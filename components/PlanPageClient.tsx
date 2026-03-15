@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import type { TripFormData, WeatherData } from '@/types';
 import { TripPlanResult } from './TripPlanResult';
 import { ChatBox } from './ChatBox';
+import { BookingCTAs } from './BookingCTAs';
 
 interface StoredPlanData {
   content: string;
@@ -112,6 +113,9 @@ export function PlanPageClient() {
             weather={weather}
           />
         </section>
+
+        {/* Booking CTAs */}
+        <BookingCTAs destination={formData.destination} formData={formData} />
 
         {/* Chat Section */}
         <section aria-labelledby="chat-heading">
