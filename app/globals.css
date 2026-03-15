@@ -127,3 +127,34 @@
     @apply font-sans;
   }
 }
+
+/* Travel palette custom properties */
+:root {
+  --travel-sky: #0EA5E9;
+  --travel-coral: #FF6B6B;
+  --travel-sandy: #F5DEB3;
+  --travel-sky-light: #E0F2FE;
+  --travel-sky-dark: #0284C7;
+}
+
+/* Print styles */
+@media print {
+  header,
+  footer,
+  nav,
+  [data-slot="tabs-list"],
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    font-size: 12pt;
+    color: #000;
+    background: #fff;
+  }
+
+  .print-content {
+    max-width: 100%;
+    padding: 0;
+  }
+}
