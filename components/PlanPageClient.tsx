@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { TripFormData, WeatherData } from '@/types';
 import { TripPlanResult } from './TripPlanResult';
@@ -19,8 +19,13 @@ export function PlanPageClient() {
   const router = useRouter();
   const [planData, setPlanData] = useState<StoredPlanData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [chatOpen, setChatOpen] = useState(false);
+  const chatRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Always start at the top of the page
+    window.scrollTo({ top: 0, behavior: 'instant' });
+
     try {
       const stored = localStorage.getItem('travel-plan');
       if (!stored) {
@@ -41,6 +46,14 @@ export function PlanPageClient() {
       setIsLoading(false);
     }
   }, [router]);
+
+  const openChat = () => {
+    setChatOpen(true);
+    // Give the DOM a tick to render the chat, then scroll to it
+    setTimeout(() => {
+      chatRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
+  };
 
   if (isLoading) {
     return (
@@ -122,17 +135,57 @@ export function PlanPageClient() {
         <BookingCTAs destination={formData.destination} formData={formData} />
 
         {/* Chat Section */}
-        <section aria-labelledby="chat-heading">
-          <h2 id="chat-heading" className="text-xl font-bold text-foreground mb-4">
-            Refine Your Plan with AI
-          </h2>
-          <p className="text-sm text-muted-foreground mb-5">
-            Ask questions, get alternative suggestions, or adjust any part of your itinerary.
-          </p>
-          <ChatBox
-            tripContext={content}
-            destination={formData.destination}
-          />
+        <section ref={chatRef} aria-labelledby="chat-heading">
+          {!chatOpen ? (
+            /* Collapsed CTA */
+            <div className="rounded-2xl border-2 border-dashed border-sky-200 dark:border-sky-800 bg-sky-50/50 dark:bg-sky-950/20 p-6 flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+              <div className="w-12 h-12 rounded-2xl bg-sky-100 dark:bg-sky-900/50 flex items-center justify-center text-2xl shrink-0">
+                🤖
+              </div>
+              <div className="flex-1">
+                <h2 id="chat-heading" className="text-base font-bold text-foreground mb-1">
+                  Have questions about your plan?
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Ask the AI to tweak your itinerary, suggest alternatives, or answer anything about {formData.destination}.
+                </p>
+              </div>
+              <button
+                onClick={openChat}
+                className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-semibold text-sm transition-colors shadow-sm"
+              >
+                <span aria-hidden="true">💬</span>
+                Chat with AI
+              </button>
+            </div>
+          ) : (
+            /* Expanded chat */
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 id="chat-heading" className="text-xl font-bold text-foreground">
+                    Chat with AI
+                  </h2>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    Ask questions, get alternatives, or refine any part of your itinerary.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setChatOpen(false)}
+                  className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-muted"
+                  aria-label="Close chat"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <ChatBox
+                tripContext={content}
+                destination={formData.destination}
+              />
+            </div>
+          )}
         </section>
       </div>
     </main>
