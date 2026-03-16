@@ -9,6 +9,7 @@ import { TripStyleSelector } from './TripStyleSelector';
 import { BudgetSelector } from './BudgetSelector';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { DestinationAutocomplete } from './DestinationAutocomplete';
 
 interface TripFormProps {
   onSubmit: (data: TripFormData) => void;
@@ -108,17 +109,19 @@ export function TripForm({ onSubmit, isLoading }: TripFormProps) {
           <label htmlFor="destination" className="text-sm font-semibold text-foreground">
             Where are you headed? <span className="text-destructive" aria-hidden="true">*</span>
           </label>
-          <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl pointer-events-none" aria-hidden="true">📍</span>
-            <Input
-              id="destination"
-              {...register('destination')}
-              placeholder="Paris, France · Tokyo, Japan · Bali, Indonesia…"
-              className="pl-11 text-base h-13 rounded-xl border-2 focus:border-sky-400 bg-background"
-              aria-describedby={errors.destination ? 'destination-error' : undefined}
-              aria-required="true"
-            />
-          </div>
+          <Controller
+            name="destination"
+            control={control}
+            render={({ field }) => (
+              <DestinationAutocomplete
+                id="destination"
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                error={errors.destination?.message}
+              />
+            )}
+          />
           {errors.destination && (
             <p id="destination-error" role="alert" className="text-sm text-destructive">
               {errors.destination.message}
