@@ -6,6 +6,7 @@ import type { TripFormData, WeatherData } from '@/types';
 import { TripPlanResult } from './TripPlanResult';
 import { ChatBox } from './ChatBox';
 import { BookingCTAs } from './BookingCTAs';
+import { DestinationPhotoGallery } from './DestinationPhotoGallery';
 
 interface StoredPlanData {
   content: string;
@@ -102,6 +103,9 @@ export function PlanPageClient() {
             </span>
           </div>
         </div>
+
+        {/* Photo Gallery */}
+        <DestinationPhotoGallery destination={formData.destination} />
 
         {/* Travel Plan */}
         <section aria-labelledby="travel-plan-heading">

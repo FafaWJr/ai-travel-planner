@@ -194,7 +194,7 @@ export function DestinationAutocomplete({
                 onMouseDown={(e) => { e.preventDefault(); selectResult(r); }}
                 onMouseEnter={() => setActiveIndex(i)}
                 className={`
-                  flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors text-sm
+                  flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-colors text-sm
                   ${isActive
                     ? 'bg-sky-50 dark:bg-sky-950/60 text-foreground'
                     : 'text-foreground hover:bg-muted/60'
@@ -202,14 +202,24 @@ export function DestinationAutocomplete({
                   ${i !== 0 ? 'border-t border-border/50' : ''}
                 `}
               >
-                <span className="text-base shrink-0" aria-hidden="true">
-                  {getFlagEmoji(r.country_code)}
-                </span>
-                <div className="min-w-0">
-                  <span className="font-semibold">{r.name}</span>
+                {/* Thumbnail photo */}
+                <div className="w-11 h-11 rounded-lg overflow-hidden shrink-0 bg-muted">
+                  <img
+                    src={`https://source.unsplash.com/featured/88x88/?${encodeURIComponent(r.name)},city,travel`}
+                    alt=""
+                    aria-hidden="true"
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm shrink-0" aria-hidden="true">{getFlagEmoji(r.country_code)}</span>
+                    <span className="font-semibold truncate">{r.name}</span>
+                  </div>
                   {(r.admin1 || r.country) && (
-                    <span className="text-muted-foreground">
-                      {r.admin1 && r.admin1 !== r.name ? `, ${r.admin1}` : ''}{r.country ? `, ${r.country}` : ''}
+                    <span className="text-xs text-muted-foreground">
+                      {r.admin1 && r.admin1 !== r.name ? `${r.admin1}, ` : ''}{r.country ?? ''}
                     </span>
                   )}
                 </div>
