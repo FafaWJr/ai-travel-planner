@@ -7,6 +7,7 @@ import { TripPlanResult } from './TripPlanResult';
 import { ChatBox } from './ChatBox';
 import { BookingCTAs } from './BookingCTAs';
 import { DestinationPhotoGallery } from './DestinationPhotoGallery';
+import { Bot, MessageSquare, X, CalendarDays, Users, Wallet, ArrowLeft } from 'lucide-react';
 
 interface StoredPlanData {
   content: string;
@@ -81,37 +82,35 @@ export function PlanPageClient() {
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <button
               onClick={() => router.push('/')}
-              className="hover:text-foreground transition-colors flex items-center gap-1"
+              className="hover:text-foreground transition-colors flex items-center gap-1.5"
               aria-label="Back to home"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
+              <ArrowLeft className="w-4 h-4" aria-hidden="true" />
               New Plan
             </button>
             <span aria-hidden="true">/</span>
             <span>{formData.destination}</span>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight">
             Your Trip to{' '}
             <span className="text-sky-500">{formData.destination}</span>
           </h1>
 
           <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <span aria-hidden="true">📅</span>
+            <span className="flex items-center gap-1.5">
+              <CalendarDays className="w-3.5 h-3.5 text-sky-400" aria-hidden="true" />
               {new Date(formData.startDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
               {' — '}
               {new Date(formData.endDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
             </span>
-            <span className="flex items-center gap-1">
-              <span aria-hidden="true">👥</span>
+            <span className="flex items-center gap-1.5">
+              <Users className="w-3.5 h-3.5 text-sky-400" aria-hidden="true" />
               {formData.adults} adult{formData.adults !== 1 ? 's' : ''}
               {formData.children > 0 && `, ${formData.children} child${formData.children !== 1 ? 'ren' : ''}`}
             </span>
-            <span className="flex items-center gap-1">
-              <span aria-hidden="true">💰</span>
+            <span className="flex items-center gap-1.5">
+              <Wallet className="w-3.5 h-3.5 text-sky-400" aria-hidden="true" />
               {formData.budgetLevel === 'budget' ? 'Budget Friendly' : formData.budgetLevel === 'mid-range' ? 'Mid Range' : 'Premium'}
             </span>
           </div>
@@ -139,8 +138,8 @@ export function PlanPageClient() {
           {!chatOpen ? (
             /* Collapsed CTA */
             <div className="rounded-2xl border-2 border-dashed border-sky-200 dark:border-sky-800 bg-sky-50/50 dark:bg-sky-950/20 p-6 flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
-              <div className="w-12 h-12 rounded-2xl bg-sky-100 dark:bg-sky-900/50 flex items-center justify-center text-2xl shrink-0">
-                🤖
+              <div className="w-12 h-12 rounded-2xl bg-sky-100 dark:bg-sky-900/50 flex items-center justify-center shrink-0">
+                <Bot className="w-6 h-6 text-sky-600 dark:text-sky-400" aria-hidden="true" />
               </div>
               <div className="flex-1">
                 <h2 id="chat-heading" className="text-base font-bold text-foreground mb-1">
@@ -154,7 +153,7 @@ export function PlanPageClient() {
                 onClick={openChat}
                 className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-semibold text-sm transition-colors shadow-sm"
               >
-                <span aria-hidden="true">💬</span>
+                <MessageSquare className="w-4 h-4" aria-hidden="true" />
                 Chat with AI
               </button>
             </div>
@@ -175,9 +174,7 @@ export function PlanPageClient() {
                   className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-muted"
                   aria-label="Close chat"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <X className="w-5 h-5" aria-hidden="true" />
                 </button>
               </div>
               <ChatBox

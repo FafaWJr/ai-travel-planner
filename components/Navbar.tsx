@@ -4,23 +4,17 @@ import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Plane, Sun, Moon } from 'lucide-react';
 
 function ThemeToggle() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => { setMounted(true); }, []);
 
-  if (!mounted) {
-    return (
-      <div className="w-8 h-8 rounded-lg bg-muted animate-pulse" aria-hidden="true" />
-    );
-  }
+  if (!mounted) return <div className="w-8 h-8 rounded-lg bg-muted animate-pulse" aria-hidden="true" />;
 
   const isDark = theme === 'dark';
-
   return (
     <Button
       variant="ghost"
@@ -29,30 +23,24 @@ function ThemeToggle() {
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       className="rounded-lg"
     >
-      {isDark ? (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-        </svg>
-      ) : (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-        </svg>
-      )}
+      {isDark ? <Sun className="w-4 h-4" aria-hidden="true" /> : <Moon className="w-4 h-4" aria-hidden="true" />}
     </Button>
   );
 }
 
 export function Navbar() {
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-sky-100 dark:border-sky-900/40 bg-white/90 dark:bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 dark:supports-[backdrop-filter]:bg-background/70 shadow-sm shadow-sky-100/60 dark:shadow-sky-950/30" role="banner">
+    <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-white/90 dark:bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 dark:supports-[backdrop-filter]:bg-background/70 shadow-sm" role="banner">
       <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
         <Link
           href="/"
-          className="flex items-center gap-2 font-extrabold transition-opacity hover:opacity-80"
+          className="flex items-center gap-2.5 font-extrabold transition-opacity hover:opacity-80"
           aria-label="AI Travel Planner home"
         >
-          <span className="text-xl" aria-hidden="true">✈️</span>
-          <span className="hidden sm:inline bg-gradient-to-r from-sky-500 to-cyan-400 bg-clip-text text-transparent">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-sky-500 to-cyan-400 flex items-center justify-center shadow-sm">
+            <Plane className="w-4 h-4 text-white" aria-hidden="true" />
+          </div>
+          <span className="hidden sm:inline bg-gradient-to-r from-sky-600 to-cyan-500 bg-clip-text text-transparent tracking-tight">
             AI Travel Planner
           </span>
         </Link>
@@ -60,7 +48,7 @@ export function Navbar() {
         <nav className="flex items-center gap-2" aria-label="Main navigation">
           <Link
             href="/#plan-form"
-            className="text-sm font-medium text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 transition-colors hidden sm:inline"
+            className="text-sm font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 transition-colors hidden sm:inline"
           >
             Plan a Trip
           </Link>

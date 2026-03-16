@@ -4,6 +4,11 @@ import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import type { TripFormData, WeatherData } from '@/types';
 import { TripForm } from './TripForm';
+import {
+  Plane, Sparkles, ChevronDown, AlertTriangle,
+  ClipboardList, Bot, Map, CloudSun, CalendarDays,
+  Hotel, Bus, Wallet, Lightbulb,
+} from 'lucide-react';
 
 export function LandingPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -93,30 +98,29 @@ export function LandingPage() {
   return (
     <main>
       {/* Hero Section */}
-      <section
-        className="relative overflow-hidden bg-gradient-to-br from-sky-400 via-sky-500 to-[#FF6B6B]/80 py-20 px-4 text-white"
-        aria-label="Hero section"
-      >
-        {/* Decorative background elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-          <div className="absolute -top-10 -right-10 w-64 h-64 rounded-full bg-white/10 blur-3xl" />
-          <div className="absolute bottom-0 -left-10 w-80 h-80 rounded-full bg-white/10 blur-3xl" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-white/5 blur-3xl" />
-        </div>
+      <section className="relative overflow-hidden min-h-[560px] flex items-center py-24 px-4 text-white" aria-label="Hero section">
+        {/* Background image */}
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=1920&q=80')" }}
+          aria-hidden="true"
+        />
+        {/* Dark + colour overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/80 via-sky-900/70 to-slate-900/75" aria-hidden="true" />
 
-        <div className="relative max-w-4xl mx-auto text-center space-y-6">
-          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-1.5 text-sm font-medium border border-white/30">
-            <span aria-hidden="true">✨</span>
+        <div className="relative w-full max-w-4xl mx-auto text-center space-y-7">
+          <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm rounded-full px-4 py-1.5 text-sm font-medium border border-white/25">
+            <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
             Powered by Advanced AI
           </div>
 
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight tracking-tight">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight tracking-tight">
             Plan Your Perfect Trip
             <br />
-            <span className="text-white/90">with AI</span>
+            <span className="text-sky-300">with AI</span>
           </h1>
 
-          <p className="text-lg sm:text-xl text-white/85 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg sm:text-xl text-white/80 max-w-2xl mx-auto leading-relaxed font-medium">
             Tell us about your dream trip and get a personalised, detailed travel plan in seconds —
             tailored to your style, budget, and group.
           </p>
@@ -124,27 +128,26 @@ export function LandingPage() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center pt-2">
             <button
               onClick={scrollToForm}
-              className="inline-flex items-center gap-2 bg-white text-sky-600 font-semibold px-8 py-3.5 rounded-full hover:bg-sky-50 transition-all duration-200 shadow-lg hover:shadow-xl text-base"
+              className="inline-flex items-center gap-2.5 bg-white text-sky-700 font-bold px-8 py-3.5 rounded-full hover:bg-sky-50 transition-all duration-200 shadow-xl hover:shadow-2xl text-base tracking-tight"
               aria-label="Start planning your trip"
             >
+              <Plane className="w-4 h-4" aria-hidden="true" />
               Start Planning
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-              </svg>
+              <ChevronDown className="w-4 h-4 opacity-60" aria-hidden="true" />
             </button>
-            <span className="text-white/70 text-sm">Free • No account required</span>
+            <span className="text-white/60 text-sm font-medium">Free · No account required</span>
           </div>
 
           {/* Stats */}
-          <div className="flex flex-wrap justify-center gap-8 pt-6" aria-label="App highlights">
+          <div className="flex flex-wrap justify-center gap-10 pt-4" aria-label="App highlights">
             {[
-              { value: '30s', label: 'Average generation time' },
-              { value: '7', label: 'Detailed plan sections' },
-              { value: '12', label: 'Trip style options' },
+              { value: '30s', label: 'Plan generated' },
+              { value: '7', label: 'Plan sections' },
+              { value: '12', label: 'Trip styles' },
             ].map((stat) => (
               <div key={stat.label} className="text-center">
-                <p className="text-2xl font-bold">{stat.value}</p>
-                <p className="text-sm text-white/75">{stat.label}</p>
+                <p className="text-3xl font-extrabold text-sky-300">{stat.value}</p>
+                <p className="text-xs text-white/60 font-medium mt-0.5 uppercase tracking-wider">{stat.label}</p>
               </div>
             ))}
           </div>
@@ -161,27 +164,27 @@ export function LandingPage() {
             {[
               {
                 step: '01',
-                emoji: '📝',
+                icon: <ClipboardList className="w-7 h-7 text-sky-600 dark:text-sky-400" aria-hidden="true" />,
                 title: 'Fill in Your Details',
                 description: 'Tell us your destination, dates, travel group, preferred styles, and budget level.',
               },
               {
                 step: '02',
-                emoji: '🤖',
+                icon: <Bot className="w-7 h-7 text-sky-600 dark:text-sky-400" aria-hidden="true" />,
                 title: 'AI Crafts Your Plan',
                 description: 'Our AI analyses your preferences and generates a comprehensive, personalised itinerary.',
               },
               {
                 step: '03',
-                emoji: '✈️',
+                icon: <Plane className="w-7 h-7 text-sky-600 dark:text-sky-400" aria-hidden="true" />,
                 title: 'Explore & Refine',
                 description: 'Review your plan across 7 detailed sections and chat with AI to refine any details.',
               },
             ].map((item) => (
               <div key={item.step} className="flex flex-col items-center text-center gap-4">
                 <div className="relative">
-                  <div className="w-16 h-16 rounded-2xl bg-sky-100 dark:bg-sky-900/40 flex items-center justify-center text-2xl shadow-sm">
-                    <span aria-hidden="true">{item.emoji}</span>
+                  <div className="w-16 h-16 rounded-2xl bg-sky-100 dark:bg-sky-900/40 flex items-center justify-center shadow-sm">
+                    {item.icon}
                   </div>
                   <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-sky-500 text-white text-xs font-bold flex items-center justify-center">
                     {item.step.slice(1)}
@@ -207,7 +210,7 @@ export function LandingPage() {
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-10">
             <div className="inline-flex items-center gap-2 bg-sky-100 dark:bg-sky-900/40 rounded-full px-4 py-1.5 text-sm font-semibold text-sky-700 dark:text-sky-300 mb-4">
-              <span aria-hidden="true">✈️</span>
+              <Plane className="w-3.5 h-3.5" aria-hidden="true" />
               Your adventure starts here
             </div>
             <h2 id="form-section-heading" className="text-3xl sm:text-4xl font-bold text-foreground mb-3">
@@ -220,7 +223,7 @@ export function LandingPage() {
 
           {error && (
             <div className="mb-6 p-4 rounded-xl bg-destructive/10 border border-destructive/30 text-destructive text-sm flex items-start gap-2">
-              <span aria-hidden="true" className="mt-0.5">⚠️</span>
+              <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" aria-hidden="true" />
               <span><strong>Error:</strong> {error}</span>
             </div>
           )}
@@ -236,21 +239,21 @@ export function LandingPage() {
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {[
-              { emoji: '🗺️', title: 'Destination Overview', desc: 'What makes it special and must-see highlights' },
-              { emoji: '🌤️', title: 'Weather & Season Info', desc: 'Real forecasts or climate averages for your dates' },
-              { emoji: '📅', title: 'Day-by-Day Itinerary', desc: 'Morning, afternoon, and evening activities planned' },
-              { emoji: '🏨', title: 'Accommodation Picks', desc: 'Curated hotels and stays matching your budget' },
-              { emoji: '🚌', title: 'Getting Around', desc: 'Transport tips, passes, and estimated costs' },
-              { emoji: '💰', title: 'Budget Breakdown', desc: 'Estimated costs per category with totals' },
-              { emoji: '💡', title: 'Practical Tips', desc: 'Visas, safety, culture, food, and local apps' },
+              { icon: <Map className="w-4 h-4 text-sky-500" />, title: 'Destination Overview', desc: 'What makes it special and must-see highlights' },
+              { icon: <CloudSun className="w-4 h-4 text-sky-500" />, title: 'Weather & Season Info', desc: 'Real forecasts or climate averages for your dates' },
+              { icon: <CalendarDays className="w-4 h-4 text-sky-500" />, title: 'Day-by-Day Itinerary', desc: 'Morning, afternoon, and evening activities planned' },
+              { icon: <Hotel className="w-4 h-4 text-sky-500" />, title: 'Accommodation Picks', desc: 'Curated hotels and stays matching your budget' },
+              { icon: <Bus className="w-4 h-4 text-sky-500" />, title: 'Getting Around', desc: 'Transport tips, passes, and estimated costs' },
+              { icon: <Wallet className="w-4 h-4 text-sky-500" />, title: 'Budget Breakdown', desc: 'Estimated costs per category with totals' },
+              { icon: <Lightbulb className="w-4 h-4 text-sky-500" />, title: 'Practical Tips', desc: 'Visas, safety, culture, food, and local apps' },
             ].map((feature) => (
               <div
                 key={feature.title}
                 className="flex items-start gap-3 p-4 rounded-xl bg-card border border-border"
               >
-                <span className="text-xl mt-0.5" aria-hidden="true">{feature.emoji}</span>
+                <div className="mt-0.5 shrink-0" aria-hidden="true">{feature.icon}</div>
                 <div>
-                  <p className="font-medium text-sm text-foreground">{feature.title}</p>
+                  <p className="font-semibold text-sm text-foreground">{feature.title}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{feature.desc}</p>
                 </div>
               </div>

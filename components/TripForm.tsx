@@ -10,17 +10,21 @@ import { BudgetSelector } from './BudgetSelector';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { DestinationAutocomplete } from './DestinationAutocomplete';
+import {
+  Globe, Users, Sparkles, CreditCard, MessageSquare,
+  PlaneTakeoff, PlaneLanding, Calendar, Clock, Plane,
+} from 'lucide-react';
 
 interface TripFormProps {
   onSubmit: (data: TripFormData) => void;
   isLoading: boolean;
 }
 
-function SectionHeader({ emoji, label, color }: { emoji: string; label: string; color: string }) {
+function SectionHeader({ icon, label, color }: { icon: React.ReactNode; label: string; color: string }) {
   return (
-    <div className={`flex items-center gap-3 mb-6`}>
-      <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-xl shadow-sm ${color}`}>
-        {emoji}
+    <div className="flex items-center gap-3 mb-6">
+      <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shadow-sm ${color}`}>
+        {icon}
       </div>
       <h3 className="text-lg font-bold text-foreground">{label}</h3>
     </div>
@@ -102,7 +106,7 @@ export function TripForm({ onSubmit, isLoading }: TripFormProps) {
 
       {/* Where & When */}
       <FormSection>
-        <SectionHeader emoji="🌍" label="Where & When" color="bg-sky-100 dark:bg-sky-900/50" />
+        <SectionHeader icon={<Globe className="w-5 h-5 text-sky-600 dark:text-sky-400" />} label="Where & When" color="bg-sky-100 dark:bg-sky-900/50" />
 
         {/* Destination */}
         <div className="space-y-2 mb-5">
@@ -129,11 +133,12 @@ export function TripForm({ onSubmit, isLoading }: TripFormProps) {
           )}
         </div>
 
-        {/* Date Range */}
+        {/* Date Range — Departure left, Return right */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-1">
           <div className="space-y-2">
             <label htmlFor="startDate" className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-              <span aria-hidden="true">🛬</span> Arrival Date <span className="text-destructive" aria-hidden="true">*</span>
+              <PlaneTakeoff className="w-4 h-4 text-sky-500" aria-hidden="true" />
+              Departure Date <span className="text-destructive" aria-hidden="true">*</span>
             </label>
             <Input
               id="startDate"
@@ -151,7 +156,8 @@ export function TripForm({ onSubmit, isLoading }: TripFormProps) {
           </div>
           <div className="space-y-2">
             <label htmlFor="endDate" className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-              <span aria-hidden="true">🛫</span> Departure Date <span className="text-destructive" aria-hidden="true">*</span>
+              <PlaneLanding className="w-4 h-4 text-sky-500" aria-hidden="true" />
+              Return Date <span className="text-destructive" aria-hidden="true">*</span>
             </label>
             <Input
               id="endDate"
@@ -172,7 +178,7 @@ export function TripForm({ onSubmit, isLoading }: TripFormProps) {
         {/* Trip duration badge */}
         {tripDays !== null && tripDays > 0 && (
           <div className="mt-3 inline-flex items-center gap-2 bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 rounded-full px-3.5 py-1.5 text-sm font-semibold text-sky-700 dark:text-sky-300">
-            <span aria-hidden="true">🗓️</span>
+            <Calendar className="w-3.5 h-3.5" aria-hidden="true" />
             {tripDays} {tripDays === 1 ? 'night' : 'nights'} · {tripDays + 1} days
           </div>
         )}
@@ -181,7 +187,7 @@ export function TripForm({ onSubmit, isLoading }: TripFormProps) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
           <div className="space-y-2">
             <label htmlFor="arrivalTime" className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
-              <span aria-hidden="true">⏰</span> Arrival Time
+              <Clock className="w-3.5 h-3.5" aria-hidden="true" /> Arrival Time
               <span className="text-xs font-normal">(optional)</span>
             </label>
             <Input
@@ -193,7 +199,7 @@ export function TripForm({ onSubmit, isLoading }: TripFormProps) {
           </div>
           <div className="space-y-2">
             <label htmlFor="departureTime" className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
-              <span aria-hidden="true">⏰</span> Departure Time
+              <Clock className="w-3.5 h-3.5" aria-hidden="true" /> Departure Time
               <span className="text-xs font-normal">(optional)</span>
             </label>
             <Input
@@ -208,7 +214,7 @@ export function TripForm({ onSubmit, isLoading }: TripFormProps) {
 
       {/* Who's Travelling */}
       <FormSection>
-        <SectionHeader emoji="👥" label="Who's Travelling?" color="bg-violet-100 dark:bg-violet-900/50" />
+        <SectionHeader icon={<Users className="w-5 h-5 text-violet-600 dark:text-violet-400" />} label="Who's Travelling?" color="bg-violet-100 dark:bg-violet-900/50" />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {/* Adults */}
@@ -323,7 +329,7 @@ export function TripForm({ onSubmit, isLoading }: TripFormProps) {
 
       {/* Trip Style */}
       <FormSection>
-        <SectionHeader emoji="✨" label="Trip Style" color="bg-amber-100 dark:bg-amber-900/50" />
+        <SectionHeader icon={<Sparkles className="w-5 h-5 text-amber-600 dark:text-amber-400" />} label="Trip Style" color="bg-amber-100 dark:bg-amber-900/50" />
         <p className="text-sm text-muted-foreground mb-5 -mt-2">
           Pick everything that excites you — your plan will be tailored to your interests.
         </p>
@@ -344,7 +350,7 @@ export function TripForm({ onSubmit, isLoading }: TripFormProps) {
 
       {/* Budget */}
       <FormSection>
-        <SectionHeader emoji="💳" label="Budget Level" color="bg-emerald-100 dark:bg-emerald-900/50" />
+        <SectionHeader icon={<CreditCard className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />} label="Budget Level" color="bg-emerald-100 dark:bg-emerald-900/50" />
         <Controller
           name="budgetLevel"
           control={control}
@@ -362,7 +368,7 @@ export function TripForm({ onSubmit, isLoading }: TripFormProps) {
 
       {/* Special Requests */}
       <FormSection>
-        <SectionHeader emoji="💬" label="Anything Special?" color="bg-rose-100 dark:bg-rose-900/50" />
+        <SectionHeader icon={<MessageSquare className="w-5 h-5 text-rose-600 dark:text-rose-400" />} label="Anything Special?" color="bg-rose-100 dark:bg-rose-900/50" />
         <label htmlFor="notes" className="sr-only">Special requests or notes</label>
         <Textarea
           id="notes"
@@ -400,9 +406,8 @@ export function TripForm({ onSubmit, isLoading }: TripFormProps) {
           </span>
         ) : (
           <span className="flex items-center justify-center gap-3">
-            <span aria-hidden="true">✈️</span>
+            <Plane className="w-5 h-5" aria-hidden="true" />
             Generate My Travel Plan
-            <span aria-hidden="true" className="text-white/80">→</span>
           </span>
         )}
       </button>
