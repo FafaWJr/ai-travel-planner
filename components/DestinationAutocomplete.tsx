@@ -34,6 +34,7 @@ export function DestinationAutocomplete({
 }: DestinationAutocompleteProps) {
   const [query, setQuery] = useState(value);
   const [results, setResults] = useState<GeoResult[]>([]);
+  const [thumbnails, setThumbnails] = useState<Record<number, string>>({});
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -64,8 +65,24 @@ export function DestinationAutocomplete({
       const data = await res.json();
       const items: GeoResult[] = data.results ?? [];
       setResults(items);
+      setThumbnails({});
       setIsOpen(items.length > 0);
       setActiveIndex(-1);
+
+      // Fetch thumbnails in background
+      Promise.allSettled(
+        items.map(r =>
+          fetch(`/api/place-photo?q=${encodeURIComponent(r.name)}`)
+            .then(res => res.json())
+            .then(d => ({ id: r.id, url: d.url as string | null }))
+        )
+      ).then(settled => {
+        const map: Record<number, string> = {};
+        settled.forEach(r => {
+          if (r.status === 'fulfilled' && r.value.url) map[r.value.id] = r.value.url;
+        });
+        setThumbnails(map);
+      });
     } catch {
       setResults([]);
       setIsOpen(false);
@@ -203,14 +220,18 @@ export function DestinationAutocomplete({
                 `}
               >
                 {/* Thumbnail photo */}
-                <div className="w-11 h-11 rounded-lg overflow-hidden shrink-0 bg-muted">
-                  <img
-                    src={`https://source.unsplash.com/featured/88x88/?${encodeURIComponent(r.name)},city,travel`}
-                    alt=""
-                    aria-hidden="true"
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
+                <div className="w-11 h-11 rounded-lg overflow-hidden shrink-0 bg-muted flex items-center justify-center text-lg">
+                  {thumbnails[r.id] ? (
+                    <img
+                      src={thumbnails[r.id]}
+                      alt=""
+                      aria-hidden="true"
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <span aria-hidden="true">{getFlagEmoji(r.country_code)}</span>
+                  )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">

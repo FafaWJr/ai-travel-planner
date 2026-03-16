@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { WeatherWidget } from './WeatherWidget';
 import { Button } from '@/components/ui/button';
+import { PlaceHoverCard } from './PlaceHoverCard';
 
 interface TripPlanResultProps {
   content: string;
@@ -70,7 +71,7 @@ function parseSections(content: string): Section[] {
   });
 }
 
-function renderMarkdown(text: string): React.ReactNode {
+function renderMarkdown(text: string, hoverable = false): React.ReactNode {
   if (!text) return null;
 
   const lines = text.split('\n');
@@ -85,7 +86,7 @@ function renderMarkdown(text: string): React.ReactNode {
           {listItems.map((item, li) => (
             <li key={li} className="flex items-start gap-2 text-sm text-foreground leading-relaxed">
               <span className="text-sky-500 mt-0.5 shrink-0" aria-hidden="true">•</span>
-              <span>{renderInlineMarkdown(item)}</span>
+              <span>{renderInlineMarkdown(item, hoverable)}</span>
             </li>
           ))}
         </ul>
@@ -127,7 +128,7 @@ function renderMarkdown(text: string): React.ReactNode {
       elements.push(
         <div key={`ol-${keyCounter++}`} className="flex items-start gap-2 text-sm my-1.5 pl-2">
           <span className="font-semibold text-sky-500 shrink-0 min-w-[20px]">{num}.</span>
-          <span className="leading-relaxed">{renderInlineMarkdown(content)}</span>
+          <span className="leading-relaxed">{renderInlineMarkdown(content, hoverable)}</span>
         </div>
       );
     } else if (line.trim() === '' || line.trim() === '---') {
@@ -141,7 +142,7 @@ function renderMarkdown(text: string): React.ReactNode {
       flushList();
       elements.push(
         <p key={`p-${keyCounter++}`} className="text-sm text-foreground leading-relaxed mb-1.5">
-          {renderInlineMarkdown(line)}
+          {renderInlineMarkdown(line, hoverable)}
         </p>
       );
     }
@@ -151,7 +152,7 @@ function renderMarkdown(text: string): React.ReactNode {
   return <>{elements}</>;
 }
 
-function renderInlineMarkdown(text: string): React.ReactNode {
+function renderInlineMarkdown(text: string, hoverable = false): React.ReactNode {
   if (!text) return null;
   // Handle **bold** and *italic*
   const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g);
@@ -159,7 +160,9 @@ function renderInlineMarkdown(text: string): React.ReactNode {
     <>
       {parts.map((part, i) => {
         if (part.startsWith('**') && part.endsWith('**')) {
-          return <strong key={i} className="font-semibold">{part.slice(2, -2)}</strong>;
+          const name = part.slice(2, -2);
+          if (hoverable) return <PlaceHoverCard key={i} name={name} />;
+          return <strong key={i} className="font-semibold">{name}</strong>;
         }
         if (part.startsWith('*') && part.endsWith('*')) {
           return <em key={i}>{part.slice(1, -1)}</em>;
@@ -282,7 +285,10 @@ export function TripPlanResult({ content, isStreaming, destination, weather }: T
               )}
               {section.content ? (
                 <div className="prose-like">
-                  {renderMarkdown(section.content)}
+                  {renderMarkdown(
+                    section.content,
+                    ['itinerary', 'overview', 'stay'].includes(section.id)
+                  )}
                 </div>
               ) : isStreaming ? (
                 <div className="space-y-3 animate-pulse">
