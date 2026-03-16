@@ -82,10 +82,10 @@ function renderMarkdown(text: string, hoverable = false): React.ReactNode {
   const flushList = () => {
     if (listItems.length > 0) {
       elements.push(
-        <ul key={`ul-${keyCounter++}`} className="list-none space-y-1.5 my-3 pl-2">
+        <ul key={`ul-${keyCounter++}`} className="list-none space-y-2.5 my-4 pl-1">
           {listItems.map((item, li) => (
-            <li key={li} className="flex items-start gap-2 text-sm text-foreground leading-relaxed">
-              <span className="text-sky-500 mt-0.5 shrink-0" aria-hidden="true">•</span>
+            <li key={li} className="flex items-start gap-3 text-base text-foreground leading-relaxed">
+              <span className="text-sky-500 mt-1 shrink-0 text-lg" aria-hidden="true">•</span>
               <span>{renderInlineMarkdown(item, hoverable)}</span>
             </li>
           ))}
@@ -100,22 +100,37 @@ function renderMarkdown(text: string, hoverable = false): React.ReactNode {
 
     if (line.startsWith('### ')) {
       flushList();
+      // Day headers get a coloured pill style
+      const text = line.slice(4);
+      const isDayHeader = /^day\s+\d+/i.test(text.trim());
       elements.push(
-        <h3 key={`h3-${keyCounter++}`} className="text-base font-semibold text-foreground mt-5 mb-2 flex items-center gap-1.5">
-          {renderInlineMarkdown(line.slice(4))}
-        </h3>
+        isDayHeader ? (
+          <div key={`h3-${keyCounter++}`} className="flex items-center gap-3 mt-8 mb-3">
+            <div className="flex-shrink-0 bg-sky-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+              {text.match(/^(Day\s+\d+)/i)?.[1] ?? 'Day'}
+            </div>
+            <h3 className="text-base font-bold text-foreground">
+              {renderInlineMarkdown(text.replace(/^Day\s+\d+[:\s]*/i, ''))}
+            </h3>
+            <div className="flex-1 h-px bg-border" />
+          </div>
+        ) : (
+          <h3 key={`h3-${keyCounter++}`} className="text-lg font-bold text-foreground mt-6 mb-2.5 border-l-4 border-sky-400 pl-3">
+            {renderInlineMarkdown(text)}
+          </h3>
+        )
       );
     } else if (line.startsWith('## ')) {
       flushList();
       elements.push(
-        <h2 key={`h2-${keyCounter++}`} className="text-lg font-bold text-foreground mt-6 mb-3">
+        <h2 key={`h2-${keyCounter++}`} className="text-xl font-bold text-foreground mt-7 mb-3">
           {renderInlineMarkdown(line.slice(3))}
         </h2>
       );
     } else if (line.startsWith('**') && line.endsWith('**') && line.length > 4) {
       flushList();
       elements.push(
-        <p key={`bold-${keyCounter++}`} className="font-semibold text-foreground mt-3 mb-1">
+        <p key={`bold-${keyCounter++}`} className="text-base font-bold text-foreground mt-4 mb-1.5">
           {line.slice(2, -2)}
         </p>
       );
@@ -126,22 +141,22 @@ function renderMarkdown(text: string, hoverable = false): React.ReactNode {
       const num = line.match(/^(\d+)\. /)?.[1];
       const content = line.replace(/^\d+\. /, '');
       elements.push(
-        <div key={`ol-${keyCounter++}`} className="flex items-start gap-2 text-sm my-1.5 pl-2">
-          <span className="font-semibold text-sky-500 shrink-0 min-w-[20px]">{num}.</span>
+        <div key={`ol-${keyCounter++}`} className="flex items-start gap-3 text-base my-2 pl-1">
+          <span className="font-bold text-sky-500 shrink-0 min-w-[24px] mt-0.5">{num}.</span>
           <span className="leading-relaxed">{renderInlineMarkdown(content, hoverable)}</span>
         </div>
       );
     } else if (line.trim() === '' || line.trim() === '---') {
       flushList();
       if (line.trim() === '---') {
-        elements.push(<hr key={`hr-${keyCounter++}`} className="border-border my-4" />);
+        elements.push(<hr key={`hr-${keyCounter++}`} className="border-border my-5" />);
       } else {
         elements.push(<div key={`sp-${keyCounter++}`} className="h-2" />);
       }
     } else if (line.trim()) {
       flushList();
       elements.push(
-        <p key={`p-${keyCounter++}`} className="text-sm text-foreground leading-relaxed mb-1.5">
+        <p key={`p-${keyCounter++}`} className="text-base text-foreground leading-relaxed mb-2">
           {renderInlineMarkdown(line, hoverable)}
         </p>
       );
@@ -273,7 +288,7 @@ export function TripPlanResult({ content, isStreaming, destination, weather }: T
 
         {sections.map((section) => (
           <TabsContent key={section.id} value={section.id} className="mt-4">
-            <div className="rounded-xl border border-border bg-card p-5 min-h-[200px]">
+            <div className="rounded-xl border border-border bg-card p-6 sm:p-8 min-h-[200px]">
               {section.id === 'weather' && weather && (
                 <div className="mb-5">
                   <WeatherWidget
