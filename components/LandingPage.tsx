@@ -200,23 +200,28 @@ export function LandingPage() {
       {/* Form Section */}
       <section
         ref={formRef}
-        className="py-16 px-4"
+        className="py-16 px-4 bg-gradient-to-b from-sky-50/60 via-background to-background dark:from-sky-950/20 dark:via-background dark:to-background"
         aria-labelledby="form-section-heading"
         id="plan-form"
       >
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-10">
-            <h2 id="form-section-heading" className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
+            <div className="inline-flex items-center gap-2 bg-sky-100 dark:bg-sky-900/40 rounded-full px-4 py-1.5 text-sm font-semibold text-sky-700 dark:text-sky-300 mb-4">
+              <span aria-hidden="true">✈️</span>
+              Your adventure starts here
+            </div>
+            <h2 id="form-section-heading" className="text-3xl sm:text-4xl font-bold text-foreground mb-3">
               Create Your Travel Plan
             </h2>
-            <p className="text-muted-foreground">
-              Fill in the details below and we&apos;ll generate a personalised itinerary just for you.
+            <p className="text-muted-foreground text-base max-w-md mx-auto">
+              Tell us about your dream trip and we&apos;ll craft a personalised itinerary just for you.
             </p>
           </div>
 
           {error && (
-            <div className="mb-6 p-4 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-sm">
-              <strong>Error:</strong> {error}
+            <div className="mb-6 p-4 rounded-xl bg-destructive/10 border border-destructive/30 text-destructive text-sm flex items-start gap-2">
+              <span aria-hidden="true" className="mt-0.5">⚠️</span>
+              <span><strong>Error:</strong> {error}</span>
             </div>
           )}
           <TripForm onSubmit={handleSubmit} isLoading={isLoading} />

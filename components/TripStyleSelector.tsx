@@ -50,30 +50,32 @@ export function TripStyleSelector({ value, onChange }: TripStyleSelectorProps) {
           <motion.button
             key={style.value}
             type="button"
-            whileTap={{ scale: 0.95 }}
-            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.94 }}
+            whileHover={{ scale: 1.03 }}
             onClick={() => toggle(style.value)}
             aria-pressed={isSelected}
             aria-label={`${style.label} travel style`}
             className={`
-              flex flex-col items-center gap-2 p-3 rounded-xl border-2 text-center cursor-pointer transition-all duration-200
+              relative flex flex-col items-center gap-2 p-3.5 rounded-2xl border-2 text-center cursor-pointer transition-all duration-200
               ${isSelected
-                ? 'border-sky-500 bg-sky-50 dark:bg-sky-950 dark:border-sky-400 shadow-md shadow-sky-100 dark:shadow-sky-900'
-                : 'border-border bg-card hover:border-sky-300 hover:bg-sky-50/50 dark:hover:bg-sky-950/30'
+                ? 'border-sky-400 bg-gradient-to-b from-sky-50 to-sky-100/60 dark:from-sky-950 dark:to-sky-900/60 shadow-md shadow-sky-100/80 dark:shadow-sky-900/50'
+                : 'border-border bg-card hover:border-sky-200 hover:bg-sky-50/40 dark:hover:bg-sky-950/20 hover:shadow-sm'
               }
             `}
           >
-            <span className="text-2xl" role="img" aria-hidden="true">
-              {style.emoji}
-            </span>
-            <span className={`text-xs font-medium leading-tight ${
+            {isSelected && (
+              <span className="absolute top-2 right-2 w-4 h-4 rounded-full bg-sky-500 flex items-center justify-center" aria-hidden="true">
+                <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </span>
+            )}
+            <span className="text-2xl" role="img" aria-hidden="true">{style.emoji}</span>
+            <span className={`text-xs font-semibold leading-tight ${
               isSelected ? 'text-sky-700 dark:text-sky-300' : 'text-muted-foreground'
             }`}>
               {style.label}
             </span>
-            {isSelected && (
-              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-sky-500" />
-            )}
           </motion.button>
         );
       })}
