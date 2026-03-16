@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation';
 import type { TripFormData, WeatherData } from '@/types';
 import { TripForm } from './TripForm';
 import {
-  Plane, Sparkles, ChevronDown, AlertTriangle,
+  Plane, Sparkles, AlertTriangle,
   ClipboardList, Bot, Map, CloudSun, CalendarDays,
-  Hotel, Bus, Wallet, Lightbulb,
+  Hotel, Bus, Wallet, Lightbulb, ArrowRight,
 } from 'lucide-react';
 
 export function LandingPage() {
@@ -39,14 +39,13 @@ export function LandingPage() {
         return;
       }
 
-      // Extract weather from response headers
       const weatherHeader = response.headers.get('X-Weather-Data');
       let weather: WeatherData | null = null;
       if (weatherHeader) {
         try {
           weather = JSON.parse(decodeURIComponent(weatherHeader));
         } catch {
-          // ignore parse error
+          // ignore
         }
       }
 
@@ -70,9 +69,7 @@ export function LandingPage() {
             try {
               const parsed = JSON.parse(raw);
               const delta = parsed.choices?.[0]?.delta?.content;
-              if (delta) {
-                planContent += delta;
-              }
+              if (delta) planContent += delta;
             } catch {
               // skip
             }
@@ -80,7 +77,6 @@ export function LandingPage() {
         }
       }
 
-      // Store in localStorage and navigate
       localStorage.setItem('travel-plan', JSON.stringify({
         content: planContent,
         formData: data,
@@ -97,123 +93,164 @@ export function LandingPage() {
 
   return (
     <main>
-      {/* Hero Section */}
-      <section className="relative overflow-hidden min-h-[560px] flex items-center py-24 px-4 text-white" aria-label="Hero section">
-        {/* Background image */}
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=1920&q=80')" }}
-          aria-hidden="true"
-        />
-        {/* Dark + colour overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/80 via-sky-900/70 to-slate-900/75" aria-hidden="true" />
+      {/* ── Hero ─────────────────────────────────────────────── */}
+      <section
+        className="relative bg-white dark:bg-background overflow-hidden"
+        aria-label="Hero section"
+      >
+        {/* Top accent line */}
+        <div className="h-1 w-full bg-gradient-to-r from-sky-400 via-cyan-400 to-sky-500" />
 
-        <div className="relative w-full max-w-4xl mx-auto text-center space-y-7">
-          <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm rounded-full px-4 py-1.5 text-sm font-medium border border-white/25">
-            <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
-            Powered by Advanced AI
-          </div>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-0">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-end">
 
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight tracking-tight">
-            Plan Your Perfect Trip
-            <br />
-            <span className="text-sky-300">with AI</span>
-          </h1>
-
-          <p className="text-lg sm:text-xl text-white/80 max-w-2xl mx-auto leading-relaxed font-medium">
-            Tell us about your dream trip and get a personalised, detailed travel plan in seconds —
-            tailored to your style, budget, and group.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center pt-2">
-            <button
-              onClick={scrollToForm}
-              className="inline-flex items-center gap-2.5 bg-white text-sky-700 font-bold px-8 py-3.5 rounded-full hover:bg-sky-50 transition-all duration-200 shadow-xl hover:shadow-2xl text-base tracking-tight"
-              aria-label="Start planning your trip"
-            >
-              <Plane className="w-4 h-4" aria-hidden="true" />
-              Start Planning
-              <ChevronDown className="w-4 h-4 opacity-60" aria-hidden="true" />
-            </button>
-            <span className="text-white/60 text-sm font-medium">Free · No account required</span>
-          </div>
-
-          {/* Stats */}
-          <div className="flex flex-wrap justify-center gap-10 pt-4" aria-label="App highlights">
-            {[
-              { value: '30s', label: 'Plan generated' },
-              { value: '7', label: 'Plan sections' },
-              { value: '12', label: 'Trip styles' },
-            ].map((stat) => (
-              <div key={stat.label} className="text-center">
-                <p className="text-3xl font-extrabold text-sky-300">{stat.value}</p>
-                <p className="text-xs text-white/60 font-medium mt-0.5 uppercase tracking-wider">{stat.label}</p>
+            {/* Left: typography block */}
+            <div className="pb-14 lg:pb-20 space-y-6">
+              <div className="inline-flex items-center gap-2 bg-sky-50 dark:bg-sky-900/30 border border-sky-200 dark:border-sky-800 rounded-full px-3.5 py-1.5 text-xs font-semibold text-sky-600 dark:text-sky-400 uppercase tracking-widest">
+                <Sparkles className="w-3 h-3" aria-hidden="true" />
+                AI-Powered Planning
               </div>
-            ))}
+
+              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-foreground leading-[0.92] tracking-tighter uppercase">
+                Travel
+                <br />
+                <span className="text-sky-500">Around</span>
+                <br />
+                The World
+              </h1>
+
+              <p className="text-base sm:text-lg text-muted-foreground max-w-md leading-relaxed">
+                Tell us about your dream destination and get a personalised, detailed travel plan in seconds — tailored to your style, budget, and group.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <button
+                  onClick={scrollToForm}
+                  className="inline-flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-600 active:bg-sky-700 text-white font-bold px-7 py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-sky-200 dark:shadow-sky-900/40 text-sm tracking-wide"
+                  aria-label="Start planning your trip"
+                >
+                  <Plane className="w-4 h-4" aria-hidden="true" />
+                  Start Planning
+                  <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                </button>
+                <span className="inline-flex items-center text-muted-foreground text-sm font-medium">
+                  Free · No account required
+                </span>
+              </div>
+
+              {/* Stats row */}
+              <div className="flex gap-8 pt-4 border-t border-border">
+                {[
+                  { value: '30s', label: 'Plan generated' },
+                  { value: '7', label: 'Plan sections' },
+                  { value: '12', label: 'Trip styles' },
+                ].map((stat) => (
+                  <div key={stat.label}>
+                    <p className="text-2xl font-extrabold text-foreground">{stat.value}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 uppercase tracking-wider">{stat.label}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Right: airplane photo card */}
+            <div className="relative lg:self-end hidden sm:block">
+              {/* Card */}
+              <div className="relative rounded-t-3xl overflow-hidden shadow-2xl h-[420px] lg:h-[480px]">
+                <img
+                  src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=900&q=80"
+                  alt="Airplane wing over clouds"
+                  className="w-full h-full object-cover"
+                />
+                {/* Bottom gradient */}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-transparent to-transparent" />
+
+                {/* Floating info pill */}
+                <div className="absolute bottom-5 left-5 right-5 flex items-center justify-between gap-3">
+                  <div className="bg-white/15 backdrop-blur-md border border-white/25 rounded-2xl px-4 py-3 flex-1">
+                    <p className="text-white/60 text-xs font-medium uppercase tracking-wider">Your next destination</p>
+                    <p className="text-white font-bold text-base leading-tight mt-0.5">Anywhere you dream of</p>
+                  </div>
+                  <div className="w-12 h-12 rounded-2xl bg-sky-500 flex items-center justify-center shadow-lg shrink-0">
+                    <Plane className="w-5 h-5 text-white rotate-45" aria-hidden="true" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Floating badge — top right */}
+              <div className="absolute top-5 right-5 bg-white dark:bg-card border border-border rounded-2xl px-3.5 py-2.5 shadow-xl">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">AI-Crafted</p>
+                <p className="text-sm font-extrabold text-foreground">Personalised Plan</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className="py-16 px-4 bg-muted/30" aria-labelledby="how-it-works-heading">
-        <div className="max-w-4xl mx-auto">
-          <h2 id="how-it-works-heading" className="text-2xl sm:text-3xl font-bold text-center mb-12 text-foreground">
-            How It Works
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+      {/* ── How It Works ──────────────────────────────────────── */}
+      <section className="py-20 px-4 bg-muted/30 border-t border-border" aria-labelledby="how-it-works-heading">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-14">
+            <p className="text-xs font-semibold uppercase tracking-widest text-sky-500 mb-2">Simple Process</p>
+            <h2 id="how-it-works-heading" className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight">
+              How It Works
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {[
               {
                 step: '01',
-                icon: <ClipboardList className="w-7 h-7 text-sky-600 dark:text-sky-400" aria-hidden="true" />,
+                icon: <ClipboardList className="w-6 h-6 text-sky-500" aria-hidden="true" />,
                 title: 'Fill in Your Details',
-                description: 'Tell us your destination, dates, travel group, preferred styles, and budget level.',
+                description: 'Destination, dates, group size, travel style, and budget — all in one form.',
               },
               {
                 step: '02',
-                icon: <Bot className="w-7 h-7 text-sky-600 dark:text-sky-400" aria-hidden="true" />,
+                icon: <Bot className="w-6 h-6 text-sky-500" aria-hidden="true" />,
                 title: 'AI Crafts Your Plan',
-                description: 'Our AI analyses your preferences and generates a comprehensive, personalised itinerary.',
+                description: 'Our AI analyses your preferences and builds a comprehensive personalised itinerary.',
               },
               {
                 step: '03',
-                icon: <Plane className="w-7 h-7 text-sky-600 dark:text-sky-400" aria-hidden="true" />,
+                icon: <Plane className="w-6 h-6 text-sky-500" aria-hidden="true" />,
                 title: 'Explore & Refine',
-                description: 'Review your plan across 7 detailed sections and chat with AI to refine any details.',
+                description: 'Browse 7 detailed sections and chat with AI to tweak any part of your trip.',
               },
-            ].map((item) => (
-              <div key={item.step} className="flex flex-col items-center text-center gap-4">
-                <div className="relative">
-                  <div className="w-16 h-16 rounded-2xl bg-sky-100 dark:bg-sky-900/40 flex items-center justify-center shadow-sm">
-                    {item.icon}
+            ].map((item, i) => (
+              <div key={item.step} className="relative bg-card border border-border rounded-2xl p-6 shadow-sm">
+                {/* Step number */}
+                <span className="absolute top-5 right-5 text-4xl font-extrabold text-muted/40 select-none leading-none">
+                  {item.step}
+                </span>
+                <div className="w-11 h-11 rounded-xl bg-sky-50 dark:bg-sky-900/30 flex items-center justify-center mb-4">
+                  {item.icon}
+                </div>
+                <h3 className="font-bold text-foreground mb-1.5">{item.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
+                {/* Connector arrow (between cards) */}
+                {i < 2 && (
+                  <div className="hidden sm:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-sky-500 items-center justify-center shadow-md">
+                    <ArrowRight className="w-3.5 h-3.5 text-white" aria-hidden="true" />
                   </div>
-                  <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-sky-500 text-white text-xs font-bold flex items-center justify-center">
-                    {item.step.slice(1)}
-                  </span>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-foreground mb-1">{item.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
-                </div>
+                )}
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Form Section */}
+      {/* ── Form Section ─────────────────────────────────────── */}
       <section
         ref={formRef}
-        className="py-16 px-4 bg-gradient-to-b from-sky-50/60 via-background to-background dark:from-sky-950/20 dark:via-background dark:to-background"
+        className="py-20 px-4 bg-background"
         aria-labelledby="form-section-heading"
         id="plan-form"
       >
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 bg-sky-100 dark:bg-sky-900/40 rounded-full px-4 py-1.5 text-sm font-semibold text-sky-700 dark:text-sky-300 mb-4">
-              <Plane className="w-3.5 h-3.5" aria-hidden="true" />
-              Your adventure starts here
-            </div>
-            <h2 id="form-section-heading" className="text-3xl sm:text-4xl font-bold text-foreground mb-3">
+            <p className="text-xs font-semibold uppercase tracking-widest text-sky-500 mb-2">Your adventure starts here</p>
+            <h2 id="form-section-heading" className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight mb-3">
               Create Your Travel Plan
             </h2>
             <p className="text-muted-foreground text-base max-w-md mx-auto">
@@ -231,30 +268,37 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Feature Highlights */}
-      <section className="py-16 px-4 bg-muted/30 border-t border-border" aria-labelledby="features-heading">
-        <div className="max-w-4xl mx-auto">
-          <h2 id="features-heading" className="text-2xl font-bold text-center mb-10 text-foreground">
-            What&apos;s Included in Every Plan
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      {/* ── What's Included ───────────────────────────────────── */}
+      <section className="py-20 px-4 bg-muted/30 border-t border-border" aria-labelledby="features-heading">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="text-xs font-semibold uppercase tracking-widest text-sky-500 mb-2">Full coverage</p>
+            <h2 id="features-heading" className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight">
+              What&apos;s Included in Every Plan
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { icon: <Map className="w-4 h-4 text-sky-500" />, title: 'Destination Overview', desc: 'What makes it special and must-see highlights' },
-              { icon: <CloudSun className="w-4 h-4 text-sky-500" />, title: 'Weather & Season Info', desc: 'Real forecasts or climate averages for your dates' },
-              { icon: <CalendarDays className="w-4 h-4 text-sky-500" />, title: 'Day-by-Day Itinerary', desc: 'Morning, afternoon, and evening activities planned' },
-              { icon: <Hotel className="w-4 h-4 text-sky-500" />, title: 'Accommodation Picks', desc: 'Curated hotels and stays matching your budget' },
-              { icon: <Bus className="w-4 h-4 text-sky-500" />, title: 'Getting Around', desc: 'Transport tips, passes, and estimated costs' },
-              { icon: <Wallet className="w-4 h-4 text-sky-500" />, title: 'Budget Breakdown', desc: 'Estimated costs per category with totals' },
-              { icon: <Lightbulb className="w-4 h-4 text-sky-500" />, title: 'Practical Tips', desc: 'Visas, safety, culture, food, and local apps' },
+              { icon: <Map className="w-5 h-5 text-sky-500" />, title: 'Destination Overview', desc: 'What makes it special and must-see highlights' },
+              { icon: <CloudSun className="w-5 h-5 text-sky-500" />, title: 'Weather & Season', desc: 'Real forecasts or climate averages for your dates' },
+              { icon: <CalendarDays className="w-5 h-5 text-sky-500" />, title: 'Day-by-Day Itinerary', desc: 'Morning, afternoon, and evening activities' },
+              { icon: <Hotel className="w-5 h-5 text-sky-500" />, title: 'Accommodation Picks', desc: 'Curated stays matching your budget' },
+              { icon: <Bus className="w-5 h-5 text-sky-500" />, title: 'Getting Around', desc: 'Transport tips, passes, and estimated costs' },
+              { icon: <Wallet className="w-5 h-5 text-sky-500" />, title: 'Budget Breakdown', desc: 'Estimated costs per category with totals' },
+              { icon: <Lightbulb className="w-5 h-5 text-sky-500" />, title: 'Practical Tips', desc: 'Visas, safety, culture, food, and local apps' },
+              { icon: <Bot className="w-5 h-5 text-sky-500" />, title: 'AI Chat', desc: 'Ask follow-up questions or refine any detail' },
             ].map((feature) => (
               <div
                 key={feature.title}
-                className="flex items-start gap-3 p-4 rounded-xl bg-card border border-border"
+                className="group flex flex-col gap-3 p-5 rounded-2xl bg-card border border-border hover:border-sky-300 dark:hover:border-sky-700 hover:shadow-md transition-all duration-200"
               >
-                <div className="mt-0.5 shrink-0" aria-hidden="true">{feature.icon}</div>
+                <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-900/30 flex items-center justify-center group-hover:bg-sky-100 dark:group-hover:bg-sky-900/50 transition-colors" aria-hidden="true">
+                  {feature.icon}
+                </div>
                 <div>
-                  <p className="font-semibold text-sm text-foreground">{feature.title}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{feature.desc}</p>
+                  <p className="font-bold text-sm text-foreground">{feature.title}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{feature.desc}</p>
                 </div>
               </div>
             ))}
