@@ -623,9 +623,11 @@ function PlanForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; preF
   const [dest,   setDest]   = useState('');
   const [dep,    setDep]    = useState('');
   const [ret,    setRet]    = useState('');
-  const [adults,    setAdults]    = useState(2);
-  const [kids,      setKids]      = useState(0);
-  const [companion, setCompanion] = useState('partner');
+  const [adults,     setAdults]     = useState(2);
+  const [kids,       setKids]       = useState(0);
+  const [adultAges,  setAdultAges]  = useState<string[]>(['', '']);
+  const [childAges,  setChildAges]  = useState<string[]>([]);
+  const [companion,  setCompanion]  = useState('partner');
   const [styles,    setStyles]    = useState<string[]>(preFilledData?.styles ?? []);
   const [budget,    setBudget]    = useState(preFilledData?.budget ?? 'midrange');
   const [notes,     setNotes]     = useState('');
@@ -656,11 +658,13 @@ function PlanForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; preF
 
   const setAdultsChecked = (n: number) => {
     setAdults(n);
+    setAdultAges(prev => { const a=[...prev]; while(a.length<n) a.push(''); return a.slice(0,n); });
     if (n === 1 && kids === 0) setCompanion('solo');
     else if (companion === 'solo') setCompanion('partner');
   };
   const setKidsChecked = (n: number) => {
     setKids(n);
+    setChildAges(prev => { const a=[...prev]; while(a.length<n) a.push(''); return a.slice(0,n); });
     if (adults === 1 && n === 0) setCompanion('solo');
     else if (n > 0 && companion !== 'family') setCompanion('family');
     else if (n === 0 && companion === 'family') setCompanion('partner');
@@ -677,7 +681,14 @@ function PlanForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; preF
     const dates = dep ? `from ${dep}${ret?` to ${ret}`:''}` : '';
     const group = `for ${adults} adult${adults>1?'s':''}${kids>0?` and ${kids} child${kids>1?'ren':''}`:''}`;
     const companionCtx = companionLabel[companion] || '';
-    onSubmit(`Plan a trip to ${dest} ${dates} ${group}, ${companionCtx}, with ${bLabels[budget]||budget} budget ${tripStyles}${notes?`. Additional context about what they're looking for: ${notes}`:''}`);
+    const filledAdultAges = adultAges.filter(Boolean);
+    const filledChildAges = childAges.filter(Boolean);
+    const ageParts = [
+      filledAdultAges.length ? `adults aged ${filledAdultAges.join(', ')}` : '',
+      filledChildAges.length ? `children aged ${filledChildAges.join(', ')}` : '',
+    ].filter(Boolean);
+    const ageCtx = ageParts.length ? `. Traveller ages: ${ageParts.join('; ')}` : '';
+    onSubmit(`Plan a trip to ${dest} ${dates} ${group}, ${companionCtx}, with ${bLabels[budget]||budget} budget ${tripStyles}${ageCtx}${notes?`. Additional context about what they're looking for: ${notes}`:''}`);
   };
 
   const inp: React.CSSProperties = {
@@ -722,19 +733,56 @@ function PlanForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; preF
       <hr style={divider} />
 
       {/* Travellers */}
-      <div style={{ padding:'24px 32px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
-        {([['Adults', adults, setAdultsChecked, 1], ['Children', kids, setKidsChecked, 0]] as const).map(([l,val,set,min])=>(
-          <div key={l as string}>
-            <label style={lbl}>{l as string}</label>
-            <div style={{ display:'flex', alignItems:'center', gap:0, background:'var(--bg-section)', borderRadius:'var(--r-md)', border:'1.5px solid rgba(0,68,123,0.12)', overflow:'hidden' }}>
-              <button onClick={()=>(set as (n:number)=>void)(Math.max(min as number,(val as number)-1))}
-                style={{ width:44, height:44, background:'none', border:'none', color:'var(--navy)', fontSize:22, cursor:'pointer', fontFamily:'var(--font-head)', fontWeight:500, flexShrink:0 }}>−</button>
-              <span style={{ flex:1, textAlign:'center', fontFamily:'var(--font-head)', fontWeight:700, fontSize:18, color:'var(--navy)' }}>{val as number}</span>
-              <button onClick={()=>(set as (n:number)=>void)((val as number)+1)}
-                style={{ width:44, height:44, background:'none', border:'none', color:'var(--navy)', fontSize:22, cursor:'pointer', fontFamily:'var(--font-head)', fontWeight:500, flexShrink:0 }}>+</button>
+      <div style={{ padding:'24px 32px' }}>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
+          {([['Adults', adults, setAdultsChecked, 1], ['Children', kids, setKidsChecked, 0]] as const).map(([l,val,set,min])=>(
+            <div key={l as string}>
+              <label style={lbl}>{l as string}</label>
+              <div style={{ display:'flex', alignItems:'center', gap:0, background:'var(--bg-section)', borderRadius:'var(--r-md)', border:'1.5px solid rgba(0,68,123,0.12)', overflow:'hidden' }}>
+                <button onClick={()=>(set as (n:number)=>void)(Math.max(min as number,(val as number)-1))}
+                  style={{ width:44, height:44, background:'none', border:'none', color:'var(--navy)', fontSize:22, cursor:'pointer', fontFamily:'var(--font-head)', fontWeight:500, flexShrink:0 }}>−</button>
+                <span style={{ flex:1, textAlign:'center', fontFamily:'var(--font-head)', fontWeight:700, fontSize:18, color:'var(--navy)' }}>{val as number}</span>
+                <button onClick={()=>(set as (n:number)=>void)((val as number)+1)}
+                  style={{ width:44, height:44, background:'none', border:'none', color:'var(--navy)', fontSize:22, cursor:'pointer', fontFamily:'var(--font-head)', fontWeight:500, flexShrink:0 }}>+</button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Age inputs — optional */}
+        {(adults > 0 || kids > 0) && (
+          <div style={{ marginTop:16 }}>
+            <p style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:11, color:'var(--gray-dark)', textTransform:'uppercase', letterSpacing:0.8, marginBottom:10 }}>
+              Ages <span style={{ fontWeight:400, textTransform:'none', letterSpacing:0 }}>(optional — helps personalise your plan)</span>
+            </p>
+            <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+              {adultAges.map((age, i) => (
+                <div key={`adult-${i}`} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
+                  <input
+                    type="number" min={1} max={99} value={age}
+                    onChange={e => setAdultAges(prev => { const a=[...prev]; a[i]=e.target.value; return a; })}
+                    placeholder="—"
+                    style={{ width:52, padding:'7px 0', textAlign:'center', background:'var(--bg-section)', border:'1.5px solid rgba(0,68,123,0.12)', borderRadius:10, fontFamily:'var(--font-head)', fontWeight:600, fontSize:15, color:'var(--navy)', outline:'none' }}
+                    onFocus={e=>(e.target.style.borderColor='var(--navy)')} onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.12)')}
+                  />
+                  <span style={{ fontFamily:'var(--font-body)', fontSize:10, color:'var(--gray-dark)' }}>Adult {adults>1?i+1:''}</span>
+                </div>
+              ))}
+              {childAges.map((age, i) => (
+                <div key={`child-${i}`} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
+                  <input
+                    type="number" min={1} max={17} value={age}
+                    onChange={e => setChildAges(prev => { const a=[...prev]; a[i]=e.target.value; return a; })}
+                    placeholder="—"
+                    style={{ width:52, padding:'7px 0', textAlign:'center', background:'rgba(255,130,16,0.06)', border:'1.5px solid rgba(255,130,16,0.20)', borderRadius:10, fontFamily:'var(--font-head)', fontWeight:600, fontSize:15, color:'var(--navy)', outline:'none' }}
+                    onFocus={e=>(e.target.style.borderColor='var(--orange)')} onBlur={e=>(e.target.style.borderColor='rgba(255,130,16,0.20)')}
+                  />
+                  <span style={{ fontFamily:'var(--font-body)', fontSize:10, color:'var(--gray-dark)' }}>Child {kids>1?i+1:''}</span>
+                </div>
+              ))}
             </div>
           </div>
-        ))}
+        )}
       </div>
 
       <hr style={divider} />
