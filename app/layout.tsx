@@ -1,14 +1,19 @@
 import type { Metadata } from 'next';
-import { Plus_Jakarta_Sans } from 'next/font/google';
+import { Syne, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { Navbar } from '@/components/Navbar';
-import { Plane } from 'lucide-react';
+
+const syne = Syne({
+  subsets: ['latin'],
+  variable: '--font-display',
+  weight: ['400', '600', '700', '800'],
+});
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
   variable: '--font-sans',
-  weight: ['400', '500', '600', '700', '800'],
+  weight: ['400', '500', '600', '700'],
 });
 
 export const metadata: Metadata = {
@@ -32,7 +37,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${plusJakartaSans.variable} antialiased min-h-screen flex flex-col`}>
+      <body className={`${syne.variable} ${plusJakartaSans.variable} antialiased min-h-screen flex flex-col`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -40,14 +45,16 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Navbar />
-          <div className="flex-1">{children}</div>
-          <footer className="border-t border-border bg-muted/30 py-6 px-4 mt-auto" role="contentinfo">
-            <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Plane className="w-4 h-4 text-sky-500" aria-hidden="true" />
-                <span className="font-semibold text-foreground">AI Travel Planner</span>
+          {/* pt-16 compensates for the fixed navbar (h-16) */}
+          <div className="flex-1 pt-16">{children}</div>
+          <footer className="border-t border-border/60 bg-muted/20 py-8 px-4" role="contentinfo">
+            <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2.5">
+                <span className="font-extrabold text-foreground tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
+                  AI Travel Planner
+                </span>
               </div>
-              <p>
+              <p className="text-xs">
                 &copy; {new Date().getFullYear()} AI Travel Planner. Built with Next.js &amp; OpenRouter.
               </p>
               <p className="text-xs">

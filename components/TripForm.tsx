@@ -2,7 +2,7 @@
 
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { tripFormSchema } from '@/lib/validators';
 import type { TripFormData, TripStyle, BudgetLevel } from '@/types';
 import { TripStyleSelector } from './TripStyleSelector';
@@ -18,6 +18,7 @@ import {
 interface TripFormProps {
   onSubmit: (data: TripFormData) => void;
   isLoading: boolean;
+  defaultDestination?: string;
 }
 
 function SectionHeader({ icon, label, color }: { icon: React.ReactNode; label: string; color: string }) {
@@ -39,7 +40,7 @@ function FormSection({ children, className = '' }: { children: React.ReactNode; 
   );
 }
 
-export function TripForm({ onSubmit, isLoading }: TripFormProps) {
+export function TripForm({ onSubmit, isLoading, defaultDestination }: TripFormProps) {
   const [adultAgeInputs, setAdultAgeInputs] = useState<string[]>([]);
   const [childAgeInputs, setChildAgeInputs] = useState<string[]>([]);
 
@@ -61,6 +62,11 @@ export function TripForm({ onSubmit, isLoading }: TripFormProps) {
       childrenAges: [],
     },
   });
+
+  // Pre-fill destination from hero search bar
+  useEffect(() => {
+    if (defaultDestination) setValue('destination', defaultDestination);
+  }, [defaultDestination, setValue]);
 
   const adultsCount = watch('adults');
   const childrenCount = watch('children');
@@ -390,11 +396,7 @@ export function TripForm({ onSubmit, isLoading }: TripFormProps) {
         type="submit"
         disabled={isLoading}
         aria-describedby={isLoading ? 'loading-status' : undefined}
-        className="w-full h-16 rounded-2xl font-bold text-lg text-white transition-all duration-300 shadow-lg disabled:opacity-70 disabled:cursor-not-allowed
-          bg-gradient-to-r from-sky-500 via-sky-400 to-[#FF6B6B]
-          hover:from-sky-600 hover:via-sky-500 hover:to-[#e05555]
-          hover:shadow-xl hover:shadow-sky-200 dark:hover:shadow-sky-900
-          active:scale-[0.98]"
+        className="w-full h-14 rounded-full font-bold text-base text-white transition-all duration-200 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.99] bg-[#FF6B35] hover:bg-[#E55A25]"
       >
         {isLoading ? (
           <span className="flex items-center justify-center gap-3">
