@@ -659,7 +659,7 @@ function PlanForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; preF
     const tripStyles = styles.length ? `focusing on ${styles.join(', ')}` : '';
     const dates = dep ? `from ${dep}${ret?` to ${ret}`:''}` : '';
     const group = `for ${adults} adult${adults>1?'s':''}${kids>0?` and ${kids} child${kids>1?'ren':''}`:''}`;
-    onSubmit(`Plan a trip to ${dest} ${dates} ${group} with ${bLabels[budget]||budget} budget ${tripStyles}${notes?`. Notes: ${notes}`:''}`);
+    onSubmit(`Plan a trip to ${dest} ${dates} ${group} with ${bLabels[budget]||budget} budget ${tripStyles}${notes?`. Additional context about what they're looking for: ${notes}`:''}`);
   };
 
   const inp: React.CSSProperties = {
@@ -775,10 +775,13 @@ function PlanForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; preF
 
       {/* Notes */}
       <div style={{ padding:'24px 32px 8px' }}>
-        <label style={lbl}>Special Requests <span style={{ fontFamily:'var(--font-body)', fontWeight:400, textTransform:'none', letterSpacing:0, color:'var(--gray-dark)' }}>(optional)</span></label>
+        <label style={lbl}>Describe your ideal trip <span style={{ fontFamily:'var(--font-body)', fontWeight:400, textTransform:'none', letterSpacing:0, color:'var(--gray-dark)' }}>(optional)</span></label>
+        <p style={{ fontFamily:'var(--font-body)', fontSize:12, color:'var(--gray-dark)', marginBottom:10, lineHeight:1.5 }}>
+          What kind of experience are you after? Mention the vibe, pace, must-see places, dietary needs, occasions, or anything that will make this trip special.
+        </p>
         <textarea value={notes} onChange={e=>setNotes(e.target.value)}
-          placeholder="Dietary needs, mobility requirements, must-see places, anniversaries..."
-          maxLength={500} rows={3} style={{ ...inp, resize:'vertical' }}
+          placeholder="e.g. We want a slow-paced trip focused on local food and hidden gems. It's our honeymoon so something romantic. Avoid touristy spots. One of us is vegetarian."
+          maxLength={600} rows={4} style={{ ...inp, resize:'vertical' }}
           onFocus={e=>(e.target.style.borderColor='var(--navy)')} onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} />
       </div>
 
