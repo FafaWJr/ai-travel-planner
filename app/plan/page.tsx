@@ -1,31 +1,184 @@
 'use client';
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 
+/* ── SVG icons (flat, navy/orange, no emojis) ── */
+const Icon = {
+  Overview: () => (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.5"/>
+      <path d="M8 1.5C8 1.5 5 5 5 8s3 6.5 3 6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      <path d="M8 1.5C8 1.5 11 5 11 8s-3 6.5-3 6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      <path d="M1.5 8h13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+  ),
+  Weather: () => (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <circle cx="8" cy="6" r="2.5" stroke="currentColor" strokeWidth="1.5"/>
+      <path d="M8 1v1M8 10v1M3.5 3.5l.7.7M11.8 11.8l.7.7M1 6h1M13 6h1M3.5 8.5l.7-.7M11.8 2.2l.7-.7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      <path d="M4 11.5a2.5 2.5 0 0 1 0-5h.1A3 3 0 1 1 11 10.5H4z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+    </svg>
+  ),
+  Itinerary: () => (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <rect x="1.5" y="3" width="13" height="11" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+      <path d="M5 1.5v3M11 1.5v3M1.5 7h13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      <path d="M4.5 10h3M4.5 12.5h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+  ),
+  Stays: () => (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M2 14V6l6-4 6 4v8" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+      <rect x="5.5" y="9" width="2.5" height="3" rx=".5" stroke="currentColor" strokeWidth="1.5"/>
+      <rect x="8" y="9" width="2.5" height="3" rx=".5" stroke="currentColor" strokeWidth="1.5"/>
+      <path d="M2 14h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+  ),
+  Transport: () => (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M2 10V7l2-4h6l2 4v3" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+      <path d="M1 10h14v1a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1v-1z" stroke="currentColor" strokeWidth="1.5"/>
+      <circle cx="4" cy="12.5" r="1" stroke="currentColor" strokeWidth="1.5"/>
+      <circle cx="12" cy="12.5" r="1" stroke="currentColor" strokeWidth="1.5"/>
+      <path d="M4 7h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+  ),
+  Budget: () => (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.5"/>
+      <path d="M8 4v1.5M8 10.5V12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      <path d="M5.5 9.5s0 1.5 2.5 1.5 2.5-1.5 2.5-1.5-0-1.5-2.5-1.5S5.5 6.5 5.5 6.5 5.5 5 8 5s2.5 1.5 2.5 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+  ),
+  Tips: () => (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M8 2a4 4 0 0 1 2 7.46V11H6V9.46A4 4 0 0 1 8 2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+      <path d="M6 12h4M6.5 14h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+  ),
+  Send: () => (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M14 2L7 9M14 2L9.5 14 7 9 2 6.5 14 2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round"/>
+    </svg>
+  ),
+};
+
 const SECTIONS = [
-  { id:'overview',       label:'Overview',       icon:'🌍' },
-  { id:'weather',        label:'Weather',         icon:'⛅' },
-  { id:'itinerary',      label:'Itinerary',       icon:'🗓️' },
-  { id:'accommodation',  label:'Stays',           icon:'🏨' },
-  { id:'transport',      label:'Transport',       icon:'🚌' },
-  { id:'budget',         label:'Budget',          icon:'💰' },
-  { id:'tips',           label:'Tips',            icon:'📋' },
+  { id:'overview',      label:'Overview',    Icon: Icon.Overview   },
+  { id:'weather',       label:'Weather',     Icon: Icon.Weather    },
+  { id:'itinerary',     label:'Itinerary',   Icon: Icon.Itinerary  },
+  { id:'accommodation', label:'Stays',       Icon: Icon.Stays      },
+  { id:'transport',     label:'Transport',   Icon: Icon.Transport  },
+  { id:'budget',        label:'Budget',      Icon: Icon.Budget     },
+  { id:'tips',          label:'Tips',        Icon: Icon.Tips       },
 ];
 
+const SECTION_KEYWORDS: Record<string, string[]> = {
+  overview:      ['Destination Overview', 'Overview'],
+  weather:       ['Travel Season', 'Weather', 'Season & Weather'],
+  itinerary:     ['Itinerary', 'Day-by-Day', 'Personalised Itinerary'],
+  accommodation: ['Where to Stay', 'Accommodation', 'Stay'],
+  transport:     ['Getting Around', 'Transport', 'Getting there'],
+  budget:        ['Budget', 'Cost', 'Estimator'],
+  tips:          ['Practical Tips', 'Tips', 'Practical'],
+};
+
+/* ── Extract one section from the plan markdown ── */
+function extractSection(plan: string, sectionId: string): string {
+  if (!plan) return '';
+  const keywords = SECTION_KEYWORDS[sectionId] || [];
+  const lines = plan.split('\n');
+  let collecting = false;
+  const out: string[] = [];
+
+  for (const line of lines) {
+    if (/^##\s/.test(line)) {
+      if (collecting) break;
+      const header = line.replace(/^##\s+/, '').toLowerCase();
+      if (keywords.some(k => header.includes(k.toLowerCase()))) {
+        collecting = true;
+        out.push(line);
+      }
+    } else if (collecting) {
+      out.push(line);
+    }
+  }
+  return out.join('\n').trim() || plan; // fallback to full plan if section not found
+}
+
+/* ── Minimal markdown → styled HTML ── */
+function inlineMd(text: string): string {
+  return text
+    .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`(.+?)`/g, '<code style="background:rgba(0,68,123,0.07);padding:1px 6px;border-radius:4px;font-size:0.92em;font-family:monospace">$1</code>');
+}
+
+function markdownToHtml(md: string): string {
+  const lines = md.split('\n');
+  const parts: string[] = [];
+  let inUl = false, inOl = false;
+
+  const closeList = () => {
+    if (inUl) { parts.push('</ul>'); inUl = false; }
+    if (inOl) { parts.push('</ol>'); inOl = false; }
+  };
+
+  const UL_STYLE = `style="margin:10px 0 10px 20px;padding:0;list-style:none"`;
+  const OL_STYLE = `style="margin:10px 0 10px 20px;padding:0;list-style:none;counter-reset:li"`;
+  const LI_STYLE = `style="position:relative;padding:4px 0 4px 18px;font-size:15px;line-height:1.65;color:#333"`;
+
+  for (const raw of lines) {
+    const line = raw.trimEnd();
+
+    if (/^#{4}\s/.test(line)) {
+      closeList();
+      parts.push(`<h4 style="font-family:'Poppins',sans-serif;font-weight:600;font-size:14px;color:#00447B;text-transform:uppercase;letter-spacing:.5px;margin:20px 0 6px">${inlineMd(line.replace(/^#{4}\s+/, ''))}</h4>`);
+    } else if (/^#{3}\s/.test(line)) {
+      closeList();
+      parts.push(`<h3 style="font-family:'Poppins',sans-serif;font-weight:600;font-size:17px;color:#111;margin:24px 0 8px">${inlineMd(line.replace(/^#{3}\s+/, ''))}</h3>`);
+    } else if (/^#{2}\s/.test(line)) {
+      closeList();
+      parts.push(`<h2 style="font-family:'Poppins',sans-serif;font-weight:700;font-size:22px;color:#00447B;margin:32px 0 14px;padding-bottom:10px;border-bottom:2px solid rgba(0,68,123,0.10)">${inlineMd(line.replace(/^#{2}\s+/, ''))}</h2>`);
+    } else if (/^[-*•]\s/.test(line)) {
+      if (!inUl) { closeList(); parts.push(`<ul ${UL_STYLE}>`); inUl = true; }
+      parts.push(`<li ${LI_STYLE}><span style="position:absolute;left:0;top:10px;width:6px;height:6px;border-radius:50%;background:#FF8210;display:inline-block"></span>${inlineMd(line.replace(/^[-*•]\s+/, ''))}</li>`);
+    } else if (/^\d+\.\s/.test(line)) {
+      if (!inOl) { closeList(); parts.push(`<ol ${OL_STYLE}>`); inOl = true; }
+      parts.push(`<li ${LI_STYLE} style="position:relative;padding:4px 0 4px 28px;font-size:15px;line-height:1.65;color:#333"><span style="position:absolute;left:0;top:5px;width:20px;height:20px;border-radius:50%;background:#00447B;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif">${line.match(/^\d+/)![0]}</span>${inlineMd(line.replace(/^\d+\.\s+/, ''))}</li>`);
+    } else if (line.trim() === '') {
+      closeList();
+      parts.push('<div style="height:6px"></div>');
+    } else {
+      closeList();
+      parts.push(`<p style="font-size:15px;line-height:1.75;color:#333;margin:4px 0">${inlineMd(line)}</p>`);
+    }
+  }
+  closeList();
+  // Remove leading empty spacer if first child
+  return parts.join('').replace(/^(<div style="height:6px"><\/div>)+/, '');
+}
+
+/* ── Main component ── */
 function PlanContent() {
   const searchParams = useSearchParams();
   const router       = useRouter();
   const prompt       = searchParams.get('prompt') || '';
-  const [plan,        setPlan]        = useState('');
-  const [loading,     setLoading]     = useState(false);
-  const [error,       setError]       = useState('');
-  const [activeSection,setActiveSection] = useState('overview');
-  const [chatMessages,setChatMessages] = useState<{role:string;content:string}[]>([]);
-  const [chatInput,   setChatInput]   = useState('');
-  const [chatLoading, setChatLoading] = useState(false);
-  const [photos,      setPhotos]      = useState<string[]>([]);
 
-  useEffect(() => { if (prompt) generatePlan(prompt); }, [prompt]);
+  const [plan,         setPlan]         = useState('');
+  const [loading,      setLoading]      = useState(false);
+  const [error,        setError]        = useState('');
+  const [activeSection,setActiveSection] = useState('overview');
+  const [chatMessages, setChatMessages] = useState<{role:string;content:string}[]>([]);
+  const [chatInput,    setChatInput]    = useState('');
+  const [chatLoading,  setChatLoading]  = useState(false);
+  const [photos,       setPhotos]       = useState<string[]>([]);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { if (prompt) generatePlan(prompt); }, [prompt]); // eslint-disable-line
+
+  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior:'smooth' }); }, [chatMessages]);
 
   const generatePlan = async (p: string) => {
     setLoading(true); setError('');
@@ -57,91 +210,217 @@ function PlanContent() {
     } finally { setChatLoading(false); }
   };
 
+  const sectionContent = plan ? extractSection(plan, activeSection) : '';
+
   return (
-    <div style={{ background:'#F4F7FB', minHeight:'100vh', fontFamily:"'Inter', sans-serif" }}>
-      {/* Nav */}
-      <nav style={{ position:'fixed', top:0, left:0, right:0, zIndex:100, height:64, padding:'0 32px', display:'flex', alignItems:'center', justifyContent:'space-between', background:'rgba(255,255,255,0.92)', backdropFilter:'blur(20px)', borderBottom:'1px solid rgba(0,68,123,0.10)' }}>
+    <div style={{ background:'#F4F7FB', minHeight:'100vh', fontFamily:"'Inter',sans-serif" }}>
+
+      {/* ── Nav ── */}
+      <nav style={{
+        position:'fixed', top:0, left:0, right:0, zIndex:100, height:68,
+        padding:'0 40px', display:'flex', alignItems:'center', justifyContent:'space-between',
+        background:'rgba(255,255,255,0.95)', backdropFilter:'blur(20px)',
+        borderBottom:'1px solid rgba(0,68,123,0.10)',
+      }}>
         <a href="/" style={{ display:'flex', alignItems:'center' }}>
-          <img src="/goto-logo.png" alt="GOTO" style={{ height:34, width:'auto' }} />
+          <img src="/goto-logo.png" alt="GOTO" style={{ height:36, width:'auto' }} />
         </a>
-        <button onClick={()=>router.push('/')} style={{ background:'var(--bg-section,#F4F7FB)', border:'1.5px solid rgba(0,68,123,0.15)', color:'#00447B', fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:13, padding:'8px 18px', borderRadius:100, cursor:'pointer' }}>
-          ← New trip
-        </button>
+        <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+          {plan && (
+            <button onClick={()=>window.print()} style={{ background:'none', border:'1.5px solid rgba(0,68,123,0.20)', color:'#00447B', fontFamily:"'Poppins',sans-serif", fontWeight:500, fontSize:13, padding:'7px 16px', borderRadius:100, cursor:'pointer' }}>
+              Print / Save PDF
+            </button>
+          )}
+          <button onClick={()=>router.push('/')} style={{ background:'#00447B', color:'#fff', fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:13, padding:'8px 20px', borderRadius:100, cursor:'pointer', border:'none' }}>
+            New trip
+          </button>
+        </div>
       </nav>
 
-      <div style={{ paddingTop:64 }}>
-        {loading ? (
-          <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'calc(100vh - 64px)', gap:24 }}>
-            <div style={{ width:56, height:56, borderRadius:'50%', border:'3px solid rgba(0,68,123,0.12)', borderTop:'3px solid #FF8210', animation:'spin 1s linear infinite' }} />
+      <div style={{ paddingTop:68 }}>
+
+        {/* ── Loading ── */}
+        {loading && (
+          <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'calc(100vh - 68px)', gap:28 }}>
+            <div style={{ position:'relative', width:72, height:72 }}>
+              <div style={{ position:'absolute', inset:0, borderRadius:'50%', border:'3px solid rgba(0,68,123,0.10)', borderTop:'3px solid #FF8210', animation:'spin 1s linear infinite' }} />
+              <div style={{ position:'absolute', inset:8, borderRadius:'50%', border:'2px solid rgba(0,68,123,0.06)', borderBottom:'2px solid rgba(0,68,123,0.30)', animation:'spin 1.5s linear infinite reverse' }} />
+            </div>
             <div style={{ textAlign:'center' }}>
               <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:22, color:'#00447B', marginBottom:8 }}>Crafting your perfect trip...</p>
-              <p style={{ color:'#6C6D6F', fontSize:15 }}>This usually takes about 30 seconds</p>
+              <p style={{ fontFamily:"'Inter',sans-serif", color:'#6C6D6F', fontSize:15 }}>This usually takes about 30 seconds</p>
             </div>
-            <style>{`@keyframes spin { to { transform:rotate(360deg); } }`}</style>
+            <div style={{ display:'flex', gap:8 }}>
+              {['Researching destination','Building itinerary','Adding local tips'].map((s,i) => (
+                <div key={s} style={{ background:'#fff', border:'1px solid rgba(0,68,123,0.10)', borderRadius:100, padding:'6px 14px', fontFamily:"'Inter',sans-serif", fontSize:12, color:'#6C6D6F', animation:`fadeIn 0.5s ${i*0.3}s both` }}>{s}...</div>
+              ))}
+            </div>
           </div>
-        ) : error ? (
-          <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'calc(100vh - 64px)', gap:16, textAlign:'center', padding:'0 24px' }}>
-            <span style={{ fontSize:48 }}>😕</span>
-            <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:20 }}>{error}</p>
-            <button onClick={()=>generatePlan(prompt)} style={{ background:'#FF8210', color:'#fff', fontFamily:"'Poppins',sans-serif", fontWeight:600, padding:'12px 28px', borderRadius:100, fontSize:15, cursor:'pointer', border:'none' }}>Try again</button>
+        )}
+
+        {/* ── Error ── */}
+        {!loading && error && (
+          <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'calc(100vh - 68px)', gap:16, textAlign:'center', padding:'0 24px' }}>
+            <div style={{ width:56, height:56, borderRadius:'50%', background:'rgba(255,130,16,0.10)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 8v4M12 16h.01" stroke="#FF8210" strokeWidth="2" strokeLinecap="round"/><circle cx="12" cy="12" r="10" stroke="#FF8210" strokeWidth="2"/></svg>
+            </div>
+            <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:18, color:'#000' }}>{error}</p>
+            <button onClick={()=>generatePlan(prompt)} style={{ background:'#FF8210', color:'#fff', fontFamily:"'Poppins',sans-serif", fontWeight:600, padding:'12px 28px', borderRadius:100, fontSize:14, cursor:'pointer', border:'none' }}>
+              Try again
+            </button>
           </div>
-        ) : plan ? (
-          <div style={{ maxWidth:1100, margin:'0 auto', padding:'32px 24px', display:'grid', gridTemplateColumns:'1fr 360px', gap:28 }}>
-            <div>
+        )}
+
+        {/* ── Plan ── */}
+        {!loading && !error && plan && (
+          <div style={{ maxWidth:1180, margin:'0 auto', padding:'32px 24px', display:'grid', gridTemplateColumns:'1fr 340px', gap:24, alignItems:'start' }}>
+
+            {/* Left column */}
+            <div style={{ minWidth:0 }}>
+
               {/* Photo strip */}
-              {photos.length>0 && (
-                <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr 1fr', gap:8, borderRadius:20, overflow:'hidden', marginBottom:28, height:260 }}>
-                  {photos.slice(0,3).map((url,i)=>(<img key={i} src={url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} />))}
+              {photos.length > 0 && (
+                <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr 1fr', gap:6, borderRadius:16, overflow:'hidden', marginBottom:24, height:240 }}>
+                  {photos.slice(0,3).map((url,i) => (
+                    <img key={i} src={url} alt="" loading="lazy" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+                  ))}
                 </div>
               )}
-              {/* Section tabs */}
-              <div style={{ display:'flex', gap:8, marginBottom:24, flexWrap:'wrap' }}>
-                {SECTIONS.map(s=>(
-                  <button key={s.id} onClick={()=>setActiveSection(s.id)} style={{ background:activeSection===s.id?'#FF8210':'#fff', border:`1.5px solid ${activeSection===s.id?'#FF8210':'rgba(0,68,123,0.15)'}`, color:activeSection===s.id?'#fff':'#000', borderRadius:100, padding:'8px 16px', fontSize:13, fontFamily:"'Poppins',sans-serif", fontWeight:500, cursor:'pointer' }}>
-                    {s.icon} {s.label}
-                  </button>
-                ))}
+
+              {/* Destination title from prompt */}
+              <div style={{ marginBottom:20 }}>
+                <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:24, color:'#00447B', marginBottom:4 }}>
+                  {prompt.replace(/^plan a (trip to |)?/i,'').replace(/\b(from \d{4}-\d{2}-\d{2}.*)/i,'').trim().split(' ').slice(0,5).join(' ')}
+                </p>
+                <p style={{ fontFamily:"'Inter',sans-serif", fontSize:13, color:'#6C6D6F' }}>AI-generated travel plan · {new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</p>
               </div>
-              {/* Plan content */}
-              <div style={{ background:'#fff', border:'1px solid rgba(0,68,123,0.10)', borderRadius:20, padding:'32px', color:'#000', lineHeight:1.8, fontSize:16, whiteSpace:'pre-wrap', boxShadow:'0 4px 24px rgba(0,68,123,0.07)' }}>
-                {plan}
+
+              {/* Section tabs */}
+              <div style={{ display:'flex', gap:6, marginBottom:20, overflowX:'auto', paddingBottom:4 }}>
+                {SECTIONS.map(s => {
+                  const active = activeSection === s.id;
+                  return (
+                    <button key={s.id} onClick={()=>setActiveSection(s.id)} style={{
+                      display:'flex', alignItems:'center', gap:6, padding:'8px 16px',
+                      borderRadius:100, border:`1.5px solid ${active ? '#FF8210' : 'rgba(0,68,123,0.15)'}`,
+                      background: active ? '#FF8210' : '#fff',
+                      color: active ? '#fff' : '#00447B',
+                      fontFamily:"'Poppins',sans-serif", fontWeight:500, fontSize:13,
+                      cursor:'pointer', whiteSpace:'nowrap', transition:'all 0.15s', flexShrink:0,
+                    }}>
+                      <s.Icon /> {s.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Rendered plan section */}
+              <div style={{ background:'#fff', borderRadius:16, padding:'32px 36px', boxShadow:'0 2px 20px rgba(0,68,123,0.07)', border:'1px solid rgba(0,68,123,0.08)' }}>
+                <div dangerouslySetInnerHTML={{ __html: markdownToHtml(sectionContent) }} />
+              </div>
+
+              {/* Section navigation */}
+              <div style={{ display:'flex', justifyContent:'space-between', marginTop:16 }}>
+                {(() => {
+                  const idx = SECTIONS.findIndex(s=>s.id===activeSection);
+                  const prev = SECTIONS[idx-1]; const next = SECTIONS[idx+1];
+                  return <>
+                    {prev ? (
+                      <button onClick={()=>setActiveSection(prev.id)} style={{ display:'flex', alignItems:'center', gap:6, background:'#fff', border:'1.5px solid rgba(0,68,123,0.15)', color:'#00447B', fontFamily:"'Poppins',sans-serif", fontWeight:500, fontSize:13, padding:'8px 16px', borderRadius:100, cursor:'pointer' }}>
+                        ← {prev.label}
+                      </button>
+                    ) : <div />}
+                    {next && (
+                      <button onClick={()=>setActiveSection(next.id)} style={{ display:'flex', alignItems:'center', gap:6, background:'#00447B', border:'none', color:'#fff', fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:13, padding:'8px 18px', borderRadius:100, cursor:'pointer' }}>
+                        {next.label} →
+                      </button>
+                    )}
+                  </>;
+                })()}
               </div>
             </div>
 
-            {/* Chat sidebar */}
-            <div style={{ position:'sticky', top:80, height:'calc(100vh - 110px)', display:'flex', flexDirection:'column' }}>
-              <div style={{ background:'#fff', border:'1px solid rgba(0,68,123,0.10)', borderRadius:20, flex:1, display:'flex', flexDirection:'column', overflow:'hidden', boxShadow:'0 4px 24px rgba(0,68,123,0.07)' }}>
-                <div style={{ padding:'18px 18px 14px', borderBottom:'1px solid rgba(0,68,123,0.08)' }}>
-                  <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:15, color:'#000' }}>💬 Refine with AI</p>
-                  <p style={{ fontFamily:"'Inter',sans-serif", color:'#6C6D6F', fontSize:13, marginTop:3 }}>Ask anything about your trip</p>
+            {/* Right column — chat sidebar */}
+            <div style={{ position:'sticky', top:84, height:'calc(100vh - 108px)', display:'flex', flexDirection:'column' }}>
+              <div style={{ background:'#fff', borderRadius:16, flex:1, display:'flex', flexDirection:'column', overflow:'hidden', boxShadow:'0 2px 20px rgba(0,68,123,0.07)', border:'1px solid rgba(0,68,123,0.08)' }}>
+
+                {/* Chat header */}
+                <div style={{ padding:'16px 18px 14px', borderBottom:'1px solid rgba(0,68,123,0.08)', background:'#00447B', borderRadius:'16px 16px 0 0' }}>
+                  <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:14, color:'#fff', marginBottom:2 }}>Refine with AI</p>
+                  <p style={{ fontFamily:"'Inter',sans-serif", color:'rgba(255,255,255,0.6)', fontSize:12 }}>Ask anything about your trip</p>
                 </div>
-                <div style={{ flex:1, overflowY:'auto', padding:16, display:'flex', flexDirection:'column', gap:10 }}>
-                  {chatMessages.length===0&&(<div style={{ fontFamily:"'Inter',sans-serif", color:'#C0C0C0', fontSize:13, textAlign:'center', paddingTop:20 }}>Ask me to adjust hotels, activities, budget...</div>)}
-                  {chatMessages.map((m,i)=>(
-                    <div key={i} style={{ background:m.role==='user'?'#FF8210':'#F4F7FB', color:m.role==='user'?'#fff':'#000', borderRadius:m.role==='user'?'16px 16px 4px 16px':'16px 16px 16px 4px', padding:'11px 14px', fontSize:13, lineHeight:1.6, alignSelf:m.role==='user'?'flex-end':'flex-start', maxWidth:'90%', fontFamily:"'Inter',sans-serif" }}>
+
+                {/* Messages */}
+                <div style={{ flex:1, overflowY:'auto', padding:'14px 14px 8px', display:'flex', flexDirection:'column', gap:8 }}>
+                  {chatMessages.length === 0 && (
+                    <div style={{ padding:'20px 0', textAlign:'center' }}>
+                      <p style={{ fontFamily:"'Inter',sans-serif", color:'#C0C0C0', fontSize:13, lineHeight:1.6 }}>
+                        Adjust hotels, add activities,<br/>change the budget — anything.
+                      </p>
+                    </div>
+                  )}
+                  {chatMessages.map((m,i) => (
+                    <div key={i} style={{
+                      background: m.role==='user' ? '#FF8210' : '#F4F7FB',
+                      color: m.role==='user' ? '#fff' : '#000',
+                      borderRadius: m.role==='user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
+                      padding:'10px 13px', fontSize:13, lineHeight:1.6,
+                      alignSelf: m.role==='user' ? 'flex-end' : 'flex-start',
+                      maxWidth:'88%', fontFamily:"'Inter',sans-serif",
+                    }}>
                       {m.content}
                     </div>
                   ))}
-                  {chatLoading&&(<div style={{ fontFamily:"'Inter',sans-serif", color:'#C0C0C0', fontSize:12 }}>✦ Thinking...</div>)}
+                  {chatLoading && (
+                    <div style={{ display:'flex', gap:4, padding:'8px 12px', alignSelf:'flex-start' }}>
+                      {[0,1,2].map(i => <span key={i} style={{ width:7, height:7, borderRadius:'50%', background:'rgba(0,68,123,0.25)', display:'inline-block', animation:`bounce 1.2s ${i*0.2}s infinite` }} />)}
+                    </div>
+                  )}
+                  <div ref={chatEndRef} />
                 </div>
-                <div style={{ padding:14, borderTop:'1px solid rgba(0,68,123,0.08)', display:'flex', gap:8 }}>
-                  <input type="text" value={chatInput} onChange={e=>setChatInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&sendChat()} placeholder="Ask anything..." style={{ flex:1, background:'#F4F7FB', border:'1.5px solid rgba(0,68,123,0.12)', borderRadius:12, padding:'10px 14px', fontFamily:"'Inter',sans-serif", fontSize:13, color:'#000', outline:'none' }} />
-                  <button onClick={sendChat} style={{ background:'#FF8210', color:'#fff', borderRadius:12, width:40, height:40, display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, cursor:'pointer', border:'none', flexShrink:0 }}>↑</button>
+
+                {/* Input */}
+                <div style={{ padding:'10px 12px', borderTop:'1px solid rgba(0,68,123,0.08)', display:'flex', gap:8, alignItems:'center' }}>
+                  <input
+                    type="text" value={chatInput}
+                    onChange={e=>setChatInput(e.target.value)}
+                    onKeyDown={e=>e.key==='Enter'&&sendChat()}
+                    placeholder="e.g. Switch to a 4-star hotel..."
+                    style={{ flex:1, background:'#F4F7FB', border:'1.5px solid rgba(0,68,123,0.12)', borderRadius:10, padding:'9px 12px', fontFamily:"'Inter',sans-serif", fontSize:13, color:'#000', outline:'none' }}
+                    onFocus={e=>(e.target.style.borderColor='#00447B')}
+                    onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.12)')}
+                  />
+                  <button onClick={sendChat} disabled={!chatInput.trim()||chatLoading} style={{ background: chatInput.trim() ? '#FF8210' : '#C0C0C0', color:'#fff', borderRadius:10, width:38, height:38, display:'flex', alignItems:'center', justifyContent:'center', cursor: chatInput.trim() ? 'pointer' : 'default', border:'none', flexShrink:0, transition:'background 0.15s' }}>
+                    <Icon.Send />
+                  </button>
                 </div>
               </div>
             </div>
           </div>
-        ) : (
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'calc(100vh - 64px)' }}>
-            <p style={{ fontFamily:"'Inter',sans-serif", color:'#6C6D6F', fontSize:16 }}>
-              No trip prompt provided.{' '}
-              <button onClick={()=>router.push('/')} style={{ color:'#FF8210', background:'none', border:'none', cursor:'pointer', fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:16 }}>Start planning</button>
-            </p>
+        )}
+
+        {/* ── Empty state ── */}
+        {!loading && !error && !plan && (
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'calc(100vh - 68px)' }}>
+            <div style={{ textAlign:'center' }}>
+              <p style={{ fontFamily:"'Inter',sans-serif", color:'#6C6D6F', fontSize:16, marginBottom:16 }}>No trip prompt provided.</p>
+              <button onClick={()=>router.push('/')} style={{ background:'#FF8210', color:'#fff', border:'none', fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:14, padding:'12px 28px', borderRadius:100, cursor:'pointer' }}>
+                Start planning
+              </button>
+            </div>
           </div>
         )}
       </div>
+
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500&display=swap');
+        @keyframes spin    { to { transform: rotate(360deg); } }
+        @keyframes fadeIn  { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes bounce  { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-5px); } }
+        @media print {
+          nav, .no-print { display:none !important; }
+          body { background:#fff; }
+        }
       `}</style>
     </div>
   );
@@ -149,7 +428,13 @@ function PlanContent() {
 
 export default function PlanPage() {
   return (
-    <Suspense fallback={<div style={{ background:'#F4F7FB', minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center' }}><p style={{ fontFamily:"'Poppins',sans-serif", color:'#00447B' }}>Loading...</p></div>}>
+    <Suspense fallback={
+      <div style={{ background:'#F4F7FB', minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:16 }}>
+        <div style={{ width:48, height:48, borderRadius:'50%', border:'3px solid rgba(0,68,123,0.12)', borderTop:'3px solid #FF8210', animation:'spin 1s linear infinite' }} />
+        <p style={{ fontFamily:"'Poppins',sans-serif", color:'#00447B', fontSize:15 }}>Loading your plan...</p>
+        <style>{`@keyframes spin { to { transform:rotate(360deg); } }`}</style>
+      </div>
+    }>
       <PlanContent />
     </Suspense>
   );

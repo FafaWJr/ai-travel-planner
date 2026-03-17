@@ -567,7 +567,6 @@ export default function HomePage() {
           </p>
           {preFilledData && (
             <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(255,130,16,0.18)', border:'1px solid rgba(255,130,16,0.35)', borderRadius:'var(--r-pill)', padding:'8px 18px', marginTop:20 }}>
-              <span style={{ fontSize:14 }}>🎯</span>
               <span style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:13, color:'var(--orange-light)' }}>
                 Quiz results applied — your style &amp; budget are pre-filled below
               </span>
@@ -682,7 +681,7 @@ function PlanForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; preF
 
       {/* Destination */}
       <div style={{ padding:'28px 32px 24px' }}>
-        <label style={lbl}>📍 Where are you headed? <span style={{ color:'var(--orange)' }}>*</span></label>
+        <label style={lbl}>Destination <span style={{ color:'var(--orange)' }}>*</span></label>
         <DestinationInput value={dest} onChange={setDest} />
       </div>
 
@@ -691,12 +690,12 @@ function PlanForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; preF
       {/* Dates */}
       <div style={{ padding:'24px 32px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
         <div>
-          <label style={lbl}>📅 Departure</label>
+          <label style={lbl}>Departure Date</label>
           <input type="date" value={dep} onChange={e=>setDep(e.target.value)} style={inp}
             onFocus={e=>(e.target.style.borderColor='var(--navy)')} onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} />
         </div>
         <div>
-          <label style={lbl}>🏁 Return</label>
+          <label style={lbl}>Return Date</label>
           <input type="date" value={ret} onChange={e=>setRet(e.target.value)} style={inp}
             onFocus={e=>(e.target.style.borderColor='var(--navy)')} onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} />
         </div>
@@ -706,7 +705,7 @@ function PlanForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; preF
 
       {/* Travellers */}
       <div style={{ padding:'24px 32px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
-        {([['👤 Adults', adults, setAdults, 1], ['🧒 Children', kids, setKids, 0]] as const).map(([l,val,set,min])=>(
+        {([['Adults', adults, setAdults, 1], ['Children', kids, setKids, 0]] as const).map(([l,val,set,min])=>(
           <div key={l as string}>
             <label style={lbl}>{l as string}</label>
             <div style={{ display:'flex', alignItems:'center', gap:0, background:'var(--bg-section)', borderRadius:'var(--r-md)', border:'1.5px solid rgba(0,68,123,0.12)', overflow:'hidden' }}>
@@ -725,7 +724,7 @@ function PlanForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; preF
       {/* Trip Style */}
       <div style={{ padding:'24px 32px' }}>
         <label style={{ ...lbl, marginBottom:14 }}>
-          ✨ Trip Style
+          Trip Style
           {styles.length > 0 && <span style={{ fontFamily:'var(--font-body)', fontWeight:400, fontSize:11, color:'var(--orange)', textTransform:'none', letterSpacing:0, marginLeft:4 }}>{styles.length} selected</span>}
         </label>
         <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
@@ -748,7 +747,7 @@ function PlanForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; preF
 
       {/* Budget */}
       <div style={{ padding:'24px 32px' }}>
-        <label style={{ ...lbl, marginBottom:14 }}>💰 Budget Level</label>
+        <label style={{ ...lbl, marginBottom:14 }}>Budget Level</label>
         <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10 }}>
           {[
             {v:'budget',  e:'🎒', l:'Budget',   s:'< $80 / day'},
@@ -776,7 +775,7 @@ function PlanForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; preF
 
       {/* Notes */}
       <div style={{ padding:'24px 32px 8px' }}>
-        <label style={lbl}>💬 Special Requests <span style={{ fontFamily:'var(--font-body)', fontWeight:400, textTransform:'none', letterSpacing:0, color:'var(--gray-dark)' }}>(optional)</span></label>
+        <label style={lbl}>Special Requests <span style={{ fontFamily:'var(--font-body)', fontWeight:400, textTransform:'none', letterSpacing:0, color:'var(--gray-dark)' }}>(optional)</span></label>
         <textarea value={notes} onChange={e=>setNotes(e.target.value)}
           placeholder="Dietary needs, mobility requirements, must-see places, anniversaries..."
           maxLength={500} rows={3} style={{ ...inp, resize:'vertical' }}
