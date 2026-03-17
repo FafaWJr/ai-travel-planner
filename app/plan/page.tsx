@@ -36,7 +36,7 @@ function PlanContent() {
       setPlan(data.plan || data.content || '');
       const dest = p.split(' ').slice(4,8).join(' ');
       try {
-        const pr = await fetch(`/api/destination-photos?destination=${encodeURIComponent(dest)}`);
+        const pr = await fetch(`/api/destination-photos?city=${encodeURIComponent(dest)}`);
         if (pr.ok) { const pd = await pr.json(); setPhotos(pd.photos||[]); }
       } catch {}
     } catch { setError('Failed to generate your travel plan. Please try again.'); }
