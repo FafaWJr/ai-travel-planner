@@ -44,7 +44,7 @@ export function DestinationPhotoGallery({ destination }: DestinationPhotoGallery
   const [main, second, third] = photos;
 
   return (
-    <div className="grid grid-cols-3 gap-2 h-52 sm:h-72">
+    <div className="grid grid-cols-3 gap-2 h-52 sm:h-72 overflow-hidden">
       {/* Main photo */}
       <div className="col-span-2 relative rounded-2xl overflow-hidden shadow-md group">
         <img
@@ -67,9 +67,9 @@ export function DestinationPhotoGallery({ destination }: DestinationPhotoGallery
       </div>
 
       {/* Secondary photos */}
-      <div className="col-span-1 flex flex-col gap-2">
+      <div className="col-span-1 flex flex-col gap-2 min-h-0">
         {[second, third].map((photo, idx) => (
-          <div key={idx} className="flex-1 relative rounded-xl overflow-hidden shadow-md group">
+          <div key={idx} className="flex-1 min-h-0 relative rounded-xl overflow-hidden shadow-md group">
             {photo ? (
               <>
                 <img
