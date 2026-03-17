@@ -95,11 +95,13 @@ const FEATURES = [
 
 export default function HomePage() {
   const router = useRouter();
-  const [query, setQuery]     = useState('');
-  const [quizStep, setQuizStep] = useState(0);
-  const [answers, setAnswers]   = useState<string[]>([]);
-  const [showQuiz, setShowQuiz] = useState(false);
-  const [hovered, setHovered]   = useState<number|null>(null);
+  const [query, setQuery]         = useState('');
+  const [quizStep, setQuizStep]   = useState(0);
+  const [answers, setAnswers]     = useState<string[]>([]);
+  const [showQuiz, setShowQuiz]   = useState(false);
+  const [quizDone, setQuizDone]   = useState(false);
+  const [hovered, setHovered]     = useState<number|null>(null);
+  const [preFilledData, setPreFilledData] = useState<{budget:string; styles:string[]} | null>(null);
 
   const go = (q?: string) => {
     const s = (q || query).trim();
@@ -107,14 +109,27 @@ export default function HomePage() {
     router.push(`/plan?prompt=${encodeURIComponent(s)}`);
   };
 
+  const scrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior:'smooth' });
+  };
+
   const answerQuiz = (v: string) => {
     const a = [...answers, v];
     if (quizStep < QUIZ_QUESTIONS.length - 1) { setAnswers(a); setQuizStep(quizStep + 1); return; }
-    const vibeMap: Record<string,string> = { relaxation:'relaxing beach', adventure:'adventure outdoor', culture:'cultural historical', food:'food nightlife' };
-    const budMap:  Record<string,string> = { budget:'budget-friendly', midrange:'mid-range', luxury:'luxury', flexible:'flexible budget' };
-    const durMap:  Record<string,string> = { weekend:'weekend', '1week':'7-day', '2weeks':'14-day', month:'30-day' };
-    router.push(`/plan?prompt=${encodeURIComponent(`Plan a ${durMap[a[3]]||'7-day'} ${vibeMap[a[0]]||'amazing'} trip with ${budMap[a[2]]||''} budget`)}`);
+    // Quiz complete — map answers to form pre-fill
+    const styleMap: Record<string,string[]> = {
+      relaxation: ['beach','wellness'],
+      adventure:  ['adventure','nature'],
+      culture:    ['cultural','photography'],
+      food:       ['food','nightlife'],
+    };
+    const budMap: Record<string,string> = { budget:'budget', midrange:'midrange', luxury:'luxury', flexible:'midrange' };
+    setPreFilledData({ budget: budMap[a[2]] || 'midrange', styles: styleMap[a[0]] || [] });
+    setQuizDone(true);
+    setTimeout(() => scrollTo('plan-form'), 300);
   };
+
+  const resetQuiz = () => { setQuizStep(0); setAnswers([]); setShowQuiz(false); setQuizDone(false); };
 
   /* ── Shared styles ── */
   const S = {
@@ -210,7 +225,7 @@ export default function HomePage() {
                 padding:'8px 16px', borderRadius:'var(--r-pill)', cursor:'pointer', display:'flex', alignItems:'center', gap:6,
               }}>{i.icon} {i.label}</button>
             ))}
-            <button onClick={()=>setShowQuiz(true)} style={{
+            <button onClick={()=>scrollTo('quiz')} style={{
               background:'var(--orange)', border:'none', color:'#fff',
               fontFamily:'var(--font-head)', fontWeight:600, fontSize:13,
               padding:'8px 16px', borderRadius:'var(--r-pill)', cursor:'pointer', display:'flex', alignItems:'center', gap:6,
@@ -286,33 +301,68 @@ export default function HomePage() {
       </section>
 
       {/* ───── QUIZ ───── */}
-      <section id="quiz" style={{ ...S.section, background:'var(--navy)' }}>
-        <div className="container" style={{ maxWidth:680, textAlign:'center' }}>
+      <section id="quiz" style={{ ...S.section, background:'var(--navy)', position:'relative', overflow:'hidden' }}>
+        {/* subtle pattern */}
+        <div style={{ position:'absolute', inset:0, backgroundImage:'radial-gradient(circle at 20% 50%, rgba(103,154,193,0.15) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255,130,16,0.10) 0%, transparent 40%)', pointerEvents:'none' }} />
+        <div className="container" style={{ maxWidth:700, textAlign:'center', position:'relative', zIndex:1 }}>
           <p style={{ ...S.label, color:'var(--orange-light)' }}>Not Sure Where to Go?</p>
-          <h2 style={{ ...S.h2, color:'#fff' }}>Take the travel quiz</h2>
-          <p style={{ fontFamily:'var(--font-body)', fontSize:18, color:'rgba(255,255,255,0.55)', marginBottom:48 }}>
-            Answer 4 quick questions and we&apos;ll generate the perfect personalised trip for you.
+          <h2 style={{ ...S.h2, color:'#fff', fontSize:32, marginBottom:12 }}>Find your perfect trip style</h2>
+          <p style={{ fontFamily:'var(--font-body)', fontSize:17, color:'rgba(255,255,255,0.55)', marginBottom:48 }}>
+            4 quick questions. We&apos;ll pre-fill your travel form so you can start planning instantly.
           </p>
 
-          {!showQuiz ? (
-            <button onClick={()=>setShowQuiz(true)} style={{ background:'var(--orange)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:600, fontSize:16, padding:'16px 36px', borderRadius:'var(--r-pill)', border:'none', cursor:'pointer', boxShadow:'0 8px 28px rgba(255,130,16,0.35)' }}>
+          {!showQuiz && !quizDone ? (
+            <button onClick={()=>setShowQuiz(true)} style={{ background:'var(--orange)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:16, padding:'18px 44px', borderRadius:'var(--r-pill)', border:'none', cursor:'pointer', boxShadow:'0 8px 32px rgba(255,130,16,0.40)', letterSpacing:0.3 }}>
               🎯 Start the quiz
             </button>
+          ) : quizDone ? (
+            <div style={{ background:'rgba(255,255,255,0.08)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:'var(--r-lg)', padding:'40px 32px' }}>
+              <div style={{ fontSize:52, marginBottom:16 }}>🎉</div>
+              <h3 style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:22, color:'#fff', marginBottom:10 }}>Your trip profile is ready!</h3>
+              <p style={{ fontFamily:'var(--font-body)', color:'rgba(255,255,255,0.65)', fontSize:16, marginBottom:32 }}>
+                We&apos;ve pre-filled the planner below based on your answers. Just add your destination and dates to generate your trip.
+              </p>
+              <div style={{ display:'flex', gap:12, justifyContent:'center', flexWrap:'wrap' }}>
+                <button onClick={()=>scrollTo('plan-form')} style={{ background:'var(--orange)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, padding:'14px 32px', borderRadius:'var(--r-pill)', border:'none', cursor:'pointer', boxShadow:'0 6px 20px rgba(255,130,16,0.35)' }}>
+                  ✈ Go to my planner ↓
+                </button>
+                <button onClick={resetQuiz} style={{ background:'rgba(255,255,255,0.10)', color:'rgba(255,255,255,0.8)', fontFamily:'var(--font-head)', fontWeight:500, fontSize:15, padding:'14px 24px', borderRadius:'var(--r-pill)', border:'1px solid rgba(255,255,255,0.20)', cursor:'pointer' }}>
+                  ↺ Retake quiz
+                </button>
+              </div>
+            </div>
           ) : (
             <div style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:'var(--r-lg)', padding:'40px 32px' }}>
-              {/* Progress */}
-              <div style={{ display:'flex', gap:8, justifyContent:'center', marginBottom:32 }}>
-                {QUIZ_QUESTIONS.map((_,i)=>(<div key={i} style={{ width:40, height:4, borderRadius:100, background:i<=quizStep?'var(--orange)':'rgba(255,255,255,0.15)', transition:'background 0.3s' }} />))}
+              {/* Progress bar */}
+              <div style={{ display:'flex', gap:6, justifyContent:'center', marginBottom:8 }}>
+                {QUIZ_QUESTIONS.map((_,i)=>(<div key={i} style={{ flex:1, maxWidth:60, height:4, borderRadius:100, background:i<quizStep?'var(--orange)':i===quizStep?'var(--orange-light)':'rgba(255,255,255,0.15)', transition:'background 0.3s' }} />))}
               </div>
-              <p style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:12, color:'rgba(255,255,255,0.4)', letterSpacing:1.5, textTransform:'uppercase', marginBottom:14 }}>Question {quizStep+1} of {QUIZ_QUESTIONS.length}</p>
-              <h3 style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:24, color:'#fff', marginBottom:28 }}>{QUIZ_QUESTIONS[quizStep].q}</h3>
+              <p style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:12, color:'rgba(255,255,255,0.35)', letterSpacing:1.5, textTransform:'uppercase', marginBottom:20 }}>
+                Question {quizStep+1} of {QUIZ_QUESTIONS.length}
+              </p>
+              <h3 style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:22, color:'#fff', marginBottom:28, lineHeight:1.3 }}>
+                {QUIZ_QUESTIONS[quizStep].q}
+              </h3>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
                 {QUIZ_QUESTIONS[quizStep].opts.map(o=>(
-                  <button key={o.v} onClick={()=>answerQuiz(o.v)} style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)', color:'#fff', borderRadius:'var(--r-md)', padding:'18px 14px', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:8, fontFamily:'var(--font-head)', fontWeight:500, fontSize:14, transition:'all 0.18s' }}>
-                    <span style={{ fontSize:26 }}>{o.e}</span>{o.l}
+                  <button key={o.v} onClick={()=>answerQuiz(o.v)} style={{
+                    background:'rgba(255,255,255,0.06)', border:'1.5px solid rgba(255,255,255,0.12)',
+                    color:'#fff', borderRadius:'var(--r-md)', padding:'20px 14px', cursor:'pointer',
+                    display:'flex', flexDirection:'column', alignItems:'center', gap:10,
+                    fontFamily:'var(--font-head)', fontWeight:500, fontSize:14, transition:'all 0.18s',
+                  }}
+                  onMouseEnter={e=>{(e.currentTarget as HTMLButtonElement).style.background='rgba(255,130,16,0.18)';(e.currentTarget as HTMLButtonElement).style.borderColor='rgba(255,130,16,0.5)';}}
+                  onMouseLeave={e=>{(e.currentTarget as HTMLButtonElement).style.background='rgba(255,255,255,0.06)';(e.currentTarget as HTMLButtonElement).style.borderColor='rgba(255,255,255,0.12)';}}>
+                    <span style={{ fontSize:32, lineHeight:1 }}>{o.e}</span>
+                    <span>{o.l}</span>
                   </button>
                 ))}
               </div>
+              {quizStep > 0 && (
+                <button onClick={()=>{setQuizStep(q=>q-1);setAnswers(a=>a.slice(0,-1));}} style={{ marginTop:20, background:'none', border:'none', color:'rgba(255,255,255,0.4)', fontFamily:'var(--font-head)', fontSize:13, cursor:'pointer' }}>
+                  ← Back
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -357,14 +407,27 @@ export default function HomePage() {
       </section>
 
       {/* ───── FORM ───── */}
-      <section id="plan-form" style={{ ...S.section, background:'var(--bg-section)' }}>
-        <div style={{ maxWidth:680, margin:'0 auto', padding:'0 24px' }}>
-          <div style={{ textAlign:'center', marginBottom:48 }}>
-            <p style={S.label}>Your Adventure Awaits</p>
-            <h2 style={{ ...S.h2, textAlign:'center' }}>Create your travel plan</h2>
-            <p style={{ fontFamily:'var(--font-body)', fontSize:18, color:'var(--gray-dark)' }}>Free. Personalised. Ready in 30 seconds.</p>
-          </div>
-          <PlanForm onSubmit={go} />
+      <section id="plan-form" style={{ background:'var(--bg-section)', padding:'0 0 96px' }}>
+        {/* Navy header bar */}
+        <div style={{ background:'var(--navy)', padding:'56px 24px 72px', textAlign:'center', marginBottom:-40, position:'relative' }}>
+          <p style={{ ...S.label, color:'var(--orange-light)' }}>Your Adventure Awaits</p>
+          <h2 style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:32, color:'#fff', lineHeight:1.2, marginBottom:12 }}>
+            Plan your trip in 30 seconds
+          </h2>
+          <p style={{ fontFamily:'var(--font-body)', fontSize:17, color:'rgba(255,255,255,0.55)' }}>
+            Free · Personalised · No account required
+          </p>
+          {preFilledData && (
+            <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(255,130,16,0.18)', border:'1px solid rgba(255,130,16,0.35)', borderRadius:'var(--r-pill)', padding:'8px 18px', marginTop:20 }}>
+              <span style={{ fontSize:14 }}>🎯</span>
+              <span style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:13, color:'var(--orange-light)' }}>
+                Quiz results applied — your style &amp; budget are pre-filled below
+              </span>
+            </div>
+          )}
+        </div>
+        <div style={{ maxWidth:700, margin:'0 auto', padding:'0 24px', position:'relative', zIndex:1 }}>
+          <PlanForm onSubmit={go} preFilledData={preFilledData} />
         </div>
       </section>
 
@@ -409,22 +472,36 @@ export default function HomePage() {
 }
 
 /* ────────────────────────────────────────────────────── */
-function PlanForm({ onSubmit }: { onSubmit: (q:string)=>void }) {
-  const [dest,    setDest]    = useState('');
-  const [dep,     setDep]     = useState('');
-  const [ret,     setRet]     = useState('');
-  const [adults,  setAdults]  = useState(2);
-  const [kids,    setKids]    = useState(0);
-  const [styles,  setStyles]  = useState<string[]>([]);
-  const [budget,  setBudget]  = useState('midrange');
-  const [notes,   setNotes]   = useState('');
+function PlanForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; preFilledData?: {budget:string; styles:string[]} | null }) {
+  const [dest,   setDest]   = useState('');
+  const [dep,    setDep]    = useState('');
+  const [ret,    setRet]    = useState('');
+  const [adults, setAdults] = useState(2);
+  const [kids,   setKids]   = useState(0);
+  const [styles, setStyles] = useState<string[]>(preFilledData?.styles ?? []);
+  const [budget, setBudget] = useState(preFilledData?.budget ?? 'midrange');
+  const [notes,  setNotes]  = useState('');
+
+  // Sync pre-fill when quiz completes
+  useState(() => { if (preFilledData) { setStyles(preFilledData.styles); setBudget(preFilledData.budget); } });
 
   const styleOpts = [
-    {v:'cultural',label:'🏛️ Cultural'},     {v:'food',label:'🍽️ Food & Drink'},
-    {v:'party',label:'🎉 Nightlife'},        {v:'shopping',label:'🛍️ Shopping'},
-    {v:'family',label:'👨‍👩‍👧 Family'},   {v:'adventure',label:'🏔️ Adventure'},
-    {v:'beach',label:'🏖️ Beach'},            {v:'wellness',label:'🧘 Wellness'},
-    {v:'romance',label:'💑 Romance'},         {v:'nature',label:'🌿 Nature'},
+    {v:'cultural',   label:'🏛️ Cultural'},
+    {v:'food',       label:'🍽️ Food & Drink'},
+    {v:'nightlife',  label:'🎉 Nightlife'},
+    {v:'shopping',   label:'🛍️ Shopping'},
+    {v:'family',     label:'👨‍👩‍👧 Family'},
+    {v:'adventure',  label:'🏔️ Adventure'},
+    {v:'beach',      label:'🏖️ Beach'},
+    {v:'wellness',   label:'🧘 Wellness'},
+    {v:'romance',    label:'💑 Romance'},
+    {v:'nature',     label:'🌿 Nature'},
+    {v:'luxury',     label:'💎 Luxury'},
+    {v:'photography',label:'📸 Photography'},
+    {v:'ski',        label:'🎿 Winter Sports'},
+    {v:'safari',     label:'🦁 Safari'},
+    {v:'roadtrip',   label:'🚗 Road Trip'},
+    {v:'citybreak',  label:'🏙️ City Break'},
   ];
 
   const toggle = (v:string) => setStyles(p=>p.includes(v)?p.filter(s=>s!==v):[...p,v]);
@@ -438,81 +515,146 @@ function PlanForm({ onSubmit }: { onSubmit: (q:string)=>void }) {
     onSubmit(`Plan a trip to ${dest} ${dates} ${group} with ${bLabels[budget]||budget} budget ${tripStyles}${notes?`. Notes: ${notes}`:''}`);
   };
 
-  const inp: React.CSSProperties = { width:'100%', background:'#fff', border:'1.5px solid var(--border)', borderRadius:'var(--r-md)', padding:'13px 16px', fontFamily:'var(--font-body)', fontSize:16, color:'#000', outline:'none' };
-  const lbl: React.CSSProperties = { fontFamily:'var(--font-head)', fontWeight:600, fontSize:13, color:'var(--gray-dark)', marginBottom:8, display:'block', letterSpacing:0.3 };
+  const inp: React.CSSProperties = {
+    width:'100%', background:'#fff',
+    border:'1.5px solid rgba(0,68,123,0.15)',
+    borderRadius:'var(--r-md)', padding:'13px 16px',
+    fontFamily:'var(--font-body)', fontSize:15, color:'#000', outline:'none',
+    transition:'border-color 0.18s',
+  };
+  const lbl: React.CSSProperties = {
+    fontFamily:'var(--font-head)', fontWeight:600, fontSize:12,
+    color:'var(--navy)', marginBottom:8, display:'flex', alignItems:'center', gap:6,
+    textTransform:'uppercase', letterSpacing:0.8,
+  };
+  const divider = { borderTop:'1px solid rgba(0,68,123,0.08)', margin:'0' } as React.CSSProperties;
 
   return (
-    <div style={{ background:'#fff', borderRadius:'var(--r-lg)', border:'1px solid var(--border)', padding:'40px 36px', boxShadow:'var(--shadow-card)', display:'flex', flexDirection:'column', gap:24 }}>
+    <div style={{ background:'#fff', borderRadius:'var(--r-lg)', boxShadow:'0 8px 48px rgba(0,68,123,0.12)', overflow:'hidden' }}>
 
-      <div>
-        <label style={lbl}>Where are you headed? *</label>
-        <input type="text" value={dest} onChange={e=>setDest(e.target.value)} placeholder="📍 e.g. Bali, Paris, Japan..." style={inp} />
+      {/* Destination */}
+      <div style={{ padding:'28px 32px 24px' }}>
+        <label style={lbl}>📍 Where are you headed? <span style={{ color:'var(--orange)' }}>*</span></label>
+        <input
+          type="text" value={dest} onChange={e=>setDest(e.target.value)}
+          placeholder="e.g. Bali, Paris, Japan, New York..."
+          style={{ ...inp, fontSize:16, padding:'15px 18px' }}
+          onFocus={e=>(e.target.style.borderColor='var(--navy)')}
+          onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')}
+        />
       </div>
 
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
-        <div><label style={lbl}>Departure Date</label><input type="date" value={dep} onChange={e=>setDep(e.target.value)} style={inp} /></div>
-        <div><label style={lbl}>Return Date</label><input type="date" value={ret} onChange={e=>setRet(e.target.value)} style={inp} /></div>
+      <hr style={divider} />
+
+      {/* Dates */}
+      <div style={{ padding:'24px 32px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
+        <div>
+          <label style={lbl}>📅 Departure</label>
+          <input type="date" value={dep} onChange={e=>setDep(e.target.value)} style={inp}
+            onFocus={e=>(e.target.style.borderColor='var(--navy)')} onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} />
+        </div>
+        <div>
+          <label style={lbl}>🏁 Return</label>
+          <input type="date" value={ret} onChange={e=>setRet(e.target.value)} style={inp}
+            onFocus={e=>(e.target.style.borderColor='var(--navy)')} onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} />
+        </div>
       </div>
 
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
-        {[['Adults', adults, setAdults, 1],['Children', kids, setKids, 0]].map(([lbl2,val,set,min])=>(
-          <div key={lbl2 as string}>
-            <label style={lbl}>{lbl2 as string}</label>
-            <div style={{ display:'flex', alignItems:'center', gap:14 }}>
-              <button onClick={()=>(set as (n:number)=>void)(Math.max(min as number,(val as number)-1))} style={{ width:36, height:36, borderRadius:'50%', background:'var(--bg-section)', border:'1.5px solid var(--border)', color:'#000', fontSize:20, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', fontFamily:'var(--font-head)' }}>−</button>
-              <span style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:18, minWidth:24, textAlign:'center' }}>{val as number}</span>
-              <button onClick={()=>(set as (n:number)=>void)((val as number)+1)} style={{ width:36, height:36, borderRadius:'50%', background:'var(--bg-section)', border:'1.5px solid var(--border)', color:'#000', fontSize:20, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', fontFamily:'var(--font-head)' }}>+</button>
+      <hr style={divider} />
+
+      {/* Travellers */}
+      <div style={{ padding:'24px 32px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
+        {([['👤 Adults', adults, setAdults, 1], ['🧒 Children', kids, setKids, 0]] as const).map(([l,val,set,min])=>(
+          <div key={l as string}>
+            <label style={lbl}>{l as string}</label>
+            <div style={{ display:'flex', alignItems:'center', gap:0, background:'var(--bg-section)', borderRadius:'var(--r-md)', border:'1.5px solid rgba(0,68,123,0.12)', overflow:'hidden' }}>
+              <button onClick={()=>(set as (n:number)=>void)(Math.max(min as number,(val as number)-1))}
+                style={{ width:44, height:44, background:'none', border:'none', color:'var(--navy)', fontSize:22, cursor:'pointer', fontFamily:'var(--font-head)', fontWeight:500, flexShrink:0 }}>−</button>
+              <span style={{ flex:1, textAlign:'center', fontFamily:'var(--font-head)', fontWeight:700, fontSize:18, color:'var(--navy)' }}>{val as number}</span>
+              <button onClick={()=>(set as (n:number)=>void)((val as number)+1)}
+                style={{ width:44, height:44, background:'none', border:'none', color:'var(--navy)', fontSize:22, cursor:'pointer', fontFamily:'var(--font-head)', fontWeight:500, flexShrink:0 }}>+</button>
             </div>
           </div>
         ))}
       </div>
 
-      <div>
-        <label style={lbl}>Trip Style</label>
+      <hr style={divider} />
+
+      {/* Trip Style */}
+      <div style={{ padding:'24px 32px' }}>
+        <label style={{ ...lbl, marginBottom:14 }}>
+          ✨ Trip Style
+          {styles.length > 0 && <span style={{ fontFamily:'var(--font-body)', fontWeight:400, fontSize:11, color:'var(--orange)', textTransform:'none', letterSpacing:0, marginLeft:4 }}>{styles.length} selected</span>}
+        </label>
         <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
-          {styleOpts.map(o=>(
-            <button key={o.v} onClick={()=>toggle(o.v)} style={{
-              background:styles.includes(o.v)?'rgba(255,130,16,0.1)':'var(--bg-section)',
-              border:`1.5px solid ${styles.includes(o.v)?'var(--orange)':'transparent'}`,
-              color:styles.includes(o.v)?'var(--orange)':'#000',
-              fontFamily:'var(--font-head)', fontWeight:500, fontSize:13,
-              borderRadius:'var(--r-pill)', padding:'7px 14px', cursor:'pointer',
-            }}>{o.label}</button>
-          ))}
+          {styleOpts.map(o=>{
+            const active = styles.includes(o.v);
+            return (
+              <button key={o.v} onClick={()=>toggle(o.v)} style={{
+                background: active ? 'rgba(255,130,16,0.10)' : 'var(--bg-section)',
+                border: `1.5px solid ${active ? 'var(--orange)' : 'rgba(0,68,123,0.10)'}`,
+                color: active ? 'var(--orange)' : '#333',
+                fontFamily:'var(--font-head)', fontWeight: active ? 600 : 400, fontSize:13,
+                borderRadius:'var(--r-pill)', padding:'7px 15px', cursor:'pointer', transition:'all 0.15s',
+              }}>{o.label}</button>
+            );
+          })}
         </div>
       </div>
 
-      <div>
-        <label style={lbl}>Budget Level</label>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12 }}>
-          {[{v:'budget',e:'🎒',l:'Budget',s:'< $80/day'},{v:'midrange',e:'🏨',l:'Mid-range',s:'$80–250/day'},{v:'luxury',e:'💎',l:'Luxury',s:'$250+/day'}].map(b=>(
-            <button key={b.v} onClick={()=>setBudget(b.v)} style={{
-              background:budget===b.v?'rgba(0,68,123,0.06)':'var(--bg-section)',
-              border:`1.5px solid ${budget===b.v?'var(--navy)':'transparent'}`,
-              borderRadius:'var(--r-md)', padding:'16px 10px', cursor:'pointer', textAlign:'center',
-            }}>
-              <div style={{ fontSize:22, marginBottom:6 }}>{b.e}</div>
-              <div style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:13, color:budget===b.v?'var(--navy)':'#000', marginBottom:2 }}>{b.l}</div>
-              <div style={{ fontFamily:'var(--font-body)', color:'var(--gray-dark)', fontSize:11 }}>{b.s}</div>
-            </button>
-          ))}
+      <hr style={divider} />
+
+      {/* Budget */}
+      <div style={{ padding:'24px 32px' }}>
+        <label style={{ ...lbl, marginBottom:14 }}>💰 Budget Level</label>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10 }}>
+          {[
+            {v:'budget',  e:'🎒', l:'Budget',   s:'< $80 / day'},
+            {v:'midrange',e:'🏨', l:'Mid-range', s:'$80–250 / day'},
+            {v:'luxury',  e:'💎', l:'Luxury',    s:'$250+ / day'},
+          ].map(b=>{
+            const active = budget===b.v;
+            return (
+              <button key={b.v} onClick={()=>setBudget(b.v)} style={{
+                background: active ? 'rgba(0,68,123,0.06)' : 'var(--bg-section)',
+                border: `2px solid ${active ? 'var(--navy)' : 'transparent'}`,
+                borderRadius:'var(--r-md)', padding:'16px 10px', cursor:'pointer', textAlign:'center',
+                transition:'all 0.15s',
+              }}>
+                <div style={{ fontSize:24, marginBottom:6 }}>{b.e}</div>
+                <div style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:13, color: active?'var(--navy)':'#000', marginBottom:3 }}>{b.l}</div>
+                <div style={{ fontFamily:'var(--font-body)', color:'var(--gray-dark)', fontSize:11 }}>{b.s}</div>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      <div>
-        <label style={lbl}>Special requests (optional)</label>
-        <textarea value={notes} onChange={e=>setNotes(e.target.value)} placeholder="Dietary needs, accessibility, must-see places..." maxLength={500} rows={3} style={{ ...inp, resize:'vertical' }} />
+      <hr style={divider} />
+
+      {/* Notes */}
+      <div style={{ padding:'24px 32px 8px' }}>
+        <label style={lbl}>💬 Special Requests <span style={{ fontFamily:'var(--font-body)', fontWeight:400, textTransform:'none', letterSpacing:0, color:'var(--gray-dark)' }}>(optional)</span></label>
+        <textarea value={notes} onChange={e=>setNotes(e.target.value)}
+          placeholder="Dietary needs, mobility requirements, must-see places, anniversaries..."
+          maxLength={500} rows={3} style={{ ...inp, resize:'vertical' }}
+          onFocus={e=>(e.target.style.borderColor='var(--navy)')} onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} />
       </div>
 
-      <button onClick={submit} disabled={!dest} style={{
-        background:dest?'var(--orange)':'var(--gray-light)', color:'#fff',
-        fontFamily:'var(--font-head)', fontWeight:700, fontSize:16,
-        padding:'17px', borderRadius:'var(--r-pill)', border:'none',
-        cursor:dest?'pointer':'not-allowed', width:'100%',
-        boxShadow:dest?'0 8px 28px rgba(255,130,16,0.30)':'none',
-      }}>
-        ✈ Generate My Travel Plan
-      </button>
+      {/* Submit */}
+      <div style={{ padding:'24px 32px 32px' }}>
+        <button onClick={submit} disabled={!dest} style={{
+          background: dest ? 'var(--orange)' : 'var(--gray-light)', color:'#fff',
+          fontFamily:'var(--font-head)', fontWeight:700, fontSize:16,
+          padding:'18px', borderRadius:'var(--r-pill)', border:'none',
+          cursor: dest ? 'pointer' : 'not-allowed', width:'100%',
+          boxShadow: dest ? '0 8px 28px rgba(255,130,16,0.30)' : 'none',
+          transition:'all 0.2s', letterSpacing:0.3,
+        }}>
+          ✈ Generate My Travel Plan
+        </button>
+        {!dest && <p style={{ fontFamily:'var(--font-body)', fontSize:12, color:'var(--gray-dark)', textAlign:'center', marginTop:10 }}>Enter a destination to get started</p>}
+      </div>
     </div>
   );
 }
