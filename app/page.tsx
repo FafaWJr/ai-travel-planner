@@ -216,12 +216,170 @@ const QUICK_IDEAS = [
   { icon:'👨‍👩‍👧', label:'Family fun',  query:'A fun family vacation' },
 ];
 
-const QUIZ_QUESTIONS = [
-  { q:'What is your ideal travel vibe?', opts:[{e:'🌴',l:'Relax & unwind',v:'relaxation'},{e:'🧗',l:'Thrill & adventure',v:'adventure'},{e:'🎭',l:'Culture & history',v:'culture'},{e:'🍷',l:'Food & nightlife',v:'food'}] },
-  { q:'How do you prefer to travel?',    opts:[{e:'✈️',l:'Fly everywhere',v:'fly'},{e:'🚗',l:'Road trip',v:'drive'},{e:'🚂',l:'Train journeys',v:'train'},{e:'🚢',l:'Cruise',v:'cruise'}] },
-  { q:'What is your budget style?',      opts:[{e:'🎒',l:'Budget backpacker',v:'budget'},{e:'🏨',l:'Mid-range comfort',v:'midrange'},{e:'💎',l:'Luxury splurge',v:'luxury'},{e:'🤷',l:'It depends',v:'flexible'}] },
-  { q:'How long is your ideal trip?',    opts:[{e:'⚡',l:'Weekend getaway',v:'weekend'},{e:'📅',l:'1 week',v:'1week'},{e:'🗓️',l:'2 weeks',v:'2weeks'},{e:'🌍',l:'A month+',v:'month'}] },
+/* ── Quiz data ── */
+const VIBE_SPECTRUMS = [
+  { key:'energy',  leftIcon:'⛰️', left:'Pure Adventure',    right:'Total Relaxation',  rightIcon:'🌴' },
+  { key:'setting', leftIcon:'🌿', left:'Outdoors & Nature',  right:'Cities & Culture',  rightIcon:'🏛️' },
+  { key:'crowd',   leftIcon:'📸', left:'Famous Highlights',  right:'Hidden Local Gems', rightIcon:'🗺️' },
 ];
+
+const ACCOM_OPTIONS = [
+  {v:'luxury',e:'🏰',l:'Luxury Hotel'},{v:'boutique',e:'🏡',l:'Boutique Hotel'},
+  {v:'resort',e:'🌴',l:'Resort'},{v:'bnb',e:'☕',l:'B&B / Guesthouse'},
+  {v:'hostel',e:'🎒',l:'Hostel'},{v:'apartment',e:'🏠',l:'Apartment / Airbnb'},
+  {v:'camping',e:'⛺',l:'Camping & Glamping'},{v:'motel',e:'🛣️',l:'Motel'},
+  {v:'allinclusive',e:'🍹',l:'All-Inclusive'},
+];
+
+const HABIT_QUESTIONS = [
+  { key:'spend', label:'Spending style', opts:[
+    {e:'🎒',l:'Shoestring',v:'shoestring'},{e:'💰',l:'Budget-conscious',v:'budget'},
+    {e:'🏨',l:'Comfortable',v:'comfortable'},{e:'✨',l:'Splurge often',v:'splurge'},
+    {e:'💎',l:'No limits',v:'unlimited'},
+  ]},
+  { key:'pace', label:'Time of day', opts:[
+    {e:'🌅',l:'Early bird',v:'early'},{e:'☀️',l:'Daytime explorer',v:'day'},
+    {e:'🌆',l:'Afternoon starter',v:'afternoon'},{e:'🌙',l:'Night owl',v:'night'},
+  ]},
+  { key:'social', label:'Travel company', opts:[
+    {e:'🧍',l:'Solo & independent',v:'solo'},
+    {e:'🤝',l:'Mix of both',v:'mixed'},{e:'🎉',l:'Group & social',v:'social'},
+  ]},
+];
+
+const DINING_OPTIONS = [
+  {v:'finedining',e:'🍽️',l:'Fine Dining'},{v:'streetfood',e:'🌮',l:'Street Food'},
+  {v:'cafes',e:'☕',l:'Cafes & Bistros'},{v:'family',e:'👨‍👩‍👧',l:'Family Restaurants'},
+  {v:'veganveg',e:'🥗',l:'Vegetarian / Vegan'},{v:'ethnic',e:'🌍',l:'Ethnic & World Cuisine'},
+  {v:'halal',e:'🌙',l:'Halal'},{v:'fastfood',e:'🍔',l:'Fast Food'},
+  {v:'pub',e:'🍺',l:'Pub & Tavern'},{v:'bakery',e:'🥐',l:'Bakeries & Patisseries'},
+  {v:'markets',e:'🛒',l:'Food Markets'},{v:'farmtable',e:'🌾',l:'Farm-to-Table'},
+];
+
+const INTEREST_OPTIONS = [
+  {v:'beach',e:'🏖️',l:'Beach & Swimming'},{v:'hiking',e:'🥾',l:'Hiking & Trekking'},
+  {v:'watersports',e:'🏄',l:'Water Sports'},{v:'cycling',e:'🚴',l:'Cycling'},
+  {v:'photography',e:'📸',l:'Photography'},{v:'wellness',e:'🧘',l:'Wellness & Spa'},
+  {v:'history',e:'🏛️',l:'Historical Tours'},{v:'nightlife',e:'🎉',l:'Nightlife & Bars'},
+  {v:'wildlife',e:'🦁',l:'Wildlife & Nature'},{v:'shows',e:'🎭',l:'Shows & Performances'},
+  {v:'shopping',e:'🛍️',l:'Shopping'},{v:'architecture',e:'🏰',l:'Architecture'},
+  {v:'cooking',e:'👨‍🍳',l:'Cooking Classes'},{v:'wine',e:'🍷',l:'Wine & Spirits'},
+  {v:'markets',e:'🏪',l:'Local Markets'},{v:'sports',e:'⚽',l:'Sports & Activities'},
+];
+
+function generateQuizQuestions(personaName:string, interests:string[], dining:string[], habits:Record<string,string>): string[] {
+  const base: Record<string,string[]> = {
+    'The Wild Explorer': [
+      'Which national parks or wilderness areas offer the best multi-day trekking for independent travellers?',
+      'Are there off-grid eco-lodges that feel truly remote yet are still safely reachable?',
+      'What are the least-visited safari destinations that still offer incredible wildlife encounters?',
+      'Can you suggest a route where I can hike from village to village without a tour group?',
+      'Which destinations have the best conditions for wild camping, and what permits do I need?',
+    ],
+    'The Thrill Seeker': [
+      'Which destinations pack the most adventure activities into a single trip?',
+      'Where can I combine white-water rafting, bungee jumping, and mountain biking in one week?',
+      'Are there lesser-known adventure spots that rival Queenstown or Interlaken but with fewer crowds?',
+      'Can you recommend a guided multi-activity expedition for someone wanting a serious physical challenge?',
+      'What safety certifications should I check for adventure operators in developing countries?',
+    ],
+    'The Cultural Adventurer': [
+      'Which destinations combine a thriving contemporary art scene with deep historical heritage?',
+      'Can you suggest cities where I can attend local festivals not listed in mainstream guidebooks?',
+      'Are there heritage towns with historically restored guesthouses rather than modern hotels?',
+      'What are the best ways to connect with local artisans or cultural practitioners during a trip?',
+      'Which regions offer deep cultural immersion through homestays or community-based tourism?',
+    ],
+    'The Expedition Traveller': [
+      'What iconic bucket-list sites are actually worth the hype, and what\'s the best way to visit them?',
+      'Can you plan an active sightseeing route where I hike or cycle to landmarks instead of driving?',
+      'Which UNESCO Heritage Sites can be combined efficiently in a two-week itinerary?',
+      'Are there lesser-known viewpoints to famous landmarks that most tourists miss?',
+      'What\'s the best time to visit major highlights while avoiding peak-season crowds?',
+    ],
+    'The Mindful Wanderer': [
+      'Which coastal destinations offer peaceful villages with excellent independent hiking and cycling?',
+      'Can you recommend a slow-travel itinerary where I spend 4–5 nights in each place rather than rushing?',
+      'Are there wellness-focused destinations where yoga retreats sit alongside natural landscapes and culture?',
+      'What are the quietest, most restorative beach destinations that still have interesting local life?',
+      'Can you suggest a trip that balances solo exploration with optional guided experiences when I want company?',
+    ],
+    'The Beach Lover': [
+      'Which beach destinations offer the best combination of beautiful water, local atmosphere, and good food?',
+      'Can you recommend islands where I can island-hop easily without expensive flights between stops?',
+      'Are there all-inclusive resorts that also give good access to local culture and authentic dining?',
+      'What are the best snorkelling or diving spots suitable for beginners at a beach destination?',
+      'Which beach towns come alive at night with a great food scene but without being too rowdy?',
+    ],
+    'The Cultural Connoisseur': [
+      'Which cities have the richest neighbourhood-level culture — local markets, street art, and independent cafes?',
+      'Can you suggest a trip that includes a cooking class, a food market tour, and a local home dinner experience?',
+      'Are there lesser-known cultural capitals that feel authentic and uncrowded?',
+      'What are the best ways to find local music, theatre, or performance events during a city visit?',
+      'Can you recommend areas in a city where local life continues relatively undisturbed by tourism?',
+    ],
+    'The Cultured Traveller': [
+      'Which cities offer the best combination of world-class museums, fine dining, and boutique accommodation?',
+      'Can you plan a cultural city break with iconic galleries, acclaimed restaurants, and a bit of architecture?',
+      'Are there food and wine regions where I can combine vineyard visits with strong cultural sightseeing?',
+      'What are the most impressive performing arts venues worth planning a trip around?',
+      'Which cities have the best private guided museum or heritage tours for a small group?',
+    ],
+    'The All-Rounder': [
+      'Can you suggest a destination that works well for both beach days and cultural sightseeing in the same trip?',
+      'Which cities act as great bases for day trips to nature, coast, and historic towns all within easy reach?',
+      'Are there flexible itineraries that mix budget street food days with one or two special dining experiences?',
+      'What destinations let me shift between being active (hiking, cycling) and relaxed (cafes, beaches) day by day?',
+      'Can you recommend a trip where I can be spontaneous — not every activity pre-booked — and still have a great time?',
+    ],
+  };
+  const questions = [...(base[personaName] || base['The All-Rounder'])].slice(0,5);
+  if (interests.includes('nightlife')) questions[4] = 'Which destinations have the most vibrant nightlife scenes that stay lively well past midnight?';
+  if (dining.includes('streetfood') || dining.includes('markets')) questions[3] = 'What are the best destinations for street food and local market dining that go beyond the usual tourist haunts?';
+  if (interests.includes('photography')) questions[4] = 'What are the most photogenic destinations and the best times of day to shoot the iconic locations?';
+  return questions;
+}
+
+function computePersona(
+  vibes: Record<string,number>, accom: string[],
+  habits: Record<string,string>, dining: string[], interests: string[],
+) {
+  const energy = vibes.energy ?? 2;
+  const setting = vibes.setting ?? 2;
+  const crowd = vibes.crowd ?? 2;
+  const adv=energy<=1, rel=energy>=3, out=setting<=1, cul=setting>=3, hid=crowd>=3, pop=crowd<=1;
+
+  type P = { name:string; icon:string; tagline:string; desc:string; tripStyles:string[] };
+  let p: P;
+  if      (adv&&out&&hid) p={name:'The Wild Explorer',       icon:'🌿',tagline:'Off the beaten path, close to nature',            desc:"You thrive on raw landscapes and remote places most travellers never find. Tourist crowds aren't your scene — give you a trail map and an adventure with no tour group in sight.",                         tripStyles:['Eco-tourism','Trekking','Wildlife Safari','Camping']};
+  else if (adv&&out&&pop) p={name:'The Thrill Seeker',        icon:'⛰️',tagline:'Living for the rush',                            desc:"Adrenaline is your travel currency. Whether it's bungee jumping, white-water rafting, or scaling a via ferrata, you want every day to push your limits and leave you buzzing.",                  tripStyles:['Adventure Sports','Extreme Activities','Group Tours','Road Trip']};
+  else if (adv&&cul&&hid) p={name:'The Cultural Adventurer',  icon:'🗺️',tagline:'Curious, bold, and deeply engaged',              desc:"History books aren't enough — you want to live the story. You seek out off-map heritage sites, local festivals, and hidden corners of ancient cities that most tourists walk straight past.", tripStyles:['Cultural Immersion','Heritage Travel','Slow Travel','Photography']};
+  else if (adv&&cul&&pop) p={name:'The Expedition Traveller', icon:'🧭',tagline:'Iconic destinations, adventurous approach',       desc:"Bucket-list icons appeal to you, but on your own terms — climbing Machu Picchu at sunrise, cycling through Angkor Wat, or hiking the Cinque Terre rather than bussing it.",              tripStyles:['Bucket List','Active Sightseeing','Photography','City Break']};
+  else if (rel&&out&&hid) p={name:'The Mindful Wanderer',     icon:'🌊',tagline:'Slow travel, deep connections',                  desc:"You travel to breathe. Untouched coastal paths, quiet fishing villages, and mornings with nothing planned but coffee and a view — these are the moments you'll still be talking about in 20 years.", tripStyles:['Wellness Retreat','Slow Travel','Eco-tourism','Coastal Escape']};
+  else if (rel&&out&&pop) p={name:'The Beach Lover',          icon:'🏖️',tagline:'Sun, sea, and pure relaxation',                  desc:"You know exactly what a great holiday looks like: a sunlounger, warm water, and a cocktail. Maybe a snorkel. Definitely no alarm clocks. You've perfected the art of doing very little, very well.", tripStyles:['Beach Resort','Island Hopping','All-Inclusive','Snorkelling & Diving']};
+  else if (rel&&cul&&hid) p={name:'The Cultural Connoisseur', icon:'🎭',tagline:'Deep immersion in local life',                   desc:"You travel at the speed of curiosity. Hidden art exhibitions, restaurants the locals love, and learning a few words of the language before you arrive — that's your kind of trip.",              tripStyles:['Cultural Immersion','City Break','Culinary Tour','Local Experiences']};
+  else if (rel&&cul&&pop) p={name:'The Cultured Traveller',   icon:'🏛️',tagline:'Museums, wine, and memorable meals',            desc:"World-class museums, acclaimed restaurants, a comfortable hotel — your ideal trip blends culture with the finer things. You'll queue for the Louvre, but only after a proper croissant.",           tripStyles:['City Break','Culinary Tour','Luxury Travel','Heritage Sites']};
+  else                    p={name:'The All-Rounder',          icon:'🌍',tagline:'Balanced, curious, and up for anything',         desc:"You refuse to be put in a box. Some days you want a beach, others a museum. Budget street food one night, a special dinner the next. This flexibility is your superpower — you thrive everywhere.", tripStyles:['Mixed Itinerary','City & Beach Combo','Flexible Travel','Cultural Highlights']};
+
+  const budgetMap: Record<string,string> = { shoestring:'budget',budget:'budget',comfortable:'midrange',splurge:'luxury',unlimited:'luxury' };
+  const budget = budgetMap[habits.spend] || 'midrange';
+  const styleMap: Record<string,string> = { beach:'beach',hiking:'adventure',wildlife:'nature',wellness:'wellness',history:'cultural',photography:'photography',nightlife:'nightlife',shopping:'shopping',cooking:'food',wine:'food',watersports:'adventure',cycling:'adventure',sports:'adventure',shows:'cultural',architecture:'cultural',markets:'cultural' };
+  const styles = [...new Set(interests.slice(0,8).map(i=>styleMap[i]).filter(Boolean))];
+
+  const traits: string[] = [];
+  if (energy<=1) traits.push('Adventurous'); else if (energy>=3) traits.push('Laid-back'); else traits.push('Balanced');
+  if (setting<=1) traits.push('Nature lover'); else if (setting>=3) traits.push('Culture seeker'); else traits.push('City & nature mix');
+  if (crowd>=3) traits.push('Off the beaten path'); else if (crowd<=1) traits.push('Classic highlights'); else traits.push('Best of both worlds');
+  if (habits.pace==='night') traits.push('Night owl'); else if (habits.pace==='early') traits.push('Early riser');
+  if (habits.social==='social') traits.push('Group & social'); else if (habits.social==='solo') traits.push('Independent traveller');
+  if (accom.includes('luxury')||accom.includes('boutique')) traits.push('Boutique stays');
+  if (accom.includes('hostel')||accom.includes('camping')) traits.push('Budget-smart');
+  if (dining.includes('streetfood')||dining.includes('markets')) traits.push('Street food fan');
+  if (dining.includes('finedining')||dining.includes('farmtable')) traits.push('Foodie');
+
+  const questions = generateQuizQuestions(p.name, interests, dining, habits);
+  return { ...p, budget, styles, questions, traits };
+}
 
 const TRIP_IDEAS = [
   { title:'10 Days in Japan', sub:'Tokyo to Kyoto', img:'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=600&q=80', tags:['Culture','Food'], dur:'10 days', bud:'Mid-range', q:'Plan a 10-day trip in Japan from Tokyo to Kyoto focusing on culture and food' },
@@ -244,10 +402,15 @@ const FEATURES = [
 export default function HomePage() {
   const router = useRouter();
   const [query, setQuery]         = useState('');
-  const [quizStep, setQuizStep]   = useState(0);
-  const [answers, setAnswers]     = useState<string[]>([]);
-  const [showQuiz, setShowQuiz]   = useState(false);
-  const [quizDone, setQuizDone]   = useState(false);
+  const [quizStep,       setQuizStep]       = useState(0);
+  const [showQuiz,       setShowQuiz]       = useState(false);
+  const [quizDone,       setQuizDone]       = useState(false);
+  const [quizVibes,      setQuizVibes]      = useState<Record<string,number>>({energy:2,setting:2,crowd:2});
+  const [quizAccom,      setQuizAccom]      = useState<string[]>([]);
+  const [quizHabits,     setQuizHabits]     = useState<Record<string,string>>({});
+  const [quizDining,     setQuizDining]     = useState<string[]>([]);
+  const [quizInterests,  setQuizInterests]  = useState<string[]>([]);
+  const [quizPersona,    setQuizPersona]    = useState<ReturnType<typeof computePersona>|null>(null);
   const [hovered, setHovered]     = useState<number|null>(null);
   const [preFilledData, setPreFilledData] = useState<{budget:string; styles:string[]} | null>(null);
 
@@ -261,23 +424,18 @@ export default function HomePage() {
     document.getElementById(id)?.scrollIntoView({ behavior:'smooth' });
   };
 
-  const answerQuiz = (v: string) => {
-    const a = [...answers, v];
-    if (quizStep < QUIZ_QUESTIONS.length - 1) { setAnswers(a); setQuizStep(quizStep + 1); return; }
-    // Quiz complete — map answers to form pre-fill
-    const styleMap: Record<string,string[]> = {
-      relaxation: ['beach','wellness'],
-      adventure:  ['adventure','nature'],
-      culture:    ['cultural','photography'],
-      food:       ['food','nightlife'],
-    };
-    const budMap: Record<string,string> = { budget:'budget', midrange:'midrange', luxury:'luxury', flexible:'midrange' };
-    setPreFilledData({ budget: budMap[a[2]] || 'midrange', styles: styleMap[a[0]] || [] });
+  const finishQuiz = () => {
+    const persona = computePersona(quizVibes, quizAccom, quizHabits, quizDining, quizInterests);
+    setQuizPersona(persona);
+    setPreFilledData({ budget: persona.budget, styles: persona.styles });
     setQuizDone(true);
-    setTimeout(() => scrollTo('plan-form'), 300);
   };
 
-  const resetQuiz = () => { setQuizStep(0); setAnswers([]); setShowQuiz(false); setQuizDone(false); };
+  const resetQuiz = () => {
+    setQuizStep(0); setShowQuiz(false); setQuizDone(false);
+    setQuizVibes({energy:2,setting:2,crowd:2}); setQuizAccom([]);
+    setQuizHabits({}); setQuizDining([]); setQuizInterests([]); setQuizPersona(null);
+  };
 
   /* ── Shared styles ── */
   const S = {
@@ -450,27 +608,59 @@ export default function HomePage() {
 
       {/* ───── QUIZ ───── */}
       <section id="quiz" style={{ ...S.section, background:'var(--navy)', position:'relative', overflow:'hidden' }}>
-        {/* subtle pattern */}
         <div style={{ position:'absolute', inset:0, backgroundImage:'radial-gradient(circle at 20% 50%, rgba(103,154,193,0.15) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255,130,16,0.10) 0%, transparent 40%)', pointerEvents:'none' }} />
-        <div className="container" style={{ maxWidth:700, textAlign:'center', position:'relative', zIndex:1 }}>
+        <div className="container" style={{ maxWidth:820, textAlign:'center', position:'relative', zIndex:1 }}>
           <p style={{ ...S.label, color:'var(--orange-light)' }}>Not Sure Where to Go?</p>
-          <h2 style={{ ...S.h2, color:'#fff', fontSize:32, marginBottom:12 }}>Find your perfect trip style</h2>
+          <h2 style={{ ...S.h2, color:'#fff', fontSize:32, marginBottom:12 }}>Discover your traveller persona</h2>
           <p style={{ fontFamily:'var(--font-body)', fontSize:17, color:'rgba(255,255,255,0.55)', marginBottom:48 }}>
-            4 quick questions. We&apos;ll pre-fill your travel form so you can start planning instantly.
+            5 quick questions. We&apos;ll define your travel style, suggest destinations, and pre-fill your planner.
           </p>
 
           {!showQuiz && !quizDone ? (
             <button onClick={()=>setShowQuiz(true)} style={{ background:'var(--orange)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:16, padding:'18px 44px', borderRadius:'var(--r-pill)', border:'none', cursor:'pointer', boxShadow:'0 8px 32px rgba(255,130,16,0.40)', letterSpacing:0.3 }}>
-              🎯 Start the quiz
+              🎯 Find my travel persona
             </button>
-          ) : quizDone ? (
-            <div style={{ background:'rgba(255,255,255,0.08)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:'var(--r-lg)', padding:'40px 32px' }}>
-              <div style={{ fontSize:52, marginBottom:16 }}>🎉</div>
-              <h3 style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:22, color:'#fff', marginBottom:10 }}>Your trip profile is ready!</h3>
-              <p style={{ fontFamily:'var(--font-body)', color:'rgba(255,255,255,0.65)', fontSize:16, marginBottom:32 }}>
-                We&apos;ve pre-filled the planner below based on your answers. Just add your destination and dates to generate your trip.
-              </p>
-              <div style={{ display:'flex', gap:12, justifyContent:'center', flexWrap:'wrap' }}>
+
+          ) : quizDone && quizPersona ? (
+            /* ── PERSONA RESULTS ── */
+            <div style={{ background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:'var(--r-lg)', padding:'40px', textAlign:'left' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:20, marginBottom:24, flexWrap:'wrap' }}>
+                <div style={{ fontSize:56, lineHeight:1, flexShrink:0 }}>{quizPersona.icon}</div>
+                <div>
+                  <p style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:11, color:'var(--orange-light)', letterSpacing:2, textTransform:'uppercase', marginBottom:6 }}>Your Traveller Persona</p>
+                  <h3 style={{ fontFamily:'var(--font-head)', fontWeight:800, fontSize:30, color:'#fff', lineHeight:1.1, marginBottom:4 }}>{quizPersona.name}</h3>
+                  <p style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:15, color:'rgba(255,255,255,0.55)' }}>{quizPersona.tagline}</p>
+                </div>
+              </div>
+              <p style={{ fontFamily:'var(--font-body)', fontSize:16, color:'rgba(255,255,255,0.75)', lineHeight:1.75, marginBottom:28, borderLeft:'3px solid var(--orange)', paddingLeft:18 }}>{quizPersona.desc}</p>
+              <div style={{ marginBottom:24 }}>
+                <p style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:11, color:'var(--orange-light)', letterSpacing:2, textTransform:'uppercase', marginBottom:12 }}>Your Travel Profile</p>
+                <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+                  {quizPersona.traits.map((t:string) => (
+                    <span key={t} style={{ background:'rgba(255,255,255,0.10)', border:'1px solid rgba(255,255,255,0.18)', borderRadius:'var(--r-pill)', padding:'5px 14px', color:'#fff', fontFamily:'var(--font-head)', fontWeight:500, fontSize:13 }}>{t}</span>
+                  ))}
+                </div>
+              </div>
+              <div style={{ marginBottom:28 }}>
+                <p style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:11, color:'var(--orange-light)', letterSpacing:2, textTransform:'uppercase', marginBottom:12 }}>Suggested Trip Styles</p>
+                <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+                  {quizPersona.tripStyles.map((s:string) => (
+                    <span key={s} style={{ background:'rgba(255,130,16,0.15)', border:'1px solid rgba(255,130,16,0.30)', borderRadius:'var(--r-pill)', padding:'5px 14px', color:'var(--orange-light)', fontFamily:'var(--font-head)', fontWeight:600, fontSize:13 }}>{s}</span>
+                  ))}
+                </div>
+              </div>
+              <div style={{ marginBottom:32 }}>
+                <p style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:11, color:'var(--orange-light)', letterSpacing:2, textTransform:'uppercase', marginBottom:14 }}>You might want to ask</p>
+                <ul style={{ listStyle:'none', padding:0, margin:0, display:'flex', flexDirection:'column', gap:10 }}>
+                  {quizPersona.questions.map((q:string, i:number) => (
+                    <li key={i} style={{ display:'flex', gap:12, alignItems:'flex-start', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:12, padding:'12px 16px' }}>
+                      <span style={{ color:'var(--orange)', fontFamily:'var(--font-head)', fontWeight:700, fontSize:16, flexShrink:0, lineHeight:1.4 }}>→</span>
+                      <span style={{ fontFamily:'var(--font-body)', fontSize:14, color:'rgba(255,255,255,0.72)', lineHeight:1.65 }}>{q}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
                 <button onClick={()=>scrollTo('plan-form')} style={{ background:'var(--orange)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, padding:'14px 32px', borderRadius:'var(--r-pill)', border:'none', cursor:'pointer', boxShadow:'0 6px 20px rgba(255,130,16,0.35)' }}>
                   ✈ Go to my planner ↓
                 </button>
@@ -479,37 +669,147 @@ export default function HomePage() {
                 </button>
               </div>
             </div>
+
           ) : (
-            <div style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:'var(--r-lg)', padding:'40px 32px' }}>
-              {/* Progress bar */}
-              <div style={{ display:'flex', gap:6, justifyContent:'center', marginBottom:8 }}>
-                {QUIZ_QUESTIONS.map((_,i)=>(<div key={i} style={{ flex:1, maxWidth:60, height:4, borderRadius:100, background:i<quizStep?'var(--orange)':i===quizStep?'var(--orange-light)':'rgba(255,255,255,0.15)', transition:'background 0.3s' }} />))}
-              </div>
-              <p style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:12, color:'rgba(255,255,255,0.35)', letterSpacing:1.5, textTransform:'uppercase', marginBottom:20 }}>
-                Question {quizStep+1} of {QUIZ_QUESTIONS.length}
-              </p>
-              <h3 style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:22, color:'#fff', marginBottom:28, lineHeight:1.3 }}>
-                {QUIZ_QUESTIONS[quizStep].q}
-              </h3>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
-                {QUIZ_QUESTIONS[quizStep].opts.map(o=>(
-                  <button key={o.v} onClick={()=>answerQuiz(o.v)} style={{
-                    background:'rgba(255,255,255,0.06)', border:'1.5px solid rgba(255,255,255,0.12)',
-                    color:'#fff', borderRadius:'var(--r-md)', padding:'20px 14px', cursor:'pointer',
-                    display:'flex', flexDirection:'column', alignItems:'center', gap:10,
-                    fontFamily:'var(--font-head)', fontWeight:500, fontSize:14, transition:'all 0.18s',
-                  }}
-                  onMouseEnter={e=>{(e.currentTarget as HTMLButtonElement).style.background='rgba(255,130,16,0.18)';(e.currentTarget as HTMLButtonElement).style.borderColor='rgba(255,130,16,0.5)';}}
-                  onMouseLeave={e=>{(e.currentTarget as HTMLButtonElement).style.background='rgba(255,255,255,0.06)';(e.currentTarget as HTMLButtonElement).style.borderColor='rgba(255,255,255,0.12)';}}>
-                    <span style={{ fontSize:32, lineHeight:1 }}>{o.e}</span>
-                    <span>{o.l}</span>
-                  </button>
+            /* ── QUIZ IN PROGRESS ── */
+            <div style={{ background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:'var(--r-lg)', padding:'40px 36px' }}>
+              {/* Progress */}
+              <div style={{ display:'flex', gap:8, marginBottom:6 }}>
+                {['Vibe','Stay','Habits','Dining','Interests'].map((label,i) => (
+                  <div key={i} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
+                    <div style={{ width:'100%', height:4, borderRadius:100, background:i<quizStep?'var(--orange)':i===quizStep?'var(--orange-light)':'rgba(255,255,255,0.15)', transition:'background 0.3s' }} />
+                    <span style={{ fontFamily:'var(--font-head)', fontSize:10, color:i<=quizStep?'var(--orange-light)':'rgba(255,255,255,0.25)', letterSpacing:0.5, textTransform:'uppercase' as const }}>{label}</span>
+                  </div>
                 ))}
               </div>
-              {quizStep > 0 && (
-                <button onClick={()=>{setQuizStep(q=>q-1);setAnswers(a=>a.slice(0,-1));}} style={{ marginTop:20, background:'none', border:'none', color:'rgba(255,255,255,0.4)', fontFamily:'var(--font-head)', fontSize:13, cursor:'pointer' }}>
-                  ← Back
-                </button>
+              <p style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:11, color:'rgba(255,255,255,0.3)', letterSpacing:1.5, textTransform:'uppercase', marginBottom:28, marginTop:16 }}>Step {quizStep+1} of 5</p>
+
+              {/* Step 0: Vibe spectrums */}
+              {quizStep === 0 && (
+                <div style={{ textAlign:'left' }}>
+                  <h3 style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:22, color:'#fff', marginBottom:8, textAlign:'center' }}>What is your ideal travel vibe?</h3>
+                  <p style={{ fontFamily:'var(--font-body)', fontSize:14, color:'rgba(255,255,255,0.50)', marginBottom:32, textAlign:'center' }}>Tap to set your position on each dial — there are no wrong answers.</p>
+                  {VIBE_SPECTRUMS.map(sp => (
+                    <div key={sp.key} style={{ marginBottom:28 }}>
+                      <div style={{ display:'flex', justifyContent:'space-between', marginBottom:10 }}>
+                        <span style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:13, color:'rgba(255,255,255,0.65)' }}>{sp.leftIcon} {sp.left}</span>
+                        <span style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:13, color:'rgba(255,255,255,0.65)' }}>{sp.right} {sp.rightIcon}</span>
+                      </div>
+                      <div style={{ display:'flex', gap:6 }}>
+                        {[0,1,2,3,4].map(v => {
+                          const sel = (quizVibes[sp.key] ?? 2) === v;
+                          return (
+                            <button key={v} onClick={()=>setQuizVibes(prev=>({...prev,[sp.key]:v}))} style={{ flex:1, height:48, borderRadius:12, cursor:'pointer', transition:'all 0.18s', background:sel?'rgba(255,130,16,0.25)':'rgba(255,255,255,0.06)', border:sel?'2px solid var(--orange)':'1.5px solid rgba(255,255,255,0.12)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                              <div style={{ width:sel?16:[8,10,12,10,8][v], height:sel?16:[8,10,12,10,8][v], borderRadius:'50%', transition:'all 0.18s', background:sel?'var(--orange)':'rgba(255,255,255,0.30)' }} />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                  <div style={{ display:'flex', justifyContent:'flex-end', marginTop:8 }}>
+                    <button onClick={()=>setQuizStep(1)} style={{ background:'var(--orange)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, padding:'14px 32px', borderRadius:'var(--r-pill)', border:'none', cursor:'pointer' }}>Continue →</button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 1: Accommodation */}
+              {quizStep === 1 && (
+                <div>
+                  <h3 style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:22, color:'#fff', marginBottom:8 }}>How do you like to stay?</h3>
+                  <p style={{ fontFamily:'var(--font-body)', fontSize:14, color:'rgba(255,255,255,0.50)', marginBottom:28 }}>Select all that appeal to you.</p>
+                  <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10, marginBottom:24 }}>
+                    {ACCOM_OPTIONS.map(opt => {
+                      const sel = quizAccom.includes(opt.v);
+                      return (
+                        <button key={opt.v} onClick={()=>setQuizAccom(p=>p.includes(opt.v)?p.filter(x=>x!==opt.v):[...p,opt.v])} style={{ background:sel?'rgba(255,130,16,0.18)':'rgba(255,255,255,0.06)', border:`1.5px solid ${sel?'var(--orange)':'rgba(255,255,255,0.12)'}`, borderRadius:'var(--r-md)', padding:'16px 10px', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:8, transition:'all 0.15s' }}>
+                          <span style={{ fontSize:26 }}>{opt.e}</span>
+                          <span style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:12, color:sel?'var(--orange-light)':'rgba(255,255,255,0.75)', lineHeight:1.3, textAlign:'center' }}>{opt.l}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div style={{ display:'flex', justifyContent:'space-between' }}>
+                    <button onClick={()=>setQuizStep(0)} style={{ background:'none', border:'none', color:'rgba(255,255,255,0.4)', fontFamily:'var(--font-head)', fontSize:13, cursor:'pointer' }}>← Back</button>
+                    <button onClick={()=>setQuizStep(2)} disabled={quizAccom.length===0} style={{ background:quizAccom.length>0?'var(--orange)':'rgba(255,255,255,0.15)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, padding:'14px 32px', borderRadius:'var(--r-pill)', border:'none', cursor:quizAccom.length>0?'pointer':'not-allowed' }}>Continue →</button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 2: Habits */}
+              {quizStep === 2 && (
+                <div style={{ textAlign:'left' }}>
+                  <h3 style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:22, color:'#fff', marginBottom:8, textAlign:'center' }}>How do you travel?</h3>
+                  <p style={{ fontFamily:'var(--font-body)', fontSize:14, color:'rgba(255,255,255,0.50)', marginBottom:28, textAlign:'center' }}>One answer per question.</p>
+                  {HABIT_QUESTIONS.map(hq => (
+                    <div key={hq.key} style={{ marginBottom:24 }}>
+                      <p style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:12, color:'var(--orange-light)', letterSpacing:1.5, textTransform:'uppercase', marginBottom:12 }}>{hq.label}</p>
+                      <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+                        {hq.opts.map(opt => {
+                          const sel = quizHabits[hq.key] === opt.v;
+                          return (
+                            <button key={opt.v} onClick={()=>setQuizHabits(p=>({...p,[hq.key]:opt.v}))} style={{ background:sel?'rgba(255,130,16,0.18)':'rgba(255,255,255,0.06)', border:`1.5px solid ${sel?'var(--orange)':'rgba(255,255,255,0.12)'}`, borderRadius:10, padding:'10px 16px', cursor:'pointer', transition:'all 0.15s', display:'flex', alignItems:'center', gap:8 }}>
+                              <span style={{ fontSize:18 }}>{opt.e}</span>
+                              <span style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:13, color:sel?'var(--orange-light)':'rgba(255,255,255,0.75)' }}>{opt.l}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                  <div style={{ display:'flex', justifyContent:'space-between', marginTop:8 }}>
+                    <button onClick={()=>setQuizStep(1)} style={{ background:'none', border:'none', color:'rgba(255,255,255,0.4)', fontFamily:'var(--font-head)', fontSize:13, cursor:'pointer' }}>← Back</button>
+                    <button onClick={()=>setQuizStep(3)} disabled={Object.keys(quizHabits).length<HABIT_QUESTIONS.length} style={{ background:Object.keys(quizHabits).length>=HABIT_QUESTIONS.length?'var(--orange)':'rgba(255,255,255,0.15)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, padding:'14px 32px', borderRadius:'var(--r-pill)', border:'none', cursor:Object.keys(quizHabits).length>=HABIT_QUESTIONS.length?'pointer':'not-allowed' }}>Continue →</button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3: Dining */}
+              {quizStep === 3 && (
+                <div>
+                  <h3 style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:22, color:'#fff', marginBottom:8 }}>What dining experiences do you love?</h3>
+                  <p style={{ fontFamily:'var(--font-body)', fontSize:14, color:'rgba(255,255,255,0.50)', marginBottom:28 }}>Select all that apply.</p>
+                  <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10, marginBottom:24 }}>
+                    {DINING_OPTIONS.map(opt => {
+                      const sel = quizDining.includes(opt.v);
+                      return (
+                        <button key={opt.v} onClick={()=>setQuizDining(p=>p.includes(opt.v)?p.filter(x=>x!==opt.v):[...p,opt.v])} style={{ background:sel?'rgba(255,130,16,0.18)':'rgba(255,255,255,0.06)', border:`1.5px solid ${sel?'var(--orange)':'rgba(255,255,255,0.12)'}`, borderRadius:'var(--r-md)', padding:'14px 8px', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:6, transition:'all 0.15s' }}>
+                          <span style={{ fontSize:24 }}>{opt.e}</span>
+                          <span style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:11, color:sel?'var(--orange-light)':'rgba(255,255,255,0.70)', lineHeight:1.3, textAlign:'center' }}>{opt.l}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div style={{ display:'flex', justifyContent:'space-between' }}>
+                    <button onClick={()=>setQuizStep(2)} style={{ background:'none', border:'none', color:'rgba(255,255,255,0.4)', fontFamily:'var(--font-head)', fontSize:13, cursor:'pointer' }}>← Back</button>
+                    <button onClick={()=>setQuizStep(4)} disabled={quizDining.length===0} style={{ background:quizDining.length>0?'var(--orange)':'rgba(255,255,255,0.15)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, padding:'14px 32px', borderRadius:'var(--r-pill)', border:'none', cursor:quizDining.length>0?'pointer':'not-allowed' }}>Continue →</button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 4: Interests */}
+              {quizStep === 4 && (
+                <div>
+                  <h3 style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:22, color:'#fff', marginBottom:8 }}>What are your favourite travel activities?</h3>
+                  <p style={{ fontFamily:'var(--font-body)', fontSize:14, color:'rgba(255,255,255,0.50)', marginBottom:28 }}>Select all that apply.</p>
+                  <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10, marginBottom:24 }}>
+                    {INTEREST_OPTIONS.map(opt => {
+                      const sel = quizInterests.includes(opt.v);
+                      return (
+                        <button key={opt.v} onClick={()=>setQuizInterests(p=>p.includes(opt.v)?p.filter(x=>x!==opt.v):[...p,opt.v])} style={{ background:sel?'rgba(255,130,16,0.18)':'rgba(255,255,255,0.06)', border:`1.5px solid ${sel?'var(--orange)':'rgba(255,255,255,0.12)'}`, borderRadius:'var(--r-md)', padding:'14px 8px', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:6, transition:'all 0.15s' }}>
+                          <span style={{ fontSize:24 }}>{opt.e}</span>
+                          <span style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:11, color:sel?'var(--orange-light)':'rgba(255,255,255,0.70)', lineHeight:1.3, textAlign:'center' }}>{opt.l}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div style={{ display:'flex', justifyContent:'space-between' }}>
+                    <button onClick={()=>setQuizStep(3)} style={{ background:'none', border:'none', color:'rgba(255,255,255,0.4)', fontFamily:'var(--font-head)', fontSize:13, cursor:'pointer' }}>← Back</button>
+                    <button onClick={finishQuiz} disabled={quizInterests.length===0} style={{ background:quizInterests.length>0?'var(--orange)':'rgba(255,255,255,0.15)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, padding:'14px 32px', borderRadius:'var(--r-pill)', border:'none', cursor:quizInterests.length>0?'pointer':'not-allowed' }}>
+                      Reveal my persona ✨
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
           )}
