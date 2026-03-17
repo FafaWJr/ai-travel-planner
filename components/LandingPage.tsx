@@ -6,10 +6,11 @@ import { motion } from 'framer-motion';
 import type { TripFormData, WeatherData } from '@/types';
 import { TripForm } from './TripForm';
 import {
-  Plane, AlertTriangle, Search, ArrowRight,
+  Plane, AlertTriangle, ArrowRight,
   ClipboardList, Bot, Map, CloudSun, CalendarDays,
   Hotel, Bus, Wallet, Lightbulb,
 } from 'lucide-react';
+import { HeroSearch } from './HeroSearch';
 
 const QUICK_CHIPS = [
   { label: 'Beach escape', destination: 'Bali, Indonesia' },
@@ -22,7 +23,6 @@ const QUICK_CHIPS = [
 export function LandingPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [heroSearch, setHeroSearch] = useState('');
   const [heroDestination, setHeroDestination] = useState('');
   const router = useRouter();
   const formRef = useRef<HTMLDivElement>(null);
@@ -31,13 +31,12 @@ export function LandingPage() {
     formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const handleHeroSubmit = () => {
-    if (heroSearch.trim()) setHeroDestination(heroSearch.trim());
+  const handleHeroSubmit = (destination: string) => {
+    if (destination.trim()) setHeroDestination(destination.trim());
     scrollToForm();
   };
 
   const handleChipClick = (destination: string) => {
-    setHeroSearch(destination);
     setHeroDestination(destination);
     scrollToForm();
   };
@@ -170,33 +169,14 @@ export function LandingPage() {
             Your AI travel planner. Personalised itineraries crafted in 30 seconds — tailored to your style, budget, and group.
           </motion.p>
 
-          {/* Search pill */}
+          {/* Search pill with autocomplete */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: 'easeOut', delay: 0.32 }}
-            className="flex items-center bg-white rounded-full shadow-2xl shadow-black/30 p-2 max-w-2xl mx-auto mb-5"
-            role="search"
-            aria-label="Destination search"
+            className="mb-5"
           >
-            <Search className="w-5 h-5 text-gray-400 ml-3 shrink-0" aria-hidden="true" />
-            <input
-              type="text"
-              value={heroSearch}
-              onChange={(e) => setHeroSearch(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleHeroSubmit()}
-              placeholder="Where do you want to go?"
-              className="flex-1 px-4 py-2.5 bg-transparent text-gray-900 text-base outline-none placeholder:text-gray-400 font-medium"
-              aria-label="Destination"
-            />
-            <button
-              onClick={handleHeroSubmit}
-              className="shrink-0 flex items-center gap-2 font-bold px-6 py-3 rounded-full text-sm text-white transition-colors bg-[#FF6B35] hover:bg-[#E55A25]"
-              aria-label="Plan my trip"
-            >
-              Plan my trip
-              <ArrowRight className="w-4 h-4" aria-hidden="true" />
-            </button>
+            <HeroSearch onSubmit={handleHeroSubmit} />
           </motion.div>
 
           {/* Quick chips */}
