@@ -623,11 +623,12 @@ function PlanForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; preF
   const [dest,   setDest]   = useState('');
   const [dep,    setDep]    = useState('');
   const [ret,    setRet]    = useState('');
-  const [adults, setAdults] = useState(2);
-  const [kids,   setKids]   = useState(0);
-  const [styles, setStyles] = useState<string[]>(preFilledData?.styles ?? []);
-  const [budget, setBudget] = useState(preFilledData?.budget ?? 'midrange');
-  const [notes,  setNotes]  = useState('');
+  const [adults,    setAdults]    = useState(2);
+  const [kids,      setKids]      = useState(0);
+  const [companion, setCompanion] = useState('partner');
+  const [styles,    setStyles]    = useState<string[]>(preFilledData?.styles ?? []);
+  const [budget,    setBudget]    = useState(preFilledData?.budget ?? 'midrange');
+  const [notes,     setNotes]     = useState('');
 
   // Sync pre-fill when quiz completes
   useState(() => { if (preFilledData) { setStyles(preFilledData.styles); setBudget(preFilledData.budget); } });
@@ -653,13 +654,30 @@ function PlanForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; preF
 
   const toggle = (v:string) => setStyles(p=>p.includes(v)?p.filter(s=>s!==v):[...p,v]);
 
+  const setAdultsChecked = (n: number) => {
+    setAdults(n);
+    if (n === 1 && kids === 0) setCompanion('solo');
+    else if (companion === 'solo') setCompanion('partner');
+  };
+  const setKidsChecked = (n: number) => {
+    setKids(n);
+    if (adults === 1 && n === 0) setCompanion('solo');
+    else if (n > 0 && companion !== 'family') setCompanion('family');
+    else if (n === 0 && companion === 'family') setCompanion('partner');
+  };
+
+  const companionLabel: Record<string,string> = {
+    solo:'travelling solo', partner:'travelling as a couple', family:'travelling with family', friends:'travelling with friends',
+  };
+
   const submit = () => {
     if (!dest) return;
     const bLabels: Record<string,string> = { budget:'budget-friendly', midrange:'mid-range', luxury:'luxury' };
     const tripStyles = styles.length ? `focusing on ${styles.join(', ')}` : '';
     const dates = dep ? `from ${dep}${ret?` to ${ret}`:''}` : '';
     const group = `for ${adults} adult${adults>1?'s':''}${kids>0?` and ${kids} child${kids>1?'ren':''}`:''}`;
-    onSubmit(`Plan a trip to ${dest} ${dates} ${group} with ${bLabels[budget]||budget} budget ${tripStyles}${notes?`. Additional context about what they're looking for: ${notes}`:''}`);
+    const companionCtx = companionLabel[companion] || '';
+    onSubmit(`Plan a trip to ${dest} ${dates} ${group}, ${companionCtx}, with ${bLabels[budget]||budget} budget ${tripStyles}${notes?`. Additional context about what they're looking for: ${notes}`:''}`);
   };
 
   const inp: React.CSSProperties = {
@@ -705,7 +723,7 @@ function PlanForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; preF
 
       {/* Travellers */}
       <div style={{ padding:'24px 32px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
-        {([['Adults', adults, setAdults, 1], ['Children', kids, setKids, 0]] as const).map(([l,val,set,min])=>(
+        {([['Adults', adults, setAdultsChecked, 1], ['Children', kids, setKidsChecked, 0]] as const).map(([l,val,set,min])=>(
           <div key={l as string}>
             <label style={lbl}>{l as string}</label>
             <div style={{ display:'flex', alignItems:'center', gap:0, background:'var(--bg-section)', borderRadius:'var(--r-md)', border:'1.5px solid rgba(0,68,123,0.12)', overflow:'hidden' }}>
@@ -717,6 +735,39 @@ function PlanForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; preF
             </div>
           </div>
         ))}
+      </div>
+
+      <hr style={divider} />
+
+      {/* Travelling with */}
+      <div style={{ padding:'24px 32px' }}>
+        <label style={{ ...lbl, marginBottom:14 }}>Travelling with</label>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10 }}>
+          {[
+            { v:'solo',    icon:'🧳', l:'Solo' },
+            { v:'partner', icon:'👫', l:'Partner' },
+            { v:'family',  icon:'👨‍👩‍👧', l:'Family' },
+            { v:'friends', icon:'🧑‍🤝‍🧑', l:'Friends' },
+          ].map(opt => {
+            const active = companion === opt.v;
+            return (
+              <button key={opt.v} onClick={()=>setCompanion(opt.v)} style={{
+                background: active ? 'rgba(0,68,123,0.06)' : 'var(--bg-section)',
+                border: `2px solid ${active ? 'var(--navy)' : 'transparent'}`,
+                borderRadius:'var(--r-md)', padding:'14px 8px', cursor:'pointer', textAlign:'center',
+                transition:'all 0.15s',
+              }}>
+                <div style={{ fontSize:22, marginBottom:6 }}>{opt.icon}</div>
+                <div style={{ fontFamily:'var(--font-head)', fontWeight: active ? 700 : 500, fontSize:13, color: active ? 'var(--navy)' : '#333' }}>{opt.l}</div>
+              </button>
+            );
+          })}
+        </div>
+        {companion === 'solo' && adults > 1 && (
+          <p style={{ fontFamily:'var(--font-body)', fontSize:12, color:'var(--gray-dark)', marginTop:8 }}>
+            You have {adults} adults selected — consider adjusting the traveller count.
+          </p>
+        )}
       </div>
 
       <hr style={divider} />
