@@ -267,6 +267,18 @@ const INTEREST_OPTIONS = [
   {v:'markets',e:'🏪',l:'Local Markets'},{v:'sports',e:'⚽',l:'Sports & Activities'},
 ];
 
+const PERSONA_DESTINATIONS: Record<string, Array<{name:string; country:string; desc:string; query:string}>> = {
+  'The Wild Explorer':       [{name:'Patagonia',     country:'Argentina & Chile', desc:'Glaciers, granite peaks and raw Andean wilderness with virtually no crowds.',   query:'Patagonia'},{name:'Faroe Islands',  country:'Denmark',           desc:'Dramatic sea cliffs, waterfalls and mist-shrouded volcanic seascapes.',       query:'Faroe Islands'},{name:'Kyrgyzstan',     country:'Central Asia',       desc:'Untouched mountain valleys, nomadic yurt camps and silk-road culture.',      query:'Kyrgyzstan'}],
+  'The Thrill Seeker':       [{name:'Queenstown',    country:'New Zealand',        desc:'The adventure capital of the world — bungee, skydive, raft, all in one week.',query:'Queenstown New Zealand'},{name:'Interlaken',     country:'Switzerland',        desc:'Alpine adventure hub ringed by lakes, glaciers and extreme sports.',         query:'Interlaken Switzerland'},{name:'Moab',          country:'Utah, USA',          desc:'Red-rock canyon country built for climbing, mountain biking and off-road.',  query:'Moab Utah'}],
+  'The Cultural Adventurer': [{name:'Tbilisi',        country:'Georgia',            desc:'Ancient cave monasteries, Soviet street art and world-class natural wine.',   query:'Tbilisi'},{name:'Oaxaca',         country:'Mexico',             desc:'Rich indigenous heritage, ancient ruins and a world-renowned food scene.',   query:'Oaxaca'},{name:'Luang Prabang',  country:'Laos',               desc:'Golden temples, saffron-robed monks at dawn and Mekong river sunsets.',      query:'Luang Prabang'}],
+  'The Expedition Traveller':[{name:'Machu Picchu',   country:'Peru',               desc:'Iconic Inca citadel perched high in the cloud-covered Andes mountains.',     query:'Machu Picchu'},{name:'Angkor Wat',     country:'Cambodia',           desc:"The world's largest religious monument, deep in the jungle.",               query:'Angkor Wat'},{name:'Cappadocia',     country:'Turkey',             desc:'Hot-air balloons at sunrise over fairy-chimney rock formations.',            query:'Cappadocia'}],
+  'The Mindful Wanderer':    [{name:'Azores',         country:'Portugal',           desc:'Volcanic island paradise with thermal pools, whale watching and wild coasts.',query:'Azores'},{name:'Chiang Mai',     country:'Thailand',           desc:'Jungle temples, elephant sanctuaries, wellness retreats and farm cuisine.',  query:'Chiang Mai'},{name:'Sintra',         country:'Portugal',           desc:'Fairy-tale palaces, misty forests and clifftop castles near Lisbon.',       query:'Sintra'}],
+  'The Beach Lover':         [{name:'Maldives',       country:'Indian Ocean',       desc:'Overwater bungalows, crystal-clear lagoons and pristine coral reefs.',        query:'Maldives'},{name:'Bali',           country:'Indonesia',          desc:'Lush rice paddies, surf-ready beaches and vibrant sunset beach clubs.',      query:'Bali'},{name:'Seychelles',     country:'East Africa',        desc:'Granite-boulder beaches, turquoise bays and tropical marine paradise.',      query:'Seychelles'}],
+  'The Cultural Connoisseur':[{name:'Havana',         country:'Cuba',               desc:"1950s cars, salsa rhythms, crumbling colonial grandeur and street art.",     query:'Havana'},{name:'Bologna',        country:'Italy',              desc:"Italy's food capital with medieval arcades, markets and student energy.",    query:'Bologna'},{name:'Fez',            country:'Morocco',            desc:"The world's oldest living medieval city, full of hidden souks and craft.",   query:'Fez'}],
+  'The Cultured Traveller':  [{name:'Paris',          country:'France',             desc:'The city of art, gastronomy, fashion and unmatched cultural grandeur.',       query:'Paris'},{name:'Florence',       country:'Italy',              desc:'Renaissance art, leather markets, extraordinary trattorias and wine bars.',  query:'Florence'},{name:'Kyoto',          country:'Japan',              desc:'Ancient temples, geisha districts and immaculate seasonal gardens.',          query:'Kyoto'}],
+  'The All-Rounder':         [{name:'Barcelona',      country:'Spain',              desc:'Gaudí architecture, tapas bars, beach days and world-class nightlife.',       query:'Barcelona'},{name:'Lisbon',         country:'Portugal',           desc:'Colourful trams, riverside restaurants and Atlantic surf beaches nearby.',   query:'Lisbon'},{name:'Cape Town',      country:'South Africa',       desc:'Mountain hikes, wine valleys, penguins and pristine ocean beaches.',         query:'Cape Town'}],
+};
+
 function generateQuizQuestions(personaName:string, interests:string[], dining:string[], habits:Record<string,string>): string[] {
   const base: Record<string,string[]> = {
     'The Wild Explorer': [
@@ -378,7 +390,8 @@ function computePersona(
   if (dining.includes('finedining')||dining.includes('farmtable')) traits.push('Foodie');
 
   const questions = generateQuizQuestions(p.name, interests, dining, habits);
-  return { ...p, budget, styles, questions, traits };
+  const destinations = PERSONA_DESTINATIONS[p.name] || PERSONA_DESTINATIONS['The All-Rounder'];
+  return { ...p, budget, styles, questions, traits, destinations };
 }
 
 const TRIP_IDEAS = [
@@ -411,6 +424,7 @@ export default function HomePage() {
   const [quizDining,     setQuizDining]     = useState<string[]>([]);
   const [quizInterests,  setQuizInterests]  = useState<string[]>([]);
   const [quizPersona,    setQuizPersona]    = useState<ReturnType<typeof computePersona>|null>(null);
+  const [destPhotos,     setDestPhotos]     = useState<Record<string,string|null>>({});
   const [hovered, setHovered]     = useState<number|null>(null);
   const [preFilledData, setPreFilledData] = useState<{budget:string; styles:string[]} | null>(null);
 
@@ -435,7 +449,21 @@ export default function HomePage() {
     setQuizStep(0); setShowQuiz(false); setQuizDone(false);
     setQuizVibes({energy:2,setting:2,crowd:2}); setQuizAccom([]);
     setQuizHabits({}); setQuizDining([]); setQuizInterests([]); setQuizPersona(null);
+    setDestPhotos({});
   };
+
+  // Fetch photos for quiz-suggested destinations
+  useEffect(() => {
+    if (!quizDone || !quizPersona) return;
+    setDestPhotos({});
+    quizPersona.destinations.forEach(async (d) => {
+      try {
+        const res = await fetch(`/api/place-photo?q=${encodeURIComponent(d.query)}`);
+        const data = await res.json();
+        setDestPhotos(prev => ({ ...prev, [d.name]: data.url ?? null }));
+      } catch { setDestPhotos(prev => ({ ...prev, [d.name]: null })); }
+    });
+  }, [quizDone, quizPersona]); // eslint-disable-line
 
   /* ── Shared styles ── */
   const S = {
@@ -649,6 +677,36 @@ export default function HomePage() {
                   ))}
                 </div>
               </div>
+              {/* Suggested destinations */}
+              <div style={{ marginBottom:32 }}>
+                <p style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:11, color:'var(--orange-light)', letterSpacing:2, textTransform:'uppercase', marginBottom:14 }}>Destinations for you</p>
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }}>
+                  {quizPersona.destinations.map((d) => {
+                    const photo = destPhotos[d.name];
+                    return (
+                      <div key={d.name} onClick={()=>go(`Plan a trip to ${d.name}, ${d.country}`)}
+                        style={{ cursor:'pointer', borderRadius:'var(--r-md)', overflow:'hidden', background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.10)', transition:'all 0.2s' }}
+                        onMouseEnter={e=>{(e.currentTarget as HTMLDivElement).style.border='1px solid rgba(255,130,16,0.45)';(e.currentTarget as HTMLDivElement).style.transform='translateY(-3px)';}}
+                        onMouseLeave={e=>{(e.currentTarget as HTMLDivElement).style.border='1px solid rgba(255,255,255,0.10)';(e.currentTarget as HTMLDivElement).style.transform='translateY(0)';}}>
+                        <div style={{ height:130, overflow:'hidden', background:'rgba(255,255,255,0.04)', position:'relative', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                          {photo
+                            ? <img src={photo} alt={d.name} style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+                            : <span style={{ fontSize:32, opacity:0.3 }}>📍</span>
+                          }
+                          <div style={{ position:'absolute', inset:0, background:'linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 55%)' }} />
+                          <div style={{ position:'absolute', bottom:8, right:10, fontFamily:'var(--font-head)', fontWeight:600, fontSize:11, color:'rgba(255,255,255,0.7)' }}>Plan this →</div>
+                        </div>
+                        <div style={{ padding:'12px 14px 14px' }}>
+                          <div style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, color:'#fff', marginBottom:2 }}>{d.name}</div>
+                          <div style={{ fontFamily:'var(--font-body)', fontSize:11, color:'var(--orange-light)', marginBottom:6 }}>{d.country}</div>
+                          <div style={{ fontFamily:'var(--font-body)', fontSize:12, color:'rgba(255,255,255,0.55)', lineHeight:1.55 }}>{d.desc}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
               <div style={{ marginBottom:32 }}>
                 <p style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:11, color:'var(--orange-light)', letterSpacing:2, textTransform:'uppercase', marginBottom:14 }}>You might want to ask</p>
                 <ul style={{ listStyle:'none', padding:0, margin:0, display:'flex', flexDirection:'column', gap:10 }}>
