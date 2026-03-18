@@ -629,8 +629,8 @@ Traveller Profile:
               src="/luna.png"
               alt="Luna — AI travel assistant"
               style={{
-                width:230, flexShrink:0, alignSelf:'flex-end',
-                marginLeft:-16, position:'relative', zIndex:1,
+                width:320, flexShrink:0, alignSelf:'flex-end',
+                marginLeft:-24, position:'relative', zIndex:1,
                 filter:'drop-shadow(0 16px 32px rgba(0,0,0,0.45))',
                 mixBlendMode:'multiply' as const,
                 pointerEvents:'none',
