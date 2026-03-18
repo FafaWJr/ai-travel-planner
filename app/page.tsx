@@ -1017,9 +1017,22 @@ function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; 
   const [adultAges, setAdultAges] = useState<string[]>(['','']);
   const [childAges, setChildAges] = useState<string[]>([]);
   const [companion, setCompanion] = useState('couple');
+  const [depTime, setDepTime] = useState('');
+  const [retTime, setRetTime] = useState('');
   const [styles, setStyles] = useState<string[]>(preFilledData?.styles ?? []);
   const [budget, setBudget] = useState(preFilledData?.budget ?? 'midrange');
   const [notes, setNotes] = useState('');
+  const [errors, setErrors] = useState<Record<string,string>>({});
+
+  const today = new Date().toISOString().split('T')[0];
+
+  const goNext = (nextStep: number) => {
+    const errs: Record<string,string> = {};
+    if (!dest.trim()) errs.dest = 'Please enter your destination.';
+    if (!dep) errs.dep = 'Please choose a departure date.';
+    setErrors(errs);
+    if (Object.keys(errs).length === 0) setStep(nextStep);
+  };
 
   useEffect(() => {
     if (preFilledData) { setStyles(preFilledData.styles); setBudget(preFilledData.budget); setStep(1); }
@@ -1043,7 +1056,7 @@ function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; 
     if (!dest) { setStep(0); return; }
     const bLabels: Record<string,string> = {budget:'budget-friendly',midrange:'mid-range',luxury:'luxury'};
     const tripStyles = styles.length ? `focusing on ${styles.join(', ')}` : '';
-    const dates = dep ? `from ${dep}${ret?` to ${ret}`:''}` : '';
+    const dates = dep ? `from ${dep}${depTime?` at ${depTime}`:''}${ret?` to ${ret}`:''}${ret&&retTime?` arriving ${retTime}`:''}` : '';
     const group = `for ${adults} adult${adults>1?'s':''}${kids>0?` and ${kids} child${kids>1?'ren':''}`:''}`;
     const cLabel: Record<string,string> = {solo:'travelling solo',couple:'travelling as a couple',partner:'travelling as a couple',family:'travelling with family',friends:'travelling with friends'};
     const filledAdultAges = adultAges.filter(Boolean);
@@ -1094,14 +1107,55 @@ function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; 
         {/* Step 0: Where & When */}
         {step===0 && (
           <div style={{ display:'flex',flexDirection:'column',gap:14 }}>
+            {/* Destination */}
             <div>
               <label style={lbl}>Destination <span style={{ color:'var(--orange)' }}>*</span></label>
-              <DestinationInput value={dest} onChange={setDest} />
+              <DestinationInput value={dest} onChange={v=>{setDest(v);if(v.trim())setErrors(p=>({...p,dest:''}));}} />
+              {errors.dest && <p style={{ fontFamily:'var(--font-body)',fontSize:12,color:'#E53E3E',marginTop:5,display:'flex',alignItems:'center',gap:4 }}>⚠ {errors.dest}</p>}
             </div>
-            <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:12 }}>
-              <div><label style={lbl}>Departure</label><input type="date" value={dep} onChange={e=>setDep(e.target.value)} style={inp} onFocus={e=>(e.target.style.borderColor='var(--navy)')} onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} /></div>
-              <div><label style={lbl}>Return</label><input type="date" value={ret} onChange={e=>setRet(e.target.value)} style={inp} onFocus={e=>(e.target.style.borderColor='var(--navy)')} onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} /></div>
+
+            {/* Departure date + time */}
+            <div>
+              <label style={lbl}>Departure <span style={{ color:'var(--orange)' }}>*</span></label>
+              <div style={{ display:'grid',gridTemplateColumns:'1fr auto',gap:8 }}>
+                <div>
+                  <input type="date" value={dep} min={today}
+                    onChange={e=>{setDep(e.target.value);if(ret&&e.target.value>ret)setRet('');if(e.target.value)setErrors(p=>({...p,dep:''}));}}
+                    style={{...inp,borderColor:errors.dep?'#E53E3E':'rgba(0,68,123,0.15)'}}
+                    onFocus={e=>(e.target.style.borderColor=errors.dep?'#E53E3E':'var(--navy)')}
+                    onBlur={e=>(e.target.style.borderColor=errors.dep?'#E53E3E':'rgba(0,68,123,0.15)')} />
+                </div>
+                <div style={{ display:'flex',alignItems:'center',gap:6 }}>
+                  <span style={{ fontFamily:'var(--font-body)',fontSize:11,color:'var(--gray-dark)',whiteSpace:'nowrap' }}>🕐 time</span>
+                  <input type="time" value={depTime} onChange={e=>setDepTime(e.target.value)}
+                    style={{...inp,width:100,padding:'11px 10px'}}
+                    onFocus={e=>(e.target.style.borderColor='var(--navy)')}
+                    onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} />
+                </div>
+              </div>
+              {errors.dep && <p style={{ fontFamily:'var(--font-body)',fontSize:12,color:'#E53E3E',marginTop:5,display:'flex',alignItems:'center',gap:4 }}>⚠ {errors.dep}</p>}
             </div>
+
+            {/* Return date + time */}
+            <div>
+              <label style={lbl}>Return <span style={{ fontFamily:'var(--font-body)',fontWeight:400,textTransform:'none',letterSpacing:0,color:'var(--gray-dark)' }}>(optional)</span></label>
+              <div style={{ display:'grid',gridTemplateColumns:'1fr auto',gap:8 }}>
+                <input type="date" value={ret} min={dep || today}
+                  onChange={e=>setRet(e.target.value)}
+                  style={inp}
+                  onFocus={e=>(e.target.style.borderColor='var(--navy)')}
+                  onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} />
+                <div style={{ display:'flex',alignItems:'center',gap:6 }}>
+                  <span style={{ fontFamily:'var(--font-body)',fontSize:11,color:'var(--gray-dark)',whiteSpace:'nowrap' }}>🕐 time</span>
+                  <input type="time" value={retTime} onChange={e=>setRetTime(e.target.value)}
+                    style={{...inp,width:100,padding:'11px 10px'}}
+                    onFocus={e=>(e.target.style.borderColor='var(--navy)')}
+                    onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} />
+                </div>
+              </div>
+            </div>
+
+            {/* Travellers */}
             <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:12 }}>
               {([['Adults',adults,setAdultsChecked,1],['Children',kids,setKidsChecked,0]] as const).map(([l,val,set,min])=>(
                 <div key={l as string}>
@@ -1114,6 +1168,8 @@ function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; 
                 </div>
               ))}
             </div>
+
+            {/* Ages */}
             {(adults>0||kids>0) && (
               <div>
                 <p style={{ fontFamily:'var(--font-head)',fontWeight:500,fontSize:10,color:'var(--gray-dark)',textTransform:'uppercase',letterSpacing:0.8,marginBottom:8 }}>Ages <span style={{ fontWeight:400,textTransform:'none',letterSpacing:0 }}>(optional)</span></p>
@@ -1133,8 +1189,9 @@ function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; 
                 </div>
               </div>
             )}
+
             <div style={{ display:'flex',justifyContent:'flex-end',paddingTop:4 }}>
-              <button onClick={()=>setStep(1)} disabled={!dest} style={{ ...navBtn(!dest?false:true), background:dest?'var(--navy)':'var(--gray-light)', cursor:dest?'pointer':'not-allowed' }}>Next →</button>
+              <button onClick={()=>goNext(1)} style={navBtn()}>Next →</button>
             </div>
           </div>
         )}
