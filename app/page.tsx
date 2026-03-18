@@ -198,13 +198,13 @@ const IconShield = () => (
 );
 
 /* ── Data ── */
-const DESTINATIONS = [
-  { name:'Santorini',   country:'Greece',    tag:'Romance',   color:'#FF8210', img:'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=800&q=80' },
-  { name:'Kyoto',       country:'Japan',     tag:'Culture',   color:'#00447B', img:'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=800&q=80' },
-  { name:'Patagonia',   country:'Argentina', tag:'Adventure', color:'#679AC1', img:'https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&w=800&q=80' },
-  { name:'Marrakech',   country:'Morocco',   tag:'Discovery', color:'#FFBD59', img:'https://images.unsplash.com/photo-1553603229-f8fd3f0e50ce?auto=format&fit=crop&w=800&q=80' },
-  { name:'Amalfi Coast',country:'Italy',     tag:'Luxury',    color:'#FF8210', img:'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=800&q=80' },
-  { name:'Bali',        country:'Indonesia', tag:'Wellness',  color:'#00447B', img:'https://images.unsplash.com/photo-1552733407-5d5c46c3bb3b?auto=format&fit=crop&w=800&q=80' },
+const HERO_IMAGES = [
+  { url:'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=1800&q=90', label:'The world is waiting.' },
+  { url:'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1800&q=90', label:'Mountains call.' },
+  { url:'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1800&q=90', label:'Beach escapes await.' },
+  { url:'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=1800&q=90', label:'Cities never sleep.' },
+  { url:'https://images.unsplash.com/photo-1418985991508-e47386d96a71?auto=format&fit=crop&w=1800&q=90', label:'Snow & adventure.' },
+  { url:'https://images.unsplash.com/photo-1509316785289-025f5b846b35?auto=format&fit=crop&w=1800&q=90', label:'Desert wonders.' },
 ];
 
 const QUICK_IDEAS = [
@@ -418,13 +418,19 @@ function computePersona(
   return { ...p, budget, styles, questions, traits, destinations };
 }
 
-const TRIP_IDEAS = [
+const ALL_TRIP_IDEAS = [
   { title:'10 Days in Japan', sub:'Tokyo to Kyoto', img:'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=600&q=80', tags:['Culture','Food'], dur:'10 days', bud:'Mid-range', q:'Plan a 10-day trip in Japan from Tokyo to Kyoto focusing on culture and food' },
   { title:'Greek Island Hopping', sub:'Santorini, Mykonos & Rhodes', img:'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=600&q=80', tags:['Romance','Beach'], dur:'14 days', bud:'Premium', q:'Plan a 14-day Greek island hopping trip' },
   { title:'Patagonia Adventure', sub:'Argentina & Chile', img:'https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&w=600&q=80', tags:['Adventure','Hiking'], dur:'12 days', bud:'Mid-range', q:'Plan a 12-day Patagonia adventure covering Argentina and Chile' },
   { title:'Morocco Highlights', sub:'Marrakech to Sahara', img:'https://images.unsplash.com/photo-1553603229-f8fd3f0e50ce?auto=format&fit=crop&w=600&q=80', tags:['Culture','Desert'], dur:'8 days', bud:'Budget', q:'Plan an 8-day Morocco trip from Marrakech to the Sahara' },
   { title:'Bali Wellness Retreat', sub:'Ubud & Seminyak', img:'https://images.unsplash.com/photo-1552733407-5d5c46c3bb3b?auto=format&fit=crop&w=600&q=80', tags:['Wellness','Beach'], dur:'10 days', bud:'Mid-range', q:'Plan a 10-day Bali wellness retreat in Ubud and Seminyak' },
   { title:'Amalfi Coast Drive', sub:'Naples to Positano', img:'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=600&q=80', tags:['Scenic','Food'], dur:'7 days', bud:'Premium', q:'Plan a 7-day Amalfi Coast road trip from Naples to Positano' },
+  { title:'Iceland Ring Road', sub:'Reykjavik & Beyond', img:'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?auto=format&fit=crop&w=600&q=80', tags:['Adventure','Nature'], dur:'10 days', bud:'Mid-range', q:'Plan a 10-day Iceland ring road trip from Reykjavik' },
+  { title:'Safari in Kenya', sub:'Masai Mara & Amboseli', img:'https://images.unsplash.com/photo-1523805009345-7448845a9e53?auto=format&fit=crop&w=600&q=80', tags:['Wildlife','Safari'], dur:'9 days', bud:'Premium', q:'Plan a 9-day safari in Kenya covering Masai Mara and Amboseli' },
+  { title:'Peru & Machu Picchu', sub:'Lima, Cusco & Inca Trail', img:'https://images.unsplash.com/photo-1526392060635-9d6019884377?auto=format&fit=crop&w=600&q=80', tags:['History','Hiking'], dur:'12 days', bud:'Mid-range', q:'Plan a 12-day Peru trip including Lima, Cusco and Machu Picchu' },
+  { title:'New Zealand South Island', sub:'Queenstown to Fiordland', img:'https://images.unsplash.com/photo-1507699622108-4be3abd695ad?auto=format&fit=crop&w=600&q=80', tags:['Adventure','Scenic'], dur:'14 days', bud:'Mid-range', q:'Plan a 14-day New Zealand South Island road trip from Queenstown to Fiordland' },
+  { title:'Thailand Island Tour', sub:'Bangkok, Chiang Mai & Koh Samui', img:'https://images.unsplash.com/photo-1506665531195-3566af2b4dfa?auto=format&fit=crop&w=600&q=80', tags:['Beach','Culture'], dur:'14 days', bud:'Budget', q:'Plan a 14-day Thailand trip covering Bangkok, Chiang Mai and Koh Samui' },
+  { title:'Portugal Road Trip', sub:'Lisbon, Porto & Algarve', img:'https://images.unsplash.com/photo-1513735492246-483525079686?auto=format&fit=crop&w=600&q=80', tags:['Culture','Food'], dur:'10 days', bud:'Budget', q:'Plan a 10-day Portugal road trip from Lisbon to Porto and the Algarve' },
 ];
 
 const FEATURES = [
@@ -451,8 +457,12 @@ export default function HomePage() {
   const [destPhotos,     setDestPhotos]     = useState<Record<string,string|null>>({});
   const [aiDestinations, setAiDestinations] = useState<Array<{name:string;country:string;desc:string;query:string}>|null>(null);
   const [aiDestsLoading, setAiDestsLoading] = useState(false);
-  const [hovered, setHovered]     = useState<number|null>(null);
   const [preFilledData, setPreFilledData] = useState<{budget:string; styles:string[]} | null>(null);
+  const [heroImgIdx, setHeroImgIdx] = useState(0);
+  const [tripIdeas] = useState(() => {
+    const shuffled = [...ALL_TRIP_IDEAS].sort(()=>Math.random()-0.5);
+    return shuffled.slice(0,6);
+  });
 
   const go = (q?: string) => {
     const s = (q || query).trim();
@@ -463,6 +473,11 @@ export default function HomePage() {
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior:'smooth' });
   };
+
+  useEffect(() => {
+    const t = setInterval(() => setHeroImgIdx(i => (i+1) % HERO_IMAGES.length), 10000);
+    return () => clearInterval(t);
+  }, []);
 
   const fetchAiDestinations = async (persona: ReturnType<typeof computePersona>) => {
     setAiDestsLoading(true);
@@ -562,13 +577,13 @@ Traveller Profile:
           <img src="/goto-logo.png" alt="GOTO" style={{ height:38, width:'auto' }} />
         </a>
         <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-          {['Destinations','Trip Ideas','Quiz'].map(l => (
+          {['Trip Ideas','Quiz'].map(l => (
             <a key={l} href={`#${l.toLowerCase().replace(' ','-')}`}
                style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:14, color:'var(--gray-dark)', padding:'8px 14px', borderRadius:8 }}>
               {l}
             </a>
           ))}
-          <a href="#plan-form" style={{
+          <a href="#" onClick={e=>{e.preventDefault();window.scrollTo({top:0,behavior:'smooth'});}} style={{
             marginLeft:12, background:'var(--navy)', color:'#fff',
             fontFamily:'var(--font-head)', fontWeight:600, fontSize:14,
             padding:'10px 22px', borderRadius:'var(--r-pill)',
@@ -577,66 +592,34 @@ Traveller Profile:
       </nav>
 
       {/* ───── HERO ───── */}
-      <section style={{ position:'relative', height:'100vh', minHeight:680, display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden' }}>
-        {/* Photo */}
-        <div style={{ position:'absolute', inset:0, backgroundImage:'url(https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=1800&q=90)', backgroundSize:'cover', backgroundPosition:'center 40%' }} />
+      <section style={{ position:'relative', minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden', padding:'80px 24px' }}>
+        {/* Photo — rotates every 10s */}
+        {HERO_IMAGES.map((img,i) => (
+          <div key={img.url} style={{ position:'absolute', inset:0, backgroundImage:`url(${img.url})`, backgroundSize:'cover', backgroundPosition:'center 40%', transition:'opacity 1.5s ease', opacity:i===heroImgIdx?1:0 }} />
+        ))}
         {/* Strong colour overlay — deep navy #00447B at 68% */}
         <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg, rgba(0,40,90,0.75) 0%, rgba(0,68,123,0.60) 50%, rgba(0,20,60,0.78) 100%)' }} />
 
-        <div style={{ position:'relative', zIndex:2, textAlign:'center', maxWidth:860, padding:'0 24px', width:'100%' }}>
+        <div style={{ position:'relative', zIndex:2, textAlign:'center', maxWidth:580, width:'100%' }}>
           {/* Badge */}
-          <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(255,255,255,0.12)', backdropFilter:'blur(12px)', border:'1px solid rgba(255,255,255,0.22)', borderRadius:'var(--r-pill)', padding:'6px 18px', marginBottom:28, animation:'fadeIn 0.6s ease both' }}>
+          <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(255,255,255,0.12)', backdropFilter:'blur(12px)', border:'1px solid rgba(255,255,255,0.22)', borderRadius:'var(--r-pill)', padding:'6px 18px', marginBottom:24, animation:'fadeIn 0.6s ease both' }}>
             <span style={{ width:7, height:7, borderRadius:'50%', background:'#4ADE80', flexShrink:0 }} />
             <span style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:13, color:'rgba(255,255,255,0.92)' }}>AI-powered · Free · No account required</span>
           </div>
 
           {/* H1 */}
-          <h1 style={{ color:'#fff', marginBottom:20, animation:'fadeUp 0.65s 0.1s ease both' }}>
-            The world is waiting.<br/>
-            <span style={{ color:'var(--orange-light)' }}>Where to next?</span>
+          <h1 style={{ color:'#fff', marginBottom:14, animation:'fadeUp 0.65s 0.1s ease both' }}>
+            Plan your trip<br/>
+            <span style={{ color:'var(--orange-light)' }}>in 30 seconds.</span>
           </h1>
 
-          <p style={{ fontFamily:'var(--font-body)', fontWeight:400, fontSize:18, color:'rgba(255,255,255,0.75)', marginBottom:40, animation:'fadeUp 0.65s 0.2s ease both' }}>
-            Describe your dream trip and get a complete, personalised itinerary in 30 seconds.
+          <p style={{ fontFamily:'var(--font-body)', fontWeight:400, fontSize:17, color:'rgba(255,255,255,0.70)', marginBottom:32, animation:'fadeUp 0.65s 0.2s ease both' }}>
+            Tell us where you want to go — we'll handle the rest.
           </p>
 
-          {/* Search bar */}
-          <div style={{ display:'flex', alignItems:'center', background:'#fff', borderRadius:'var(--r-pill)', padding:'6px 6px 6px 22px', gap:10, boxShadow:'0 24px 64px rgba(0,0,0,0.30)', animation:'fadeUp 0.65s 0.3s ease both' }}>
-            <span style={{ fontSize:18, flexShrink:0 }}>🔍</span>
-            <input
-              type="text" value={query} onChange={e=>setQuery(e.target.value)} onKeyDown={e=>e.key==='Enter'&&go()}
-              placeholder="e.g. 10 days in Japan, mid-range budget, couple..."
-              style={{ flex:1, border:'none', outline:'none', fontFamily:'var(--font-body)', fontSize:16, color:'#000', background:'transparent', padding:'10px 0' }}
-            />
-            <button onClick={()=>go()} style={{
-              background:'var(--orange)', color:'#fff',
-              fontFamily:'var(--font-head)', fontWeight:600, fontSize:15,
-              padding:'14px 26px', borderRadius:'var(--r-pill)', border:'none', cursor:'pointer', whiteSpace:'nowrap',
-            }}>Plan my trip ✈</button>
+          <div style={{ animation:'fadeUp 0.65s 0.3s ease both', textAlign:'left', width:'100%' }}>
+            <HeroStepForm onSubmit={go} preFilledData={preFilledData} />
           </div>
-
-          {/* Quick chips */}
-          <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginTop:20, justifyContent:'center', animation:'fadeUp 0.65s 0.4s ease both' }}>
-            {QUICK_IDEAS.map(i=>(
-              <button key={i.label} onClick={()=>go(i.query)} style={{
-                background:'rgba(255,255,255,0.13)', backdropFilter:'blur(10px)',
-                border:'1px solid rgba(255,255,255,0.22)', color:'rgba(255,255,255,0.92)',
-                fontFamily:'var(--font-head)', fontWeight:500, fontSize:13,
-                padding:'8px 16px', borderRadius:'var(--r-pill)', cursor:'pointer', display:'flex', alignItems:'center', gap:6,
-              }}>{i.icon} {i.label}</button>
-            ))}
-            <button onClick={()=>scrollTo('quiz')} style={{
-              background:'var(--orange)', border:'none', color:'#fff',
-              fontFamily:'var(--font-head)', fontWeight:600, fontSize:13,
-              padding:'8px 16px', borderRadius:'var(--r-pill)', cursor:'pointer', display:'flex', alignItems:'center', gap:6,
-            }}>🎯 Take the quiz</button>
-          </div>
-        </div>
-
-        {/* Scroll hint */}
-        <div style={{ position:'absolute', bottom:32, left:'50%', transform:'translateX(-50%)', zIndex:2, display:'flex', flexDirection:'column', alignItems:'center', gap:6, animation:'fadeIn 1s 0.8s ease both', opacity:0 }}>
-          <span style={{ fontFamily:'var(--font-head)', color:'rgba(255,255,255,0.45)', fontSize:11, letterSpacing:2, textTransform:'uppercase' }}>Scroll</span>
-          <div style={{ width:1, height:36, background:'linear-gradient(to bottom, rgba(255,255,255,0.4), transparent)' }} />
         </div>
       </section>
 
@@ -652,31 +635,6 @@ Traveller Profile:
         </div>
       </section>
 
-      {/* ───── DESTINATIONS ───── */}
-      <section id="destinations" style={{ ...S.section, background:'#fff' }}>
-        <div className="container">
-          <div style={{ marginBottom:48 }}>
-            <p style={S.label}>Trending Destinations</p>
-            <h2 style={{ ...S.h2, maxWidth:520 }}>Dream destinations,<br/>crafted just for you.</h2>
-          </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gridTemplateRows:'repeat(2,260px)', gap:16 }}>
-            {DESTINATIONS.map((d,i)=>(
-              <div key={d.name} onClick={()=>go(`Plan a trip to ${d.name}, ${d.country}`)}
-                onMouseEnter={()=>setHovered(i)} onMouseLeave={()=>setHovered(null)}
-                style={{ position:'relative', borderRadius:'var(--r-lg)', overflow:'hidden', cursor:'pointer', gridColumn:i===0?'span 2':undefined, transition:'transform 0.3s', transform:hovered===i?'scale(1.015)':'scale(1)', boxShadow: hovered===i?'var(--shadow-hover)':'var(--shadow-card)' }}>
-                <img src={d.img} alt={d.name} style={{ width:'100%', height:'100%', objectFit:'cover', transition:'transform 0.5s', transform:hovered===i?'scale(1.06)':'scale(1)' }} />
-                <div style={{ position:'absolute', inset:0, background:'linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.08) 55%, transparent 100%)' }} />
-                <div style={{ position:'absolute', bottom:0, left:0, right:0, padding:'18px 20px' }}>
-                  <span style={{ display:'inline-block', background:d.color, color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:11, padding:'3px 10px', borderRadius:'var(--r-pill)', marginBottom:6, textTransform:'uppercase', letterSpacing:0.5 }}>{d.tag}</span>
-                  <div style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:i===0?26:20, color:'#fff', letterSpacing:'-0.3px' }}>{d.name}</div>
-                  <div style={{ fontFamily:'var(--font-body)', color:'rgba(255,255,255,0.65)', fontSize:13, marginTop:2 }}>{d.country}</div>
-                </div>
-                <div style={{ position:'absolute', top:14, right:14, background:'rgba(255,255,255,0.15)', backdropFilter:'blur(8px)', border:'1px solid rgba(255,255,255,0.25)', borderRadius:'var(--r-pill)', padding:'6px 14px', color:'#fff', fontFamily:'var(--font-head)', fontWeight:600, fontSize:12, opacity:hovered===i?1:0, transition:'opacity 0.2s' }}>Plan this →</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* ───── HOW IT WORKS ───── */}
       <section style={{ ...S.section, background:'var(--bg-section)' }}>
@@ -687,7 +645,7 @@ Traveller Profile:
             {[
               { n:'01', icon:'✏️', t:'Tell us your dream trip', d:'Destination, travel style, dates, group and budget — all in one natural sentence or our smart form.' },
               { n:'02', icon:'⚡', t:'AI crafts your plan',     d:'Your personalised itinerary is generated in under 30 seconds with 7 detailed sections tailored to you.' },
-              { n:'03', icon:'✨', t:'Explore & refine',        d:'Chat with AI to adjust any detail. Add activities, change hotels, tweak the budget — all in real time.' },
+              { n:'03', icon:'✨', t:'Explore & refine',        d:'Chat with AI to adjust any detail. Add activities, change hotels, tweak the budget — all in real time, for free.' },
             ].map(s=>(
               <div key={s.n} style={{ textAlign:'center' }}>
                 <div style={{ width:72, height:72, borderRadius:20, background:'#fff', border:'1.5px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:28, margin:'0 auto 16px', boxShadow:'var(--shadow-card)' }}>{s.icon}</div>
@@ -806,8 +764,8 @@ Traveller Profile:
                 </ul>
               </div>
               <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
-                <button onClick={()=>scrollTo('plan-form')} style={{ background:'var(--orange)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, padding:'14px 32px', borderRadius:'var(--r-pill)', border:'none', cursor:'pointer', boxShadow:'0 6px 20px rgba(255,130,16,0.35)' }}>
-                  ✈ Go to my planner ↓
+                <button onClick={()=>window.scrollTo({top:0,behavior:'smooth'})} style={{ background:'var(--orange)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, padding:'14px 32px', borderRadius:'var(--r-pill)', border:'none', cursor:'pointer', boxShadow:'0 6px 20px rgba(255,130,16,0.35)' }}>
+                  ✈ Go to my planner ↑
                 </button>
                 <button onClick={resetQuiz} style={{ background:'rgba(255,255,255,0.10)', color:'rgba(255,255,255,0.8)', fontFamily:'var(--font-head)', fontWeight:500, fontSize:15, padding:'14px 24px', borderRadius:'var(--r-pill)', border:'1px solid rgba(255,255,255,0.20)', cursor:'pointer' }}>
                   ↺ Retake quiz
@@ -971,10 +929,10 @@ Traveller Profile:
               <p style={S.label}>Curated Itineraries</p>
               <h2 style={S.h2}>Ready-made trip ideas.</h2>
             </div>
-            <a href="#plan-form" style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:15, color:'var(--navy)', borderBottom:'2px solid var(--navy)', paddingBottom:2 }}>Create a custom trip →</a>
+            <a href="#" onClick={e=>{e.preventDefault();window.scrollTo({top:0,behavior:'smooth'});}} style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:15, color:'var(--navy)', borderBottom:'2px solid var(--navy)', paddingBottom:2 }}>Create a custom trip →</a>
           </div>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(340px,1fr))', gap:20 }}>
-            {TRIP_IDEAS.map(t=>(
+            {tripIdeas.map(t=>(
               <div key={t.title} onClick={()=>go(t.q)} style={{ background:'#fff', borderRadius:'var(--r-lg)', overflow:'hidden', cursor:'pointer', border:'1px solid var(--border)', boxShadow:'var(--shadow-card)', transition:'all 0.3s' }}>
                 <div style={{ position:'relative', height:200, overflow:'hidden' }}>
                   <img src={t.img} alt={t.title} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
@@ -1001,29 +959,6 @@ Traveller Profile:
         </div>
       </section>
 
-      {/* ───── FORM ───── */}
-      <section id="plan-form" style={{ background:'var(--bg-section)', padding:'0 0 96px' }}>
-        {/* Navy header bar */}
-        <div style={{ background:'var(--navy)', padding:'56px 24px 72px', textAlign:'center', marginBottom:-40, position:'relative' }}>
-          <p style={{ ...S.label, color:'var(--orange-light)' }}>Your Adventure Awaits</p>
-          <h2 style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:32, color:'#fff', lineHeight:1.2, marginBottom:12 }}>
-            Plan your trip in 30 seconds
-          </h2>
-          <p style={{ fontFamily:'var(--font-body)', fontSize:17, color:'rgba(255,255,255,0.55)' }}>
-            Free · Personalised · No account required
-          </p>
-          {preFilledData && (
-            <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(255,130,16,0.18)', border:'1px solid rgba(255,130,16,0.35)', borderRadius:'var(--r-pill)', padding:'8px 18px', marginTop:20 }}>
-              <span style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:13, color:'var(--orange-light)' }}>
-                Quiz results applied — your style &amp; budget are pre-filled below
-              </span>
-            </div>
-          )}
-        </div>
-        <div style={{ maxWidth:700, margin:'0 auto', padding:'0 24px', position:'relative', zIndex:1 }}>
-          <PlanForm onSubmit={go} preFilledData={preFilledData} />
-        </div>
-      </section>
 
       {/* ───── FEATURES ───── */}
       <section style={{ ...S.section, background:'#fff' }}>
@@ -1067,6 +1002,201 @@ Traveller Profile:
         .quiz-slider::-moz-range-progress { background:#FF8210; height:8px; border-radius:100px; }
         @keyframes shimmer { 0%,100% { opacity:0.5; } 50% { opacity:1; } }
       `}</style>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────── */
+function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; preFilledData?:{budget:string;styles:string[]}|null }) {
+  const [step, setStep] = useState(0);
+  const [dest, setDest] = useState('');
+  const [dep, setDep] = useState('');
+  const [ret, setRet] = useState('');
+  const [adults, setAdults] = useState(2);
+  const [kids, setKids] = useState(0);
+  const [adultAges, setAdultAges] = useState<string[]>(['','']);
+  const [childAges, setChildAges] = useState<string[]>([]);
+  const [companion, setCompanion] = useState('couple');
+  const [styles, setStyles] = useState<string[]>(preFilledData?.styles ?? []);
+  const [budget, setBudget] = useState(preFilledData?.budget ?? 'midrange');
+  const [notes, setNotes] = useState('');
+
+  useEffect(() => {
+    if (preFilledData) { setStyles(preFilledData.styles); setBudget(preFilledData.budget); setStep(1); }
+  }, [preFilledData]); // eslint-disable-line
+
+  const setAdultsChecked = (n:number) => {
+    setAdults(n);
+    setAdultAges(prev=>{const a=[...prev];while(a.length<n)a.push('');return a.slice(0,n);});
+    if(n===1&&kids===0) setCompanion('solo'); else if(companion==='solo') setCompanion('couple');
+  };
+  const setKidsChecked = (n:number) => {
+    setKids(n);
+    setChildAges(prev=>{const a=[...prev];while(a.length<n)a.push('');return a.slice(0,n);});
+    if(adults===1&&n===0) setCompanion('solo');
+    else if(n>0&&companion!=='family') setCompanion('family');
+    else if(n===0&&companion==='family') setCompanion('couple');
+  };
+  const toggle = (v:string) => setStyles(p=>p.includes(v)?p.filter(s=>s!==v):[...p,v]);
+
+  const submit = () => {
+    if (!dest) { setStep(0); return; }
+    const bLabels: Record<string,string> = {budget:'budget-friendly',midrange:'mid-range',luxury:'luxury'};
+    const tripStyles = styles.length ? `focusing on ${styles.join(', ')}` : '';
+    const dates = dep ? `from ${dep}${ret?` to ${ret}`:''}` : '';
+    const group = `for ${adults} adult${adults>1?'s':''}${kids>0?` and ${kids} child${kids>1?'ren':''}`:''}`;
+    const cLabel: Record<string,string> = {solo:'travelling solo',couple:'travelling as a couple',partner:'travelling as a couple',family:'travelling with family',friends:'travelling with friends'};
+    const filledAdultAges = adultAges.filter(Boolean);
+    const filledChildAges = childAges.filter(Boolean);
+    const ageParts = [filledAdultAges.length?`adults aged ${filledAdultAges.join(', ')}`:'',...(filledChildAges.length?[`children aged ${filledChildAges.join(', ')}`]:[])].filter(Boolean);
+    const ageCtx = ageParts.length ? `. Traveller ages: ${ageParts.join('; ')}` : '';
+    onSubmit(`Plan a trip to ${dest} ${dates} ${group}, ${cLabel[companion]||''}, with ${bLabels[budget]||budget} budget ${tripStyles}${ageCtx}${notes?`. Additional context: ${notes}`:''}`);
+  };
+
+  const styleOpts = [
+    {v:'cultural',label:'🏛️ Cultural'},{v:'food',label:'🍽️ Food & Drink'},
+    {v:'nightlife',label:'🎉 Nightlife'},{v:'shopping',label:'🛍️ Shopping'},
+    {v:'family',label:'👨‍👩‍👧 Family'},{v:'adventure',label:'🏔️ Adventure'},
+    {v:'beach',label:'🏖️ Beach'},{v:'wellness',label:'🧘 Wellness'},
+    {v:'romance',label:'💑 Romance'},{v:'nature',label:'🌿 Nature'},
+    {v:'luxury',label:'💎 Luxury'},{v:'photography',label:'📸 Photography'},
+    {v:'ski',label:'🎿 Winter Sports'},{v:'safari',label:'🦁 Safari'},
+    {v:'roadtrip',label:'🚗 Road Trip'},{v:'citybreak',label:'🏙️ City Break'},
+  ];
+  const inp: React.CSSProperties = {width:'100%',boxSizing:'border-box' as const,border:'1.5px solid rgba(0,68,123,0.15)',borderRadius:'var(--r-md)',padding:'11px 14px',fontFamily:'var(--font-body)',fontSize:14,color:'#000',background:'#fff',outline:'none',transition:'border-color 0.18s'};
+  const lbl: React.CSSProperties = {fontFamily:'var(--font-head)',fontWeight:600,fontSize:11,color:'var(--navy)',marginBottom:6,display:'block',textTransform:'uppercase',letterSpacing:0.8};
+  const cBox: React.CSSProperties = {display:'flex',alignItems:'center',background:'#F4F7FB',border:'1.5px solid rgba(0,68,123,0.12)',borderRadius:'var(--r-md)',overflow:'hidden'};
+  const cBtn: React.CSSProperties = {width:40,height:40,background:'none',border:'none',color:'var(--navy)',fontSize:20,cursor:'pointer',flexShrink:0};
+  const navBtn = (primary=true): React.CSSProperties => ({
+    fontFamily:'var(--font-head)',fontWeight:700,fontSize:14,padding:'12px 28px',borderRadius:'var(--r-pill)',border:primary?'none':'1.5px solid rgba(0,68,123,0.15)',
+    background:primary?'var(--navy)':'none',color:primary?'#fff':'var(--navy)',cursor:'pointer',transition:'all 0.18s',
+  });
+  const STEPS = ['Where & When','Travel Style','Budget & Trip'];
+
+  return (
+    <div style={{ background:'#fff', borderRadius:'var(--r-lg)', boxShadow:'0 32px 80px rgba(0,0,0,0.28)', overflow:'hidden', textAlign:'left' }}>
+      {/* Step header */}
+      <div style={{ background:'var(--navy)', padding:'14px 28px', display:'flex', alignItems:'center' }}>
+        {STEPS.map((label,i) => (
+          <div key={i} style={{ display:'flex', alignItems:'center', flex:i<STEPS.length-1?1:'none' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
+              <div style={{ width:26,height:26,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center', background:i<step?'var(--orange)':i===step?'#fff':'rgba(255,255,255,0.15)', fontFamily:'var(--font-head)',fontWeight:700,fontSize:11, color:i<step?'#fff':i===step?'var(--navy)':'rgba(255,255,255,0.35)', flexShrink:0,transition:'all 0.2s' }}>
+                {i<step?'✓':i+1}
+              </div>
+              <span style={{ fontFamily:'var(--font-head)',fontWeight:i===step?600:400,fontSize:12,color:i===step?'#fff':'rgba(255,255,255,0.40)',whiteSpace:'nowrap' }}>{label}</span>
+            </div>
+            {i<STEPS.length-1 && <div style={{ flex:1,height:1,background:'rgba(255,255,255,0.15)',margin:'0 10px' }} />}
+          </div>
+        ))}
+      </div>
+
+      <div style={{ padding:'24px 28px' }}>
+        {/* Step 0: Where & When */}
+        {step===0 && (
+          <div style={{ display:'flex',flexDirection:'column',gap:14 }}>
+            <div>
+              <label style={lbl}>Destination <span style={{ color:'var(--orange)' }}>*</span></label>
+              <DestinationInput value={dest} onChange={setDest} />
+            </div>
+            <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:12 }}>
+              <div><label style={lbl}>Departure</label><input type="date" value={dep} onChange={e=>setDep(e.target.value)} style={inp} onFocus={e=>(e.target.style.borderColor='var(--navy)')} onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} /></div>
+              <div><label style={lbl}>Return</label><input type="date" value={ret} onChange={e=>setRet(e.target.value)} style={inp} onFocus={e=>(e.target.style.borderColor='var(--navy)')} onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} /></div>
+            </div>
+            <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:12 }}>
+              {([['Adults',adults,setAdultsChecked,1],['Children',kids,setKidsChecked,0]] as const).map(([l,val,set,min])=>(
+                <div key={l as string}>
+                  <label style={lbl}>{l as string}</label>
+                  <div style={cBox}>
+                    <button onClick={()=>(set as (n:number)=>void)(Math.max(min as number,(val as number)-1))} style={cBtn}>−</button>
+                    <span style={{ flex:1,textAlign:'center',fontFamily:'var(--font-head)',fontWeight:700,fontSize:18,color:'var(--navy)' }}>{val as number}</span>
+                    <button onClick={()=>(set as (n:number)=>void)((val as number)+1)} style={cBtn}>+</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {(adults>0||kids>0) && (
+              <div>
+                <p style={{ fontFamily:'var(--font-head)',fontWeight:500,fontSize:10,color:'var(--gray-dark)',textTransform:'uppercase',letterSpacing:0.8,marginBottom:8 }}>Ages <span style={{ fontWeight:400,textTransform:'none',letterSpacing:0 }}>(optional)</span></p>
+                <div style={{ display:'flex',flexWrap:'wrap',gap:6 }}>
+                  {adultAges.map((age,i)=>(
+                    <div key={`a${i}`} style={{ display:'flex',flexDirection:'column',alignItems:'center',gap:3 }}>
+                      <input type="number" min={1} max={99} value={age} placeholder="—" onChange={e=>setAdultAges(p=>{const a=[...p];a[i]=e.target.value;return a;})} style={{ width:46,padding:'6px 0',textAlign:'center',background:'#F4F7FB',border:'1.5px solid rgba(0,68,123,0.12)',borderRadius:8,fontFamily:'var(--font-head)',fontWeight:600,fontSize:13,color:'var(--navy)',outline:'none' }} onFocus={e=>(e.target.style.borderColor='var(--navy)')} onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.12)')} />
+                      <span style={{ fontFamily:'var(--font-body)',fontSize:9,color:'var(--gray-dark)' }}>Adult {adults>1?i+1:''}</span>
+                    </div>
+                  ))}
+                  {childAges.map((age,i)=>(
+                    <div key={`c${i}`} style={{ display:'flex',flexDirection:'column',alignItems:'center',gap:3 }}>
+                      <input type="number" min={1} max={17} value={age} placeholder="—" onChange={e=>setChildAges(p=>{const a=[...p];a[i]=e.target.value;return a;})} style={{ width:46,padding:'6px 0',textAlign:'center',background:'rgba(255,130,16,0.06)',border:'1.5px solid rgba(255,130,16,0.20)',borderRadius:8,fontFamily:'var(--font-head)',fontWeight:600,fontSize:13,color:'var(--navy)',outline:'none' }} onFocus={e=>(e.target.style.borderColor='var(--orange)')} onBlur={e=>(e.target.style.borderColor='rgba(255,130,16,0.20)')} />
+                      <span style={{ fontFamily:'var(--font-body)',fontSize:9,color:'var(--gray-dark)' }}>Child {kids>1?i+1:''}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div style={{ display:'flex',justifyContent:'flex-end',paddingTop:4 }}>
+              <button onClick={()=>setStep(1)} disabled={!dest} style={{ ...navBtn(!dest?false:true), background:dest?'var(--navy)':'var(--gray-light)', cursor:dest?'pointer':'not-allowed' }}>Next →</button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 1: Travelling With + Trip Style */}
+        {step===1 && (
+          <div style={{ display:'flex',flexDirection:'column',gap:18 }}>
+            <div>
+              <label style={{ ...lbl,marginBottom:10 }}>Travelling with</label>
+              <div style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8 }}>
+                {[{v:'solo',icon:'🧳',l:'Solo'},{v:'couple',icon:'💑',l:'Couple'},{v:'family',icon:'👨‍👩‍👧',l:'Family'},{v:'friends',icon:'🧑‍🤝‍🧑',l:'Friends'}].map(opt=>{
+                  const active=companion===opt.v;
+                  return (
+                    <button key={opt.v} onClick={()=>setCompanion(opt.v)} style={{ background:active?'rgba(0,68,123,0.07)':'#F4F7FB',border:`2px solid ${active?'var(--navy)':'transparent'}`,borderRadius:'var(--r-md)',padding:'12px 6px',cursor:'pointer',textAlign:'center',transition:'all 0.15s' }}>
+                      <div style={{ fontSize:20,marginBottom:4 }}>{opt.icon}</div>
+                      <div style={{ fontFamily:'var(--font-head)',fontWeight:active?700:500,fontSize:12,color:active?'var(--navy)':'#333' }}>{opt.l}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div>
+              <label style={{ ...lbl,marginBottom:10 }}>Trip Style {styles.length>0&&<span style={{ fontFamily:'var(--font-body)',fontWeight:400,fontSize:10,color:'var(--orange)',textTransform:'none',letterSpacing:0,marginLeft:4 }}>{styles.length} selected</span>}</label>
+              <div style={{ display:'flex',flexWrap:'wrap',gap:6 }}>
+                {styleOpts.map(o=>{const active=styles.includes(o.v);return(<button key={o.v} onClick={()=>toggle(o.v)} style={{ background:active?'rgba(255,130,16,0.10)':'#F4F7FB',border:`1.5px solid ${active?'var(--orange)':'rgba(0,68,123,0.10)'}`,color:active?'var(--orange)':'#333',fontFamily:'var(--font-head)',fontWeight:active?600:400,fontSize:12,borderRadius:'var(--r-pill)',padding:'6px 13px',cursor:'pointer',transition:'all 0.15s' }}>{o.label}</button>);})}
+              </div>
+            </div>
+            <div style={{ display:'flex',justifyContent:'space-between',paddingTop:4 }}>
+              <button onClick={()=>setStep(0)} style={navBtn(false)}>← Back</button>
+              <button onClick={()=>setStep(2)} style={navBtn()}>Next →</button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 2: Budget + Notes */}
+        {step===2 && (
+          <div style={{ display:'flex',flexDirection:'column',gap:18 }}>
+            <div>
+              <label style={{ ...lbl,marginBottom:10 }}>Budget Level</label>
+              <div style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8 }}>
+                {[{v:'budget',e:'🎒',l:'Budget',s:'< $80 / day'},{v:'midrange',e:'🏨',l:'Mid-range',s:'$80–250 / day'},{v:'luxury',e:'💎',l:'Luxury',s:'$250+ / day'}].map(b=>{
+                  const active=budget===b.v;
+                  return(<button key={b.v} onClick={()=>setBudget(b.v)} style={{ background:active?'rgba(0,68,123,0.07)':'#F4F7FB',border:`2px solid ${active?'var(--navy)':'transparent'}`,borderRadius:'var(--r-md)',padding:'14px 8px',cursor:'pointer',textAlign:'center',transition:'all 0.15s' }}>
+                    <div style={{ fontSize:22,marginBottom:5 }}>{b.e}</div>
+                    <div style={{ fontFamily:'var(--font-head)',fontWeight:700,fontSize:12,color:active?'var(--navy)':'#000',marginBottom:2 }}>{b.l}</div>
+                    <div style={{ fontFamily:'var(--font-body)',color:'var(--gray-dark)',fontSize:10 }}>{b.s}</div>
+                  </button>);
+                })}
+              </div>
+            </div>
+            <div>
+              <label style={lbl}>Describe your ideal trip <span style={{ fontFamily:'var(--font-body)',fontWeight:400,textTransform:'none',letterSpacing:0,color:'var(--gray-dark)' }}>(optional)</span></label>
+              <p style={{ fontFamily:'var(--font-body)',fontSize:11,color:'var(--gray-dark)',marginBottom:8,lineHeight:1.5 }}>Vibe, pace, must-see spots, dietary needs, occasions — anything that makes this trip special.</p>
+              <textarea value={notes} onChange={e=>setNotes(e.target.value)} placeholder="e.g. Slow-paced honeymoon focused on local food and hidden gems. One of us is vegetarian. Avoid big tourist crowds." maxLength={600} rows={3} style={{ ...inp,resize:'vertical' }} onFocus={e=>(e.target.style.borderColor='var(--navy)')} onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} />
+            </div>
+            <div style={{ display:'flex',justifyContent:'space-between',paddingTop:4 }}>
+              <button onClick={()=>setStep(1)} style={navBtn(false)}>← Back</button>
+              <button onClick={submit} style={{ ...navBtn(),background:'var(--orange)',boxShadow:'0 6px 20px rgba(255,130,16,0.30)',letterSpacing:0.3 }}>✈ Generate My Travel Plan</button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
