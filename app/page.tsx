@@ -618,24 +618,8 @@ Traveller Profile:
             Tell us where you want to go — we'll handle the rest.
           </p>
 
-          {/* Form + Luna — flex row, centred as a unit */}
-          <div style={{ display:'inline-flex', alignItems:'flex-end', animation:'fadeUp 0.65s 0.3s ease both' }}>
-            {/* Form */}
-            <div style={{ width:560, flexShrink:0, textAlign:'left', position:'relative', zIndex:2 }}>
-              <HeroStepForm onSubmit={go} preFilledData={preFilledData} />
-            </div>
-            {/* Luna — right of form, slight overlap, bottom-aligned */}
-            <img
-              src="/luna.png"
-              alt="Luna — AI travel assistant"
-              style={{
-                width:320, flexShrink:0, alignSelf:'flex-end',
-                marginLeft:-24, position:'relative', zIndex:1,
-                filter:'drop-shadow(0 16px 32px rgba(0,0,0,0.45))',
-                mixBlendMode:'multiply' as const,
-                pointerEvents:'none',
-              }}
-            />
+          <div style={{ width:'100%', maxWidth:560, textAlign:'left', animation:'fadeUp 0.65s 0.3s ease both' }}>
+            <HeroStepForm onSubmit={go} preFilledData={preFilledData} />
           </div>
 
         </div>
