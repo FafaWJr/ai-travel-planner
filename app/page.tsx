@@ -449,6 +449,8 @@ export default function HomePage() {
   const [quizInterests,  setQuizInterests]  = useState<string[]>([]);
   const [quizPersona,    setQuizPersona]    = useState<ReturnType<typeof computePersona>|null>(null);
   const [destPhotos,     setDestPhotos]     = useState<Record<string,string|null>>({});
+  const [aiDestinations, setAiDestinations] = useState<Array<{name:string;country:string;desc:string;query:string}>|null>(null);
+  const [aiDestsLoading, setAiDestsLoading] = useState(false);
   const [hovered, setHovered]     = useState<number|null>(null);
   const [preFilledData, setPreFilledData] = useState<{budget:string; styles:string[]} | null>(null);
 
@@ -462,32 +464,72 @@ export default function HomePage() {
     document.getElementById(id)?.scrollIntoView({ behavior:'smooth' });
   };
 
+  const fetchAiDestinations = async (persona: ReturnType<typeof computePersona>) => {
+    setAiDestsLoading(true);
+    setAiDestinations(null);
+    const vibeLabels = VIBE_SPECTRUMS.map(sp => `${sp.left}↔${sp.right}: ${sp.labels[quizVibes[sp.key] ?? 2]}`).join('; ');
+    const accomNames = quizAccom.map(a => ACCOM_OPTIONS.find(o=>o.v===a)?.l||a).join(', ') || 'flexible';
+    const diningNames = quizDining.map(d => DINING_OPTIONS.find(o=>o.v===d)?.l||d).join(', ') || 'varied';
+    const interestNames = quizInterests.map(i => INTEREST_OPTIONS.find(o=>o.v===i)?.l||i).join(', ') || 'varied';
+    const budgetLabel: Record<string,string> = {shoestring:'Shoestring',budget:'Budget-conscious',comfortable:'Comfortable',splurge:'Splurge often',unlimited:'No limits'};
+    const paceLabel: Record<string,string> = {early:'Early bird',day:'Daytime explorer',afternoon:'Afternoon starter',night:'Night owl'};
+    const socialLabel: Record<string,string> = {solo:'Solo & independent',couple:'Couple',mixed:'Mix of both',social:'Group & social'};
+    const prompt = `You are a world-class travel expert. Suggest exactly 3 travel destinations that are a perfect match for this traveller. Make them diverse — ideally different continents or regions. Be creative and think beyond the obvious.
+
+Return ONLY a valid JSON array with no other text, no markdown, no code blocks — just raw JSON:
+[{"name":"City or Place","country":"Country or Region","desc":"One vivid sentence about why this place suits this exact traveller.","query":"Wikipedia article title for this place"}]
+
+Traveller Profile:
+- Persona: ${persona.name} — ${persona.tagline}
+- Vibe dials: ${vibeLabels}
+- Accommodation style: ${accomNames}
+- Budget: ${budgetLabel[quizHabits.spend] || quizHabits.spend || 'comfortable'}
+- Daily pace: ${paceLabel[quizHabits.pace] || quizHabits.pace || 'flexible'}
+- Travel company: ${socialLabel[quizHabits.social] || quizHabits.social || 'flexible'}
+- Dining preferences: ${diningNames}
+- Interests: ${interestNames}`;
+    try {
+      const res = await fetch('/api/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ prompt }) });
+      const data = await res.json();
+      if (data.plan) {
+        const match = data.plan.match(/\[[\s\S]*?\]/);
+        if (match) {
+          const dests = JSON.parse(match[0]);
+          if (Array.isArray(dests) && dests.length > 0) { setAiDestinations(dests); return; }
+        }
+      }
+    } catch { /* fall through */ }
+    finally { setAiDestsLoading(false); }
+    setAiDestinations(persona.destinations); // static fallback
+  };
+
   const finishQuiz = () => {
     const persona = computePersona(quizVibes, quizAccom, quizHabits, quizDining, quizInterests);
     setQuizPersona(persona);
     setPreFilledData({ budget: persona.budget, styles: persona.styles });
     setQuizDone(true);
+    fetchAiDestinations(persona);
   };
 
   const resetQuiz = () => {
     setQuizStep(0); setShowQuiz(false); setQuizDone(false);
-    setQuizVibes({energy:2,setting:2,crowd:2}); setQuizAccom([]);
+    setQuizVibes({energy:2,setting:2,crowd:2,coast:2}); setQuizAccom([]);
     setQuizHabits({}); setQuizDining([]); setQuizInterests([]); setQuizPersona(null);
-    setDestPhotos({});
+    setDestPhotos({}); setAiDestinations(null); setAiDestsLoading(false);
   };
 
-  // Fetch photos for quiz-suggested destinations
+  // Fetch Wikipedia photos whenever AI destinations resolve
   useEffect(() => {
-    if (!quizDone || !quizPersona) return;
+    if (!aiDestinations) return;
     setDestPhotos({});
-    quizPersona.destinations.forEach(async (d) => {
+    aiDestinations.forEach(async (d) => {
       try {
         const res = await fetch(`/api/place-photo?q=${encodeURIComponent(d.query)}`);
         const data = await res.json();
         setDestPhotos(prev => ({ ...prev, [d.name]: data.url ?? null }));
       } catch { setDestPhotos(prev => ({ ...prev, [d.name]: null })); }
     });
-  }, [quizDone, quizPersona]); // eslint-disable-line
+  }, [aiDestinations]); // eslint-disable-line
 
   /* ── Shared styles ── */
   const S = {
@@ -701,34 +743,55 @@ export default function HomePage() {
                   ))}
                 </div>
               </div>
-              {/* Suggested destinations */}
+              {/* AI-suggested destinations */}
               <div style={{ marginBottom:32 }}>
-                <p style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:11, color:'var(--orange-light)', letterSpacing:2, textTransform:'uppercase', marginBottom:14 }}>Destinations for you</p>
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }}>
-                  {quizPersona.destinations.map((d) => {
-                    const photo = destPhotos[d.name];
-                    return (
-                      <div key={d.name} onClick={()=>go(`Plan a trip to ${d.name}, ${d.country}`)}
-                        style={{ cursor:'pointer', borderRadius:'var(--r-md)', overflow:'hidden', background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.10)', transition:'all 0.2s' }}
-                        onMouseEnter={e=>{(e.currentTarget as HTMLDivElement).style.border='1px solid rgba(255,130,16,0.45)';(e.currentTarget as HTMLDivElement).style.transform='translateY(-3px)';}}
-                        onMouseLeave={e=>{(e.currentTarget as HTMLDivElement).style.border='1px solid rgba(255,255,255,0.10)';(e.currentTarget as HTMLDivElement).style.transform='translateY(0)';}}>
-                        <div style={{ height:130, overflow:'hidden', background:'rgba(255,255,255,0.04)', position:'relative', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                          {photo
-                            ? <img src={photo} alt={d.name} style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
-                            : <span style={{ fontSize:32, opacity:0.3 }}>📍</span>
-                          }
-                          <div style={{ position:'absolute', inset:0, background:'linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 55%)' }} />
-                          <div style={{ position:'absolute', bottom:8, right:10, fontFamily:'var(--font-head)', fontWeight:600, fontSize:11, color:'rgba(255,255,255,0.7)' }}>Plan this →</div>
-                        </div>
-                        <div style={{ padding:'12px 14px 14px' }}>
-                          <div style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, color:'#fff', marginBottom:2 }}>{d.name}</div>
-                          <div style={{ fontFamily:'var(--font-body)', fontSize:11, color:'var(--orange-light)', marginBottom:6 }}>{d.country}</div>
-                          <div style={{ fontFamily:'var(--font-body)', fontSize:12, color:'rgba(255,255,255,0.55)', lineHeight:1.55 }}>{d.desc}</div>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
+                  <p style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:11, color:'var(--orange-light)', letterSpacing:2, textTransform:'uppercase', margin:0 }}>Destinations for you</p>
+                  {aiDestsLoading && <span style={{ fontFamily:'var(--font-body)', fontSize:12, color:'rgba(255,255,255,0.40)', display:'flex', alignItems:'center', gap:6 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ animation:'spin 0.9s linear infinite', flexShrink:0 }}><circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.2)" strokeWidth="3"/><path d="M12 2a10 10 0 0 1 10 10" stroke="#FF8210" strokeWidth="3" strokeLinecap="round"/></svg>
+                    AI is picking destinations…
+                  </span>}
+                </div>
+                {aiDestsLoading && !aiDestinations ? (
+                  <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }}>
+                    {[0,1,2].map(i => (
+                      <div key={i} style={{ borderRadius:'var(--r-md)', overflow:'hidden', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)' }}>
+                        <div style={{ height:130, background:'rgba(255,255,255,0.06)', animation:'shimmer 1.6s ease-in-out infinite' }} />
+                        <div style={{ padding:'12px 14px' }}>
+                          <div style={{ height:13, background:'rgba(255,255,255,0.08)', borderRadius:4, marginBottom:8, width:'70%' }} />
+                          <div style={{ height:10, background:'rgba(255,255,255,0.05)', borderRadius:4, marginBottom:6, width:'45%' }} />
+                          <div style={{ height:10, background:'rgba(255,255,255,0.04)', borderRadius:4 }} />
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }}>
+                    {(aiDestinations ?? []).map((d) => {
+                      const photo = destPhotos[d.name];
+                      return (
+                        <div key={d.name} onClick={()=>go(`Plan a trip to ${d.name}, ${d.country}`)}
+                          style={{ cursor:'pointer', borderRadius:'var(--r-md)', overflow:'hidden', background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.10)', transition:'all 0.2s' }}
+                          onMouseEnter={e=>{(e.currentTarget as HTMLDivElement).style.border='1px solid rgba(255,130,16,0.45)';(e.currentTarget as HTMLDivElement).style.transform='translateY(-3px)';}}
+                          onMouseLeave={e=>{(e.currentTarget as HTMLDivElement).style.border='1px solid rgba(255,255,255,0.10)';(e.currentTarget as HTMLDivElement).style.transform='translateY(0)';}}>
+                          <div style={{ height:130, overflow:'hidden', background:'rgba(255,255,255,0.04)', position:'relative', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                            {photo
+                              ? <img src={photo} alt={d.name} style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+                              : <span style={{ fontSize:32, opacity:0.25 }}>📍</span>
+                            }
+                            <div style={{ position:'absolute', inset:0, background:'linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 55%)' }} />
+                            <div style={{ position:'absolute', bottom:8, right:10, fontFamily:'var(--font-head)', fontWeight:600, fontSize:11, color:'rgba(255,255,255,0.7)' }}>Plan this →</div>
+                          </div>
+                          <div style={{ padding:'12px 14px 14px' }}>
+                            <div style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, color:'#fff', marginBottom:2 }}>{d.name}</div>
+                            <div style={{ fontFamily:'var(--font-body)', fontSize:11, color:'var(--orange-light)', marginBottom:6 }}>{d.country}</div>
+                            <div style={{ fontFamily:'var(--font-body)', fontSize:12, color:'rgba(255,255,255,0.55)', lineHeight:1.55 }}>{d.desc}</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               <div style={{ marginBottom:32 }}>
@@ -1002,6 +1065,7 @@ export default function HomePage() {
         .quiz-slider::-webkit-slider-thumb:hover { box-shadow:0 0 0 8px rgba(255,130,16,0.30), 0 2px 8px rgba(0,0,0,0.3); }
         .quiz-slider::-moz-range-thumb { width:26px; height:26px; border-radius:50%; background:#FF8210; cursor:pointer; border:none; box-shadow:0 0 0 5px rgba(255,130,16,0.25); }
         .quiz-slider::-moz-range-progress { background:#FF8210; height:8px; border-radius:100px; }
+        @keyframes shimmer { 0%,100% { opacity:0.5; } 50% { opacity:1; } }
       `}</style>
     </div>
   );
