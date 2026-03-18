@@ -597,29 +597,45 @@ Traveller Profile:
         {HERO_IMAGES.map((img,i) => (
           <div key={img.url} style={{ position:'absolute', inset:0, backgroundImage:`url(${img.url})`, backgroundSize:'cover', backgroundPosition:'center 40%', transition:'opacity 1.5s ease', opacity:i===heroImgIdx?1:0 }} />
         ))}
-        {/* Strong colour overlay — deep navy #00447B at 68% */}
-        <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg, rgba(0,40,90,0.75) 0%, rgba(0,68,123,0.60) 50%, rgba(0,20,60,0.78) 100%)' }} />
+        {/* Overlay */}
+        <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg, rgba(0,40,90,0.80) 0%, rgba(0,68,123,0.65) 50%, rgba(0,20,60,0.82) 100%)' }} />
 
-        <div style={{ position:'relative', zIndex:2, textAlign:'center', maxWidth:580, width:'100%' }}>
-          {/* Badge */}
-          <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(255,255,255,0.12)', backdropFilter:'blur(12px)', border:'1px solid rgba(255,255,255,0.22)', borderRadius:'var(--r-pill)', padding:'6px 18px', marginBottom:24, animation:'fadeIn 0.6s ease both' }}>
-            <span style={{ width:7, height:7, borderRadius:'50%', background:'#4ADE80', flexShrink:0 }} />
-            <span style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:13, color:'rgba(255,255,255,0.92)' }}>AI-powered · Free · No account required</span>
+        <div className="hero-layout" style={{ position:'relative', zIndex:2, display:'flex', alignItems:'flex-end', gap:48, maxWidth:1080, width:'100%' }}>
+
+          {/* ── Left: Maya + intro ── */}
+          <div className="hero-maya-col" style={{ flex:'0 0 auto', width:320, display:'flex', flexDirection:'column', animation:'fadeUp 0.65s 0.1s ease both' }}>
+            {/* Badge */}
+            <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(255,255,255,0.12)', backdropFilter:'blur(12px)', border:'1px solid rgba(255,255,255,0.22)', borderRadius:'var(--r-pill)', padding:'6px 16px', marginBottom:20, alignSelf:'flex-start' }}>
+              <span style={{ width:7, height:7, borderRadius:'50%', background:'#4ADE80', flexShrink:0 }} />
+              <span style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:12, color:'rgba(255,255,255,0.92)' }}>AI-powered · Free · No sign-up</span>
+            </div>
+
+            {/* Greeting */}
+            <h1 style={{ color:'#fff', marginBottom:12, fontSize:'clamp(28px,3.5vw,42px)', lineHeight:1.15 }}>
+              Hey, I'm Maya! 👋<br/>
+              <span style={{ color:'var(--orange-light)', fontSize:'0.78em' }}>Let's plan your perfect trip.</span>
+            </h1>
+            <p style={{ fontFamily:'var(--font-body)', fontSize:15, color:'rgba(255,255,255,0.65)', marginBottom:0, lineHeight:1.6 }}>
+              Tell me where you want to go and I'll design an unforgettable itinerary for you in no more than 30 seconds!
+            </p>
+
+            {/* Maya image */}
+            <img
+              src="/maya.png"
+              alt="Maya — AI travel assistant"
+              style={{
+                width:'100%', maxWidth:300, marginTop:12, alignSelf:'center',
+                filter:'drop-shadow(0 20px 40px rgba(0,0,0,0.50))',
+                mixBlendMode:'multiply' as const,
+              }}
+            />
           </div>
 
-          {/* H1 */}
-          <h1 style={{ color:'#fff', marginBottom:14, animation:'fadeUp 0.65s 0.1s ease both' }}>
-            Plan your trip<br/>
-            <span style={{ color:'var(--orange-light)' }}>in 30 seconds.</span>
-          </h1>
-
-          <p style={{ fontFamily:'var(--font-body)', fontWeight:400, fontSize:17, color:'rgba(255,255,255,0.70)', marginBottom:32, animation:'fadeUp 0.65s 0.2s ease both' }}>
-            Tell us where you want to go — we'll handle the rest.
-          </p>
-
-          <div style={{ animation:'fadeUp 0.65s 0.3s ease both', textAlign:'left', width:'100%' }}>
+          {/* ── Right: Form ── */}
+          <div style={{ flex:1, animation:'fadeUp 0.65s 0.25s ease both', paddingBottom:16 }}>
             <HeroStepForm onSubmit={go} preFilledData={preFilledData} />
           </div>
+
         </div>
       </section>
 
@@ -1001,6 +1017,11 @@ Traveller Profile:
         .quiz-slider::-moz-range-thumb { width:26px; height:26px; border-radius:50%; background:#FF8210; cursor:pointer; border:none; box-shadow:0 0 0 5px rgba(255,130,16,0.25); }
         .quiz-slider::-moz-range-progress { background:#FF8210; height:8px; border-radius:100px; }
         @keyframes shimmer { 0%,100% { opacity:0.5; } 50% { opacity:1; } }
+        @media (max-width: 768px) {
+          .hero-layout { flex-direction: column !important; align-items: center !important; }
+          .hero-maya-col { width: 100% !important; flex-direction: row !important; align-items: flex-end !important; gap: 16px; }
+          .hero-maya-col img { max-width: 140px !important; margin-top: 0 !important; }
+        }
       `}</style>
     </div>
   );
