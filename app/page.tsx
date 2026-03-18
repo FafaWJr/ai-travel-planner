@@ -218,9 +218,10 @@ const QUICK_IDEAS = [
 
 /* ── Quiz data ── */
 const VIBE_SPECTRUMS = [
-  { key:'energy',  leftIcon:'⛰️', left:'Pure Adventure',    right:'Total Relaxation',  rightIcon:'🌴' },
-  { key:'setting', leftIcon:'🌿', left:'Outdoors & Nature',  right:'Cities & Culture',  rightIcon:'🏛️' },
-  { key:'crowd',   leftIcon:'📸', left:'Famous Highlights',  right:'Hidden Local Gems', rightIcon:'🗺️' },
+  { key:'energy',  leftIcon:'⛰️', left:'Pure Adventure',    right:'Total Relaxation',  rightIcon:'🌴', labels:['Pure Adventure','Adventurous','Balanced','Relaxed','Pure Relaxation'] },
+  { key:'setting', leftIcon:'🌿', left:'Outdoors & Nature',  right:'Cities & Culture',  rightIcon:'🏛️', labels:['Pure Outdoors','Outdoorsy','Mix of both','Culture-leaning','Pure Culture'] },
+  { key:'crowd',   leftIcon:'📸', left:'Famous Highlights',  right:'Hidden Local Gems', rightIcon:'🗺️', labels:['Iconic hotspots','Popular spots','Mix of both','Off-beaten-path','Hidden gems'] },
+  { key:'coast',   leftIcon:'🏔️', left:'Mountains & Inland', right:'Beaches & Coast',   rightIcon:'🏖️', labels:['Deep inland','Mountain-based','Mix of both','Coastal vibes','Full beach mode'] },
 ];
 
 const ACCOM_OPTIONS = [
@@ -243,6 +244,7 @@ const HABIT_QUESTIONS = [
   ]},
   { key:'social', label:'Travel company', opts:[
     {e:'🧍',l:'Solo & independent',v:'solo'},
+    {e:'💑',l:'Couple',v:'couple'},
     {e:'🤝',l:'Mix of both',v:'mixed'},{e:'🎉',l:'Group & social',v:'social'},
   ]},
 ];
@@ -277,6 +279,18 @@ const PERSONA_DESTINATIONS: Record<string, Array<{name:string; country:string; d
   'The Cultural Connoisseur':[{name:'Havana',         country:'Cuba',               desc:"1950s cars, salsa rhythms, crumbling colonial grandeur and street art.",     query:'Havana'},{name:'Bologna',        country:'Italy',              desc:"Italy's food capital with medieval arcades, markets and student energy.",    query:'Bologna'},{name:'Fez',            country:'Morocco',            desc:"The world's oldest living medieval city, full of hidden souks and craft.",   query:'Fez'}],
   'The Cultured Traveller':  [{name:'Paris',          country:'France',             desc:'The city of art, gastronomy, fashion and unmatched cultural grandeur.',       query:'Paris'},{name:'Florence',       country:'Italy',              desc:'Renaissance art, leather markets, extraordinary trattorias and wine bars.',  query:'Florence'},{name:'Kyoto',          country:'Japan',              desc:'Ancient temples, geisha districts and immaculate seasonal gardens.',          query:'Kyoto'}],
   'The All-Rounder':         [{name:'Barcelona',      country:'Spain',              desc:'Gaudí architecture, tapas bars, beach days and world-class nightlife.',       query:'Barcelona'},{name:'Lisbon',         country:'Portugal',           desc:'Colourful trams, riverside restaurants and Atlantic surf beaches nearby.',   query:'Lisbon'},{name:'Cape Town',      country:'South Africa',       desc:'Mountain hikes, wine valleys, penguins and pristine ocean beaches.',         query:'Cape Town'}],
+};
+
+const BEACH_ALTERNATIVES: Record<string,{name:string;country:string;desc:string;query:string}> = {
+  'The Wild Explorer':       {name:'Fernando de Noronha', country:'Brazil',         desc:'Remote volcanic archipelago with crystal-clear reefs and zero mass tourism.',     query:'Fernando de Noronha'},
+  'The Thrill Seeker':       {name:'Nazaré',              country:'Portugal',       desc:'Home of the biggest surfable waves on earth — a pilgrimage for the bold.',        query:'Nazaré Portugal'},
+  'The Cultural Adventurer': {name:'Zanzibar',            country:'Tanzania',       desc:'Spice-scented islands with a rich Swahili culture and white-sand beaches.',        query:'Zanzibar'},
+  'The Expedition Traveller':{name:'Galápagos Islands',   country:'Ecuador',        desc:'Volcanic islands with unique wildlife, pristine reefs and raw natural wonder.',    query:'Galápagos Islands'},
+  'The Mindful Wanderer':    {name:'Koh Lanta',           country:'Thailand',       desc:'Quiet long-beach island with mangroves, yoga retreats and true slow living.',      query:'Koh Lanta Thailand'},
+  'The Cultural Connoisseur':{name:'Essaouira',           country:'Morocco',        desc:'Windswept blue-and-white port city with a medina, surf and fresh seafood.',        query:'Essaouira Morocco'},
+  'The Cultured Traveller':  {name:'Amalfi Coast',        country:'Italy',          desc:'Dramatic cliffside villages, lemons and sapphire Mediterranean water.',            query:'Amalfi Coast'},
+  'The All-Rounder':         {name:'Bali',                country:'Indonesia',      desc:'Lush rice paddies, surf-ready beaches, temples and vibrant beach clubs.',          query:'Bali'},
+  'The Beach Lover':         {name:'Turks & Caicos',      country:'Caribbean',      desc:'Some of the world\'s most pristine beaches with zero development in sight.',       query:'Turks and Caicos'},
 };
 
 function generateQuizQuestions(personaName:string, interests:string[], dining:string[], habits:Record<string,string>): string[] {
@@ -389,8 +403,18 @@ function computePersona(
   if (dining.includes('streetfood')||dining.includes('markets')) traits.push('Street food fan');
   if (dining.includes('finedining')||dining.includes('farmtable')) traits.push('Foodie');
 
+  const coast = vibes.coast ?? 2; // 0=inland … 4=beach
   const questions = generateQuizQuestions(p.name, interests, dining, habits);
-  const destinations = PERSONA_DESTINATIONS[p.name] || PERSONA_DESTINATIONS['The All-Rounder'];
+  let destinations = [...(PERSONA_DESTINATIONS[p.name] || PERSONA_DESTINATIONS['The All-Rounder'])];
+  // If user leans coastal (coast >= 3), inject a beach-specific destination
+  if (coast >= 3 && !['The Beach Lover'].includes(p.name)) {
+    const beachAlt = BEACH_ALTERNATIVES[p.name];
+    if (beachAlt) destinations = [beachAlt, destinations[0], destinations[1]];
+  } else if (coast >= 3 && p.name === 'The Beach Lover') {
+    // Already beach-focused — add extra beach gem
+    const extra = BEACH_ALTERNATIVES['The Beach Lover'];
+    if (extra) destinations = [...destinations.slice(0,2), extra];
+  }
   return { ...p, budget, styles, questions, traits, destinations };
 }
 
@@ -418,7 +442,7 @@ export default function HomePage() {
   const [quizStep,       setQuizStep]       = useState(0);
   const [showQuiz,       setShowQuiz]       = useState(false);
   const [quizDone,       setQuizDone]       = useState(false);
-  const [quizVibes,      setQuizVibes]      = useState<Record<string,number>>({energy:2,setting:2,crowd:2});
+  const [quizVibes,      setQuizVibes]      = useState<Record<string,number>>({energy:2,setting:2,crowd:2,coast:2});
   const [quizAccom,      setQuizAccom]      = useState<string[]>([]);
   const [quizHabits,     setQuizHabits]     = useState<Record<string,string>>({});
   const [quizDining,     setQuizDining]     = useState<string[]>([]);
@@ -742,29 +766,31 @@ export default function HomePage() {
               </div>
               <p style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:11, color:'rgba(255,255,255,0.3)', letterSpacing:1.5, textTransform:'uppercase', marginBottom:28, marginTop:16 }}>Step {quizStep+1} of 5</p>
 
-              {/* Step 0: Vibe spectrums */}
+              {/* Step 0: Vibe sliders */}
               {quizStep === 0 && (
                 <div style={{ textAlign:'left' }}>
                   <h3 style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:22, color:'#fff', marginBottom:8, textAlign:'center' }}>What is your ideal travel vibe?</h3>
-                  <p style={{ fontFamily:'var(--font-body)', fontSize:14, color:'rgba(255,255,255,0.50)', marginBottom:32, textAlign:'center' }}>Tap to set your position on each dial — there are no wrong answers.</p>
-                  {VIBE_SPECTRUMS.map(sp => (
-                    <div key={sp.key} style={{ marginBottom:28 }}>
-                      <div style={{ display:'flex', justifyContent:'space-between', marginBottom:10 }}>
-                        <span style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:13, color:'rgba(255,255,255,0.65)' }}>{sp.leftIcon} {sp.left}</span>
-                        <span style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:13, color:'rgba(255,255,255,0.65)' }}>{sp.right} {sp.rightIcon}</span>
+                  <p style={{ fontFamily:'var(--font-body)', fontSize:14, color:'rgba(255,255,255,0.50)', marginBottom:36, textAlign:'center' }}>Drag each slider to find your sweet spot — there are no wrong answers.</p>
+                  {VIBE_SPECTRUMS.map(sp => {
+                    const val = quizVibes[sp.key] ?? 2;
+                    const pct = val * 25;
+                    const currentLabel = sp.labels[val];
+                    return (
+                      <div key={sp.key} style={{ marginBottom:32 }}>
+                        <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
+                          <span style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:12, color:'rgba(255,255,255,0.55)' }}>{sp.leftIcon} {sp.left}</span>
+                          <span style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:12, color:'var(--orange-light)', background:'rgba(255,130,16,0.12)', border:'1px solid rgba(255,130,16,0.25)', borderRadius:'var(--r-pill)', padding:'2px 10px' }}>{currentLabel}</span>
+                          <span style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:12, color:'rgba(255,255,255,0.55)' }}>{sp.right} {sp.rightIcon}</span>
+                        </div>
+                        <input
+                          type="range" min={0} max={4} step={1} value={val}
+                          onChange={e => setQuizVibes(prev => ({...prev, [sp.key]: Number(e.target.value)}))}
+                          className="quiz-slider"
+                          style={{ '--fill': `${pct}%` } as React.CSSProperties}
+                        />
                       </div>
-                      <div style={{ display:'flex', gap:6 }}>
-                        {[0,1,2,3,4].map(v => {
-                          const sel = (quizVibes[sp.key] ?? 2) === v;
-                          return (
-                            <button key={v} onClick={()=>setQuizVibes(prev=>({...prev,[sp.key]:v}))} style={{ flex:1, height:48, borderRadius:12, cursor:'pointer', transition:'all 0.18s', background:sel?'rgba(255,130,16,0.25)':'rgba(255,255,255,0.06)', border:sel?'2px solid var(--orange)':'1.5px solid rgba(255,255,255,0.12)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                              <div style={{ width:sel?16:[8,10,12,10,8][v], height:sel?16:[8,10,12,10,8][v], borderRadius:'50%', transition:'all 0.18s', background:sel?'var(--orange)':'rgba(255,255,255,0.30)' }} />
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                   <div style={{ display:'flex', justifyContent:'flex-end', marginTop:8 }}>
                     <button onClick={()=>setQuizStep(1)} style={{ background:'var(--orange)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, padding:'14px 32px', borderRadius:'var(--r-pill)', border:'none', cursor:'pointer' }}>Continue →</button>
                   </div>
@@ -971,6 +997,11 @@ export default function HomePage() {
         @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
         button:hover { opacity:0.88; }
         .container { max-width:1200px; margin:0 auto; padding:0 32px; }
+        .quiz-slider { -webkit-appearance:none; appearance:none; width:100%; height:8px; border-radius:100px; outline:none; cursor:pointer; background:linear-gradient(to right, #FF8210 var(--fill,50%), rgba(255,255,255,0.15) var(--fill,50%)); }
+        .quiz-slider::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:26px; height:26px; border-radius:50%; background:#FF8210; cursor:pointer; box-shadow:0 0 0 5px rgba(255,130,16,0.25), 0 2px 8px rgba(0,0,0,0.3); transition:box-shadow 0.15s; }
+        .quiz-slider::-webkit-slider-thumb:hover { box-shadow:0 0 0 8px rgba(255,130,16,0.30), 0 2px 8px rgba(0,0,0,0.3); }
+        .quiz-slider::-moz-range-thumb { width:26px; height:26px; border-radius:50%; background:#FF8210; cursor:pointer; border:none; box-shadow:0 0 0 5px rgba(255,130,16,0.25); }
+        .quiz-slider::-moz-range-progress { background:#FF8210; height:8px; border-radius:100px; }
       `}</style>
     </div>
   );
