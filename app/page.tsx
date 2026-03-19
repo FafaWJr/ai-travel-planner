@@ -1052,7 +1052,7 @@ function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; 
   const goNext = (nextStep: number) => {
     const errs: Record<string,string> = {};
     if (!dest.trim()) errs.dest = 'Please enter your destination.';
-    if (!dep) errs.dep = 'Please choose a departure date.';
+    if (!dep) errs.dep = 'Please choose a start date.';
     setErrors(errs);
     if (Object.keys(errs).length === 0) setStep(nextStep);
   };
@@ -1137,9 +1137,9 @@ function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; 
               {errors.dest && <p style={{ fontFamily:'var(--font-body)',fontSize:12,color:'#E53E3E',marginTop:5,display:'flex',alignItems:'center',gap:4 }}>⚠ {errors.dest}</p>}
             </div>
 
-            {/* Departure date + time */}
+            {/* From date + arrival time */}
             <div>
-              <label style={lbl}>Departure <span style={{ color:'var(--orange)' }}>*</span></label>
+              <label style={lbl}>From <span style={{ color:'var(--orange)' }}>*</span></label>
               <div style={{ display:'grid',gridTemplateColumns:'1fr auto',gap:8 }}>
                 <div>
                   <input type="date" value={dep} min={today}
@@ -1149,7 +1149,7 @@ function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; 
                     onBlur={e=>(e.target.style.borderColor=errors.dep?'#E53E3E':'rgba(0,68,123,0.15)')} />
                 </div>
                 <div style={{ display:'flex',alignItems:'center',gap:6 }}>
-                  <span style={{ fontFamily:'var(--font-body)',fontSize:11,color:'var(--gray-dark)',whiteSpace:'nowrap' }}>🕐 time</span>
+                  <span style={{ fontFamily:'var(--font-body)',fontSize:11,color:'var(--gray-dark)',whiteSpace:'nowrap' }}>✈ Est. arrival</span>
                   <input type="time" value={depTime} onChange={e=>setDepTime(e.target.value)}
                     style={{...inp,width:100,padding:'11px 10px'}}
                     onFocus={e=>(e.target.style.borderColor='var(--navy)')}
@@ -1159,9 +1159,9 @@ function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; 
               {errors.dep && <p style={{ fontFamily:'var(--font-body)',fontSize:12,color:'#E53E3E',marginTop:5,display:'flex',alignItems:'center',gap:4 }}>⚠ {errors.dep}</p>}
             </div>
 
-            {/* Return date + time */}
+            {/* To date + end time */}
             <div>
-              <label style={lbl}>Return <span style={{ fontFamily:'var(--font-body)',fontWeight:400,textTransform:'none',letterSpacing:0,color:'var(--gray-dark)' }}>(optional)</span></label>
+              <label style={lbl}>To <span style={{ fontFamily:'var(--font-body)',fontWeight:400,textTransform:'none',letterSpacing:0,color:'var(--gray-dark)' }}>(optional)</span></label>
               <div style={{ display:'grid',gridTemplateColumns:'1fr auto',gap:8 }}>
                 <input type="date" value={ret} min={dep || today}
                   onChange={e=>setRet(e.target.value)}
@@ -1169,7 +1169,7 @@ function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; 
                   onFocus={e=>(e.target.style.borderColor='var(--navy)')}
                   onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} />
                 <div style={{ display:'flex',alignItems:'center',gap:6 }}>
-                  <span style={{ fontFamily:'var(--font-body)',fontSize:11,color:'var(--gray-dark)',whiteSpace:'nowrap' }}>🕐 time</span>
+                  <span style={{ fontFamily:'var(--font-body)',fontSize:11,color:'var(--gray-dark)',whiteSpace:'nowrap' }}>🏠 Est. return</span>
                   <input type="time" value={retTime} onChange={e=>setRetTime(e.target.value)}
                     style={{...inp,width:100,padding:'11px 10px'}}
                     onFocus={e=>(e.target.style.borderColor='var(--navy)')}
