@@ -431,6 +431,14 @@ const ALL_TRIP_IDEAS = [
   { title:'New Zealand South Island', sub:'Queenstown to Fiordland', img:'https://images.unsplash.com/photo-1507699622108-4be3abd695ad?auto=format&fit=crop&w=600&q=80', tags:['Adventure','Scenic'], dur:'14 days', bud:'Mid-range', q:'Plan a 14-day New Zealand South Island road trip from Queenstown to Fiordland' },
   { title:'Thailand Island Tour', sub:'Bangkok, Chiang Mai & Koh Samui', img:'https://images.unsplash.com/photo-1506665531195-3566af2b4dfa?auto=format&fit=crop&w=600&q=80', tags:['Beach','Culture'], dur:'14 days', bud:'Budget', q:'Plan a 14-day Thailand trip covering Bangkok, Chiang Mai and Koh Samui' },
   { title:'Portugal Road Trip', sub:'Lisbon, Porto & Algarve', img:'https://images.unsplash.com/photo-1513735492246-483525079686?auto=format&fit=crop&w=600&q=80', tags:['Culture','Food'], dur:'10 days', bud:'Budget', q:'Plan a 10-day Portugal road trip from Lisbon to Porto and the Algarve' },
+  { title:'Maldives Overwater Escape', sub:'North & South Malé Atolls', img:'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=600&q=80', tags:['Beach','Luxury'], dur:'7 days', bud:'Luxury', q:'Plan a 7-day luxury Maldives trip with overwater bungalow and snorkelling' },
+  { title:'Vietnam Street Food Trail', sub:'Hanoi, Hội An & Saigon', img:'https://images.unsplash.com/photo-1528360983277-13d401cdc186?auto=format&fit=crop&w=600&q=80', tags:['Food','Culture'], dur:'12 days', bud:'Budget', q:'Plan a 12-day Vietnam street food and culture trip from Hanoi to Ho Chi Minh City' },
+  { title:'Swiss Alps Winter', sub:'Zermatt, Interlaken & St Moritz', img:'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=600&q=80', tags:['Winter','Ski'], dur:'8 days', bud:'Premium', q:'Plan an 8-day Swiss Alps winter trip covering Zermatt, Interlaken and St Moritz' },
+  { title:'Costa Rica Wildlife', sub:'Arenal, Manuel Antonio & Tortuguero', img:'https://images.unsplash.com/photo-1518259102261-b40117eabbc9?auto=format&fit=crop&w=600&q=80', tags:['Wildlife','Adventure'], dur:'10 days', bud:'Mid-range', q:'Plan a 10-day Costa Rica wildlife and adventure trip' },
+  { title:'India Golden Triangle', sub:'Delhi, Agra & Jaipur', img:'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=600&q=80', tags:['Culture','History'], dur:'8 days', bud:'Budget', q:'Plan an 8-day India Golden Triangle trip covering Delhi, Agra and Jaipur' },
+  { title:'Romantic Paris Getaway', sub:'Paris & Versailles', img:'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=600&q=80', tags:['Romance','Culture'], dur:'5 days', bud:'Premium', q:'Plan a 5-day romantic Paris trip including Versailles day trip' },
+  { title:'Tanzania Safari & Zanzibar', sub:'Serengeti, Ngorongoro & Zanzibar', img:'https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=600&q=80', tags:['Safari','Beach'], dur:'12 days', bud:'Premium', q:'Plan a 12-day Tanzania safari in the Serengeti and Ngorongoro followed by Zanzibar beach' },
+  { title:'Spain Food & Culture', sub:'Madrid, Seville & Barcelona', img:'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?auto=format&fit=crop&w=600&q=80', tags:['Food','Culture'], dur:'10 days', bud:'Mid-range', q:'Plan a 10-day Spain road trip covering Madrid, Seville and Barcelona with food focus' },
 ];
 
 const FEATURES = [
@@ -459,10 +467,9 @@ export default function HomePage() {
   const [aiDestsLoading, setAiDestsLoading] = useState(false);
   const [preFilledData, setPreFilledData] = useState<{budget:string; styles:string[]} | null>(null);
   const [heroImgIdx, setHeroImgIdx] = useState(0);
-  const [tripIdeas] = useState(() => {
-    const shuffled = [...ALL_TRIP_IDEAS].sort(()=>Math.random()-0.5);
-    return shuffled.slice(0,6);
-  });
+  const [tripIdeas] = useState(() => [...ALL_TRIP_IDEAS].sort(()=>Math.random()-0.5));
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const carouselIdxRef = useRef(0);
 
   const go = (q?: string) => {
     const s = (q || query).trim();
@@ -478,6 +485,22 @@ export default function HomePage() {
     const t = setInterval(() => setHeroImgIdx(i => (i+1) % HERO_IMAGES.length), 10000);
     return () => clearInterval(t);
   }, []);
+
+  useEffect(() => {
+    const el = carouselRef.current;
+    if (!el) return;
+    const CARD_W = 320 + 20; // card width + gap
+    const t = setInterval(() => {
+      const maxIdx = tripIdeas.length - 1;
+      carouselIdxRef.current = carouselIdxRef.current >= maxIdx ? 0 : carouselIdxRef.current + 1;
+      if (carouselIdxRef.current === 0) {
+        el.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        el.scrollBy({ left: CARD_W, behavior: 'smooth' });
+      }
+    }, 4000);
+    return () => clearInterval(t);
+  }, [tripIdeas.length]);
 
   const fetchAiDestinations = async (persona: ReturnType<typeof computePersona>) => {
     setAiDestsLoading(true);
@@ -940,40 +963,75 @@ Traveller Profile:
       </section>
 
       {/* ───── TRIP IDEAS ───── */}
-      <section id="trip-ideas" style={{ ...S.section, background:'#fff' }}>
-        <div className="container">
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', marginBottom:48, flexWrap:'wrap', gap:16 }}>
+      <section id="trip-ideas" style={{ ...S.section, background:'#fff', overflow:'hidden' }}>
+        <div className="container" style={{ paddingBottom:0 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', marginBottom:40, flexWrap:'wrap', gap:16 }}>
             <div>
               <p style={S.label}>Curated Itineraries</p>
               <h2 style={S.h2}>Ready-made trip ideas.</h2>
             </div>
-            <a href="#" onClick={e=>{e.preventDefault();window.scrollTo({top:0,behavior:'smooth'});}} style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:15, color:'var(--navy)', borderBottom:'2px solid var(--navy)', paddingBottom:2 }}>Create a custom trip →</a>
+            <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+              <a href="#" onClick={e=>{e.preventDefault();window.scrollTo({top:0,behavior:'smooth'});}} style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:15, color:'var(--navy)', borderBottom:'2px solid var(--navy)', paddingBottom:2 }}>Create a custom trip →</a>
+              <div style={{ display:'flex', gap:8 }}>
+                <button
+                  aria-label="Previous"
+                  onClick={()=>{
+                    const el=carouselRef.current; if(!el) return;
+                    const CARD_W=320+20;
+                    carouselIdxRef.current=Math.max(0,carouselIdxRef.current-1);
+                    el.scrollBy({left:-CARD_W,behavior:'smooth'});
+                  }}
+                  style={{ width:40,height:40,borderRadius:'50%',border:'1.5px solid var(--border)',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,color:'var(--navy)',transition:'all 0.18s' }}
+                >‹</button>
+                <button
+                  aria-label="Next"
+                  onClick={()=>{
+                    const el=carouselRef.current; if(!el) return;
+                    const CARD_W=320+20; const maxIdx=tripIdeas.length-1;
+                    if(carouselIdxRef.current>=maxIdx){carouselIdxRef.current=0;el.scrollTo({left:0,behavior:'smooth'});}
+                    else{carouselIdxRef.current+=1;el.scrollBy({left:CARD_W,behavior:'smooth'});}
+                  }}
+                  style={{ width:40,height:40,borderRadius:'50%',border:'1.5px solid var(--border)',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,color:'var(--navy)',transition:'all 0.18s' }}
+                >›</button>
+              </div>
+            </div>
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(340px,1fr))', gap:20 }}>
-            {tripIdeas.map(t=>(
-              <div key={t.title} onClick={()=>go(t.q)} style={{ background:'#fff', borderRadius:'var(--r-lg)', overflow:'hidden', cursor:'pointer', border:'1px solid var(--border)', boxShadow:'var(--shadow-card)', transition:'all 0.3s' }}>
-                <div style={{ position:'relative', height:200, overflow:'hidden' }}>
-                  <img src={t.img} alt={t.title} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
-                  <div style={{ position:'absolute', top:12, left:12, display:'flex', gap:6, flexWrap:'wrap' }}>
-                    {t.tags.map(tag=>(
-                      <span key={tag} style={{ background:'rgba(0,0,0,0.5)', backdropFilter:'blur(6px)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:600, fontSize:11, padding:'3px 10px', borderRadius:'var(--r-pill)', textTransform:'uppercase', letterSpacing:0.4 }}>{tag}</span>
-                    ))}
-                  </div>
-                </div>
-                <div style={{ padding:'18px 20px 20px' }}>
-                  <h3 style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:'var(--fs-h3)', color:'#000', marginBottom:4 }}>{t.title}</h3>
-                  <p style={{ fontFamily:'var(--font-body)', color:'var(--gray-dark)', fontSize:14, marginBottom:14 }}>{t.sub}</p>
-                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                    <div style={{ display:'flex', gap:14 }}>
-                      <span style={{ fontFamily:'var(--font-body)', color:'var(--gray-dark)', fontSize:13 }}>📅 {t.dur}</span>
-                      <span style={{ fontFamily:'var(--font-body)', color:'var(--gray-dark)', fontSize:13 }}>💰 {t.bud}</span>
-                    </div>
-                    <span style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:13, color:'var(--orange)' }}>Plan this ↗</span>
-                  </div>
+        </div>
+        {/* Full-bleed scroll track */}
+        <div
+          ref={carouselRef}
+          className="carousel-scroll"
+          style={{ display:'flex', gap:20, overflowX:'auto', scrollSnapType:'x mandatory', paddingLeft:32, paddingRight:32, paddingBottom:24, cursor:'grab' }}
+        >
+          {tripIdeas.map(t=>(
+            <div
+              key={t.title}
+              onClick={()=>go(t.q)}
+              style={{ flexShrink:0, width:320, scrollSnapAlign:'start', background:'#fff', borderRadius:'var(--r-lg)', overflow:'hidden', cursor:'pointer', border:'1px solid var(--border)', boxShadow:'var(--shadow-card)', transition:'transform 0.2s, box-shadow 0.2s' }}
+              onMouseEnter={e=>{(e.currentTarget as HTMLDivElement).style.transform='translateY(-4px)';(e.currentTarget as HTMLDivElement).style.boxShadow='0 12px 36px rgba(0,0,0,0.12)';}}
+              onMouseLeave={e=>{(e.currentTarget as HTMLDivElement).style.transform='translateY(0)';(e.currentTarget as HTMLDivElement).style.boxShadow='var(--shadow-card)';}}
+            >
+              <div style={{ position:'relative', height:200, overflow:'hidden' }}>
+                <img src={t.img} alt={t.title} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                <div style={{ position:'absolute', top:12, left:12, display:'flex', gap:6, flexWrap:'wrap' }}>
+                  {t.tags.map(tag=>(
+                    <span key={tag} style={{ background:'rgba(0,0,0,0.5)', backdropFilter:'blur(6px)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:600, fontSize:11, padding:'3px 10px', borderRadius:'var(--r-pill)', textTransform:'uppercase', letterSpacing:0.4 }}>{tag}</span>
+                  ))}
                 </div>
               </div>
-            ))}
-          </div>
+              <div style={{ padding:'18px 20px 20px' }}>
+                <h3 style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:'var(--fs-h3)', color:'#000', marginBottom:4 }}>{t.title}</h3>
+                <p style={{ fontFamily:'var(--font-body)', color:'var(--gray-dark)', fontSize:14, marginBottom:14 }}>{t.sub}</p>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                  <div style={{ display:'flex', gap:14 }}>
+                    <span style={{ fontFamily:'var(--font-body)', color:'var(--gray-dark)', fontSize:13 }}>📅 {t.dur}</span>
+                    <span style={{ fontFamily:'var(--font-body)', color:'var(--gray-dark)', fontSize:13 }}>💰 {t.bud}</span>
+                  </div>
+                  <span style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:13, color:'var(--orange)' }}>Plan this ↗</span>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -1019,6 +1077,9 @@ Traveller Profile:
         .quiz-slider::-moz-range-thumb { width:26px; height:26px; border-radius:50%; background:#FF8210; cursor:pointer; border:none; box-shadow:0 0 0 5px rgba(255,130,16,0.25); }
         .quiz-slider::-moz-range-progress { background:#FF8210; height:8px; border-radius:100px; }
         @keyframes shimmer { 0%,100% { opacity:0.5; } 50% { opacity:1; } }
+        .carousel-scroll { -ms-overflow-style:none; scrollbar-width:none; }
+        .carousel-scroll::-webkit-scrollbar { display:none; }
+        .carousel-scroll:active { cursor:grabbing; }
         @media (max-width: 768px) {
           .hero-layout { flex-direction: column !important; align-items: center !important; }
           .hero-maya-col { width: 100% !important; flex-direction: row !important; align-items: flex-end !important; gap: 16px; }
