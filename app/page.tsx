@@ -1149,7 +1149,7 @@ function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; 
                     onBlur={e=>(e.target.style.borderColor=errors.dep?'#E53E3E':'rgba(0,68,123,0.15)')} />
                 </div>
                 <div style={{ display:'flex',alignItems:'center',gap:6 }}>
-                  <span style={{ fontFamily:'var(--font-body)',fontSize:11,color:'var(--gray-dark)',whiteSpace:'nowrap' }}>✈ Est. arrival</span>
+                  <span style={{ fontFamily:'var(--font-body)',fontSize:11,color:'var(--gray-dark)',whiteSpace:'nowrap' }}>Est. arrival</span>
                   <input type="time" value={depTime} onChange={e=>setDepTime(e.target.value)}
                     style={{...inp,width:100,padding:'11px 10px'}}
                     onFocus={e=>(e.target.style.borderColor='var(--navy)')}
@@ -1169,7 +1169,7 @@ function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; 
                   onFocus={e=>(e.target.style.borderColor='var(--navy)')}
                   onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} />
                 <div style={{ display:'flex',alignItems:'center',gap:6 }}>
-                  <span style={{ fontFamily:'var(--font-body)',fontSize:11,color:'var(--gray-dark)',whiteSpace:'nowrap' }}>🏠 Est. return</span>
+                  <span style={{ fontFamily:'var(--font-body)',fontSize:11,color:'var(--gray-dark)',whiteSpace:'nowrap' }}>Est. return</span>
                   <input type="time" value={retTime} onChange={e=>setRetTime(e.target.value)}
                     style={{...inp,width:100,padding:'11px 10px'}}
                     onFocus={e=>(e.target.style.borderColor='var(--navy)')}
