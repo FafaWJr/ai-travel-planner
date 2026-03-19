@@ -1087,10 +1087,10 @@ Traveller Profile:
         }
         @media (max-width: 480px) {
           .step-label { display: none !important; }
-          .date-time-row { flex-direction: column !important; align-items: stretch !important; }
+          .date-time-row { flex-direction: column !important; align-items: flex-start !important; }
           .date-time-row input[type="date"] { flex: none !important; width: 100% !important; }
-          .date-time-row > div { width: 100% !important; justify-content: space-between; }
-          .date-time-row > div input[type="time"] { flex: 1; width: auto !important; }
+          .date-time-row > div { width: auto !important; }
+          .date-time-row > div input[type="time"] { width: 110px !important; }
         }
       `}</style>
     </div>
