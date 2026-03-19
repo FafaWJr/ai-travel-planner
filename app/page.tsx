@@ -1085,6 +1085,13 @@ Traveller Profile:
           .hero-maya-col { width: 100% !important; flex-direction: row !important; align-items: flex-end !important; gap: 16px; }
           .hero-maya-col img { max-width: 140px !important; margin-top: 0 !important; }
         }
+        @media (max-width: 480px) {
+          .step-label { display: none !important; }
+          .date-time-row { flex-direction: column !important; align-items: stretch !important; }
+          .date-time-row input[type="date"] { flex: none !important; width: 100% !important; }
+          .date-time-row > div { width: 100% !important; justify-content: space-between; }
+          .date-time-row > div input[type="time"] { flex: 1; width: auto !important; }
+        }
       `}</style>
     </div>
   );
@@ -1180,7 +1187,7 @@ function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; 
               <div style={{ width:26,height:26,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center', background:i<step?'var(--orange)':i===step?'#fff':'rgba(255,255,255,0.15)', fontFamily:'var(--font-head)',fontWeight:700,fontSize:11, color:i<step?'#fff':i===step?'var(--navy)':'rgba(255,255,255,0.35)', flexShrink:0,transition:'all 0.2s' }}>
                 {i<step?'✓':i+1}
               </div>
-              <span style={{ fontFamily:'var(--font-head)',fontWeight:i===step?600:400,fontSize:12,color:i===step?'#fff':'rgba(255,255,255,0.40)',whiteSpace:'nowrap' }}>{label}</span>
+              <span className="step-label" style={{ fontFamily:'var(--font-head)',fontWeight:i===step?600:400,fontSize:12,color:i===step?'#fff':'rgba(255,255,255,0.40)',whiteSpace:'nowrap' }}>{label}</span>
             </div>
             {i<STEPS.length-1 && <div style={{ flex:1,height:1,background:'rgba(255,255,255,0.15)',margin:'0 10px' }} />}
           </div>
@@ -1201,18 +1208,16 @@ function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; 
             {/* From date + arrival time */}
             <div>
               <label style={lbl}>From <span style={{ color:'var(--orange)' }}>*</span></label>
-              <div style={{ display:'grid',gridTemplateColumns:'1fr auto',gap:8 }}>
-                <div>
-                  <input type="date" value={dep} min={today}
-                    onChange={e=>{setDep(e.target.value);if(ret&&e.target.value>ret)setRet('');if(e.target.value)setErrors(p=>({...p,dep:''}));}}
-                    style={{...inp,borderColor:errors.dep?'#E53E3E':'rgba(0,68,123,0.15)'}}
-                    onFocus={e=>(e.target.style.borderColor=errors.dep?'#E53E3E':'var(--navy)')}
-                    onBlur={e=>(e.target.style.borderColor=errors.dep?'#E53E3E':'rgba(0,68,123,0.15)')} />
-                </div>
-                <div style={{ display:'flex',alignItems:'center',gap:6 }}>
+              <div className="date-time-row" style={{ display:'flex',flexWrap:'wrap',gap:8,alignItems:'center' }}>
+                <input type="date" value={dep} min={today}
+                  onChange={e=>{setDep(e.target.value);if(ret&&e.target.value>ret)setRet('');if(e.target.value)setErrors(p=>({...p,dep:''}));}}
+                  style={{...inp,flex:'1 1 140px',minWidth:0,borderColor:errors.dep?'#E53E3E':'rgba(0,68,123,0.15)'}}
+                  onFocus={e=>(e.target.style.borderColor=errors.dep?'#E53E3E':'var(--navy)')}
+                  onBlur={e=>(e.target.style.borderColor=errors.dep?'#E53E3E':'rgba(0,68,123,0.15)')} />
+                <div style={{ display:'flex',alignItems:'center',gap:6,flexShrink:0 }}>
                   <span style={{ fontFamily:'var(--font-body)',fontSize:11,color:'var(--gray-dark)',whiteSpace:'nowrap' }}>Est. arrival</span>
                   <input type="time" value={depTime} onChange={e=>setDepTime(e.target.value)}
-                    style={{...inp,width:100,padding:'11px 10px'}}
+                    style={{...inp,width:110,padding:'11px 10px'}}
                     onFocus={e=>(e.target.style.borderColor='var(--navy)')}
                     onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} />
                 </div>
@@ -1223,16 +1228,16 @@ function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; 
             {/* To date + end time */}
             <div>
               <label style={lbl}>To <span style={{ fontFamily:'var(--font-body)',fontWeight:400,textTransform:'none',letterSpacing:0,color:'var(--gray-dark)' }}>(optional)</span></label>
-              <div style={{ display:'grid',gridTemplateColumns:'1fr auto',gap:8 }}>
+              <div className="date-time-row" style={{ display:'flex',flexWrap:'wrap',gap:8,alignItems:'center' }}>
                 <input type="date" value={ret} min={dep || today}
                   onChange={e=>setRet(e.target.value)}
-                  style={inp}
+                  style={{...inp,flex:'1 1 140px',minWidth:0}}
                   onFocus={e=>(e.target.style.borderColor='var(--navy)')}
                   onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} />
-                <div style={{ display:'flex',alignItems:'center',gap:6 }}>
+                <div style={{ display:'flex',alignItems:'center',gap:6,flexShrink:0 }}>
                   <span style={{ fontFamily:'var(--font-body)',fontSize:11,color:'var(--gray-dark)',whiteSpace:'nowrap' }}>Est. return</span>
                   <input type="time" value={retTime} onChange={e=>setRetTime(e.target.value)}
-                    style={{...inp,width:100,padding:'11px 10px'}}
+                    style={{...inp,width:110,padding:'11px 10px'}}
                     onFocus={e=>(e.target.style.borderColor='var(--navy)')}
                     onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} />
                 </div>
