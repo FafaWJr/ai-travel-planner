@@ -86,24 +86,41 @@ const SECTION_KEYWORDS: Record<string, string[]> = {
 /* ── Extract one section from the plan markdown ── */
 function extractSection(plan: string, sectionId: string): string {
   if (!plan) return '';
-  const keywords = SECTION_KEYWORDS[sectionId] || [];
+
+  // Parse all ## sections into an array, stripping emojis from headers for matching
+  const allSections: { rawHeader: string; cleanHeader: string; content: string[] }[] = [];
   const lines = plan.split('\n');
-  let collecting = false;
-  const out: string[] = [];
+  let current: { rawHeader: string; cleanHeader: string; content: string[] } | null = null;
 
   for (const line of lines) {
     if (/^##\s/.test(line)) {
-      if (collecting) break;
-      const header = line.replace(/^##\s+/, '').toLowerCase();
-      if (keywords.some(k => header.includes(k.toLowerCase()))) {
-        collecting = true;
-        out.push(line);
-      }
-    } else if (collecting) {
-      out.push(line);
+      if (current) allSections.push(current);
+      const raw = line.replace(/^##\s+/, '').trim();
+      // Strip emojis and non-alpha chars (except spaces and &) for matching
+      const clean = raw.replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}]/gu, '')
+                       .replace(/[^a-zA-Z0-9\s&]/g, ' ')
+                       .replace(/\s+/g, ' ').trim().toLowerCase();
+      current = { rawHeader: raw, cleanHeader: clean, content: [line] };
+    } else if (current) {
+      current.content.push(line);
     }
   }
-  return out.join('\n').trim() || plan; // fallback to full plan if section not found
+  if (current) allSections.push(current);
+
+  if (allSections.length === 0) return plan;
+
+  const keywords = SECTION_KEYWORDS[sectionId] || [];
+  const match = allSections.find(s =>
+    keywords.some(k => s.cleanHeader.includes(k.toLowerCase()))
+  );
+
+  if (match) return match.content.join('\n').trim();
+
+  // overview fallback: first section or full plan
+  if (sectionId === 'overview') return allSections[0]?.content.join('\n').trim() || plan;
+
+  const label = SECTIONS.find(s => s.id === sectionId)?.label || sectionId;
+  return `## ${label}\n\n*This section wasn't included in the generated plan. Use the AI chat on the right to ask for ${label.toLowerCase()} details!*`;
 }
 
 /* ── Minimal markdown → styled HTML ── */

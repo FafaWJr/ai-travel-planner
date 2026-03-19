@@ -39,11 +39,25 @@ export async function POST(request: NextRequest) {
 
     /* ── Simple prompt mode (used by the new homepage search bar) ── */
     if (typeof body.prompt === 'string' && body.prompt.trim()) {
+      const structuredPrompt = body.prompt.trim() + `
+
+Please provide a detailed, personalised travel plan in Markdown with exactly these 7 sections as H2 headers (no emojis in the headers):
+
+## Destination Overview
+## Travel Season & Weather
+## Personalised Itinerary
+## Where to Stay
+## Getting Around
+## Budget Estimator
+## Practical Tips
+
+Make each section specific, practical and engaging. Use bullet points and bold text throughout.`;
+
       let stream: ReadableStream<Uint8Array>;
       try {
         stream = await streamCompletion([
           { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: body.prompt.trim() },
+          { role: 'user', content: structuredPrompt },
         ]);
       } catch (err: any) {
         return new Response(
