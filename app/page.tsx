@@ -1087,9 +1087,8 @@ Traveller Profile:
         }
         @media (max-width: 480px) {
           .step-label { display: none !important; }
-          .date-time-row { flex-direction: column !important; align-items: flex-start !important; }
-          .date-time-row input[type="date"] { flex: none !important; width: 100% !important; }
-          .date-time-row > div { width: auto !important; }
+          .date-time-row { display: block !important; }
+          .date-time-row input[type="date"] { width: 100% !important; box-sizing: border-box !important; margin-bottom: 8px; }
           .date-time-row > div input[type="time"] { width: 110px !important; }
         }
       `}</style>
