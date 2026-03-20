@@ -597,7 +597,7 @@ Traveller Profile:
         borderBottom:'1px solid var(--border)',
       }}>
         <a href="/" style={{ display:'flex', alignItems:'center' }}>
-          <img src="/goto-logo.png" alt="GOTO" style={{ height:38, width:'auto' }} />
+          <img src="/lunaletsgo-logo.jpeg" alt="Luna Let's Go" style={{ height:44, width:'auto' }} />
         </a>
         <div style={{ display:'flex', alignItems:'center', gap:4 }}>
           {['Trip Ideas','Quiz'].map(l => (
@@ -1059,7 +1059,7 @@ Traveller Profile:
 
       {/* ───── FOOTER ───── */}
       <footer style={{ background:'var(--navy)', padding:'48px 40px', display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:16 }}>
-        <img src="/goto-logo.png" alt="GOTO" style={{ height:36, width:'auto', filter:'brightness(0) invert(1)' }} />
+        <img src="/lunaletsgo-logo.jpeg" alt="Luna Let's Go" style={{ height:42, width:'auto' }} />
         <p style={{ fontFamily:'var(--font-body)', color:'rgba(255,255,255,0.45)', fontSize:13 }}>
           © 2026 GOTO AI Travel Planner. Built with Next.js &amp; OpenRouter.{' '}
           <a href="https://open-meteo.com" style={{ color:'rgba(255,255,255,0.5)', textDecoration:'underline' }}>Weather by Open-Meteo</a>
