@@ -154,7 +154,13 @@ function markdownToHtml(md: string): string {
       parts.push(`<h4 style="font-family:'Poppins',sans-serif;font-weight:600;font-size:14px;color:#00447B;text-transform:uppercase;letter-spacing:.5px;margin:20px 0 6px">${inlineMd(line.replace(/^#{4}\s+/, ''))}</h4>`);
     } else if (/^#{3}\s/.test(line)) {
       closeList();
-      parts.push(`<h3 style="font-family:'Poppins',sans-serif;font-weight:600;font-size:17px;color:#111;margin:24px 0 8px">${inlineMd(line.replace(/^#{3}\s+/, ''))}</h3>`);
+      const h3Text = line.replace(/^#{3}\s+/, '');
+      const isDay = /^day\s+\d+/i.test(h3Text);
+      if (isDay) {
+        parts.push(`<div style="margin:28px 0 0;padding-top:24px;border-top:2px solid rgba(0,68,123,0.12)"><span style="display:inline-block;background:#00447B;color:#fff;font-family:'Poppins',sans-serif;font-weight:700;font-size:13px;padding:4px 14px;border-radius:100px;margin-bottom:10px">${inlineMd(h3Text)}</span></div>`);
+      } else {
+        parts.push(`<h3 style="font-family:'Poppins',sans-serif;font-weight:600;font-size:17px;color:#111;margin:24px 0 8px">${inlineMd(h3Text)}</h3>`);
+      }
     } else if (/^#{2}\s/.test(line)) {
       closeList();
       parts.push(`<h2 style="font-family:'Poppins',sans-serif;font-weight:700;font-size:22px;color:#00447B;margin:32px 0 14px;padding-bottom:10px;border-bottom:2px solid rgba(0,68,123,0.10)">${inlineMd(line.replace(/^#{2}\s+/, ''))}</h2>`);
@@ -169,7 +175,12 @@ function markdownToHtml(md: string): string {
       parts.push('<div style="height:6px"></div>');
     } else {
       closeList();
-      parts.push(`<p style="font-size:15px;line-height:1.75;color:#333;margin:4px 0">${inlineMd(line)}</p>`);
+      const dayBold = line.match(/^\*\*(Day\s+\d+[^*]*)\*\*/i);
+      if (dayBold) {
+        parts.push(`<div style="margin:28px 0 0;padding-top:24px;border-top:2px solid rgba(0,68,123,0.12)"><span style="display:inline-block;background:#00447B;color:#fff;font-family:'Poppins',sans-serif;font-weight:700;font-size:13px;padding:4px 14px;border-radius:100px;margin-bottom:10px">${dayBold[1]}</span></div>`);
+      } else {
+        parts.push(`<p style="font-size:15px;line-height:1.75;color:#333;margin:4px 0">${inlineMd(line)}</p>`);
+      }
     }
   }
   closeList();
