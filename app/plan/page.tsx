@@ -240,7 +240,7 @@ function PlanContent() {
         borderBottom:'1px solid rgba(0,68,123,0.10)',
       }}>
         <a href="/" style={{ display:'flex', alignItems:'center' }}>
-          <img src="/goto-logo.png" alt="GOTO" style={{ height:36, width:'auto' }} />
+          <img src="/lunaletsgo-logo.jpeg" alt="Luna Let's Go" style={{ height:44, width:'auto' }} />
         </a>
         <div style={{ display:'flex', alignItems:'center', gap:12 }}>
           {plan && (
