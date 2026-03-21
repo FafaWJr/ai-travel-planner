@@ -127,7 +127,15 @@ function extractSection(plan: string, sectionId: string): string {
 function inlineMd(text: string): string {
   return text
     .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*\*(.+?)\*\*/g, (_, t) => {
+      // Tag bold proper nouns as place hovers (starts with capital, not a label like "Morning:")
+      const isPlace = /^[A-Z]/.test(t) && !t.endsWith(':') && !/^(morning|afternoon|evening|night|day\s*\d|note|tip|option|important|total|budget|price|cost|recommended|optional|estimated|approximate|include)/i.test(t);
+      if (isPlace) {
+        const escaped = t.replace(/"/g, '&quot;');
+        return `<strong data-place="${escaped}" style="cursor:pointer;border-bottom:1.5px dashed rgba(0,68,123,0.40);color:#00447B;font-weight:700;transition:color 0.15s">${t}</strong>`;
+      }
+      return `<strong>${t}</strong>`;
+    })
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
     .replace(/`(.+?)`/g, '<code style="background:rgba(0,68,123,0.07);padding:1px 6px;border-radius:4px;font-size:0.92em;font-family:monospace">$1</code>');
 }
@@ -204,6 +212,11 @@ function PlanContent() {
   const [photos,       setPhotos]       = useState<string[]>([]);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
+  // Place photo popup
+  const [popup, setPopup] = useState<{ name:string; x:number; y:number } | null>(null);
+  const [photoCache, setPhotoCache] = useState<Record<string, string | null | '__loading__'>>({});
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => { if (prompt) generatePlan(prompt); }, [prompt]); // eslint-disable-line
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior:'smooth' }); }, [chatMessages]);
@@ -222,6 +235,31 @@ function PlanContent() {
       } catch {}
     } catch { setError('Failed to generate your travel plan. Please try again.'); }
     finally  { setLoading(false); }
+  };
+
+  const handlePlaceMouseOver = async (e: React.MouseEvent) => {
+    const el = (e.target as HTMLElement).closest('[data-place]') as HTMLElement | null;
+    if (!el) return;
+    if (hideTimer.current) { clearTimeout(hideTimer.current); hideTimer.current = null; }
+    const name = el.getAttribute('data-place')!;
+    const rect = el.getBoundingClientRect();
+    const x = Math.min(rect.left, window.innerWidth - 300);
+    const y = rect.bottom + 8;
+    setPopup({ name, x, y });
+    if (!(name in photoCache)) {
+      setPhotoCache(c => ({ ...c, [name]: '__loading__' }));
+      try {
+        const res  = await fetch(`/api/place-photo?q=${encodeURIComponent(name)}`);
+        const data = await res.json();
+        setPhotoCache(c => ({ ...c, [name]: data.url || null }));
+      } catch {
+        setPhotoCache(c => ({ ...c, [name]: null }));
+      }
+    }
+  };
+
+  const handlePlaneMouseLeave = () => {
+    hideTimer.current = setTimeout(() => setPopup(null), 120);
   };
 
   const sendChat = async () => {
@@ -344,7 +382,11 @@ function PlanContent() {
 
               {/* Rendered plan section */}
               <div style={{ background:'#fff', borderRadius:16, padding:'32px 36px', boxShadow:'0 2px 20px rgba(0,68,123,0.07)', border:'1px solid rgba(0,68,123,0.08)' }}>
-                <div dangerouslySetInnerHTML={{ __html: markdownToHtml(sectionContent) }} />
+                <div
+                  onMouseOver={handlePlaceMouseOver}
+                  onMouseLeave={handlePlaneMouseLeave}
+                  dangerouslySetInnerHTML={{ __html: markdownToHtml(sectionContent) }}
+                />
               </div>
 
               {/* Section navigation */}
@@ -495,11 +537,48 @@ function PlanContent() {
         )}
       </div>
 
+      {/* ── Place photo popup ── */}
+      {popup && (
+        <div
+          onMouseEnter={() => { if (hideTimer.current) { clearTimeout(hideTimer.current); hideTimer.current = null; } }}
+          onMouseLeave={() => setPopup(null)}
+          style={{
+            position:'fixed', zIndex:9999,
+            top: popup.y, left: popup.x,
+            width:290,
+            background:'#fff', borderRadius:14,
+            boxShadow:'0 12px 40px rgba(0,0,0,0.18)',
+            border:'1px solid rgba(0,68,123,0.12)',
+            overflow:'hidden',
+            animation:'popupFadeIn 0.15s ease both',
+            pointerEvents:'auto',
+          }}
+        >
+          {/* Photo area */}
+          {photoCache[popup.name] === '__loading__' || !(popup.name in photoCache) ? (
+            <div style={{ height:160, background:'#F4F7FB', display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <div style={{ width:24, height:24, borderRadius:'50%', border:'3px solid rgba(0,68,123,0.10)', borderTop:'3px solid #FF8210', animation:'spin 0.8s linear infinite' }} />
+            </div>
+          ) : photoCache[popup.name] ? (
+            <img src={photoCache[popup.name]!} alt={popup.name} style={{ width:'100%', height:160, objectFit:'cover', display:'block' }} />
+          ) : (
+            <div style={{ height:100, background:'#F4F7FB', display:'flex', alignItems:'center', justifyContent:'center', fontSize:36 }}>📍</div>
+          )}
+          {/* Name */}
+          <div style={{ padding:'12px 14px 14px' }}>
+            <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:14, color:'#00447B', marginBottom:2 }}>{popup.name}</p>
+            <p style={{ fontFamily:"'Inter',sans-serif", fontSize:11, color:'#9CA3AF' }}>Tap to search this place</p>
+          </div>
+        </div>
+      )}
+
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500&display=swap');
-        @keyframes spin    { to { transform: rotate(360deg); } }
-        @keyframes fadeIn  { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes bounce  { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-5px); } }
+        @keyframes spin       { to { transform: rotate(360deg); } }
+        @keyframes fadeIn     { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes bounce     { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-5px); } }
+        @keyframes popupFadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+        [data-place]:hover { color: #FF8210 !important; }
         @media print {
           nav, .no-print { display:none !important; }
           body { background:#fff; }
