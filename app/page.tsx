@@ -653,7 +653,7 @@ Traveller Profile:
               alt="Luna — AI travel assistant"
               className="luna2-avatar"
               style={{
-                position:'absolute', right:-200, bottom:0,
+                position:'absolute', right:-300, bottom:0,
                 width:336, height:'auto', objectFit:'contain',
                 pointerEvents:'none',
               }}
