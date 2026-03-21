@@ -586,7 +586,7 @@ Traveller Profile:
   };
 
   return (
-    <div style={{ fontFamily:'var(--font-body)', color:'#000', background:'#fff' }}>
+    <div style={{ fontFamily:'var(--font-body)', color:'#000', background:'#fff', overflowX:'hidden' }}>
 
       {/* ───── NAV ───── */}
       <nav style={{
@@ -615,7 +615,7 @@ Traveller Profile:
       </nav>
 
       {/* ───── HERO ───── */}
-      <section style={{ position:'relative', minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden', padding:'80px 24px' }}>
+      <section style={{ position:'relative', minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', overflow:'visible', padding:'80px 24px' }}>
         {/* Photo — rotates every 10s */}
         {HERO_IMAGES.map((img,i) => (
           <div key={img.url} style={{ position:'absolute', inset:0, backgroundImage:`url(${img.url})`, backgroundSize:'cover', backgroundPosition:'center 40%', transition:'opacity 1.5s ease', opacity:i===heroImgIdx?1:0 }} />
