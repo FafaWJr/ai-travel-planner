@@ -1085,8 +1085,9 @@ Traveller Profile:
           .hero-maya-col { width: 100% !important; flex-direction: row !important; align-items: flex-end !important; gap: 16px; }
           .hero-maya-col img { max-width: 140px !important; margin-top: 0 !important; }
         }
-        @media (max-width: 480px) {
-          .step-label { display: none !important; }
+        @media (max-width: 400px) {
+          .step-label { font-size: 9px !important; }
+          .step-header { padding: 12px 14px !important; }
         }
       `}</style>
     </div>
@@ -1176,7 +1177,7 @@ function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; 
   return (
     <div style={{ background:'#fff', borderRadius:'var(--r-lg)', boxShadow:'0 32px 80px rgba(0,0,0,0.28)', overflow:'hidden', textAlign:'left' }}>
       {/* Step header */}
-      <div style={{ background:'var(--navy)', padding:'14px 28px', display:'flex', alignItems:'center' }}>
+      <div className="step-header" style={{ background:'var(--navy)', padding:'14px 28px', display:'flex', alignItems:'center' }}>
         {STEPS.map((label,i) => (
           <div key={i} style={{ display:'flex', alignItems:'center', flex:i<STEPS.length-1?1:'none' }}>
             <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
@@ -1204,18 +1205,18 @@ function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; 
             {/* From date + arrival time */}
             <div>
               <label style={lbl}>From <span style={{ color:'var(--orange)' }}>*</span></label>
-              <div style={{ position:'relative' }}>
-                <input type="date" value={dep} min={today}
-                  onChange={e=>{setDep(e.target.value);if(ret&&e.target.value>ret)setRet('');if(e.target.value)setErrors(p=>({...p,dep:''}));}}
-                  style={{...inp,borderColor:errors.dep?'#E53E3E':'rgba(0,68,123,0.15)'}}
-                  onFocus={e=>(e.target.style.borderColor=errors.dep?'#E53E3E':'var(--navy)')}
-                  onBlur={e=>(e.target.style.borderColor=errors.dep?'#E53E3E':'rgba(0,68,123,0.15)')} />
-              </div>
-              <div style={{ display:'flex',alignItems:'center',gap:8,marginTop:6 }}>
+              <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+                <div style={{ position:'relative', flex:1, minWidth:0 }}>
+                  <input type="date" value={dep} min={today}
+                    onChange={e=>{setDep(e.target.value);if(ret&&e.target.value>ret)setRet('');if(e.target.value)setErrors(p=>({...p,dep:''}));}}
+                    style={{...inp,borderColor:errors.dep?'#E53E3E':'rgba(0,68,123,0.15)'}}
+                    onFocus={e=>(e.target.style.borderColor=errors.dep?'#E53E3E':'var(--navy)')}
+                    onBlur={e=>(e.target.style.borderColor=errors.dep?'#E53E3E':'rgba(0,68,123,0.15)')} />
+                </div>
                 <span style={{ fontFamily:'var(--font-body)',fontSize:11,color:'var(--gray-dark)',whiteSpace:'nowrap',flexShrink:0 }}>Est. arrival</span>
-                <div style={{ flex:1, position:'relative' }}>
+                <div style={{ position:'relative', width:110, flexShrink:0 }}>
                   <input type="time" value={depTime} onChange={e=>setDepTime(e.target.value)}
-                    style={{...inp,padding:'9px 10px'}}
+                    style={{...inp,padding:'11px 8px'}}
                     onFocus={e=>(e.target.style.borderColor='var(--navy)')}
                     onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} />
                 </div>
@@ -1226,18 +1227,18 @@ function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; 
             {/* To date + end time */}
             <div>
               <label style={lbl}>To <span style={{ fontFamily:'var(--font-body)',fontWeight:400,textTransform:'none',letterSpacing:0,color:'var(--gray-dark)' }}>(optional)</span></label>
-              <div style={{ position:'relative' }}>
-                <input type="date" value={ret} min={dep || today}
-                  onChange={e=>setRet(e.target.value)}
-                  style={inp}
-                  onFocus={e=>(e.target.style.borderColor='var(--navy)')}
-                  onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} />
-              </div>
-              <div style={{ display:'flex',alignItems:'center',gap:8,marginTop:6 }}>
+              <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+                <div style={{ position:'relative', flex:1, minWidth:0 }}>
+                  <input type="date" value={ret} min={dep || today}
+                    onChange={e=>setRet(e.target.value)}
+                    style={inp}
+                    onFocus={e=>(e.target.style.borderColor='var(--navy)')}
+                    onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} />
+                </div>
                 <span style={{ fontFamily:'var(--font-body)',fontSize:11,color:'var(--gray-dark)',whiteSpace:'nowrap',flexShrink:0 }}>Est. return</span>
-                <div style={{ flex:1, position:'relative' }}>
+                <div style={{ position:'relative', width:110, flexShrink:0 }}>
                   <input type="time" value={retTime} onChange={e=>setRetTime(e.target.value)}
-                    style={{...inp,padding:'9px 10px'}}
+                    style={{...inp,padding:'11px 8px'}}
                     onFocus={e=>(e.target.style.borderColor='var(--navy)')}
                     onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} />
                 </div>
