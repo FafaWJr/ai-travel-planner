@@ -641,24 +641,23 @@ Traveller Profile:
             Tell us where you want to go — we'll handle the rest.
           </p>
 
-          {/* Form + Luna (Luna absolutely positioned to the left) */}
-          <div style={{ position:'relative', display:'inline-block', width:'100%', maxWidth:560, animation:'fadeUp 0.65s 0.3s ease both' }}>
-            {/* Luna — absolute, left side, bottom-aligned */}
-            <img
-              src="/luna.png"
-              alt="Luna — AI travel assistant"
-              style={{
-                position:'absolute', bottom:0, left:-200,
-                width:210,
-                filter:'drop-shadow(0 16px 32px rgba(0,0,0,0.45))',
-                mixBlendMode:'multiply' as const,
-                pointerEvents:'none',
-              }}
-            />
-            {/* Form — centered, untouched */}
+          {/* Form + Luna 2 avatar */}
+          <div style={{ position:'relative', overflow:'visible', display:'inline-block', width:'100%', maxWidth:560, animation:'fadeUp 0.65s 0.3s ease both' }}>
+            {/* Form */}
             <div style={{ textAlign:'left' }}>
               <HeroStepForm onSubmit={go} preFilledData={preFilledData} />
             </div>
+            {/* Luna 2 — desktop only, right side, bottom-anchored */}
+            <img
+              src="/luna_2.png"
+              alt="Luna — AI travel assistant"
+              className="luna2-avatar"
+              style={{
+                position:'absolute', right:-120, bottom:0,
+                width:420, height:'auto', objectFit:'contain',
+                pointerEvents:'none',
+              }}
+            />
           </div>
 
         </div>
@@ -1088,6 +1087,10 @@ Traveller Profile:
         @media (max-width: 400px) {
           .step-label { font-size: 9px !important; }
           .step-header { padding: 12px 14px !important; }
+        }
+        .luna2-avatar { display: none; }
+        @media (min-width: 1024px) {
+          .luna2-avatar { display: block; }
         }
       `}</style>
     </div>
