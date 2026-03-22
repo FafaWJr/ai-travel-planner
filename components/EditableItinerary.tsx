@@ -83,7 +83,8 @@ function inlineMd(text: string): string {
 
 /* ─── Parse slot from text/header ───────────────────────────── */
 function detectSlot(text: string): TimeSlot | null {
-  const t = text.toLowerCase().trim();
+  // Strip markdown bold/italic/heading markers before matching
+  const t = text.replace(/^[\*#\s]+/, '').toLowerCase().trim();
   if (/^morning/i.test(t))   return 'morning';
   if (/^afternoon/i.test(t)) return 'afternoon';
   if (/^evening/i.test(t))   return 'evening';
@@ -93,7 +94,10 @@ function detectSlot(text: string): TimeSlot | null {
 
 function stripSlotPrefix(text: string): string {
   return text
-    .replace(/^\*?\*?(Morning|Afternoon|Evening|Night)\s*[:\-–—]\s*\*?\*?/i, '')
+    // **Morning**: / **Morning:** / **Morning** — / *Morning* :
+    .replace(/^\*{0,2}(Morning|Afternoon|Evening|Night)\*{0,2}\s*[:\-–—]\s*/i, '')
+    // plain Morning: / Afternoon — / etc.
+    .replace(/^(Morning|Afternoon|Evening|Night)\s*[:\-–—]\s*/i, '')
     .trim();
 }
 
@@ -117,12 +121,14 @@ function parseItinerary(md: string): Day[] {
     for (const line of seg.split('\n')) {
       const trimmed = line.trim();
 
-      // Detect slot header lines (e.g. "**Morning:**" or "### Morning" or "Morning:")
-      const isSlotHeader = /^(?:\*\*|###?\s*)?(Morning|Afternoon|Evening|Night)\s*[:\*]*\s*$/i.test(trimmed)
-        || /^(?:\*\*|#{1,4}\s*)?(Morning|Afternoon|Evening|Night)\b/i.test(trimmed) && !/^[-*•]/.test(trimmed);
+      // Detect slot header lines — not a bullet, contains only the slot word (optionally formatted)
+      // Matches: "**Morning:**", "### Afternoon", "Evening:", "Night" alone on a line
+      const isSlotHeader =
+        !trimmed.startsWith('-') && !trimmed.startsWith('*- ') &&
+        /^[\*#\s]*(Morning|Afternoon|Evening|Night)[\*\s:–\-—]*$/i.test(trimmed);
 
       if (isSlotHeader) {
-        const detected = detectSlot(trimmed.replace(/[\*#]+/g, ''));
+        const detected = detectSlot(trimmed);
         if (detected) { currentSlot = detected; continue; }
       }
 
@@ -131,11 +137,12 @@ function parseItinerary(md: string): Day[] {
       if (!m) continue;
 
       let text = m[1].trim();
-      // Check if the activity itself starts with a slot prefix
-      const inlineSlot = detectSlot(text);
+      // Strip any inline slot prefix (e.g. "Morning: Visit..." or "**Afternoon** — Lunch")
+      const stripped = stripSlotPrefix(text);
+      const inlineSlot = stripped !== text ? detectSlot(text) : null;
       if (inlineSlot) {
         currentSlot = inlineSlot;
-        text = stripSlotPrefix(text);
+        text = stripped;
       }
 
       activities.push({

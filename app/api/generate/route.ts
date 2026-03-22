@@ -51,6 +51,12 @@ Please provide a detailed, personalised travel plan in Markdown with exactly the
 ## Budget Estimator
 ## Practical Tips
 
+For the ## Personalised Itinerary section, follow this structure strictly for every day:
+- Use "### Day N: Title" as the day header.
+- Inside each day include EXACTLY these four sub-headers in order: **Morning:**, **Afternoon:**, **Evening:**, **Night:**
+- List at least one bullet-point activity under each sub-header.
+- Do NOT repeat the time-of-day word inside the bullet text itself.
+
 Make each section specific, practical and engaging. Use bullet points and bold text throughout.`;
 
       let stream: ReadableStream<Uint8Array>;

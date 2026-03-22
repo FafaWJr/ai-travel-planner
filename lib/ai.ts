@@ -87,7 +87,23 @@ Provide a compelling overview of ${form.destination}: what makes it special, hig
 Describe what to expect weather-wise during the travel dates, what to pack, seasonal events or festivals, and any weather-related tips.
 
 ## Personalised Itinerary
-Create a detailed day-by-day itinerary for all ${tripDays} days, tailored to the travellers' styles (${styleLabels}) and budget (${budgetLabel}). Include morning, afternoon, and evening activities. For each day provide specific recommendations with brief descriptions.
+Create a detailed day-by-day itinerary for all ${tripDays} days, tailored to the travellers' styles (${styleLabels}) and budget (${budgetLabel}).
+
+IMPORTANT formatting rules for this section:
+- Use "### Day N: Title" as the header for each day.
+- Inside each day, include EXACTLY these four sub-headers in order: **Morning:**, **Afternoon:**, **Evening:**, **Night:**
+- Under each sub-header, list at least one activity as a bullet point.
+- Do NOT include the time-of-day word inside the bullet text itself — the sub-header already communicates that.
+- Example structure:
+  ### Day 1: Arrival & First Impressions
+  **Morning:**
+  - Check in to your hotel and freshen up
+  **Afternoon:**
+  - Explore the old town on foot
+  **Evening:**
+  - Dinner at a local restaurant
+  **Night:**
+  - Stroll along the waterfront
 
 ## Where to Stay
 Recommend 3-5 specific accommodation options that match the ${budgetLabel} budget and the group's needs. Include neighbourhood, why it suits this group, and approximate price range per night.
