@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import EditableItinerary from '@/components/EditableItinerary';
 
 /* ── SVG icons (flat, navy/orange, no emojis) ── */
 const Icon = {
@@ -265,18 +266,43 @@ function PlanContent() {
     hideTimer.current = setTimeout(() => setPopup(null), 120);
   };
 
+  /* Collect SSE stream into plain text (chat API returns event-stream) */
+  const collectSSE = async (res: Response): Promise<string> => {
+    const reader = res.body!.getReader();
+    const decoder = new TextDecoder();
+    let result = '', buffer = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? '';
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const json = line.slice(6).trim();
+        if (!json || json === '[DONE]') continue;
+        try { const d = JSON.parse(json); const t = d?.choices?.[0]?.delta?.content; if (t) result += t; } catch {}
+      }
+    }
+    return result;
+  };
+
+  const sendChatMessage = async (msg: string) => {
+    const msgs = [...chatMessages, { role:'user', content: msg }];
+    setChatMessages(msgs); setChatLoading(true);
+    try {
+      const res = await fetch('/api/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ messages: msgs, tripContext: plan }) });
+      const text = await collectSSE(res);
+      setChatMessages([...msgs, { role:'assistant', content: text || 'No response.' }]);
+    } catch {
+      setChatMessages([...msgs, { role:'assistant', content:'Sorry, could not process that. Please try again.' }]);
+    } finally { setChatLoading(false); }
+  };
+
   const sendChat = async () => {
     if (!chatInput.trim() || chatLoading) return;
     const msg = chatInput; setChatInput('');
-    const msgs = [...chatMessages, {role:'user', content:msg}];
-    setChatMessages(msgs); setChatLoading(true);
-    try {
-      const res  = await fetch('/api/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({messages:msgs, plan, destination:prompt}) });
-      const data = await res.json();
-      setChatMessages([...msgs, {role:'assistant', content:data.response||data.content||''}]);
-    } catch {
-      setChatMessages([...msgs, {role:'assistant', content:'Sorry, could not process that. Please try again.'}]);
-    } finally { setChatLoading(false); }
+    await sendChatMessage(msg);
   };
 
   const fetchExtraIdeas = async () => {
@@ -408,13 +434,24 @@ function PlanContent() {
               </div>
 
               {/* Rendered plan section */}
-              <div style={{ background:'#fff', borderRadius:16, padding:'32px 36px', boxShadow:'0 2px 20px rgba(0,68,123,0.07)', border:'1px solid rgba(0,68,123,0.08)' }}>
-                <div
-                  onMouseOver={handlePlaceMouseOver}
-                  onMouseLeave={handlePlaneMouseLeave}
-                  dangerouslySetInnerHTML={{ __html: markdownToHtml(sectionContent) }}
+              {activeSection === 'itinerary' ? (
+                <EditableItinerary
+                  itineraryMd={sectionContent}
+                  destination={prompt.replace(/^plan a (trip to |)?/i,'').split(/\s+/).slice(0,4).join(' ')}
+                  photos={photos}
+                  onSuggestMore={msg => { sendChatMessage(msg); }}
+                  onPlaceHover={handlePlaceMouseOver}
+                  onPlaceLeave={handlePlaneMouseLeave}
                 />
-              </div>
+              ) : (
+                <div style={{ background:'#fff', borderRadius:16, padding:'32px 36px', boxShadow:'0 2px 20px rgba(0,68,123,0.07)', border:'1px solid rgba(0,68,123,0.08)' }}>
+                  <div
+                    onMouseOver={handlePlaceMouseOver}
+                    onMouseLeave={handlePlaneMouseLeave}
+                    dangerouslySetInnerHTML={{ __html: markdownToHtml(sectionContent) }}
+                  />
+                </div>
+              )}
 
               {/* Section navigation */}
               <div style={{ display:'flex', justifyContent:'space-between', marginTop:16 }}>
