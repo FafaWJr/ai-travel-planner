@@ -283,15 +283,14 @@ function PlanContent() {
     if (extraIdeas || extraIdeasLoading) return;
     setExtraIdeasLoading(true);
     try {
-      const extraPrompt = `For this trip: "${prompt}" — give me a simple bullet list of 6 to 8 extra places, activities or experiences that did NOT make it into the main itinerary but would suit this traveller's style. Could be nearby spots, popular tourist places, hidden gems, a local restaurant type, a day-trip option, etc. Keep it short: just a bullet point per idea with the place or activity name in bold, followed by one sentence on why it's worth considering. No headers, no sections, just the list.`;
-      const res = await fetch('/api/generate', {
+      const res = await fetch('/api/extra-ideas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: extraPrompt }),
+        body: JSON.stringify({ prompt }),
       });
       if (!res.ok) throw new Error('Failed');
       const data = await res.json();
-      setExtraIdeas(data.plan || '');
+      setExtraIdeas(data.ideas || '');
     } catch {
       setExtraIdeas('Sorry, could not load extra ideas. Please try again.');
     } finally {
