@@ -438,8 +438,8 @@ function PlanContent() {
                 <EditableItinerary
                   itineraryMd={sectionContent}
                   destination={prompt.replace(/^plan a (trip to |)?/i,'').split(/\s+/).slice(0,4).join(' ')}
+                  tripPrompt={prompt}
                   photos={photos}
-                  onSuggestMore={msg => { sendChatMessage(msg); }}
                   onPlaceHover={handlePlaceMouseOver}
                   onPlaceLeave={handlePlaneMouseLeave}
                 />
