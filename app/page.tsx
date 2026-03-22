@@ -387,7 +387,7 @@ function computePersona(
   else if (rel&&cul&&pop) p={name:'The Cultured Traveller',   icon:'🏛️',tagline:'Museums, wine, and memorable meals',            desc:"World-class museums, acclaimed restaurants, a comfortable hotel — your ideal trip blends culture with the finer things. You'll queue for the Louvre, but only after a proper croissant.",           tripStyles:['City Break','Culinary Tour','Luxury Travel','Heritage Sites']};
   else                    p={name:'The All-Rounder',          icon:'🌍',tagline:'Balanced, curious, and up for anything',         desc:"You refuse to be put in a box. Some days you want a beach, others a museum. Budget street food one night, a special dinner the next. This flexibility is your superpower — you thrive everywhere.", tripStyles:['Mixed Itinerary','City & Beach Combo','Flexible Travel','Cultural Highlights']};
 
-  const budgetMap: Record<string,string> = { shoestring:'budget',budget:'budget',comfortable:'midrange',splurge:'luxury',unlimited:'luxury' };
+  const budgetMap: Record<string,string> = { shoestring:'budget',budget:'budget',comfortable:'comfort',splurge:'premium',unlimited:'luxury' };
   const budget = budgetMap[habits.spend] || 'midrange';
   const styleMap: Record<string,string> = { beach:'beach',hiking:'adventure',wildlife:'nature',wellness:'wellness',history:'cultural',photography:'photography',nightlife:'nightlife',shopping:'shopping',cooking:'food',wine:'food',watersports:'adventure',cycling:'adventure',sports:'adventure',shows:'cultural',architecture:'cultural',markets:'cultural' };
   const styles = [...new Set(interests.slice(0,8).map(i=>styleMap[i]).filter(Boolean))];
@@ -1111,7 +1111,7 @@ function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; 
   const [depTime, setDepTime] = useState('');
   const [retTime, setRetTime] = useState('');
   const [styles, setStyles] = useState<string[]>(preFilledData?.styles ?? []);
-  const [budget, setBudget] = useState(preFilledData?.budget ?? 'midrange');
+  const [budget, setBudget] = useState(preFilledData?.budget ?? 'comfort');
   const [notes, setNotes] = useState('');
   const [errors, setErrors] = useState<Record<string,string>>({});
 
@@ -1145,7 +1145,7 @@ function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; 
 
   const submit = () => {
     if (!dest) { setStep(0); return; }
-    const bLabels: Record<string,string> = {budget:'budget-friendly',midrange:'mid-range',luxury:'luxury'};
+    const bLabels: Record<string,string> = {budget:'budget-friendly',comfort:'comfortable',premium:'premium',luxury:'luxury'};
     const tripStyles = styles.length ? `focusing on ${styles.join(', ')}` : '';
     const dates = dep ? `from ${dep}${depTime?` at ${depTime}`:''}${ret?` to ${ret}`:''}${ret&&retTime?` arriving ${retTime}`:''}` : '';
     const group = `for ${adults} adult${adults>1?'s':''}${kids>0?` and ${kids} child${kids>1?'ren':''}`:''}`;
@@ -1324,8 +1324,8 @@ function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; 
           <div style={{ display:'flex',flexDirection:'column',gap:18 }}>
             <div>
               <label style={{ ...lbl,marginBottom:10 }}>Budget Level</label>
-              <div style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8 }}>
-                {[{v:'budget',e:'🎒',l:'Budget',s:'< $80 / day'},{v:'midrange',e:'🏨',l:'Mid-range',s:'$80–250 / day'},{v:'luxury',e:'💎',l:'Luxury',s:'$250+ / day'}].map(b=>{
+              <div style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8 }}>
+                {[{v:'budget',e:'🎒',l:'Budget',s:'< $80 / day'},{v:'comfort',e:'🏨',l:'Comfort',s:'$80–150 / day'},{v:'premium',e:'🌟',l:'Premium',s:'$150–350 / day'},{v:'luxury',e:'💎',l:'Luxury',s:'$350+ / day'}].map(b=>{
                   const active=budget===b.v;
                   return(<button key={b.v} onClick={()=>setBudget(b.v)} style={{ background:active?'rgba(0,68,123,0.07)':'#F4F7FB',border:`2px solid ${active?'var(--navy)':'transparent'}`,borderRadius:'var(--r-md)',padding:'14px 8px',cursor:'pointer',textAlign:'center',transition:'all 0.15s' }}>
                     <div style={{ fontSize:22,marginBottom:5 }}>{b.e}</div>
@@ -1362,7 +1362,7 @@ function PlanForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; preF
   const [childAges,  setChildAges]  = useState<string[]>([]);
   const [companion,  setCompanion]  = useState('partner');
   const [styles,    setStyles]    = useState<string[]>(preFilledData?.styles ?? []);
-  const [budget,    setBudget]    = useState(preFilledData?.budget ?? 'midrange');
+  const [budget,    setBudget]    = useState(preFilledData?.budget ?? 'comfort');
   const [notes,     setNotes]     = useState('');
 
   // Sync pre-fill when quiz completes
@@ -1409,7 +1409,7 @@ function PlanForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; preF
 
   const submit = () => {
     if (!dest) return;
-    const bLabels: Record<string,string> = { budget:'budget-friendly', midrange:'mid-range', luxury:'luxury' };
+    const bLabels: Record<string,string> = { budget:'budget-friendly', comfort:'comfortable', premium:'premium', luxury:'luxury' };
     const tripStyles = styles.length ? `focusing on ${styles.join(', ')}` : '';
     const dates = dep ? `from ${dep}${ret?` to ${ret}`:''}` : '';
     const group = `for ${adults} adult${adults>1?'s':''}${kids>0?` and ${kids} child${kids>1?'ren':''}`:''}`;
@@ -1580,11 +1580,12 @@ function PlanForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; preF
       {/* Budget */}
       <div style={{ padding:'24px 32px' }}>
         <label style={{ ...lbl, marginBottom:14 }}>Budget Level</label>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10 }}>
           {[
             {v:'budget',  e:'🎒', l:'Budget',   s:'< $80 / day'},
-            {v:'midrange',e:'🏨', l:'Mid-range', s:'$80–250 / day'},
-            {v:'luxury',  e:'💎', l:'Luxury',    s:'$250+ / day'},
+            {v:'comfort', e:'🏨', l:'Comfort',  s:'$80–150 / day'},
+            {v:'premium', e:'🌟', l:'Premium',  s:'$150–350 / day'},
+            {v:'luxury',  e:'💎', l:'Luxury',   s:'$350+ / day'},
           ].map(b=>{
             const active = budget===b.v;
             return (
