@@ -283,7 +283,7 @@ function PlanContent() {
     if (extraIdeas || extraIdeasLoading) return;
     setExtraIdeasLoading(true);
     try {
-      const extraPrompt = `The traveller requested: "${prompt}"\n\nBased on their trip style and preferences, suggest 8 extra ideas — hidden gems, alternative activities, unique local experiences, off-the-beaten-path spots, or restaurants — that were NOT included in the main itinerary. Make each one specific, engaging, and directly tied to the destination and travel style. Format as a markdown list with a **bold title** for each idea followed by 2 sentences describing why it suits this traveller.`;
+      const extraPrompt = `For this trip: "${prompt}" — give me a simple bullet list of 6 to 8 extra places, activities or experiences that did NOT make it into the main itinerary but would suit this traveller's style. Could be nearby spots, popular tourist places, hidden gems, a local restaurant type, a day-trip option, etc. Keep it short: just a bullet point per idea with the place or activity name in bold, followed by one sentence on why it's worth considering. No headers, no sections, just the list.`;
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -438,50 +438,35 @@ function PlanContent() {
               </div>
 
               {/* ── Extra Ideas ── */}
-              <div style={{ marginTop:24 }}>
+              <div style={{ marginTop:20 }}>
                 <button
                   onClick={handleExtraIdeas}
                   style={{
-                    width:'100%', border:'none', borderRadius:14, padding:'18px 24px',
-                    cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:10,
-                    background: showExtraIdeas ? '#00447B' : 'linear-gradient(135deg,#FF8210 0%,#FF6B00 100%)',
-                    boxShadow:'0 4px 18px rgba(255,130,16,0.30)',
-                    transition:'all 0.2s',
+                    display:'flex', alignItems:'center', gap:8,
+                    background:'none', border:'1.5px dashed rgba(255,130,16,0.55)',
+                    borderRadius:100, padding:'9px 20px', cursor:'pointer',
+                    fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:13,
+                    color:'#FF8210', transition:'all 0.15s',
                   }}
-                  onMouseEnter={e=>{(e.currentTarget).style.transform='translateY(-2px)';(e.currentTarget).style.boxShadow='0 8px 28px rgba(255,130,16,0.40)';}}
-                  onMouseLeave={e=>{(e.currentTarget).style.transform='translateY(0)';(e.currentTarget).style.boxShadow='0 4px 18px rgba(255,130,16,0.30)';}}
+                  onMouseEnter={e=>{(e.currentTarget).style.background='rgba(255,130,16,0.06)';}}
+                  onMouseLeave={e=>{(e.currentTarget).style.background='none';}}
                 >
-                  <span style={{ fontSize:22 }}>✨</span>
-                  <div style={{ textAlign:'left' }}>
-                    <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:15, color:'#fff', marginBottom:2 }}>
-                      {showExtraIdeas ? 'Hide Extra Ideas' : 'Inspire Me More'}
-                    </p>
-                    <p style={{ fontFamily:"'Inter',sans-serif", fontSize:12, color:'rgba(255,255,255,0.75)' }}>
-                      Hidden gems & alternatives tailored to your trip style
-                    </p>
-                  </div>
-                  <span style={{ marginLeft:'auto', color:'rgba(255,255,255,0.8)', fontSize:18, transition:'transform 0.2s', transform: showExtraIdeas ? 'rotate(180deg)' : 'rotate(0deg)' }}>▾</span>
+                  <span style={{ fontSize:16 }}>✨</span>
+                  {showExtraIdeas ? 'Hide extra ideas' : 'Show me more ideas'}
+                  <span style={{ fontSize:12, transition:'transform 0.2s', transform: showExtraIdeas ? 'rotate(180deg)' : 'rotate(0deg)', display:'inline-block' }}>▾</span>
                 </button>
 
                 {showExtraIdeas && (
-                  <div style={{ marginTop:8, background:'#fff', borderRadius:14, border:'1.5px solid rgba(255,130,16,0.20)', boxShadow:'0 4px 24px rgba(0,68,123,0.08)', overflow:'hidden', animation:'fadeIn 0.25s ease both' }}>
-                    {/* Header */}
-                    <div style={{ background:'linear-gradient(135deg,#FFF7ED,#FFF3E0)', padding:'20px 28px 16px', borderBottom:'1.5px solid rgba(255,130,16,0.12)' }}>
-                      <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                        <span style={{ fontSize:24 }}>✨</span>
-                        <div>
-                          <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:17, color:'#C2410C' }}>Extra Ideas & Hidden Gems</p>
-                          <p style={{ fontFamily:"'Inter',sans-serif", fontSize:12, color:'#9A6700' }}>Things you might love — not in your main plan</p>
-                        </div>
-                      </div>
+                  <div style={{ marginTop:12, background:'#fff', borderRadius:14, border:'1.5px solid rgba(0,68,123,0.08)', boxShadow:'0 2px 16px rgba(0,68,123,0.06)', animation:'fadeIn 0.2s ease both' }}>
+                    <div style={{ padding:'18px 24px 6px', borderBottom:'1px solid rgba(0,68,123,0.07)', display:'flex', alignItems:'center', gap:8 }}>
+                      <span style={{ fontSize:18 }}>💡</span>
+                      <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:14, color:'#00447B' }}>A few more ideas for your trip</p>
                     </div>
-
-                    {/* Content */}
-                    <div style={{ padding:'24px 28px' }}>
+                    <div style={{ padding:'16px 24px 20px' }}>
                       {extraIdeasLoading ? (
-                        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:14, padding:'28px 0' }}>
-                          <div style={{ width:40, height:40, borderRadius:'50%', border:'3px solid rgba(255,130,16,0.15)', borderTop:'3px solid #FF8210', animation:'spin 0.9s linear infinite' }} />
-                          <p style={{ fontFamily:"'Inter',sans-serif", color:'#9A6700', fontSize:14 }}>Finding hidden gems just for you...</p>
+                        <div style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 0' }}>
+                          <div style={{ width:22, height:22, borderRadius:'50%', border:'2.5px solid rgba(0,68,123,0.10)', borderTop:'2.5px solid #FF8210', animation:'spin 0.9s linear infinite', flexShrink:0 }} />
+                          <p style={{ fontFamily:"'Inter',sans-serif", color:'#9CA3AF', fontSize:13 }}>Looking for extra ideas...</p>
                         </div>
                       ) : (
                         <div dangerouslySetInnerHTML={{ __html: markdownToHtml(extraIdeas) }} />
