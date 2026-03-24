@@ -1,5 +1,5 @@
 'use client';
-import { useState, useId } from 'react';
+import { useState, useId, forwardRef, useImperativeHandle } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -177,10 +177,14 @@ interface Props {
   onPlaceLeave: () => void;
 }
 
-export default function EditableItinerary({
+export interface ItineraryHandle {
+  addActivity: (text: string, dayNum: number, slot: TimeSlot) => void;
+}
+
+const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableItinerary({
   itineraryMd, destination, tripPrompt, photos,
   onPlaceHover, onPlaceLeave,
-}: Props) {
+}, ref) {
   const [days, setDays] = useState<Day[]>(() => parseItinerary(itineraryMd));
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const instanceId = useId();
@@ -199,6 +203,22 @@ export default function EditableItinerary({
   const pending  = allActs.filter(a => a.status === 'pending').length;
   const total    = allActs.length;
   const progress = total > 0 ? Math.round((accepted / total) * 100) : 0;
+
+  /* Expose addActivity to parent via ref */
+  useImperativeHandle(ref, () => ({
+    addActivity(text: string, dayNum: number, slot: TimeSlot) {
+      setDays(prev => prev.map(d => {
+        if (d.number !== dayNum) return d;
+        const newActivity: Activity = {
+          id: `d${dayNum}-chat-${Math.random().toString(36).slice(2,8)}`,
+          text,
+          status: 'pending',
+          slot,
+        };
+        return { ...d, activities: [...d.activities, newActivity], open: true };
+      }));
+    },
+  }));
 
   /* Find activity across all days */
   const findActivity = (id: UniqueIdentifier) =>
@@ -466,7 +486,9 @@ export default function EditableItinerary({
       </DndContext>
     </div>
   );
-}
+});
+
+export default EditableItinerary;
 
 /* ─── TimeSlotSection ────────────────────────────────────────── */
 function TimeSlotSection({
