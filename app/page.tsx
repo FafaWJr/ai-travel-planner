@@ -641,26 +641,24 @@ Traveller Profile:
             Tell us where you want to go — we'll handle the rest.
           </p>
 
-          {/* Form + Luna 2 avatar */}
-          <div style={{ position:'relative', overflow:'visible', display:'inline-block', width:'100%', maxWidth:560, animation:'fadeUp 0.65s 0.3s ease both' }}>
-            {/* Form */}
-            <div style={{ textAlign:'left' }}>
-              <HeroStepForm onSubmit={go} preFilledData={preFilledData} />
-            </div>
-            {/* Luna 2 — desktop only, right side, bottom-anchored */}
-            <img
-              src="/luna_2.png"
-              alt="Luna — AI travel assistant"
-              className="luna2-avatar"
-              style={{
-                position:'absolute', right:-300, bottom:0,
-                width:336, height:'auto', objectFit:'contain',
-                pointerEvents:'none',
-              }}
-            />
+          {/* Form */}
+          <div style={{ display:'inline-block', width:'100%', maxWidth:560, animation:'fadeUp 0.65s 0.3s ease both', textAlign:'left' }}>
+            <HeroStepForm onSubmit={go} preFilledData={preFilledData} />
           </div>
 
         </div>
+
+        {/* Luna 3 — desktop only, anchored to bottom of hero section */}
+        <img
+          src="/luna_3.png"
+          alt="Luna — AI travel assistant"
+          className="luna2-avatar"
+          style={{
+            position:'absolute', right:'calc(50% - 580px)', bottom:0,
+            width:336, height:'auto', objectFit:'contain',
+            pointerEvents:'none', zIndex:3,
+          }}
+        />
       </section>
 
       {/* ───── STATS BAR ───── */}
