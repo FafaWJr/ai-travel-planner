@@ -648,14 +648,15 @@ Traveller Profile:
 
         </div>
 
-        {/* Luna 3 — desktop only, anchored to bottom of hero section */}
+        {/* Luna 3 — desktop only, bottom of viewport */}
         <img
           src="/luna_3.png"
           alt="Luna — AI travel assistant"
           className="luna2-avatar"
           style={{
-            position:'absolute', right:'calc(50% - 580px)', bottom:0,
-            width:336, height:'auto', objectFit:'contain',
+            position:'absolute', right:'calc(50% - 580px)',
+            top:'calc(100vh - 235px)', bottom:'auto',
+            width:235, height:'auto', objectFit:'contain',
             pointerEvents:'none', zIndex:3,
           }}
         />
