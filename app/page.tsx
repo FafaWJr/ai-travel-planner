@@ -655,7 +655,7 @@ Traveller Profile:
           className="luna2-avatar"
           style={{
             position:'absolute', right:'calc(50% - 580px)',
-            top:'calc(100vh - 235px)', bottom:'auto',
+            bottom:0, top:'auto',
             width:235, height:'auto', objectFit:'contain',
             pointerEvents:'none', zIndex:3,
           }}
