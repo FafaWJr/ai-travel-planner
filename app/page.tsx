@@ -597,7 +597,7 @@ Traveller Profile:
         borderBottom:'1px solid var(--border)',
       }}>
         <a href="/" style={{ display:'flex', alignItems:'center' }}>
-          <img src="/lunaletsgo-logo.jpeg" alt="Luna Let's Go" style={{ height:44, width:'auto' }} />
+          <img src="/luna_letsgo_bigger_3.PNG" alt="Luna Let's Go" style={{ height:58, width:'auto' }} />
         </a>
         <div style={{ display:'flex', alignItems:'center', gap:4 }}>
           {['Trip Ideas','Quiz'].map(l => (
@@ -641,26 +641,25 @@ Traveller Profile:
             Tell us where you want to go — we'll handle the rest.
           </p>
 
-          {/* Form + Luna 2 avatar */}
-          <div style={{ position:'relative', overflow:'visible', display:'inline-block', width:'100%', maxWidth:560, animation:'fadeUp 0.65s 0.3s ease both' }}>
-            {/* Form */}
-            <div style={{ textAlign:'left' }}>
-              <HeroStepForm onSubmit={go} preFilledData={preFilledData} />
-            </div>
-            {/* Luna 2 — desktop only, right side, bottom-anchored */}
-            <img
-              src="/luna_2.png"
-              alt="Luna — AI travel assistant"
-              className="luna2-avatar"
-              style={{
-                position:'absolute', right:-300, bottom:0,
-                width:336, height:'auto', objectFit:'contain',
-                pointerEvents:'none',
-              }}
-            />
+          {/* Form */}
+          <div style={{ display:'inline-block', width:'100%', maxWidth:560, animation:'fadeUp 0.65s 0.3s ease both', textAlign:'left' }}>
+            <HeroStepForm onSubmit={go} preFilledData={preFilledData} />
           </div>
 
         </div>
+
+        {/* Luna 3 — desktop only, bottom of viewport */}
+        <img
+          src="/luna_3.png"
+          alt="Luna — AI travel assistant"
+          className="luna2-avatar"
+          style={{
+            position:'absolute', right:'calc(50% - 510px)',
+            bottom:0, top:'auto',
+            width:235, height:'auto', objectFit:'contain',
+            pointerEvents:'none', zIndex:3,
+          }}
+        />
       </section>
 
       {/* ───── STATS BAR ───── */}
@@ -1058,7 +1057,7 @@ Traveller Profile:
 
       {/* ───── FOOTER ───── */}
       <footer style={{ background:'var(--navy)', padding:'48px 40px', display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:16 }}>
-        <img src="/lunaletsgo-logo.jpeg" alt="Luna Let's Go" style={{ height:42, width:'auto' }} />
+        <img src="/luna_letsgo_bigger_3.PNG" alt="Luna Let's Go" style={{ height:56, width:'auto' }} />
         <p style={{ fontFamily:'var(--font-body)', color:'rgba(255,255,255,0.45)', fontSize:13 }}>
           © 2026 GOTO AI Travel Planner. Built with Next.js &amp; OpenRouter.{' '}
           <a href="https://open-meteo.com" style={{ color:'rgba(255,255,255,0.5)', textDecoration:'underline' }}>Weather by Open-Meteo</a>
