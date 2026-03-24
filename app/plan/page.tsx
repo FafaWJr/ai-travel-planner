@@ -1,7 +1,8 @@
 'use client';
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import EditableItinerary from '@/components/EditableItinerary';
+import EditableItinerary, { type ItineraryHandle } from '@/components/EditableItinerary';
+import FloatingChat from '@/components/FloatingChat';
 
 /* ── SVG icons (flat, navy/orange, no emojis) ── */
 const Icon = {
@@ -207,14 +208,11 @@ function PlanContent() {
   const [loading,      setLoading]      = useState(false);
   const [error,        setError]        = useState('');
   const [activeSection,setActiveSection] = useState('overview');
-  const [chatMessages, setChatMessages] = useState<{role:string;content:string}[]>([]);
-  const [chatInput,    setChatInput]    = useState('');
-  const [chatLoading,  setChatLoading]  = useState(false);
   const [photos,       setPhotos]       = useState<string[]>([]);
   const [extraIdeas,      setExtraIdeas]      = useState('');
   const [extraIdeasLoading, setExtraIdeasLoading] = useState(false);
   const [showExtraIdeas,  setShowExtraIdeas]  = useState(false);
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const itineraryRef = useRef<ItineraryHandle>(null);
 
   // Place photo popup
   const [popup, setPopup] = useState<{ name:string; x:number; y:number } | null>(null);
@@ -222,8 +220,6 @@ function PlanContent() {
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => { if (prompt) generatePlan(prompt); }, [prompt]); // eslint-disable-line
-
-  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior:'smooth' }); }, [chatMessages]);
 
   const generatePlan = async (p: string) => {
     setLoading(true); setError('');
@@ -264,45 +260,6 @@ function PlanContent() {
 
   const handlePlaneMouseLeave = () => {
     hideTimer.current = setTimeout(() => setPopup(null), 120);
-  };
-
-  /* Collect SSE stream into plain text (chat API returns event-stream) */
-  const collectSSE = async (res: Response): Promise<string> => {
-    const reader = res.body!.getReader();
-    const decoder = new TextDecoder();
-    let result = '', buffer = '';
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() ?? '';
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        const json = line.slice(6).trim();
-        if (!json || json === '[DONE]') continue;
-        try { const d = JSON.parse(json); const t = d?.choices?.[0]?.delta?.content; if (t) result += t; } catch {}
-      }
-    }
-    return result;
-  };
-
-  const sendChatMessage = async (msg: string) => {
-    const msgs = [...chatMessages, { role:'user', content: msg }];
-    setChatMessages(msgs); setChatLoading(true);
-    try {
-      const res = await fetch('/api/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ messages: msgs, tripContext: plan }) });
-      const text = await collectSSE(res);
-      setChatMessages([...msgs, { role:'assistant', content: text || 'No response.' }]);
-    } catch {
-      setChatMessages([...msgs, { role:'assistant', content:'Sorry, could not process that. Please try again.' }]);
-    } finally { setChatLoading(false); }
-  };
-
-  const sendChat = async () => {
-    if (!chatInput.trim() || chatLoading) return;
-    const msg = chatInput; setChatInput('');
-    await sendChatMessage(msg);
   };
 
   const fetchExtraIdeas = async () => {
@@ -392,7 +349,8 @@ function PlanContent() {
 
         {/* ── Plan ── */}
         {!loading && !error && plan && (
-          <div style={{ maxWidth:1180, margin:'0 auto', padding:'32px 24px', display:'grid', gridTemplateColumns:'1fr 340px', gap:24, alignItems:'start' }}>
+          <>
+          <div style={{ maxWidth:900, margin:'0 auto', padding:'32px 24px' }}>
 
             {/* Left column */}
             <div style={{ minWidth:0 }}>
@@ -436,6 +394,7 @@ function PlanContent() {
               {/* Rendered plan section */}
               {activeSection === 'itinerary' ? (
                 <EditableItinerary
+                  ref={itineraryRef}
                   itineraryMd={sectionContent}
                   destination={prompt.replace(/^plan a (trip to |)?/i,'').split(/\s+/).slice(0,4).join(' ')}
                   tripPrompt={prompt}
@@ -567,64 +526,16 @@ function PlanContent() {
               })()}
 
             </div>
-
-            {/* Right column — chat sidebar */}
-            <div style={{ position:'sticky', top:84, height:'calc(100vh - 108px)', display:'flex', flexDirection:'column' }}>
-              <div style={{ background:'#fff', borderRadius:16, flex:1, display:'flex', flexDirection:'column', overflow:'hidden', boxShadow:'0 2px 20px rgba(0,68,123,0.07)', border:'1px solid rgba(0,68,123,0.08)' }}>
-
-                {/* Chat header */}
-                <div style={{ padding:'16px 18px 14px', borderBottom:'1px solid rgba(0,68,123,0.08)', background:'#00447B', borderRadius:'16px 16px 0 0' }}>
-                  <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:14, color:'#fff', marginBottom:2 }}>Refine with AI</p>
-                  <p style={{ fontFamily:"'Inter',sans-serif", color:'rgba(255,255,255,0.6)', fontSize:12 }}>Ask anything about your trip</p>
-                </div>
-
-                {/* Messages */}
-                <div style={{ flex:1, overflowY:'auto', padding:'14px 14px 8px', display:'flex', flexDirection:'column', gap:8 }}>
-                  {chatMessages.length === 0 && (
-                    <div style={{ padding:'20px 0', textAlign:'center' }}>
-                      <p style={{ fontFamily:"'Inter',sans-serif", color:'#C0C0C0', fontSize:13, lineHeight:1.6 }}>
-                        Adjust hotels, add activities,<br/>change the budget — anything.
-                      </p>
-                    </div>
-                  )}
-                  {chatMessages.map((m,i) => (
-                    <div key={i} style={{
-                      background: m.role==='user' ? '#FF8210' : '#F4F7FB',
-                      color: m.role==='user' ? '#fff' : '#000',
-                      borderRadius: m.role==='user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
-                      padding:'10px 13px', fontSize:13, lineHeight:1.6,
-                      alignSelf: m.role==='user' ? 'flex-end' : 'flex-start',
-                      maxWidth:'88%', fontFamily:"'Inter',sans-serif",
-                    }}>
-                      {m.content}
-                    </div>
-                  ))}
-                  {chatLoading && (
-                    <div style={{ display:'flex', gap:4, padding:'8px 12px', alignSelf:'flex-start' }}>
-                      {[0,1,2].map(i => <span key={i} style={{ width:7, height:7, borderRadius:'50%', background:'rgba(0,68,123,0.25)', display:'inline-block', animation:`bounce 1.2s ${i*0.2}s infinite` }} />)}
-                    </div>
-                  )}
-                  <div ref={chatEndRef} />
-                </div>
-
-                {/* Input */}
-                <div style={{ padding:'10px 12px', borderTop:'1px solid rgba(0,68,123,0.08)', display:'flex', gap:8, alignItems:'center' }}>
-                  <input
-                    type="text" value={chatInput}
-                    onChange={e=>setChatInput(e.target.value)}
-                    onKeyDown={e=>e.key==='Enter'&&sendChat()}
-                    placeholder="e.g. Switch to a 4-star hotel..."
-                    style={{ flex:1, background:'#F4F7FB', border:'1.5px solid rgba(0,68,123,0.12)', borderRadius:10, padding:'9px 12px', fontFamily:"'Inter',sans-serif", fontSize:13, color:'#000', outline:'none' }}
-                    onFocus={e=>(e.target.style.borderColor='#00447B')}
-                    onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.12)')}
-                  />
-                  <button onClick={sendChat} disabled={!chatInput.trim()||chatLoading} style={{ background: chatInput.trim() ? '#FF8210' : '#C0C0C0', color:'#fff', borderRadius:10, width:38, height:38, display:'flex', alignItems:'center', justifyContent:'center', cursor: chatInput.trim() ? 'pointer' : 'default', border:'none', flexShrink:0, transition:'background 0.15s' }}>
-                    <Icon.Send />
-                  </button>
-                </div>
-              </div>
-            </div>
           </div>
+
+          <FloatingChat
+            plan={plan}
+            onAddToItinerary={(text, dayNum, slot) => {
+              setActiveSection('itinerary');
+              itineraryRef.current?.addActivity(text, dayNum, slot);
+            }}
+          />
+          </>
         )}
 
         {/* ── Empty state ── */}
