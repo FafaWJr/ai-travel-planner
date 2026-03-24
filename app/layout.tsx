@@ -9,13 +9,15 @@ export const metadata: Metadata = {
     description: 'Plan your perfect trip with AI in seconds.',
     type: 'website',
   },
+  other: {
+    verification: '7a9001216eb5ffd9e1939f6ab446f7a3',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
-        <meta name="verification" content="7a9001216eb5ffd9e1939f6ab446f7a3" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
