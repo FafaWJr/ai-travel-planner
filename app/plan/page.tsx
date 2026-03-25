@@ -513,17 +513,19 @@ function PlanContent() {
               </div>
 
               {/* Rendered plan section */}
-              {activeSection === 'itinerary' ? (
+              {/* EditableItinerary always stays mounted to preserve user changes */}
+              <div style={{ display: activeSection === 'itinerary' ? 'block' : 'none' }}>
                 <EditableItinerary
                   ref={itineraryRef}
-                  itineraryMd={sectionContent}
+                  itineraryMd={extractSection(plan, 'itinerary')}
                   destination={prompt.replace(/^plan a (trip to |)?/i,'').split(/\s+/).slice(0,4).join(' ')}
                   tripPrompt={prompt}
                   photos={photos}
                   onPlaceHover={handlePlaceMouseOver}
                   onPlaceLeave={handlePlaneMouseLeave}
                 />
-              ) : (
+              </div>
+              {activeSection !== 'itinerary' && (
                 <div style={{ background:'#fff', borderRadius:16, padding:'32px 36px', boxShadow:'0 2px 20px rgba(0,68,123,0.07)', border:'1px solid rgba(0,68,123,0.08)' }}>
                   <div
                     onMouseOver={handlePlaceMouseOver}

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useId, forwardRef, useImperativeHandle } from 'react';
+import { useState, useId, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import FinalItineraryModal from './FinalItineraryModal';
 import {
   DndContext,
@@ -209,7 +209,11 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
   const total        = allActs.length;
   const progress     = total > 0 ? Math.round((accepted / total) * 100) : 0;
   const confirmedDays = days.filter(d => d.confirmed).length;
-  const allConfirmed  = days.length > 0 && confirmedDays === days.length;
+  // A day counts as "effectively confirmed" if manually confirmed OR all its activities have been reviewed
+  const allConfirmed = days.length > 0 && days.every(d =>
+    d.confirmed ||
+    (d.activities.length > 0 && d.activities.every(a => a.status !== 'pending'))
+  );
 
   /* Expose handle to parent via ref */
   useImperativeHandle(ref, () => ({
@@ -650,7 +654,20 @@ function SortableActivityItem({
   onMoveToDay: (toDayNum: number) => void;
 }) {
   const [showMovePicker, setShowMovePicker] = useState(false);
+  const pickerRef = useRef<HTMLDivElement>(null);
   const { attributes, listeners, setNodeRef, transform, transition, isOver } = useSortable({ id: act.id });
+
+  // Close picker when clicking outside
+  useEffect(() => {
+    if (!showMovePicker) return;
+    const handler = (e: MouseEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+        setShowMovePicker(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showMovePicker]);
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
@@ -701,7 +718,8 @@ function SortableActivityItem({
         <div style={{ display: 'flex', gap: 4, flexShrink: 0, paddingTop: 2, alignItems: 'center' }}>
           {otherDays.length > 0 && (
             <button
-              onClick={() => setShowMovePicker(v => !v)}
+              onClick={(e) => { e.stopPropagation(); setShowMovePicker(v => !v); }}
+              onPointerDown={(e) => e.stopPropagation()}
               title="Move to another day"
               style={{
                 width: 26, height: 26, borderRadius: '50%', border: 'none',
@@ -711,14 +729,14 @@ function SortableActivityItem({
               }}
             >→</button>
           )}
-          <RoundBtn active={act.status === 'accepted'} activeColor="#16A34A" idleColor="rgba(22,163,74,0.12)" onClick={onAccept} label="Accept">✓</RoundBtn>
-          <RoundBtn active={act.status === 'declined'} activeColor="#DC2626" idleColor="rgba(220,38,38,0.10)" onClick={onDecline} label="Remove">✕</RoundBtn>
+          <RoundBtn active={act.status === 'accepted'} activeColor="#16A34A" idleColor="rgba(22,163,74,0.12)" onClick={onAccept} label="Accept" onPointerDown={(e: React.PointerEvent) => e.stopPropagation()}>✓</RoundBtn>
+          <RoundBtn active={act.status === 'declined'} activeColor="#DC2626" idleColor="rgba(220,38,38,0.10)" onClick={onDecline} label="Remove" onPointerDown={(e: React.PointerEvent) => e.stopPropagation()}>✕</RoundBtn>
         </div>
       </div>
 
       {/* Move to day picker */}
       {showMovePicker && (
-        <div style={{
+        <div ref={pickerRef} style={{
           position: 'absolute', right: 0, top: '100%', zIndex: 50,
           background: '#fff', border: '1.5px solid rgba(0,68,123,0.15)',
           borderRadius: 12, boxShadow: '0 8px 28px rgba(0,68,123,0.14)',
@@ -776,9 +794,9 @@ function StatPill({ color, bg, icon, children }: { color: string; bg: string; ic
   );
 }
 
-function RoundBtn({ active, activeColor, idleColor, onClick, label, children }: { active: boolean; activeColor: string; idleColor: string; onClick: () => void; label: string; children: React.ReactNode }) {
+function RoundBtn({ active, activeColor, idleColor, onClick, onPointerDown, label, children }: { active: boolean; activeColor: string; idleColor: string; onClick: () => void; onPointerDown?: (e: React.PointerEvent) => void; label: string; children: React.ReactNode }) {
   return (
-    <button onClick={onClick} title={label} style={{ width: 26, height: 26, borderRadius: '50%', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: active ? activeColor : idleColor, color: active ? '#fff' : activeColor, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}>
+    <button onClick={onClick} onPointerDown={onPointerDown} title={label} style={{ width: 26, height: 26, borderRadius: '50%', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: active ? activeColor : idleColor, color: active ? '#fff' : activeColor, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}>
       {children}
     </button>
   );
