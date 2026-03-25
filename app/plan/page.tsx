@@ -299,7 +299,7 @@ function PlanContent() {
         borderBottom:'1px solid rgba(0,68,123,0.10)',
       }}>
         <a href="/" style={{ display:'flex', alignItems:'center' }}>
-          <img src="/luna_letsgo_bigger_3.PNG" alt="Luna Let's Go" style={{ height:58, width:'auto' }} />
+          <img src="/luna_letsgo_bigger_3.PNG" alt="Luna Let's Go" style={{ height:72, width:'auto' }} />
         </a>
         <div style={{ display:'flex', alignItems:'center', gap:12 }}>
           {plan && (
