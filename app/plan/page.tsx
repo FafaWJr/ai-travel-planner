@@ -3,6 +3,126 @@ import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import EditableItinerary, { type ItineraryHandle } from '@/components/EditableItinerary';
 import FloatingChat from '@/components/FloatingChat';
+import Toast from '@/components/Toast';
+
+type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'night';
+const SLOTS_LIST: { key: TimeSlot; label: string; icon: string }[] = [
+  { key: 'morning',   label: 'Morning',   icon: '🌅' },
+  { key: 'afternoon', label: 'Afternoon', icon: '☀️'  },
+  { key: 'evening',   label: 'Evening',   icon: '🌆' },
+  { key: 'night',     label: 'Night',     icon: '🌙' },
+];
+
+/* Parse "- **Name** — description" markdown list into idea objects */
+function parseIdeas(md: string): { name: string; description: string }[] {
+  const results: { name: string; description: string }[] = [];
+  for (const m of md.matchAll(/^[-*]\s+\*\*(.+?)\*\*\s*[—–-]\s*(.+)$/gm)) {
+    results.push({ name: m[1].trim(), description: m[2].trim() });
+  }
+  return results;
+}
+
+/* Single idea card with inline day/slot picker */
+function IdeaCard({
+  idea,
+  days,
+  onAdd,
+}: {
+  idea: { name: string; description: string };
+  days: { number: number; title: string }[];
+  onAdd: (text: string, dayNum: number, slot: TimeSlot) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [selDay, setSelDay] = useState<number>(days[0]?.number ?? 1);
+  const [selSlot, setSelSlot] = useState<TimeSlot>('morning');
+  const [added, setAdded] = useState(false);
+
+  const handleAdd = () => {
+    onAdd(`**${idea.name}** — ${idea.description}`, selDay, selSlot);
+    setAdded(true);
+    setOpen(false);
+  };
+
+  return (
+    <div style={{
+      background: '#fff', border: '1.5px solid rgba(0,68,123,0.10)',
+      borderRadius: 14, overflow: 'hidden',
+      transition: 'box-shadow 0.15s, border-color 0.15s',
+    }}>
+      <div style={{ padding: '14px 16px 12px', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 13, color: '#00447B', margin: '0 0 4px' }}>{idea.name}</p>
+          <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, color: '#555', lineHeight: 1.6, margin: 0 }}>{idea.description}</p>
+        </div>
+        {added ? (
+          <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: '#16A34A', fontWeight: 600, flexShrink: 0, paddingTop: 2 }}>✓ Added</span>
+        ) : (
+          <button
+            onClick={() => setOpen(v => !v)}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+              background: open ? '#FF8210' : 'rgba(255,130,16,0.08)',
+              color: open ? '#fff' : '#FF8210',
+              border: '1.5px solid rgba(255,130,16,0.35)',
+              borderRadius: 100, padding: '5px 14px',
+              fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 12,
+              cursor: 'pointer', transition: 'all 0.15s', flexShrink: 0,
+            }}
+          >
+            <span>+</span> Add
+          </button>
+        )}
+      </div>
+
+      {/* Inline day + slot picker */}
+      {open && !added && (
+        <div style={{ borderTop: '1px solid rgba(0,68,123,0.07)', padding: '12px 16px 14px', background: 'rgba(244,247,251,0.7)' }}>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+            {/* Day selector */}
+            <div style={{ flex: 1, minWidth: 120 }}>
+              <label style={{ fontFamily: "'Poppins',sans-serif", fontSize: 11, fontWeight: 600, color: '#00447B', display: 'block', marginBottom: 5 }}>Day</label>
+              <select
+                value={selDay}
+                onChange={e => setSelDay(Number(e.target.value))}
+                style={{ width: '100%', border: '1.5px solid rgba(0,68,123,0.15)', borderRadius: 8, padding: '7px 10px', fontFamily: "'Inter',sans-serif", fontSize: 13, color: '#333', background: '#fff', outline: 'none' }}
+              >
+                {days.map(d => (
+                  <option key={d.number} value={d.number}>Day {d.number} — {d.title}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Slot selector */}
+            <div style={{ flex: 1, minWidth: 120 }}>
+              <label style={{ fontFamily: "'Poppins',sans-serif", fontSize: 11, fontWeight: 600, color: '#00447B', display: 'block', marginBottom: 5 }}>Time</label>
+              <select
+                value={selSlot}
+                onChange={e => setSelSlot(e.target.value as TimeSlot)}
+                style={{ width: '100%', border: '1.5px solid rgba(0,68,123,0.15)', borderRadius: 8, padding: '7px 10px', fontFamily: "'Inter',sans-serif", fontSize: 13, color: '#333', background: '#fff', outline: 'none' }}
+              >
+                {SLOTS_LIST.map(s => (
+                  <option key={s.key} value={s.key}>{s.icon} {s.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <button
+              onClick={handleAdd}
+              style={{
+                background: '#FF8210', color: '#fff', border: 'none',
+                borderRadius: 8, padding: '8px 18px',
+                fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 13,
+                cursor: 'pointer', flexShrink: 0, alignSelf: 'flex-end',
+              }}
+            >
+              Add to itinerary
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* ── SVG icons (flat, navy/orange, no emojis) ── */
 const Icon = {
@@ -212,6 +332,7 @@ function PlanContent() {
   const [extraIdeas,      setExtraIdeas]      = useState('');
   const [extraIdeasLoading, setExtraIdeasLoading] = useState(false);
   const [showExtraIdeas,  setShowExtraIdeas]  = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
   const itineraryRef = useRef<ItineraryHandle>(null);
 
   // Place photo popup
@@ -463,9 +584,27 @@ function PlanContent() {
                           <div style={{ width:22, height:22, borderRadius:'50%', border:'2.5px solid rgba(0,68,123,0.10)', borderTop:'2.5px solid #FF8210', animation:'spin 0.9s linear infinite', flexShrink:0 }} />
                           <p style={{ fontFamily:"'Inter',sans-serif", color:'#9CA3AF', fontSize:13 }}>Looking for extra ideas...</p>
                         </div>
-                      ) : (
-                        <div dangerouslySetInnerHTML={{ __html: markdownToHtml(extraIdeas) }} />
-                      )}
+                      ) : (() => {
+                        const ideas = parseIdeas(extraIdeas);
+                        const days = itineraryRef.current?.getDays() ?? [];
+                        if (ideas.length === 0) return <div dangerouslySetInnerHTML={{ __html: markdownToHtml(extraIdeas) }} />;
+                        return (
+                          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+                            {ideas.map((idea, i) => (
+                              <IdeaCard
+                                key={i}
+                                idea={idea}
+                                days={days.length > 0 ? days : [{ number: 1, title: 'Day 1' }]}
+                                onAdd={(text, dayNum, slot) => {
+                                  setActiveSection('itinerary');
+                                  itineraryRef.current?.addActivity(text, dayNum, slot, true);
+                                  setToast(`"${idea.name}" added to Day ${dayNum}`);
+                                }}
+                              />
+                            ))}
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 )}
@@ -528,11 +667,14 @@ function PlanContent() {
             </div>
           </div>
 
+          {toast && <Toast message={toast} onDismiss={() => setToast(null)} />}
+
           <FloatingChat
             plan={plan}
             onAddToItinerary={(text, dayNum, slot) => {
               setActiveSection('itinerary');
-              itineraryRef.current?.addActivity(text, dayNum, slot);
+              itineraryRef.current?.addActivity(text, dayNum, slot, true);
+              setToast(`Activity added to Day ${dayNum}`);
             }}
           />
           </>

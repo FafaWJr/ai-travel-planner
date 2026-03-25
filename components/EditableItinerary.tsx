@@ -1,5 +1,6 @@
 'use client';
 import { useState, useId, forwardRef, useImperativeHandle } from 'react';
+import FinalItineraryModal from './FinalItineraryModal';
 import {
   DndContext,
   DragOverlay,
@@ -32,6 +33,7 @@ interface Activity {
   text: string;
   status: Status;
   slot: TimeSlot;
+  manuallyAdded?: boolean;
 }
 interface Suggestion {
   id: string;
@@ -46,6 +48,7 @@ interface Day {
   open: boolean;
   suggestions: Suggestion[];
   loadingMore: boolean;
+  confirmed: boolean;
 }
 
 const SLOTS: { key: TimeSlot; label: string; icon: string }[] = [
@@ -153,7 +156,7 @@ function parseItinerary(md: string): Day[] {
       });
     }
 
-    days.push({ number, title, activities, open: number === 1, suggestions: [], loadingMore: false });
+    days.push({ number, title, activities, open: number === 1, suggestions: [], loadingMore: false, confirmed: false });
   }
 
   return days;
@@ -178,7 +181,8 @@ interface Props {
 }
 
 export interface ItineraryHandle {
-  addActivity: (text: string, dayNum: number, slot: TimeSlot) => void;
+  addActivity: (text: string, dayNum: number, slot: TimeSlot, manuallyAdded?: boolean) => void;
+  getDays: () => { number: number; title: string }[];
 }
 
 const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableItinerary({
@@ -187,6 +191,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
 }, ref) {
   const [days, setDays] = useState<Day[]>(() => parseItinerary(itineraryMd));
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
+  const [showFinalModal, setShowFinalModal] = useState(false);
   const instanceId = useId();
 
   /* dnd sensors — pointer (desktop) + touch (mobile) */
@@ -197,16 +202,18 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
   );
 
   /* Derived counters */
-  const allActs  = days.flatMap(d => d.activities);
-  const accepted = allActs.filter(a => a.status === 'accepted').length;
-  const declined = allActs.filter(a => a.status === 'declined').length;
-  const pending  = allActs.filter(a => a.status === 'pending').length;
-  const total    = allActs.length;
-  const progress = total > 0 ? Math.round((accepted / total) * 100) : 0;
+  const allActs      = days.flatMap(d => d.activities);
+  const accepted     = allActs.filter(a => a.status === 'accepted').length;
+  const declined     = allActs.filter(a => a.status === 'declined').length;
+  const pending      = allActs.filter(a => a.status === 'pending').length;
+  const total        = allActs.length;
+  const progress     = total > 0 ? Math.round((accepted / total) * 100) : 0;
+  const confirmedDays = days.filter(d => d.confirmed).length;
+  const allConfirmed  = days.length > 0 && confirmedDays === days.length;
 
-  /* Expose addActivity to parent via ref */
+  /* Expose handle to parent via ref */
   useImperativeHandle(ref, () => ({
-    addActivity(text: string, dayNum: number, slot: TimeSlot) {
+    addActivity(text: string, dayNum: number, slot: TimeSlot, manuallyAdded?: boolean) {
       setDays(prev => prev.map(d => {
         if (d.number !== dayNum) return d;
         const newActivity: Activity = {
@@ -214,9 +221,13 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
           text,
           status: 'pending',
           slot,
+          manuallyAdded,
         };
         return { ...d, activities: [...d.activities, newActivity], open: true };
       }));
+    },
+    getDays() {
+      return days.map(d => ({ number: d.number, title: d.title }));
     },
   }));
 
@@ -367,6 +378,21 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
       d.number !== dayNum ? d : { ...d, suggestions: d.suggestions.filter(s => s.id !== sugId) }
     ));
 
+  const moveActivityToDay = (actId: string, fromDayNum: number, toDayNum: number) =>
+    setDays(prev => {
+      const fromDay = prev.find(d => d.number === fromDayNum);
+      const act = fromDay?.activities.find(a => a.id === actId);
+      if (!act) return prev;
+      return prev.map(d => {
+        if (d.number === fromDayNum) return { ...d, activities: d.activities.filter(a => a.id !== actId) };
+        if (d.number === toDayNum)   return { ...d, activities: [...d.activities, act], open: true };
+        return d;
+      });
+    });
+
+  const toggleConfirmed = (dayNum: number) =>
+    setDays(prev => prev.map(d => d.number === dayNum ? { ...d, confirmed: !d.confirmed } : d));
+
   const activeActivity = activeId ? findActivity(activeId) : null;
 
   return (
@@ -383,6 +409,30 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
         <div style={{ height: 7, background: 'rgba(0,68,123,0.08)', borderRadius: 100, overflow: 'hidden' }}>
           <div style={{ height: '100%', width: `${progress}%`, background: 'linear-gradient(90deg,#16A34A,#4ADE80)', borderRadius: 100, transition: 'width 0.4s ease' }} />
         </div>
+        {/* Days confirmed row */}
+        <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: '#6C6D6F' }}>
+            {confirmedDays === 0
+              ? 'Accept individual days below when you\'re happy with them'
+              : `${confirmedDays} of ${days.length} day${days.length !== 1 ? 's' : ''} confirmed`}
+          </span>
+          <button
+            onClick={() => allConfirmed && setShowFinalModal(true)}
+            disabled={!allConfirmed}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 7,
+              background: allConfirmed ? 'linear-gradient(135deg,#FF8210,#FF6B00)' : 'rgba(0,68,123,0.07)',
+              color: allConfirmed ? '#fff' : 'rgba(0,68,123,0.35)',
+              border: 'none', borderRadius: 100, padding: '8px 18px',
+              fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 12,
+              cursor: allConfirmed ? 'pointer' : 'default',
+              transition: 'all 0.2s',
+              boxShadow: allConfirmed ? '0 4px 14px rgba(255,130,16,0.35)' : 'none',
+            }}
+          >
+            🏁 Finalize My Trip
+          </button>
+        </div>
       </div>
 
       {/* ── DnD context wraps all day cards ── */}
@@ -398,9 +448,10 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
           {days.map((day, idx) => {
             const photo = photos.length > 0 ? photos[idx % photos.length] : null;
             const dayAccepted = day.activities.filter(a => a.status === 'accepted').length;
+            const otherDays = days.filter(d => d.number !== day.number).map(d => ({ number: d.number, title: d.title }));
 
             return (
-              <div key={day.number} style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(0,68,123,0.08)', boxShadow: '0 2px 12px rgba(0,68,123,0.06)' }}>
+              <div key={day.number} style={{ background: day.confirmed ? 'rgba(22,163,74,0.02)' : '#fff', borderRadius: 16, overflow: 'hidden', border: `1px solid ${day.confirmed ? 'rgba(22,163,74,0.25)' : 'rgba(0,68,123,0.08)'}`, boxShadow: '0 2px 12px rgba(0,68,123,0.06)', transition: 'border-color 0.2s, background 0.2s' }}>
 
                 {/* Cover photo */}
                 <div onClick={() => toggleDay(day.number)} style={{ cursor: 'pointer', position: 'relative' }}>
@@ -411,6 +462,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
                   <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top,rgba(0,0,0,0.60) 0%,rgba(0,0,0,0.10) 60%,transparent 100%)', display: 'flex', alignItems: 'flex-end', padding: '10px 14px', gap: 8 }}>
                     <span style={{ background: '#FF8210', color: '#fff', fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 11, padding: '3px 10px', borderRadius: 100, flexShrink: 0 }}>Day {day.number}</span>
                     <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 14, color: '#fff', flex: 1, margin: 0, textShadow: '0 1px 4px rgba(0,0,0,0.5)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{day.title}</p>
+                    {day.confirmed && <span style={{ background: 'rgba(22,163,74,0.80)', color: '#fff', fontSize: 10, fontFamily: "'Inter',sans-serif", fontWeight: 700, padding: '2px 8px', borderRadius: 100, flexShrink: 0 }}>✓ Confirmed</span>}
                     <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: 'rgba(255,255,255,0.70)', flexShrink: 0 }}>{dayAccepted}/{day.activities.length}</span>
                     <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14, flexShrink: 0, display: 'inline-block', transition: 'transform 0.2s', transform: day.open ? 'rotate(180deg)' : 'rotate(0deg)' }}>▾</span>
                   </div>
@@ -432,6 +484,8 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
                           activeId={activeId}
                           onAccept={(id) => setActivityStatus(day.number, id, 'accepted')}
                           onDecline={(id) => setActivityStatus(day.number, id, 'declined')}
+                          otherDays={otherDays}
+                          onMoveToDay={(actId, toDayNum) => moveActivityToDay(actId, day.number, toDayNum)}
                         />
                       );
                     })}
@@ -463,6 +517,22 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
                     >
                       {day.loadingMore ? <><InlineSpinner /> Finding ideas...</> : <><span style={{ fontSize: 15 }}>+</span> More ideas for this day</>}
                     </button>
+
+                    {/* Accept Day button */}
+                    <button
+                      onClick={() => toggleConfirmed(day.number)}
+                      style={{
+                        marginTop: 14, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                        background: day.confirmed ? 'rgba(22,163,74,0.10)' : 'rgba(0,68,123,0.04)',
+                        color: day.confirmed ? '#16A34A' : '#00447B',
+                        border: `1.5px solid ${day.confirmed ? 'rgba(22,163,74,0.30)' : 'rgba(0,68,123,0.15)'}`,
+                        borderRadius: 10, padding: '10px 0',
+                        fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 13,
+                        cursor: 'pointer', transition: 'all 0.2s',
+                      }}
+                    >
+                      {day.confirmed ? '✓ Day accepted — click to undo' : '✓ Accept this day'}
+                    </button>
                   </div>
                 )}
               </div>
@@ -484,6 +554,15 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
           )}
         </DragOverlay>
       </DndContext>
+
+      {/* Final Itinerary Modal */}
+      {showFinalModal && (
+        <FinalItineraryModal
+          days={days}
+          destination={destination}
+          onClose={() => setShowFinalModal(false)}
+        />
+      )}
     </div>
   );
 });
@@ -493,7 +572,7 @@ export default EditableItinerary;
 /* ─── TimeSlotSection ────────────────────────────────────────── */
 function TimeSlotSection({
   containerId, label, icon, activities, activeId,
-  onAccept, onDecline,
+  onAccept, onDecline, otherDays, onMoveToDay,
 }: {
   containerId: string;
   label: string;
@@ -502,6 +581,8 @@ function TimeSlotSection({
   activeId: UniqueIdentifier | null;
   onAccept: (id: string) => void;
   onDecline: (id: string) => void;
+  otherDays: { number: number; title: string }[];
+  onMoveToDay: (actId: string, toDayNum: number) => void;
 }) {
   const ids = activities.map(a => a.id);
 
@@ -524,6 +605,8 @@ function TimeSlotSection({
                   isDragging={act.id === activeId}
                   onAccept={() => onAccept(act.id)}
                   onDecline={() => onDecline(act.id)}
+                  otherDays={otherDays}
+                  onMoveToDay={(toDayNum) => onMoveToDay(act.id, toDayNum)}
                 />
               ))
           }
@@ -557,13 +640,16 @@ function EmptyDropZone({ containerId }: { containerId: string }) {
 
 /* ─── SortableActivityItem ───────────────────────────────────── */
 function SortableActivityItem({
-  act, isDragging, onAccept, onDecline,
+  act, isDragging, onAccept, onDecline, otherDays, onMoveToDay,
 }: {
   act: Activity;
   isDragging: boolean;
   onAccept: () => void;
   onDecline: () => void;
+  otherDays: { number: number; title: string }[];
+  onMoveToDay: (toDayNum: number) => void;
 }) {
+  const [showMovePicker, setShowMovePicker] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isOver } = useSortable({ id: act.id });
 
   const style: React.CSSProperties = {
@@ -573,42 +659,90 @@ function SortableActivityItem({
   };
 
   return (
-    <div
-      ref={setNodeRef}
-      style={{
-        ...style,
-        display: 'flex', alignItems: 'flex-start', gap: 6,
-        padding: '9px 10px', borderRadius: 10,
-        borderLeft: `3px solid ${act.status === 'accepted' ? '#16A34A' : act.status === 'declined' ? 'rgba(220,38,38,0.3)' : 'rgba(0,68,123,0.12)'}`,
-        border: isOver ? '2px dashed #00447B' : undefined,
-        background: isOver
-          ? 'rgba(0,68,123,0.05)'
-          : act.status === 'accepted' ? 'rgba(22,163,74,0.04)'
-          : act.status === 'declined' ? 'rgba(220,38,38,0.03)'
-          : '#F9FAFB',
-        opacity: act.status === 'declined' ? (isDragging ? 0.2 : 0.5) : (isDragging ? 0.35 : 1),
-        transition: 'background 0.15s, border 0.15s, opacity 0.15s',
-      }}
-    >
-      {/* Drag handle */}
-      <span
-        {...attributes}
-        {...listeners}
-        title="Drag to reorder"
-        style={{ color: 'rgba(0,68,123,0.30)', fontSize: 16, cursor: 'grab', flexShrink: 0, paddingTop: 2, userSelect: 'none', touchAction: 'none', lineHeight: 1 }}
-      >⠿</span>
+    <div style={{ position: 'relative' }}>
+      <div
+        ref={setNodeRef}
+        style={{
+          ...style,
+          display: 'flex', alignItems: 'flex-start', gap: 6,
+          padding: '9px 10px', borderRadius: 10,
+          borderLeft: `3px solid ${act.status === 'accepted' ? '#16A34A' : act.status === 'declined' ? 'rgba(220,38,38,0.3)' : act.manuallyAdded ? '#FF8210' : 'rgba(0,68,123,0.12)'}`,
+          border: isOver ? '2px dashed #00447B' : undefined,
+          background: isOver
+            ? 'rgba(0,68,123,0.05)'
+            : act.status === 'accepted' ? 'rgba(22,163,74,0.04)'
+            : act.status === 'declined' ? 'rgba(220,38,38,0.03)'
+            : act.manuallyAdded ? 'rgba(255,130,16,0.04)'
+            : '#F9FAFB',
+          opacity: act.status === 'declined' ? (isDragging ? 0.2 : 0.5) : (isDragging ? 0.35 : 1),
+          transition: 'background 0.15s, border 0.15s, opacity 0.15s',
+        }}
+      >
+        {/* Drag handle */}
+        <span
+          {...attributes}
+          {...listeners}
+          title="Drag to reorder"
+          style={{ color: 'rgba(0,68,123,0.30)', fontSize: 16, cursor: 'grab', flexShrink: 0, paddingTop: 2, userSelect: 'none', touchAction: 'none', lineHeight: 1 }}
+        >⠿</span>
 
-      {/* Text */}
-      <p
-        style={{ flex: 1, fontFamily: "'Inter',sans-serif", fontSize: 13, lineHeight: 1.65, color: '#333', margin: 0, textDecoration: act.status === 'declined' ? 'line-through' : 'none' }}
-        dangerouslySetInnerHTML={{ __html: inlineMd(act.text) }}
-      />
+        {/* Text */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p
+            style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, lineHeight: 1.65, color: '#333', margin: 0, textDecoration: act.status === 'declined' ? 'line-through' : 'none' }}
+            dangerouslySetInnerHTML={{ __html: inlineMd(act.text) }}
+          />
+          {act.manuallyAdded && (
+            <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 10, color: '#FF8210', fontWeight: 600, letterSpacing: 0.3 }}>✦ Added by you</span>
+          )}
+        </div>
 
-      {/* Accept / Decline */}
-      <div style={{ display: 'flex', gap: 4, flexShrink: 0, paddingTop: 2 }}>
-        <RoundBtn active={act.status === 'accepted'} activeColor="#16A34A" idleColor="rgba(22,163,74,0.12)" onClick={onAccept} label="Accept">✓</RoundBtn>
-        <RoundBtn active={act.status === 'declined'} activeColor="#DC2626" idleColor="rgba(220,38,38,0.10)" onClick={onDecline} label="Remove">✕</RoundBtn>
+        {/* Move to day / Accept / Decline */}
+        <div style={{ display: 'flex', gap: 4, flexShrink: 0, paddingTop: 2, alignItems: 'center' }}>
+          {otherDays.length > 0 && (
+            <button
+              onClick={() => setShowMovePicker(v => !v)}
+              title="Move to another day"
+              style={{
+                width: 26, height: 26, borderRadius: '50%', border: 'none',
+                cursor: 'pointer', fontSize: 12, background: showMovePicker ? 'rgba(0,68,123,0.15)' : 'rgba(0,68,123,0.07)',
+                color: '#00447B', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.15s',
+              }}
+            >→</button>
+          )}
+          <RoundBtn active={act.status === 'accepted'} activeColor="#16A34A" idleColor="rgba(22,163,74,0.12)" onClick={onAccept} label="Accept">✓</RoundBtn>
+          <RoundBtn active={act.status === 'declined'} activeColor="#DC2626" idleColor="rgba(220,38,38,0.10)" onClick={onDecline} label="Remove">✕</RoundBtn>
+        </div>
       </div>
+
+      {/* Move to day picker */}
+      {showMovePicker && (
+        <div style={{
+          position: 'absolute', right: 0, top: '100%', zIndex: 50,
+          background: '#fff', border: '1.5px solid rgba(0,68,123,0.15)',
+          borderRadius: 12, boxShadow: '0 8px 28px rgba(0,68,123,0.14)',
+          padding: '8px', minWidth: 200, marginTop: 4,
+        }}>
+          <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 11, color: '#6C6D6F', margin: '0 6px 6px', textTransform: 'uppercase', letterSpacing: 0.4 }}>Move to</p>
+          {otherDays.map(d => (
+            <button
+              key={d.number}
+              onClick={() => { onMoveToDay(d.number); setShowMovePicker(false); }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8, width: '100%',
+                background: 'none', border: 'none', borderRadius: 8, padding: '7px 10px',
+                cursor: 'pointer', textAlign: 'left', transition: 'background 0.12s',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,68,123,0.05)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+            >
+              <span style={{ background: '#FF8210', color: '#fff', fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 10, padding: '2px 7px', borderRadius: 100, flexShrink: 0 }}>Day {d.number}</span>
+              <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: '#333', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.title}</span>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
