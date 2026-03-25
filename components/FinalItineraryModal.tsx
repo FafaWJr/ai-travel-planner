@@ -124,7 +124,7 @@ export default function FinalItineraryModal({
             const dayActs = day.activities.filter(a => a.status !== 'declined');
             if (dayActs.length === 0) return null;
             return (
-              <div key={day.number} style={{ marginBottom: 40, pageBreakInside: 'avoid' as const }}>
+              <div key={day.number} style={{ marginBottom: 40, pageBreakInside: 'avoid' as const, breakInside: 'avoid' as const }}>
                 {/* Day header */}
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18,
@@ -211,10 +211,17 @@ export default function FinalItineraryModal({
 
       <style>{`
         @media print {
-          .no-print { display: none !important; }
-          #luna-print-root { position: static !important; overflow: visible !important; }
-          body > *:not(#luna-print-root) { display: none !important; }
-          @page { margin: 18mm; }
+          body * { visibility: hidden !important; }
+          #luna-print-root, #luna-print-root * { visibility: visible !important; }
+          #luna-print-root {
+            position: fixed !important;
+            top: 0 !important; left: 0 !important;
+            width: 100% !important; height: auto !important;
+            overflow: visible !important;
+            background: #fff !important;
+          }
+          #luna-print-root .no-print { display: none !important; }
+          @page { margin: 18mm; size: A4 portrait; }
         }
       `}</style>
     </>

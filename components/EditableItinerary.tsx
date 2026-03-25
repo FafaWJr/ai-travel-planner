@@ -207,8 +207,9 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
   const declined     = allActs.filter(a => a.status === 'declined').length;
   const pending      = allActs.filter(a => a.status === 'pending').length;
   const total        = allActs.length;
-  const progress     = total > 0 ? Math.round((accepted / total) * 100) : 0;
   const confirmedDays = days.filter(d => d.confirmed).length;
+  const reviewable   = total - declined; // only accepted + pending count toward progress
+  const progress     = reviewable > 0 ? Math.round((accepted / reviewable) * 100) : 0;
   // A day counts as "effectively confirmed" if manually confirmed OR all its activities have been reviewed
   const allConfirmed = days.length > 0 && days.every(d =>
     d.confirmed ||
@@ -395,7 +396,18 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
     });
 
   const toggleConfirmed = (dayNum: number) =>
-    setDays(prev => prev.map(d => d.number === dayNum ? { ...d, confirmed: !d.confirmed } : d));
+    setDays(prev => prev.map(d => {
+      if (d.number !== dayNum) return d;
+      const nowConfirmed = !d.confirmed;
+      return {
+        ...d,
+        confirmed: nowConfirmed,
+        // When confirming, auto-accept all pending activities (leave declined as-is)
+        activities: nowConfirmed
+          ? d.activities.map(a => a.status === 'pending' ? { ...a, status: 'accepted' as const } : a)
+          : d.activities,
+      };
+    }));
 
   const activeActivity = activeId ? findActivity(activeId) : null;
 
