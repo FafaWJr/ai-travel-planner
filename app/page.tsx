@@ -1146,7 +1146,7 @@ function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; 
     if (!dest) { setStep(0); return; }
     const bLabels: Record<string,string> = {budget:'budget-friendly',comfort:'comfortable',premium:'premium',luxury:'luxury'};
     const tripStyles = styles.length ? `focusing on ${styles.join(', ')}` : '';
-    const dates = dep ? `from ${dep}${depTime?` at ${depTime}`:''}${ret?` to ${ret}`:''}${ret&&retTime?` arriving ${retTime}`:''}` : '';
+    const dates = dep ? `from ${dep}${depTime?` (arriving at ${depTime})`:''}${ret?` to ${ret}`:''}${ret&&retTime?` (departing at ${retTime})`:''}` : '';
     const group = `for ${adults} adult${adults>1?'s':''}${kids>0?` and ${kids} child${kids>1?'ren':''}`:''}`;
     const cLabel: Record<string,string> = {solo:'travelling solo',couple:'travelling as a couple',partner:'travelling as a couple',family:'travelling with family',friends:'travelling with friends'};
     const filledAdultAges = adultAges.filter(Boolean);
