@@ -185,32 +185,61 @@ export default function BudgetTab({ itineraryRef, acceptedHotels, prompt, versio
     lastVersion.current = version;
 
     try {
-      const res = await fetch('/api/budget-estimate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          destination: dest,
-          startDate: start,
-          endDate: end,
-          nights,
-          travelers,
-          hotel,
-          days: days.map(d => ({
-            number: d.number,
-            title: d.title,
-            activities: d.activities.map(a => ({
-              status: a.status,
-              slot: a.slot,
-              text: a.text,
+      // Split days into chunks of 5 and run in parallel — scales to any trip length
+      const CHUNK = 5;
+      const chunks: Day[][] = [];
+      for (let i = 0; i < days.length; i += CHUNK) chunks.push(days.slice(i, i + CHUNK));
+
+      const fetchChunk = async (chunkDays: Day[], idx: number): Promise<BudgetResult> => {
+        const res = await fetch('/api/budget-estimate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            destination: dest,
+            startDate: start,
+            endDate: end,
+            nights,
+            travelers,
+            // Hotel cost only counted in the first chunk (where check-in activity lives)
+            hotel: idx === 0 ? hotel : null,
+            days: chunkDays.map(d => ({
+              number: d.number,
+              title: d.title,
+              activities: d.activities
+                .filter(a => a.status !== 'declined')
+                .map(a => ({ status: a.status, slot: a.slot, text: a.text })),
             })),
-          })),
-          budgetLevel,
-        }),
-      });
-      if (!res.ok) throw new Error('Failed to estimate budget');
-      const data: BudgetResult = await res.json();
-      if ((data as any).error) throw new Error((data as any).error);
-      setBudget(data);
+            budgetLevel,
+          }),
+        });
+        if (!res.ok) throw new Error(`Chunk ${idx + 1} failed`);
+        const data: BudgetResult = await res.json();
+        if ((data as any).error) throw new Error((data as any).error);
+        return data;
+      };
+
+      const results = await Promise.all(chunks.map(fetchChunk));
+
+      // Merge all chunk results into one
+      const sum = (key: keyof BudgetSummary) =>
+        results.reduce((acc, r) => acc + (r.summary?.[key] ?? 0), 0);
+
+      const merged: BudgetResult = {
+        currency: 'USD',
+        summary: {
+          accommodation:   sum('accommodation'),
+          activities:      sum('activities'),
+          meals:           sum('meals'),
+          transport:       sum('transport'),
+          other:           sum('other'),
+          confirmed_total: sum('confirmed_total'),
+          pending_total:   sum('pending_total'),
+        },
+        by_day: results.flatMap(r => r.by_day ?? []).sort((a, b) => a.day - b.day),
+        no_hotel_warning: !hotel,
+      };
+
+      setBudget(merged);
     } catch (e: any) {
       setError(e.message || 'Could not calculate budget. Please try again.');
     } finally {
