@@ -36,6 +36,7 @@ interface Props {
   checkOut: string;
   budget: string;
   onAddToItinerary: (text: string, dayNum: number, slot: TimeSlot) => void;
+  onRemoveActivitiesMatching: (pattern: string) => void;
   onHotelsConfirmed: (hotels: AcceptedHotel[]) => void;
 }
 
@@ -283,7 +284,7 @@ function ConfirmedSummary({ hotel, segment }: AcceptedHotel) {
 }
 
 /* ─── Main component ─────────────────────────────────────────── */
-export default function StayTab({ prompt, destination, checkIn, checkOut, budget, onAddToItinerary, onHotelsConfirmed }: Props) {
+export default function StayTab({ prompt, destination, checkIn, checkOut, budget, onAddToItinerary, onRemoveActivitiesMatching, onHotelsConfirmed }: Props) {
   const [segments,        setSegments]        = useState<LocationSegment[]>([]);
   const [seenIds,         setSeenIds]         = useState<Set<string>>(new Set());
   const [confirmed,       setConfirmed]       = useState<Record<string, AcceptedHotel>>({});
@@ -392,6 +393,13 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
 
   /* ── Choose hotel ── */
   const chooseHotel = (hotel: Hotel, segment: LocationSegment) => {
+    // Remove previous hotel's check-in/check-out for this segment before adding the new one
+    const previous = confirmed[segment.location];
+    if (previous) {
+      onRemoveActivitiesMatching(`Check-in: ${previous.hotel.name}`);
+      onRemoveActivitiesMatching(`Check-out: ${previous.hotel.name}`);
+    }
+
     const newConfirmed = { ...confirmed, [segment.location]: { hotel, segment } };
     setConfirmed(newConfirmed);
     onHotelsConfirmed(Object.values(newConfirmed));

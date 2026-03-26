@@ -564,6 +564,9 @@ function PlanContent() {
                         itineraryRef.current?.addActivity(text, dayNum, slot, true);
                         setToast(text.replace(/\*\*/g, '').slice(0, 60));
                       }}
+                      onRemoveActivitiesMatching={(pattern) => {
+                        itineraryRef.current?.removeActivitiesMatching(pattern);
+                      }}
                       onHotelsConfirmed={setAcceptedHotels}
                     />
                   </div>
