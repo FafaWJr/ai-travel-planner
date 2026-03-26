@@ -5,6 +5,7 @@ import EditableItinerary, { type ItineraryHandle } from '@/components/EditableIt
 import FloatingChat from '@/components/FloatingChat';
 import Toast from '@/components/Toast';
 import StayTab, { type AcceptedHotel } from '@/components/StayTab';
+import BudgetTab from '@/components/BudgetTab';
 
 type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'night';
 const SLOTS_LIST: { key: TimeSlot; label: string; icon: string }[] = [
@@ -335,6 +336,7 @@ function PlanContent() {
   const [showExtraIdeas,  setShowExtraIdeas]  = useState(false);
   const [toast,           setToast]           = useState<string | null>(null);
   const [acceptedHotels,  setAcceptedHotels]  = useState<AcceptedHotel[]>([]);
+  const [itineraryVersion, setItineraryVersion] = useState(0);
   const itineraryRef = useRef<ItineraryHandle>(null);
 
   // Place photo popup
@@ -524,6 +526,7 @@ function PlanContent() {
                   tripPrompt={prompt}
                   photos={photos}
                   acceptedHotels={acceptedHotels}
+                  onActivityStatusChange={() => setItineraryVersion(v => v + 1)}
                   onPlaceHover={handlePlaceMouseOver}
                   onPlaceLeave={handlePlaneMouseLeave}
                 />
@@ -552,7 +555,16 @@ function PlanContent() {
                   </div>
                 );
               })()}
-              {activeSection !== 'itinerary' && activeSection !== 'accommodation' && (
+              {/* BudgetTab — always mounted to preserve state */}
+              <div style={{ display: activeSection === 'budget' ? 'block' : 'none' }}>
+                <BudgetTab
+                  itineraryRef={itineraryRef}
+                  acceptedHotels={acceptedHotels}
+                  prompt={prompt}
+                  version={itineraryVersion}
+                />
+              </div>
+              {activeSection !== 'itinerary' && activeSection !== 'accommodation' && activeSection !== 'budget' && (
                 <div style={{ background:'#fff', borderRadius:16, padding:'32px 36px', boxShadow:'0 2px 20px rgba(0,68,123,0.07)', border:'1px solid rgba(0,68,123,0.08)' }}>
                   <div
                     onMouseOver={handlePlaceMouseOver}
