@@ -295,36 +295,37 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
   const [toast,           setToast]           = useState<string | null>(null);
   const [photoCache,      setPhotoCache]      = useState<Record<string, string[] | null | '__loading__'>>({});
   const hasFetched = useRef(false);
+  const allSeenNamesRef = useRef<string[]>([]);
 
   /* ── Fetch hotel photos for a segment's hotels ── */
+  const fetchedRef = useRef<Set<string>>(new Set());
+
   const fetchPhotos = useCallback(async (hotels: Hotel[]) => {
-    for (const hotel of hotels) {
-      const key = hotel.id;
-      if (photoCache[key] !== undefined) continue;
+    const unfetched = hotels.filter(h => !fetchedRef.current.has(h.id));
+    if (unfetched.length === 0) return;
 
-      setPhotoCache(prev => ({ ...prev, [key]: '__loading__' }));
+    // Mark as loading immediately
+    unfetched.forEach(h => {
+      fetchedRef.current.add(h.id);
+      setPhotoCache(prev => ({ ...prev, [h.id]: '__loading__' }));
+    });
 
+    await Promise.all(unfetched.map(async (hotel) => {
       const urls: string[] = [];
       try {
-        // 1. Try hotel Wikipedia page
-        const r1 = await fetch(`/api/place-photo?q=${encodeURIComponent(hotel.name)}`);
+        const r1 = await fetch(`/api/place-photo?q=${encodeURIComponent(hotel.name)}`, { signal: AbortSignal.timeout(5000) });
         const d1 = await r1.json();
         if (d1.url) urls.push(d1.url);
       } catch { /* ignore */ }
-
       try {
-        // 2. Area/neighbourhood photos for gallery filler
         const q2 = `${hotel.neighborhood} ${destination}`;
-        const r2 = await fetch(`/api/destination-photos?city=${encodeURIComponent(q2)}`);
+        const r2 = await fetch(`/api/destination-photos?city=${encodeURIComponent(q2)}`, { signal: AbortSignal.timeout(5000) });
         const d2 = await r2.json();
-        (d2.photos as string[] || []).forEach((u: string) => {
-          if (!urls.includes(u)) urls.push(u);
-        });
+        (d2.photos as string[] || []).forEach((u: string) => { if (!urls.includes(u)) urls.push(u); });
       } catch { /* ignore */ }
-
-      setPhotoCache(prev => ({ ...prev, [key]: urls.length > 0 ? urls.slice(0, 4) : null }));
-    }
-  }, [destination, photoCache]);
+      setPhotoCache(prev => ({ ...prev, [hotel.id]: urls.length > 0 ? urls.slice(0, 4) : null }));
+    }));
+  }, [destination]);
 
   /* ── Load suggestions ── */
   const loadSuggestions = useCallback(async (opts: { excludeNames?: string[]; isMore?: boolean } = {}) => {
@@ -349,6 +350,9 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
       newSegs.forEach(s => s.hotels.forEach(h => newSeen.add(h.id)));
       setSeenIds(newSeen);
       setSegments(newSegs);
+
+      const newNames = newSegs.flatMap(s => s.hotels.map(h => h.name));
+      newNames.forEach(n => { if (!allSeenNamesRef.current.includes(n)) allSeenNamesRef.current.push(n); });
 
       // Kick off photo fetching for all hotels
       const allHotels = newSegs.flatMap(s => s.hotels);
@@ -397,8 +401,7 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
 
   /* ── Give me more ── */
   const handleMoreOptions = () => {
-    const allCurrentNames = segments.flatMap(s => s.hotels.map(h => h.name));
-    loadSuggestions({ excludeNames: allCurrentNames, isMore: true });
+    loadSuggestions({ excludeNames: allSeenNamesRef.current, isMore: true });
   };
 
   /* ── Toggle filter ── */

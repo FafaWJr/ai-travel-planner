@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import EditableItinerary, { type ItineraryHandle } from '@/components/EditableItinerary';
 import FloatingChat from '@/components/FloatingChat';
@@ -336,8 +336,16 @@ function PlanContent() {
   const [showExtraIdeas,  setShowExtraIdeas]  = useState(false);
   const [toast,           setToast]           = useState<string | null>(null);
   const [acceptedHotels,  setAcceptedHotels]  = useState<AcceptedHotel[]>([]);
+  const [seenIdeaNames,   setSeenIdeaNames]   = useState<string[]>([]);
   const [itineraryVersion, setItineraryVersion] = useState(0);
   const itineraryRef = useRef<ItineraryHandle>(null);
+
+  const liveActivitiesText = React.useMemo(() => {
+    const days = itineraryRef.current?.getDaysSnapshot() ?? [];
+    return days
+      .flatMap(d => d.activities.filter(a => a.status !== 'declined').map(a => `Day ${d.number}: ${a.text.replace(/\*\*/g, '')}`))
+      .join('\n');
+  }, [itineraryVersion]); // eslint-disable-line
 
   // Place photo popup
   const [popup, setPopup] = useState<{ name:string; x:number; y:number } | null>(null);
@@ -388,16 +396,22 @@ function PlanContent() {
   };
 
   const fetchExtraIdeas = async () => {
-    if (extraIdeas || extraIdeasLoading) return;
+    if (extraIdeasLoading) return;
     setExtraIdeasLoading(true);
     try {
+      const days = itineraryRef.current?.getDaysSnapshot() ?? [];
+      const existingActivities = days.flatMap(d =>
+        d.activities.map(a => a.text.replace(/\*\*/g, '').replace(/^\s*[-*]\s*/, '').trim())
+      );
       const res = await fetch('/api/extra-ideas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ prompt, existingActivities, seenIdeas: seenIdeaNames }),
       });
       if (!res.ok) throw new Error('Failed');
       const data = await res.json();
+      const newIdeas = parseIdeas(data.ideas || '');
+      setSeenIdeaNames(prev => [...new Set([...prev, ...newIdeas.map(i => i.name.toLowerCase())])]);
       setExtraIdeas(data.ideas || '');
     } catch {
       setExtraIdeas('Sorry, could not load extra ideas. Please try again.');
@@ -408,7 +422,7 @@ function PlanContent() {
 
   const handleExtraIdeas = () => {
     setShowExtraIdeas(v => !v);
-    if (!extraIdeas && !extraIdeasLoading) fetchExtraIdeas();
+    fetchExtraIdeas();
   };
 
   const sectionContent = plan ? extractSection(plan, activeSection) : '';
@@ -595,6 +609,7 @@ function PlanContent() {
               </div>
 
               {/* ── Extra Ideas ── */}
+              {activeSection === 'itinerary' && (
               <div style={{ marginTop:20 }}>
                 <button
                   onClick={handleExtraIdeas}
@@ -650,6 +665,7 @@ function PlanContent() {
                   </div>
                 )}
               </div>
+              )}
 
               {/* ── Affiliate booking links ── */}
               {(() => {
@@ -718,6 +734,7 @@ function PlanContent() {
                 ).join('\n')
               : undefined
             }
+            currentActivities={liveActivitiesText}
             onAddToItinerary={(text, dayNum, slot) => {
               setActiveSection('itinerary');
               itineraryRef.current?.addActivity(text, dayNum, slot, true);
