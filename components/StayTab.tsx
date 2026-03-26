@@ -276,6 +276,36 @@ function ConfirmedSummary({ hotel, segment }: AcceptedHotel) {
   );
 }
 
+/* ─── Wikimedia Commons photo search (CORS-enabled, no API key) ─ */
+async function searchCommons(query: string, limit = 4): Promise<string[]> {
+  try {
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 6000);
+    const params = new URLSearchParams({
+      action: 'query', generator: 'search',
+      gsrnamespace: '6', gsrsearch: query,
+      gsrlimit: String(limit * 3),
+      prop: 'imageinfo', iiprop: 'url|mime|width|height',
+      format: 'json', origin: '*',
+    });
+    const r = await fetch(`https://commons.wikimedia.org/w/api.php?${params}`, { signal: ctrl.signal });
+    clearTimeout(tid);
+    if (!r.ok) return [];
+    const data = await r.json();
+    const pages = Object.values(data?.query?.pages ?? {}) as any[];
+    return pages
+      .map((p: any) => p.imageinfo?.[0])
+      .filter((ii: any): ii is any =>
+        ii &&
+        (ii.mime === 'image/jpeg' || ii.mime === 'image/png') &&
+        (ii.width ?? 0) >= 800 && (ii.height ?? 0) >= 350 &&
+        (ii.width ?? 0) > (ii.height ?? 0) // landscape only
+      )
+      .map((ii: any) => ii.url as string)
+      .slice(0, limit);
+  } catch { return []; }
+}
+
 /* ─── Main component ─────────────────────────────────────────── */
 export default function StayTab({ prompt, destination, checkIn, checkOut, budget, onAddToItinerary, onRemoveActivitiesMatching, onHotelsConfirmed }: Props) {
   const [segments,        setSegments]        = useState<LocationSegment[]>([]);
@@ -291,47 +321,30 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
   const hasFetched = useRef(false);
   const allSeenNamesRef = useRef<string[]>([]);
 
-  /* ── Fetch hotel photos for a segment's hotels ── */
+  /* ── Fetch hotel photos via Wikimedia Commons (client-side, no API key) ── */
   const fetchedRef = useRef<Set<string>>(new Set());
-
-  // Safe fetch with manual AbortController timeout (AbortSignal.timeout has uneven browser support)
-  const fetchWithTimeout = useCallback((url: string, ms: number) => {
-    const ctrl = new AbortController();
-    const tid = setTimeout(() => ctrl.abort(), ms);
-    return fetch(url, { signal: ctrl.signal }).finally(() => clearTimeout(tid));
-  }, []);
 
   const fetchPhotos = useCallback(async (hotels: Hotel[]) => {
     const unfetched = hotels.filter(h => !fetchedRef.current.has(h.id));
     if (unfetched.length === 0) return;
+    unfetched.forEach(h => fetchedRef.current.add(h.id));
 
-    // Mark all as loading up-front
-    unfetched.forEach(h => {
-      fetchedRef.current.add(h.id);
-      setPhotoCache(prev => ({ ...prev, [h.id]: '__loading__' }));
-    });
+    // Destination-level photos shared as fallback across all hotel cards
+    const destPhotos = await searchCommons(`${destination} travel tourism`, 4);
 
-    // Fetch destination-level photos ONCE — Wikipedia knows the city, not individual hotels
-    let destPhotos: string[] = [];
-    try {
-      const r = await fetchWithTimeout(`/api/destination-photos?city=${encodeURIComponent(destination)}`, 8000);
-      const d = await r.json();
-      destPhotos = d.photos || [];
-    } catch { /* ignore */ }
-
-    // Per-hotel: try Wikipedia hotel page, fill remainder with destination photos
     await Promise.all(unfetched.map(async (hotel) => {
-      const urls: string[] = [];
-      try {
-        const r1 = await fetchWithTimeout(`/api/place-photo?q=${encodeURIComponent(hotel.name)}`, 4000);
-        const d1 = await r1.json();
-        if (d1.url) urls.push(d1.url);
-      } catch { /* ignore */ }
-      // Pad with destination photos so every card has something to show
-      destPhotos.forEach(u => { if (!urls.includes(u)) urls.push(u); });
-      setPhotoCache(prev => ({ ...prev, [hotel.id]: urls.length > 0 ? urls.slice(0, 4) : null }));
+      // 1. Try hotel name on Commons
+      let photos = await searchCommons(hotel.name, 3);
+      // 2. Fall back to neighbourhood + destination
+      if (photos.length < 2) {
+        const area = await searchCommons(`${hotel.neighborhood} ${destination}`, 3);
+        photos = [...new Set([...photos, ...area])];
+      }
+      // 3. Pad with destination photos so every card shows something
+      const urls = [...new Set([...photos, ...destPhotos])].slice(0, 4);
+      setPhotoCache(prev => ({ ...prev, [hotel.id]: urls.length > 0 ? urls : null }));
     }));
-  }, [destination, fetchWithTimeout]);
+  }, [destination]);
 
   /* ── Load suggestions ── */
   const loadSuggestions = useCallback(async (opts: { excludeNames?: string[]; isMore?: boolean } = {}) => {
