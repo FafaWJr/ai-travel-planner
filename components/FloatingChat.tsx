@@ -11,6 +11,7 @@ interface Msg {
 
 interface Props {
   plan: string;
+  hotelContext?: string;
   onAddToItinerary: (text: string, dayNum: number, slot: TimeSlot) => void;
 }
 
@@ -80,7 +81,7 @@ function renderContent(text: string): React.ReactNode {
   });
 }
 
-export default function FloatingChat({ plan, onAddToItinerary }: Props) {
+export default function FloatingChat({ plan, hotelContext, onAddToItinerary }: Props) {
   const [open, setOpen] = useState(true);
   const [msgs, setMsgs] = useState<Msg[]>([
     { role: 'assistant', content: "Hi! I'm Luna. How can I help customize your trip?" },
@@ -105,7 +106,12 @@ export default function FloatingChat({ plan, onAddToItinerary }: Props) {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: next, tripContext: plan }),
+        body: JSON.stringify({
+          messages: next,
+          tripContext: hotelContext
+            ? `${plan}\n\n## Confirmed Accommodation\n${hotelContext}`
+            : plan,
+        }),
       });
       const reply = await collectSSE(res);
       setMsgs(prev => [...prev, { role: 'assistant', content: reply || 'No response received.' }]);

@@ -528,31 +528,28 @@ function PlanContent() {
                   onPlaceLeave={handlePlaneMouseLeave}
                 />
               </div>
-              {activeSection === 'accommodation' && (() => {
-                // Extract check-in / check-out dates and budget level from the prompt
-                const ciMatch  = prompt.match(/from (\d{4}-\d{2}-\d{2})/);
-                const coMatch  = prompt.match(/to (\d{4}-\d{2}-\d{2})/);
-                const ci = ciMatch?.[1] || '';
-                const co = coMatch?.[1] || '';
-                const bud = /luxury/i.test(prompt)  ? 'luxury'
-                          : /premium/i.test(prompt)  ? 'premium'
-                          : /budget/i.test(prompt)   ? 'budget'
-                          : 'comfortable';
-                const dest = prompt.replace(/^plan a (trip to |)?/i,'').replace(/\b(from \d{4}-\d{2}-\d{2}.*)$/i,'').trim().split(' ').slice(0,5).join(' ');
+              {/* StayTab — always mounted to preserve state, hidden when not active */}
+              {(() => {
+                const ciMatch = prompt.match(/from (\d{4}-\d{2}-\d{2})/);
+                const coMatch = prompt.match(/to (\d{4}-\d{2}-\d{2})/);
+                const stayDest = prompt.replace(/^plan a (trip to |)?/i,'').replace(/\b(from \d{4}-\d{2}-\d{2}.*)$/i,'').trim().split(' ').slice(0,5).join(' ');
+                const stayBudget = /luxury/i.test(prompt) ? 'luxury' : /premium/i.test(prompt) ? 'premium' : /budget/i.test(prompt) ? 'budget' : 'comfortable';
                 return (
-                  <StayTab
-                    prompt={prompt}
-                    destination={dest}
-                    checkIn={ci}
-                    checkOut={co}
-                    budget={bud}
-                    onAddToItinerary={(text, dayNum, slot) => {
-                      setActiveSection('itinerary');
-                      itineraryRef.current?.addActivity(text, dayNum, slot, true);
-                      setToast(text.replace(/\*\*/g, '').slice(0, 60));
-                    }}
-                    onHotelsConfirmed={setAcceptedHotels}
-                  />
+                  <div style={{ display: activeSection === 'accommodation' ? 'block' : 'none' }}>
+                    <StayTab
+                      prompt={prompt}
+                      destination={stayDest}
+                      checkIn={ciMatch?.[1] || ''}
+                      checkOut={coMatch?.[1] || ''}
+                      budget={stayBudget}
+                      onAddToItinerary={(text, dayNum, slot) => {
+                        setActiveSection('itinerary');
+                        itineraryRef.current?.addActivity(text, dayNum, slot, true);
+                        setToast(text.replace(/\*\*/g, '').slice(0, 60));
+                      }}
+                      onHotelsConfirmed={setAcceptedHotels}
+                    />
+                  </div>
                 );
               })()}
               {activeSection !== 'itinerary' && activeSection !== 'accommodation' && (
@@ -703,6 +700,12 @@ function PlanContent() {
 
           <FloatingChat
             plan={plan}
+            hotelContext={acceptedHotels.length > 0
+              ? acceptedHotels.map(({ hotel, segment }) =>
+                  `The user has confirmed their stay at ${hotel.name} (${hotel.stars}★, ${hotel.neighborhood}) for ${segment.label}. Price: ${hotel.priceRange}. Amenities: ${hotel.amenities.join(', ')}.`
+                ).join('\n')
+              : undefined
+            }
             onAddToItinerary={(text, dayNum, slot) => {
               setActiveSection('itinerary');
               itineraryRef.current?.addActivity(text, dayNum, slot, true);
