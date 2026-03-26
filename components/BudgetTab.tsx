@@ -10,10 +10,10 @@ interface BudgetItem {
   label: string;
   category: 'accommodation' | 'activity' | 'meal' | 'transport' | 'other';
   status: 'accepted' | 'pending';
-  unit_cost: number;
-  travelers: number;
+  unit_cost?: number;
+  travelers?: number;
   subtotal: number;
-  note: string;
+  note?: string;
 }
 
 interface BudgetDay {

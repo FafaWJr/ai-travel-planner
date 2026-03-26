@@ -80,15 +80,8 @@ function AmenityPill({ label }: { label: string }) {
 function PhotoGallery({ photos, name }: { photos: string[] | null | '__loading__'; name: string }) {
   const [idx, setIdx] = useState(0);
 
-  if (photos === '__loading__') {
-    return (
-      <div style={{ height: 180, background: 'linear-gradient(135deg,#e8f0f7,#d1e2f0)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 24, height: 24, borderRadius: '50%', border: '3px solid rgba(0,68,123,0.15)', borderTop: '3px solid #FF8210', animation: 'spin 0.9s linear infinite' }} />
-      </div>
-    );
-  }
-
-  if (!photos || photos.length === 0) {
+  // Treat '__loading__' same as null — show placeholder immediately, swap in photos when ready
+  if (!photos || photos.length === 0 || photos === '__loading__') {
     return (
       <div style={{ height: 180, background: 'linear-gradient(135deg,#00447B,#0369A1)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
         <span style={{ fontSize: 32 }}>🏨</span>
