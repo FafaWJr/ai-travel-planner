@@ -384,9 +384,13 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
     setConfirmed(newConfirmed);
     onHotelsConfirmed(Object.values(newConfirmed));
 
-    // Add check-in to first day of segment
     const checkInDay = segment.dayRange[0];
-    const checkOutDay = segment.dayRange[1];
+    // If there's a following segment, check-out on the same day as that segment's check-in
+    // to avoid a one-night gap with no accommodation between locations.
+    const segIdx = segments.findIndex(s => s.location === segment.location);
+    const nextSeg = segments[segIdx + 1];
+    const checkOutDay = nextSeg ? nextSeg.dayRange[0] : segment.dayRange[1];
+
     onAddToItinerary(
       `🏨 **Check-in: ${hotel.name}** (${hotel.neighborhood}) — ${hotel.priceRange}`,
       checkInDay,
