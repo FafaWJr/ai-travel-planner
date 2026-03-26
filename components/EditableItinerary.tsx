@@ -1,6 +1,7 @@
 'use client';
 import { useState, useId, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import FinalItineraryModal from './FinalItineraryModal';
+import type { AcceptedHotel } from './StayTab';
 import {
   DndContext,
   DragOverlay,
@@ -176,6 +177,7 @@ interface Props {
   destination: string;
   tripPrompt: string;
   photos: string[];
+  acceptedHotels?: AcceptedHotel[];
   onPlaceHover: (e: React.MouseEvent) => void;
   onPlaceLeave: () => void;
 }
@@ -186,7 +188,7 @@ export interface ItineraryHandle {
 }
 
 const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableItinerary({
-  itineraryMd, destination, tripPrompt, photos,
+  itineraryMd, destination, tripPrompt, photos, acceptedHotels = [],
   onPlaceHover, onPlaceLeave,
 }, ref) {
   const [days, setDays] = useState<Day[]>(() => parseItinerary(itineraryMd));
@@ -576,6 +578,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
         <FinalItineraryModal
           days={days}
           destination={destination}
+          acceptedHotels={acceptedHotels}
           onClose={() => setShowFinalModal(false)}
         />
       )}
