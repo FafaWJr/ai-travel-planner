@@ -300,32 +300,44 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
   /* ── Fetch hotel photos for a segment's hotels ── */
   const fetchedRef = useRef<Set<string>>(new Set());
 
+  // Safe fetch with manual AbortController timeout (AbortSignal.timeout has uneven browser support)
+  const fetchWithTimeout = useCallback((url: string, ms: number) => {
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), ms);
+    return fetch(url, { signal: ctrl.signal }).finally(() => clearTimeout(tid));
+  }, []);
+
   const fetchPhotos = useCallback(async (hotels: Hotel[]) => {
     const unfetched = hotels.filter(h => !fetchedRef.current.has(h.id));
     if (unfetched.length === 0) return;
 
-    // Mark as loading immediately
+    // Mark all as loading up-front
     unfetched.forEach(h => {
       fetchedRef.current.add(h.id);
       setPhotoCache(prev => ({ ...prev, [h.id]: '__loading__' }));
     });
 
+    // Fetch destination-level photos ONCE — Wikipedia knows the city, not individual hotels
+    let destPhotos: string[] = [];
+    try {
+      const r = await fetchWithTimeout(`/api/destination-photos?city=${encodeURIComponent(destination)}`, 8000);
+      const d = await r.json();
+      destPhotos = d.photos || [];
+    } catch { /* ignore */ }
+
+    // Per-hotel: try Wikipedia hotel page, fill remainder with destination photos
     await Promise.all(unfetched.map(async (hotel) => {
       const urls: string[] = [];
       try {
-        const r1 = await fetch(`/api/place-photo?q=${encodeURIComponent(hotel.name)}`, { signal: AbortSignal.timeout(5000) });
+        const r1 = await fetchWithTimeout(`/api/place-photo?q=${encodeURIComponent(hotel.name)}`, 4000);
         const d1 = await r1.json();
         if (d1.url) urls.push(d1.url);
       } catch { /* ignore */ }
-      try {
-        const q2 = `${hotel.neighborhood} ${destination}`;
-        const r2 = await fetch(`/api/destination-photos?city=${encodeURIComponent(q2)}`, { signal: AbortSignal.timeout(5000) });
-        const d2 = await r2.json();
-        (d2.photos as string[] || []).forEach((u: string) => { if (!urls.includes(u)) urls.push(u); });
-      } catch { /* ignore */ }
+      // Pad with destination photos so every card has something to show
+      destPhotos.forEach(u => { if (!urls.includes(u)) urls.push(u); });
       setPhotoCache(prev => ({ ...prev, [hotel.id]: urls.length > 0 ? urls.slice(0, 4) : null }));
     }));
-  }, [destination]);
+  }, [destination, fetchWithTimeout]);
 
   /* ── Load suggestions ── */
   const loadSuggestions = useCallback(async (opts: { excludeNames?: string[]; isMore?: boolean } = {}) => {

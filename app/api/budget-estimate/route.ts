@@ -106,10 +106,12 @@ Estimate the full budget. Use USD. Return only the JSON object.`;
     const stream = await streamCompletion([
       { role: 'system', content: SYSTEM_PROMPT },
       { role: 'user',   content: userMessage },
-    ], 3000);
+    ], 4096);
 
     const raw = await collectText(stream);
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    // Strip markdown code fences if present, then extract the outermost JSON object
+    const stripped = raw.replace(/```(?:json)?\s*/gi, '').replace(/```/g, '');
+    const jsonMatch = stripped.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('No JSON in AI response');
     const data = JSON.parse(jsonMatch[0]);
 
