@@ -109,27 +109,42 @@ export default function BudgetTab({ itineraryRef, acceptedHotels, prompt, versio
   const [error,        setError]        = useState('');
   const [stale,        setStale]        = useState(false);
   const [openDays,     setOpenDays]     = useState<Set<number>>(new Set([1]));
-  const lastVersion    = useRef(-1);
-  const isActive       = useRef(false);
+  const lastVersion         = useRef(-1);
+  const prevHotelCount      = useRef(acceptedHotels.length);
 
-  // Mark tab as active (called from parent via prop changes) — stale detection
+  // When itinerary version changes after first calc, mark as stale
   useEffect(() => {
-    isActive.current = true;
-    return () => { isActive.current = false; };
-  }, []);
-
-  // When version changes: if we've already loaded a budget, mark as stale
-  useEffect(() => {
-    if (lastVersion.current === -1) return; // first load handled separately
+    if (lastVersion.current === -1) return;
     setStale(true);
   }, [version]); // eslint-disable-line
 
-  // Fetch exchange rates once
+  // When hotel is confirmed/removed after first calc, mark as stale
   useEffect(() => {
-    fetch('/api/exchange-rates')
+    if (lastVersion.current === -1) { prevHotelCount.current = acceptedHotels.length; return; }
+    if (acceptedHotels.length !== prevHotelCount.current) {
+      prevHotelCount.current = acceptedHotels.length;
+      setStale(true);
+    }
+  }, [acceptedHotels]); // eslint-disable-line
+
+  // Fetch exchange rates client-side (Frankfurter supports CORS)
+  useEffect(() => {
+    fetch('https://api.frankfurter.app/latest?from=EUR&to=USD,AUD,BRL')
       .then(r => r.json())
-      .then(setRates)
-      .catch(() => {});
+      .then(data => {
+        setRates({
+          rates: { EUR: 1.0, USD: data.rates.USD, AUD: data.rates.AUD, BRL: data.rates.BRL },
+          fetchedAt: new Date().toISOString(),
+          fallback: false,
+        });
+      })
+      .catch(() => {
+        setRates({
+          rates: { EUR: 1.0, USD: 1.09, AUD: 1.68, BRL: 5.94 },
+          fetchedAt: null,
+          fallback: true,
+        });
+      });
   }, []);
 
   // Extract trip metadata from prompt
@@ -167,6 +182,7 @@ export default function BudgetTab({ itineraryRef, acceptedHotels, prompt, versio
     setLoading(true);
     setError('');
     setStale(false);
+    lastVersion.current = version;
 
     try {
       const res = await fetch('/api/budget-estimate', {
@@ -195,7 +211,6 @@ export default function BudgetTab({ itineraryRef, acceptedHotels, prompt, versio
       const data: BudgetResult = await res.json();
       if ((data as any).error) throw new Error((data as any).error);
       setBudget(data);
-      lastVersion.current = version;
     } catch (e: any) {
       setError(e.message || 'Could not calculate budget. Please try again.');
     } finally {
@@ -203,13 +218,7 @@ export default function BudgetTab({ itineraryRef, acceptedHotels, prompt, versio
     }
   }, [itineraryRef, acceptedHotels, parseTripMeta, version]);
 
-  // Auto-calculate on first render
-  useEffect(() => {
-    if (lastVersion.current === -1) {
-      lastVersion.current = 0;
-      calculate();
-    }
-  }, []); // eslint-disable-line
+  // No auto-calc on mount — user triggers first estimate so hotel/itinerary are ready
 
   const toggleDay = (n: number) =>
     setOpenDays(prev => { const s = new Set(prev); s.has(n) ? s.delete(n) : s.add(n); return s; });
@@ -274,6 +283,28 @@ export default function BudgetTab({ itineraryRef, acceptedHotels, prompt, versio
           <button onClick={calculate} style={{ background: '#FF8210', color: '#fff', border: 'none', borderRadius: 100, padding: '7px 16px', fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>
             Recalculate
           </button>
+        </div>
+      )}
+
+      {/* ── First-time CTA ── */}
+      {!loading && !budget && !error && (
+        <div style={{ background: '#fff', borderRadius: 16, padding: '40px 24px', textAlign: 'center', border: '1.5px solid rgba(0,68,123,0.08)', boxShadow: '0 2px 20px rgba(0,68,123,0.07)' }}>
+          <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(0,68,123,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 24 }}>💰</div>
+          <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 16, color: '#00447B', margin: '0 0 8px' }}>Get your budget estimate</p>
+          <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, color: '#6C6D6F', margin: '0 0 20px', lineHeight: 1.6 }}>
+            AI will analyse your accepted activities{acceptedHotels.length > 0 ? ' and confirmed hotel' : ''} to build a realistic cost breakdown.
+          </p>
+          <button
+            onClick={calculate}
+            style={{ background: '#FF8210', color: '#fff', border: 'none', borderRadius: 100, padding: '11px 28px', fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 14, cursor: 'pointer' }}
+          >
+            Generate Budget Estimate
+          </button>
+          {acceptedHotels.length === 0 && (
+            <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: '#9CA3AF', margin: '12px 0 0' }}>
+              Tip: confirm a hotel in the <strong>Stays</strong> tab first for a more accurate accommodation estimate.
+            </p>
+          )}
         </div>
       )}
 
