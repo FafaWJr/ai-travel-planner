@@ -276,34 +276,23 @@ function ConfirmedSummary({ hotel, segment }: AcceptedHotel) {
   );
 }
 
-/* ─── Wikimedia Commons photo search (CORS-enabled, no API key) ─ */
-async function searchCommons(query: string, limit = 4): Promise<string[]> {
+/* ─── Wikipedia REST API photo lookup (client-side, CORS-enabled) ─
+   summary/${title} returns the main article image for any place name.
+   Works for cities, neighbourhoods, and named hotel properties.        ─ */
+async function wikiPhoto(query: string): Promise<string | null> {
   try {
     const ctrl = new AbortController();
-    const tid = setTimeout(() => ctrl.abort(), 6000);
-    const params = new URLSearchParams({
-      action: 'query', generator: 'search',
-      gsrnamespace: '6', gsrsearch: query,
-      gsrlimit: String(limit * 3),
-      prop: 'imageinfo', iiprop: 'url|mime|width|height',
-      format: 'json', origin: '*',
-    });
-    const r = await fetch(`https://commons.wikimedia.org/w/api.php?${params}`, { signal: ctrl.signal });
-    clearTimeout(tid);
-    if (!r.ok) return [];
-    const data = await r.json();
-    const pages = Object.values(data?.query?.pages ?? {}) as any[];
-    return pages
-      .map((p: any) => p.imageinfo?.[0])
-      .filter((ii: any): ii is any =>
-        ii &&
-        (ii.mime === 'image/jpeg' || ii.mime === 'image/png') &&
-        (ii.width ?? 0) >= 800 && (ii.height ?? 0) >= 350 &&
-        (ii.width ?? 0) > (ii.height ?? 0) // landscape only
-      )
-      .map((ii: any) => ii.url as string)
-      .slice(0, limit);
-  } catch { return []; }
+    setTimeout(() => ctrl.abort(), 5000);
+    const r = await fetch(
+      `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`,
+      { signal: ctrl.signal },
+    );
+    if (!r.ok) return null;
+    const d = await r.json();
+    // Skip disambiguation pages and not-found errors
+    if ((d.type ?? '').includes('disambiguation') || (d.type ?? '').includes('not_found')) return null;
+    return d.originalimage?.source ?? d.thumbnail?.source ?? null;
+  } catch { return null; }
 }
 
 /* ─── Main component ─────────────────────────────────────────── */
@@ -321,7 +310,7 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
   const hasFetched = useRef(false);
   const allSeenNamesRef = useRef<string[]>([]);
 
-  /* ── Fetch hotel photos via Wikimedia Commons (client-side, no API key) ── */
+  /* ── Fetch hotel photos via Wikipedia REST API ── */
   const fetchedRef = useRef<Set<string>>(new Set());
 
   const fetchPhotos = useCallback(async (hotels: Hotel[]) => {
@@ -329,20 +318,19 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
     if (unfetched.length === 0) return;
     unfetched.forEach(h => fetchedRef.current.add(h.id));
 
-    // Destination-level photos shared as fallback across all hotel cards
-    const destPhotos = await searchCommons(`${destination} travel tourism`, 4);
+    // City photo — always available for any major destination
+    const cityPhoto = await wikiPhoto(destination);
 
     await Promise.all(unfetched.map(async (hotel) => {
-      // 1. Try hotel name on Commons
-      let photos = await searchCommons(hotel.name, 3);
-      // 2. Fall back to neighbourhood + destination
-      if (photos.length < 2) {
-        const area = await searchCommons(`${hotel.neighborhood} ${destination}`, 3);
-        photos = [...new Set([...photos, ...area])];
-      }
-      // 3. Pad with destination photos so every card shows something
-      const urls = [...new Set([...photos, ...destPhotos])].slice(0, 4);
-      setPhotoCache(prev => ({ ...prev, [hotel.id]: urls.length > 0 ? urls : null }));
+      // Run hotel name + neighbourhood lookups in parallel
+      const [hotelPhoto, areaPhoto] = await Promise.all([
+        wikiPhoto(hotel.name),
+        wikiPhoto(`${hotel.neighborhood} ${destination}`),
+      ]);
+      const urls = [hotelPhoto, areaPhoto, cityPhoto]
+        .filter((u): u is string => !!u);
+      const unique = [...new Set(urls)].slice(0, 3);
+      setPhotoCache(prev => ({ ...prev, [hotel.id]: unique.length > 0 ? unique : null }));
     }));
   }, [destination]);
 
