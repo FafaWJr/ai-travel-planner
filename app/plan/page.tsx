@@ -4,6 +4,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import EditableItinerary, { type ItineraryHandle } from '@/components/EditableItinerary';
 import FloatingChat from '@/components/FloatingChat';
 import Toast from '@/components/Toast';
+import StayTab, { type AcceptedHotel } from '@/components/StayTab';
 
 type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'night';
 const SLOTS_LIST: { key: TimeSlot; label: string; icon: string }[] = [
@@ -332,7 +333,8 @@ function PlanContent() {
   const [extraIdeas,      setExtraIdeas]      = useState('');
   const [extraIdeasLoading, setExtraIdeasLoading] = useState(false);
   const [showExtraIdeas,  setShowExtraIdeas]  = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast,           setToast]           = useState<string | null>(null);
+  const [acceptedHotels,  setAcceptedHotels]  = useState<AcceptedHotel[]>([]);
   const itineraryRef = useRef<ItineraryHandle>(null);
 
   // Place photo popup
@@ -521,11 +523,36 @@ function PlanContent() {
                   destination={prompt.replace(/^plan a (trip to |)?/i,'').split(/\s+/).slice(0,4).join(' ')}
                   tripPrompt={prompt}
                   photos={photos}
+                  acceptedHotels={acceptedHotels}
                   onPlaceHover={handlePlaceMouseOver}
                   onPlaceLeave={handlePlaneMouseLeave}
                 />
               </div>
-              {activeSection !== 'itinerary' && (
+              {/* StayTab — always mounted to preserve state, hidden when not active */}
+              {(() => {
+                const ciMatch = prompt.match(/from (\d{4}-\d{2}-\d{2})/);
+                const coMatch = prompt.match(/to (\d{4}-\d{2}-\d{2})/);
+                const stayDest = prompt.replace(/^plan a (trip to |)?/i,'').replace(/\b(from \d{4}-\d{2}-\d{2}.*)$/i,'').trim().split(' ').slice(0,5).join(' ');
+                const stayBudget = /luxury/i.test(prompt) ? 'luxury' : /premium/i.test(prompt) ? 'premium' : /budget/i.test(prompt) ? 'budget' : 'comfortable';
+                return (
+                  <div style={{ display: activeSection === 'accommodation' ? 'block' : 'none' }}>
+                    <StayTab
+                      prompt={prompt}
+                      destination={stayDest}
+                      checkIn={ciMatch?.[1] || ''}
+                      checkOut={coMatch?.[1] || ''}
+                      budget={stayBudget}
+                      onAddToItinerary={(text, dayNum, slot) => {
+                        setActiveSection('itinerary');
+                        itineraryRef.current?.addActivity(text, dayNum, slot, true);
+                        setToast(text.replace(/\*\*/g, '').slice(0, 60));
+                      }}
+                      onHotelsConfirmed={setAcceptedHotels}
+                    />
+                  </div>
+                );
+              })()}
+              {activeSection !== 'itinerary' && activeSection !== 'accommodation' && (
                 <div style={{ background:'#fff', borderRadius:16, padding:'32px 36px', boxShadow:'0 2px 20px rgba(0,68,123,0.07)', border:'1px solid rgba(0,68,123,0.08)' }}>
                   <div
                     onMouseOver={handlePlaceMouseOver}
@@ -673,6 +700,12 @@ function PlanContent() {
 
           <FloatingChat
             plan={plan}
+            hotelContext={acceptedHotels.length > 0
+              ? acceptedHotels.map(({ hotel, segment }) =>
+                  `The user has confirmed their stay at ${hotel.name} (${hotel.stars}★, ${hotel.neighborhood}) for ${segment.label}. Price: ${hotel.priceRange}. Amenities: ${hotel.amenities.join(', ')}.`
+                ).join('\n')
+              : undefined
+            }
             onAddToItinerary={(text, dayNum, slot) => {
               setActiveSection('itinerary');
               itineraryRef.current?.addActivity(text, dayNum, slot, true);

@@ -1,4 +1,5 @@
 'use client';
+import type { AcceptedHotel } from './StayTab';
 
 type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'night';
 type Status = 'pending' | 'accepted' | 'declined';
@@ -32,7 +33,7 @@ function inlineMd(text: string): string {
 }
 
 /* Build a fully self-contained HTML string and open it in a new window to print */
-function openPrintWindow(days: FinalDay[], destination: string) {
+function openPrintWindow(days: FinalDay[], destination: string, acceptedHotels: AcceptedHotel[] = []) {
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
   const logoUrl = `${origin}/luna_letsgo_bigger_3.PNG`;
   const date = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -70,6 +71,28 @@ function openPrintWindow(days: FinalDay[], destination: string) {
         ${slotsHtml}
       </div>`;
   }).join('');
+
+  // Build accommodation section HTML
+  const hotelsHtml = acceptedHotels.length > 0 ? `
+    <div class="section-break">
+      <div class="section-title">🏨 Accommodation</div>
+    </div>
+    ${acceptedHotels.map(({ hotel, segment }) => `
+      <div class="hotel-block">
+        <div class="hotel-header">
+          <div>
+            <div class="hotel-name">${hotel.name} ${'★'.repeat(hotel.stars)}</div>
+            <div class="hotel-meta">📍 ${hotel.neighborhood} · ${segment.label}</div>
+          </div>
+          <div class="hotel-price">${hotel.priceRange}</div>
+        </div>
+        <div class="hotel-dates">Check-in: ${segment.checkIn || '—'} &nbsp;→&nbsp; Check-out: ${segment.checkOut || '—'}</div>
+        <div class="hotel-desc">${hotel.description}</div>
+        <div class="hotel-amenities">${hotel.amenities.map(a => `<span class="amenity">${a}</span>`).join('')}</div>
+        <div class="hotel-note">Recommended by Luna Let's Go</div>
+      </div>
+    `).join('')}
+  ` : '';
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -229,6 +252,90 @@ function openPrintWindow(days: FinalDay[], destination: string) {
       color: #9CA3AF;
     }
 
+    /* ── Accommodation section ── */
+    .section-break {
+      margin: 40px 0 20px;
+      padding-top: 32px;
+      border-top: 2px solid rgba(0,68,123,0.10);
+    }
+    .section-title {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      color: #00447B;
+      margin-bottom: 16px;
+    }
+    .hotel-block {
+      background: #F8FAFC;
+      border: 1.5px solid rgba(0,68,123,0.10);
+      border-radius: 12px;
+      padding: 16px 18px;
+      margin-bottom: 14px;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    .hotel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+    .hotel-name {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      color: #111;
+      margin-bottom: 3px;
+    }
+    .hotel-meta {
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      color: #6C6D6F;
+    }
+    .hotel-price {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      color: #00447B;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .hotel-dates {
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      color: #555;
+      margin-bottom: 6px;
+    }
+    .hotel-desc {
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      color: #444;
+      line-height: 1.6;
+      margin-bottom: 8px;
+    }
+    .hotel-amenities {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-bottom: 6px;
+    }
+    .amenity {
+      background: rgba(0,68,123,0.07);
+      color: #00447B;
+      font-family: 'Inter', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 100px;
+    }
+    .hotel-note {
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      color: #9CA3AF;
+      font-style: italic;
+    }
+
     @page { margin: 16mm; size: A4 portrait; }
   </style>
 </head>
@@ -243,6 +350,8 @@ function openPrintWindow(days: FinalDay[], destination: string) {
     </div>
 
     ${daysHtml}
+
+    ${hotelsHtml}
 
     <div class="print-footer">
       <img class="logo-small" src="${logoUrl}" alt="Luna Let's Go" />
@@ -280,10 +389,11 @@ function openPrintWindow(days: FinalDay[], destination: string) {
 
 /* ── Modal component ── */
 export default function FinalItineraryModal({
-  days, destination, onClose,
+  days, destination, acceptedHotels = [], onClose,
 }: {
   days: FinalDay[];
   destination: string;
+  acceptedHotels?: AcceptedHotel[];
   onClose: () => void;
 }) {
   const activeDays = days.filter(d => d.activities.some(a => a.status !== 'declined'));
@@ -318,7 +428,7 @@ export default function FinalItineraryModal({
           <img src="/luna_letsgo_bigger_3.PNG" alt="Luna Let's Go" style={{ height: 52, width: 'auto' }} />
           <div style={{ display: 'flex', gap: 10 }}>
             <button
-              onClick={() => openPrintWindow(days, destination)}
+              onClick={() => openPrintWindow(days, destination, acceptedHotels)}
               style={{
                 display: 'flex', alignItems: 'center', gap: 8,
                 background: '#FF8210', color: '#fff', border: 'none',
