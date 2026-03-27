@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
+import NavBar from '@/components/NavBar';
 
 type DealCategory = 'All' | 'Flights' | 'Hotels' | 'Excursions' | 'Tickets';
 
@@ -154,44 +155,6 @@ const PLACEHOLDER_DEALS = [
   },
 ];
 
-function NavBar() {
-  return (
-    <nav style={{
-      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-      height: 68, padding: '0 40px',
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      background: 'rgba(255,255,255,0.96)', backdropFilter: 'blur(12px)',
-      borderBottom: '1px solid var(--border)',
-    }}>
-      <Link href="/" style={{ display: 'flex', alignItems: 'center' }}>
-        <img src="/luna_letsgo_bigger_3.PNG" alt="Luna Let's Go" style={{ height: 72, width: 'auto' }} />
-      </Link>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-        {[
-          { label: 'Trip Ideas', href: '/#trip-ideas' },
-          { label: 'Quiz', href: '/#quiz' },
-          { label: 'Blog', href: '/blog' },
-          { label: 'Deals', href: '/deals' },
-        ].map(({ label, href }) => (
-          <Link key={label} href={href}
-            style={{
-              fontFamily: 'var(--font-head)', fontWeight: 500, fontSize: 14,
-              color: label === 'Deals' ? 'var(--navy)' : 'var(--gray-dark)',
-              padding: '8px 14px', borderRadius: 8,
-              borderBottom: label === 'Deals' ? '2px solid var(--orange)' : 'none',
-            }}>
-            {label}
-          </Link>
-        ))}
-        <Link href="/" style={{
-          marginLeft: 12, background: 'var(--navy)', color: '#fff',
-          fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 14,
-          padding: '10px 22px', borderRadius: 'var(--r-pill)',
-        }}>Plan a Trip</Link>
-      </div>
-    </nav>
-  );
-}
 
 function Footer() {
   return (
