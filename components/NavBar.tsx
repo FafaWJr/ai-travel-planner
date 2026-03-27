@@ -113,7 +113,7 @@ export default function NavBar() {
         )}
 
         {/* Plan a Trip CTA */}
-        <Link href="/" style={{
+        <Link href="/#planner" style={{
           marginLeft: 8,
           background: 'var(--navy)', color: '#fff',
           fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 14,
