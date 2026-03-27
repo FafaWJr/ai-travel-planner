@@ -275,6 +275,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
   const handleDragStart = ({ active }: DragStartEvent) => setActiveId(active.id);
 
   const handleDragOver = ({ active, over }: DragOverEvent) => {
+    if (isGuest) return;                   // guests cannot move activities
     if (!over || active.id === over.id) return;
     const from = findContainer(active.id);
     const to   = findContainer(over.id);
