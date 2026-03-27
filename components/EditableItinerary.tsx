@@ -183,6 +183,7 @@ interface Props {
   onPlaceLeave: () => void;
   isGuest?: boolean;
   onGateRequired?: () => void;
+  initialDays?: Day[];
 }
 
 export interface ItineraryHandle {
@@ -190,6 +191,7 @@ export interface ItineraryHandle {
   removeActivitiesMatching: (pattern: string) => void;
   getDays: () => { number: number; title: string }[];
   getDaysSnapshot: () => Day[];
+  restoreDays: (days: Day[]) => void;
 }
 
 const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableItinerary({
@@ -197,8 +199,11 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
   onActivityStatusChange,
   onPlaceHover, onPlaceLeave,
   isGuest = false, onGateRequired,
+  initialDays,
 }, ref) {
-  const [days, setDays] = useState<Day[]>(() => parseItinerary(itineraryMd));
+  const [days, setDays] = useState<Day[]>(() =>
+    (initialDays && initialDays.length > 0) ? initialDays : parseItinerary(itineraryMd)
+  );
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [showFinalModal, setShowFinalModal] = useState(false);
   const instanceId = useId();
@@ -252,6 +257,9 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
     },
     getDaysSnapshot() {
       return days;
+    },
+    restoreDays(savedDays: Day[]) {
+      setDays(savedDays);
     },
   }));
 
@@ -407,7 +415,8 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
       d.number !== dayNum ? d : { ...d, suggestions: d.suggestions.filter(s => s.id !== sugId) }
     ));
 
-  const moveActivityToDay = (actId: string, fromDayNum: number, toDayNum: number) =>
+  const moveActivityToDay = (actId: string, fromDayNum: number, toDayNum: number) => {
+    if (isGuest) { onGateRequired?.(); return; }
     setDays(prev => {
       const fromDay = prev.find(d => d.number === fromDayNum);
       const act = fromDay?.activities.find(a => a.id === actId);
@@ -418,6 +427,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
         return d;
       });
     });
+  };
 
   const toggleConfirmed = (dayNum: number) =>
     setDays(prev => prev.map(d => {

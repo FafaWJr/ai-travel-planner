@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import EditableItinerary, { type ItineraryHandle } from '@/components/EditableItinerary';
+import EditableItinerary, { type ItineraryHandle, type Day } from '@/components/EditableItinerary';
 import FloatingChat from '@/components/FloatingChat';
 import Toast from '@/components/Toast';
 import StayTab, { type AcceptedHotel } from '@/components/StayTab';
@@ -329,9 +329,14 @@ function PlanContent() {
   const searchParams = useSearchParams();
   const router       = useRouter();
   const prompt       = searchParams.get('prompt') || '';
+  const tripId       = searchParams.get('tripId');
 
   const [plan,         setPlan]         = useState('');
-  const [loading,      setLoading]      = useState(false);
+  const [loading,      setLoading]      = useState(() => {
+    if (typeof window === 'undefined') return false;
+    if (searchParams.get('tripId')) return true;
+    return !!localStorage.getItem('guest_trip_draft');
+  });
   const [error,        setError]        = useState('');
   const [activeSection,setActiveSection] = useState('overview');
   const [photos,       setPhotos]       = useState<string[]>([]);
@@ -344,14 +349,28 @@ function PlanContent() {
   const [itineraryVersion, setItineraryVersion] = useState(0);
   const itineraryRef = useRef<ItineraryHandle>(null);
 
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const supabase = createClient();
   const [gateOpen,    setGateOpen]    = useState(false);
   const [gateFeature, setGateFeature] = useState<string | undefined>(undefined);
   const [saveLoading, setSaveLoading] = useState(false);
   const [savedTripId, setSavedTripId] = useState<string | null>(null);
+  const [initialItineraryDays, setInitialItineraryDays] = useState<Day[] | undefined>(undefined);
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const openGate = (feature?: string) => { setGateFeature(feature); setGateOpen(true); };
+  const openGate = (feature?: string) => {
+    if (plan) {
+      try {
+        const snapshot = itineraryRef.current?.getDaysSnapshot();
+        localStorage.setItem('guest_trip_draft', JSON.stringify({
+          prompt, plan, photos, acceptedHotels,
+          itineraryDays: snapshot ?? [],
+        }));
+      } catch {}
+    }
+    setGateFeature(feature);
+    setGateOpen(true);
+  };
 
   const saveTrip = async () => {
     if (!user) { openGate('Save trip'); return; }
@@ -364,7 +383,8 @@ function PlanContent() {
       const ed = coM?.[1] ?? null;
       const numDays = sd && ed ? Math.round((new Date(ed).getTime() - new Date(sd).getTime()) / 86400000) : null;
       const title = `${dest}${numDays ? ` · ${numDays} days` : ''}`;
-      const tripData = { plan, photos, acceptedHotels, prompt };
+      const snapshot = itineraryRef.current?.getDaysSnapshot() ?? [];
+      const tripData = { plan, photos, acceptedHotels, prompt, itineraryDays: snapshot };
       if (savedTripId) {
         await supabase.from('saved_trips').update({ title, trip_data: tripData }).eq('id', savedTripId).eq('user_id', user.id);
       } else {
@@ -388,7 +408,108 @@ function PlanContent() {
   const [photoCache, setPhotoCache] = useState<Record<string, string | null | '__loading__'>>({});
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => { if (prompt) generatePlan(prompt); }, [prompt]); // eslint-disable-line
+  // Normal generation — skip if we have a tripId or a pending guest draft
+  useEffect(() => {
+    if (tripId) return;
+    if (typeof window !== 'undefined' && localStorage.getItem('guest_trip_draft')) return;
+    if (prompt) generatePlan(prompt);
+  }, []); // eslint-disable-line
+
+  // Handle tripId (load saved trip) and guest draft restoration — wait for auth to settle first
+  useEffect(() => {
+    if (authLoading) return;
+
+    const draftStr = typeof window !== 'undefined' ? localStorage.getItem('guest_trip_draft') : null;
+
+    // Restore guest draft after login
+    if (draftStr && user && !plan) {
+      try {
+        const draft = JSON.parse(draftStr) as { prompt: string; plan: string; photos: string[]; acceptedHotels: AcceptedHotel[]; itineraryDays: Day[] };
+        setInitialItineraryDays(draft.itineraryDays || []);
+        setPlan(draft.plan || '');
+        setPhotos(draft.photos || []);
+        setAcceptedHotels(draft.acceptedHotels || []);
+        setLoading(false);
+        localStorage.removeItem('guest_trip_draft');
+        saveRestoredDraft(draft);
+      } catch {
+        localStorage.removeItem('guest_trip_draft');
+        if (prompt && !plan) generatePlan(prompt);
+      }
+      return;
+    }
+
+    // Load saved trip by ID
+    if (tripId && !plan) {
+      loadSavedTripById(tripId);
+      return;
+    }
+
+    // Draft existed but user isn't logged in — discard it and generate normally
+    if (draftStr && !user && !plan) {
+      localStorage.removeItem('guest_trip_draft');
+      if (prompt) generatePlan(prompt);
+    }
+  }, [user, authLoading]); // eslint-disable-line
+
+  const loadSavedTripById = async (id: string) => {
+    setLoading(true);
+    try {
+      const { data } = await supabase.from('saved_trips').select('*').eq('id', id).single();
+      if (data && data.trip_data) {
+        const td = data.trip_data as { plan?: string; photos?: string[]; acceptedHotels?: AcceptedHotel[]; itineraryDays?: Day[] };
+        setPlan(td.plan || '');
+        setPhotos(td.photos || []);
+        setAcceptedHotels((td.acceptedHotels as AcceptedHotel[]) || []);
+        if (td.itineraryDays && td.itineraryDays.length > 0) {
+          setInitialItineraryDays(td.itineraryDays);
+        }
+        setSavedTripId(data.id as string);
+      } else {
+        setError('Could not load saved trip.');
+      }
+    } catch {
+      setError('Failed to load saved trip. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveRestoredDraft = async (draft: { prompt: string; plan: string; photos: string[]; acceptedHotels: AcceptedHotel[]; itineraryDays: Day[] }) => {
+    if (!user) return;
+    try {
+      const p = draft.prompt;
+      const dest = p.replace(/^plan a (trip to |)?/i,'').replace(/\b(from \d{4}-\d{2}-\d{2}.*)$/i,'').trim().split(' ').slice(0,5).join(' ');
+      const ciM = p.match(/from (\d{4}-\d{2}-\d{2})/);
+      const coM = p.match(/to (\d{4}-\d{2}-\d{2})/);
+      const sd = ciM?.[1] ?? null;
+      const ed = coM?.[1] ?? null;
+      const numDays = sd && ed ? Math.round((new Date(ed).getTime() - new Date(sd).getTime()) / 86400000) : null;
+      const title = `${dest}${numDays ? ` · ${numDays} days` : ''}`;
+      const { data } = await supabase.from('saved_trips').insert({
+        user_id: user.id, title, destination: dest,
+        start_date: sd, end_date: ed,
+        trip_data: { plan: draft.plan, photos: draft.photos, acceptedHotels: draft.acceptedHotels, prompt: p, itineraryDays: draft.itineraryDays },
+        is_favorite: false,
+      }).select('id').single();
+      if (data) setSavedTripId((data as { id: string }).id);
+      setToast('Your trip has been saved! ✓');
+    } catch {}
+  };
+
+  // Auto-save on itinerary changes (only for trips already saved to Supabase)
+  useEffect(() => {
+    if (!user || !savedTripId || !plan) return;
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(async () => {
+      const snapshot = itineraryRef.current?.getDaysSnapshot() ?? [];
+      await supabase.from('saved_trips')
+        .update({ trip_data: { plan, photos, acceptedHotels, prompt, itineraryDays: snapshot }, updated_at: new Date().toISOString() })
+        .eq('id', savedTripId)
+        .eq('user_id', user.id);
+    }, 2500);
+    return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); };
+  }, [itineraryVersion]); // eslint-disable-line
 
   const generatePlan = async (p: string) => {
     setLoading(true); setError('');
@@ -588,6 +709,7 @@ function PlanContent() {
                   onPlaceLeave={handlePlaneMouseLeave}
                   isGuest={!user}
                   onGateRequired={() => openGate('Show me more ideas')}
+                  initialDays={initialItineraryDays}
                 />
               </div>
               {/* StayTab — always mounted to preserve state, hidden when not active */}
@@ -799,12 +921,16 @@ function PlanContent() {
         {/* ── Empty state ── */}
         {!loading && !error && !plan && (
           <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'calc(100vh - 68px)' }}>
-            <div style={{ textAlign:'center' }}>
-              <p style={{ fontFamily:"'Inter',sans-serif", color:'#6C6D6F', fontSize:16, marginBottom:16 }}>No trip prompt provided.</p>
-              <button onClick={()=>router.push('/')} style={{ background:'#FF8210', color:'#fff', border:'none', fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:14, padding:'12px 28px', borderRadius:100, cursor:'pointer' }}>
-                Start planning
-              </button>
-            </div>
+            {(tripId || (typeof window !== 'undefined' && !!localStorage.getItem('guest_trip_draft'))) ? (
+              <div style={{ width:40, height:40, borderRadius:'50%', border:'3px solid rgba(0,68,123,0.12)', borderTop:'3px solid #FF8210', animation:'spin 1s linear infinite' }} />
+            ) : (
+              <div style={{ textAlign:'center' }}>
+                <p style={{ fontFamily:"'Inter',sans-serif", color:'#6C6D6F', fontSize:16, marginBottom:16 }}>No trip prompt provided.</p>
+                <button onClick={()=>router.push('/')} style={{ background:'#FF8210', color:'#fff', border:'none', fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:14, padding:'12px 28px', borderRadius:100, cursor:'pointer' }}>
+                  Start planning
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

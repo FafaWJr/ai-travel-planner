@@ -61,7 +61,7 @@ export default function MyTripsPage() {
 
   const viewTrip = (trip: SavedTrip) => {
     const p = trip.trip_data?.prompt || `plan a trip to ${trip.destination}`;
-    router.push(`/plan?prompt=${encodeURIComponent(p)}`);
+    router.push(`/plan?tripId=${trip.id}&prompt=${encodeURIComponent(p)}`);
   };
 
   const numDays = (trip: SavedTrip) => {
