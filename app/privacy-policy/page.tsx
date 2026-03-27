@@ -63,22 +63,7 @@ export default function PrivacyPolicyPage() {
               '12. Contact Us',
             ].map((item) => (
               <li key={item}>
-                <a href={`#section-${item.split('.')[0].trim()}`} style={{
-                  display: 'block', fontSize: '13px', color: '#6C6D6F', textDecoration: 'none',
-                  padding: '7px 12px', borderRadius: '6px', borderLeft: '2px solid transparent',
-                  lineHeight: 1.4,
-                }}
-                  onMouseEnter={e => {
-                    (e.currentTarget as HTMLAnchorElement).style.color = '#00447B'
-                    ;(e.currentTarget as HTMLAnchorElement).style.background = '#f0f5fb'
-                    ;(e.currentTarget as HTMLAnchorElement).style.borderLeftColor = '#FF8210'
-                  }}
-                  onMouseLeave={e => {
-                    (e.currentTarget as HTMLAnchorElement).style.color = '#6C6D6F'
-                    ;(e.currentTarget as HTMLAnchorElement).style.background = 'transparent'
-                    ;(e.currentTarget as HTMLAnchorElement).style.borderLeftColor = 'transparent'
-                  }}
-                >{item}</a>
+                <a href={`#section-${item.split('.')[0].trim()}`} className="policy-nav-link">{item}</a>
               </li>
             ))}
           </ul>
@@ -224,6 +209,16 @@ export default function PrivacyPolicyPage() {
 
         </div>
       </div>
+      <style>{`
+        .policy-nav-link {
+          display: block; font-size: 13px; color: #6C6D6F; text-decoration: none;
+          padding: 7px 12px; border-radius: 6px; border-left: 2px solid transparent;
+          line-height: 1.4; transition: color 0.15s, background 0.15s, border-color 0.15s;
+        }
+        .policy-nav-link:hover {
+          color: #00447B; background: #f0f5fb; border-left-color: #FF8210;
+        }
+      `}</style>
     </main>
   )
 }
