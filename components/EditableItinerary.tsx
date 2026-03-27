@@ -181,6 +181,8 @@ interface Props {
   onActivityStatusChange?: () => void;
   onPlaceHover: (e: React.MouseEvent) => void;
   onPlaceLeave: () => void;
+  isGuest?: boolean;
+  onGateRequired?: () => void;
 }
 
 export interface ItineraryHandle {
@@ -194,6 +196,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
   itineraryMd, destination, tripPrompt, photos, acceptedHotels = [],
   onActivityStatusChange,
   onPlaceHover, onPlaceLeave,
+  isGuest = false, onGateRequired,
 }, ref) {
   const [days, setDays] = useState<Day[]>(() => parseItinerary(itineraryMd));
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
@@ -351,6 +354,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
     setDays(prev => prev.map(d => d.number === num ? { ...d, open: !d.open } : d));
 
   const fetchMoreIdeas = async (dayNum: number) => {
+    if (isGuest) { onGateRequired?.(); return; }
     const day = days.find(d => d.number === dayNum);
     if (!day || day.loadingMore) return;
     setDays(prev => prev.map(d => d.number === dayNum ? { ...d, loadingMore: true } : d));

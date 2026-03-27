@@ -14,6 +14,8 @@ interface Props {
   hotelContext?: string;
   currentActivities?: string;
   onAddToItinerary: (text: string, dayNum: number, slot: TimeSlot) => void;
+  isGuest?: boolean;
+  onGateRequired?: () => void;
 }
 
 async function collectSSE(res: Response): Promise<string> {
@@ -82,7 +84,7 @@ function renderContent(text: string): React.ReactNode {
   });
 }
 
-export default function FloatingChat({ plan, hotelContext, currentActivities, onAddToItinerary }: Props) {
+export default function FloatingChat({ plan, hotelContext, currentActivities, onAddToItinerary, isGuest = false, onGateRequired }: Props) {
   const [open, setOpen] = useState(true);
   const [msgs, setMsgs] = useState<Msg[]>([
     { role: 'assistant', content: "Hi! I'm Luna. How can I help customize your trip?" },
@@ -96,8 +98,11 @@ export default function FloatingChat({ plan, hotelContext, currentActivities, on
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [msgs, loading]);
 
+  const guestMsgCount = msgs.filter(m => m.role === 'user').length;
+
   const send = async () => {
     if (!input.trim() || loading) return;
+    if (isGuest && guestMsgCount >= 2) { onGateRequired?.(); return; }
     const text = input.trim();
     setInput('');
     const next: Msg[] = [...msgs, { role: 'user', content: text }];
@@ -219,6 +224,18 @@ export default function FloatingChat({ plan, hotelContext, currentActivities, on
               )}
               <div ref={endRef} />
             </div>
+
+            {/* Guest limit hint */}
+            {isGuest && (
+              <div style={{ padding: '6px 12px', background: 'rgba(255,130,16,0.06)', borderTop: '1px solid rgba(255,130,16,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: '#FF8210' }}>
+                  {2 - guestMsgCount > 0 ? `${2 - guestMsgCount} free message${2 - guestMsgCount === 1 ? '' : 's'} left` : 'Free limit reached'}
+                </span>
+                <button onClick={onGateRequired} style={{ fontFamily: "'Poppins',sans-serif", fontSize: 11, fontWeight: 600, color: '#FF8210', background: 'none', border: '1px solid rgba(255,130,16,0.4)', borderRadius: 100, padding: '2px 8px', cursor: 'pointer' }}>
+                  Sign in for unlimited
+                </button>
+              </div>
+            )}
 
             {/* Input */}
             <div style={{ padding: '10px 12px 12px', borderTop: '1px solid rgba(0,68,123,0.08)', display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>

@@ -6,6 +6,10 @@ import FloatingChat from '@/components/FloatingChat';
 import Toast from '@/components/Toast';
 import StayTab, { type AcceptedHotel } from '@/components/StayTab';
 import BudgetTab from '@/components/BudgetTab';
+import NavBar from '@/components/NavBar';
+import GateOverlay from '@/components/GateOverlay';
+import { useAuth } from '@/context/AuthContext';
+import { createClient } from '@/lib/supabase/client';
 
 type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'night';
 const SLOTS_LIST: { key: TimeSlot; label: string; icon: string }[] = [
@@ -340,6 +344,38 @@ function PlanContent() {
   const [itineraryVersion, setItineraryVersion] = useState(0);
   const itineraryRef = useRef<ItineraryHandle>(null);
 
+  const { user } = useAuth();
+  const supabase = createClient();
+  const [gateOpen,    setGateOpen]    = useState(false);
+  const [gateFeature, setGateFeature] = useState<string | undefined>(undefined);
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [savedTripId, setSavedTripId] = useState<string | null>(null);
+
+  const openGate = (feature?: string) => { setGateFeature(feature); setGateOpen(true); };
+
+  const saveTrip = async () => {
+    if (!user) { openGate('Save trip'); return; }
+    setSaveLoading(true);
+    try {
+      const dest = prompt.replace(/^plan a (trip to |)?/i,'').replace(/\b(from \d{4}-\d{2}-\d{2}.*)$/i,'').trim().split(' ').slice(0,5).join(' ');
+      const ciM = prompt.match(/from (\d{4}-\d{2}-\d{2})/);
+      const coM = prompt.match(/to (\d{4}-\d{2}-\d{2})/);
+      const sd = ciM?.[1] ?? null;
+      const ed = coM?.[1] ?? null;
+      const numDays = sd && ed ? Math.round((new Date(ed).getTime() - new Date(sd).getTime()) / 86400000) : null;
+      const title = `${dest}${numDays ? ` · ${numDays} days` : ''}`;
+      const tripData = { plan, photos, acceptedHotels, prompt };
+      if (savedTripId) {
+        await supabase.from('saved_trips').update({ title, trip_data: tripData }).eq('id', savedTripId).eq('user_id', user.id);
+      } else {
+        const { data } = await supabase.from('saved_trips').insert({ user_id: user.id, title, destination: dest, start_date: sd, end_date: ed, trip_data: tripData, is_favorite: false }).select('id').single();
+        if (data) setSavedTripId((data as { id: string }).id);
+      }
+      setToast(savedTripId ? 'Trip updated! ✓' : 'Trip saved! ✓');
+    } catch { setToast('Could not save trip. Try again.'); }
+    finally { setSaveLoading(false); }
+  };
+
   const liveActivitiesText = React.useMemo(() => {
     const days = itineraryRef.current?.getDaysSnapshot() ?? [];
     return days
@@ -431,26 +467,7 @@ function PlanContent() {
     <div style={{ background:'#F4F7FB', minHeight:'100vh', fontFamily:"'Inter',sans-serif" }}>
 
       {/* ── Nav ── */}
-      <nav style={{
-        position:'fixed', top:0, left:0, right:0, zIndex:100, height:68,
-        padding:'0 40px', display:'flex', alignItems:'center', justifyContent:'space-between',
-        background:'rgba(255,255,255,0.95)', backdropFilter:'blur(20px)',
-        borderBottom:'1px solid rgba(0,68,123,0.10)',
-      }}>
-        <a href="/" style={{ display:'flex', alignItems:'center' }}>
-          <img src="/luna_letsgo_bigger_3.PNG" alt="Luna Let's Go" style={{ height:72, width:'auto' }} />
-        </a>
-        <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-          {plan && (
-            <button onClick={()=>window.print()} style={{ background:'none', border:'1.5px solid rgba(0,68,123,0.20)', color:'#00447B', fontFamily:"'Poppins',sans-serif", fontWeight:500, fontSize:13, padding:'7px 16px', borderRadius:100, cursor:'pointer' }}>
-              Print / Save PDF
-            </button>
-          )}
-          <button onClick={()=>router.push('/')} style={{ background:'#00447B', color:'#fff', fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:13, padding:'8px 20px', borderRadius:100, cursor:'pointer', border:'none' }}>
-            New trip
-          </button>
-        </div>
-      </nav>
+      <NavBar />
 
       <div style={{ paddingTop:68 }}>
 
@@ -503,12 +520,32 @@ function PlanContent() {
                 </div>
               )}
 
-              {/* Destination title from prompt */}
-              <div style={{ marginBottom:20 }}>
-                <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:24, color:'#00447B', marginBottom:4 }}>
-                  {prompt.replace(/^plan a (trip to |)?/i,'').replace(/\b(from \d{4}-\d{2}-\d{2}.*)/i,'').trim().split(' ').slice(0,5).join(' ')}
-                </p>
-                <p style={{ fontFamily:"'Inter',sans-serif", fontSize:13, color:'#6C6D6F' }}>AI-generated travel plan · {new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</p>
+              {/* Destination title + action buttons */}
+              <div style={{ marginBottom:20, display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
+                <div>
+                  <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:24, color:'#00447B', marginBottom:4 }}>
+                    {prompt.replace(/^plan a (trip to |)?/i,'').replace(/\b(from \d{4}-\d{2}-\d{2}.*)/i,'').trim().split(' ').slice(0,5).join(' ')}
+                  </p>
+                  <p style={{ fontFamily:"'Inter',sans-serif", fontSize:13, color:'#6C6D6F' }}>AI-generated travel plan · {new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</p>
+                </div>
+                <div style={{ display:'flex', gap:8, alignItems:'center', flexShrink:0, flexWrap:'wrap' }}>
+                  <button
+                    onClick={() => user ? window.print() : openGate('Print / Save PDF')}
+                    style={{ background:'none', border:'1.5px solid rgba(0,68,123,0.20)', color:'#00447B', fontFamily:"'Poppins',sans-serif", fontWeight:500, fontSize:13, padding:'7px 16px', borderRadius:100, cursor:'pointer' }}
+                  >
+                    Print / Save PDF
+                  </button>
+                  <button
+                    onClick={saveTrip}
+                    disabled={saveLoading}
+                    style={{ background: saveLoading ? 'rgba(255,130,16,0.6)' : savedTripId ? '#16A34A' : '#FF8210', color:'#fff', border:'none', fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:13, padding:'8px 20px', borderRadius:100, cursor: saveLoading ? 'default' : 'pointer', transition:'background 0.15s' }}
+                  >
+                    {saveLoading ? 'Saving…' : savedTripId ? '✓ Saved' : 'Save trip'}
+                  </button>
+                  <button onClick={()=>router.push('/')} style={{ background:'#00447B', color:'#fff', fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:13, padding:'8px 20px', borderRadius:100, cursor:'pointer', border:'none' }}>
+                    New trip
+                  </button>
+                </div>
               </div>
 
               {/* Section tabs */}
@@ -516,7 +553,13 @@ function PlanContent() {
                 {SECTIONS.map(s => {
                   const active = activeSection === s.id;
                   return (
-                    <button key={s.id} onClick={()=>setActiveSection(s.id)} style={{
+                    <button key={s.id} onClick={() => {
+                      if (!user && (s.id === 'accommodation' || s.id === 'budget')) {
+                        openGate(s.id === 'accommodation' ? 'Hotel suggestions' : 'Budget estimator');
+                      } else {
+                        setActiveSection(s.id);
+                      }
+                    }} style={{
                       display:'flex', alignItems:'center', gap:6, padding:'8px 16px',
                       borderRadius:100, border:`1.5px solid ${active ? '#FF8210' : 'rgba(0,68,123,0.15)'}`,
                       background: active ? '#FF8210' : '#fff',
@@ -543,6 +586,8 @@ function PlanContent() {
                   onActivityStatusChange={() => setItineraryVersion(v => v + 1)}
                   onPlaceHover={handlePlaceMouseOver}
                   onPlaceLeave={handlePlaneMouseLeave}
+                  isGuest={!user}
+                  onGateRequired={() => openGate('Show me more ideas')}
                 />
               </div>
               {/* StayTab — always mounted to preserve state, hidden when not active */}
@@ -616,7 +661,7 @@ function PlanContent() {
               {activeSection === 'itinerary' && (
               <div style={{ marginTop:20 }}>
                 <button
-                  onClick={handleExtraIdeas}
+                  onClick={() => user ? handleExtraIdeas() : openGate('Show more ideas')}
                   style={{
                     display:'flex', alignItems:'center', gap:8,
                     background:'none', border:'1.5px dashed rgba(255,130,16,0.55)',
@@ -744,7 +789,10 @@ function PlanContent() {
               itineraryRef.current?.addActivity(text, dayNum, slot, true);
               setToast(`Activity added to Day ${dayNum}`);
             }}
+            isGuest={!user}
+            onGateRequired={() => openGate('Luna AI chat')}
           />
+          {gateOpen && <GateOverlay featureName={gateFeature} onClose={() => setGateOpen(false)} />}
           </>
         )}
 

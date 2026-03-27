@@ -99,6 +99,19 @@ export default function NavBar() {
           </Link>
         ))}
 
+        {/* My Trips — visible only when logged in */}
+        {!loading && user && (
+          <Link href="/my-trips" style={{
+            fontFamily: 'var(--font-head)', fontWeight: 500, fontSize: 14,
+            color: isActive('/my-trips') ? 'var(--navy)' : 'var(--gray-dark)',
+            padding: '8px 14px', borderRadius: 8,
+            borderBottom: isActive('/my-trips') ? '2px solid var(--orange)' : '2px solid transparent',
+            textDecoration: 'none',
+          }}>
+            My Trips
+          </Link>
+        )}
+
         {/* Plan a Trip CTA */}
         <Link href="/" style={{
           marginLeft: 8,
@@ -164,7 +177,7 @@ export default function NavBar() {
                   </div>
 
                   {/* My Trips */}
-                  <Link href="/" onClick={() => setDropdownOpen(false)} style={{
+                  <Link href="/my-trips" onClick={() => setDropdownOpen(false)} style={{
                     display: 'flex', alignItems: 'center', gap: 10,
                     padding: '11px 16px',
                     fontFamily: 'var(--font-body)', fontSize: 13, color: '#111',
