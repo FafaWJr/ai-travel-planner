@@ -30,9 +30,10 @@ export default function LoginPage() {
   /* ── Google OAuth ── */
   const handleGoogle = async () => {
     setError('');
+    const next = new URLSearchParams(window.location.search).get('next') || '/';
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
     });
     if (error) setError(error.message);
   };
@@ -45,7 +46,8 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) { setError(error.message); return; }
-    router.push('/');
+    const next = new URLSearchParams(window.location.search).get('next') || '/';
+    router.push(next);
     router.refresh();
   };
 

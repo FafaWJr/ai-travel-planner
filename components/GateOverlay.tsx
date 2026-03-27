@@ -4,9 +4,11 @@ import Link from 'next/link';
 interface Props {
   onClose: () => void;
   featureName?: string;
+  returnUrl?: string;
 }
 
-export default function GateOverlay({ onClose, featureName }: Props) {
+export default function GateOverlay({ onClose, featureName, returnUrl }: Props) {
+  const nextParam = returnUrl ? `?next=${encodeURIComponent(returnUrl)}` : '';
   return (
     <div
       style={{
@@ -74,7 +76,7 @@ export default function GateOverlay({ onClose, featureName }: Props) {
         </p>
 
         <Link
-          href="/auth/login"
+          href={`/auth/login${nextParam}`}
           style={{
             display: 'block', padding: '12px 0', borderRadius: 100,
             background: '#FF8210', color: '#fff', textDecoration: 'none',
@@ -85,7 +87,7 @@ export default function GateOverlay({ onClose, featureName }: Props) {
           Sign in
         </Link>
         <Link
-          href="/auth/signup"
+          href={`/auth/signup${nextParam}`}
           style={{
             fontFamily: "'Inter',sans-serif", fontSize: 14,
             color: '#679AC1', textDecoration: 'underline',

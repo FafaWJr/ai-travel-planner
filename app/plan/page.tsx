@@ -792,7 +792,7 @@ function PlanContent() {
             isGuest={!user}
             onGateRequired={() => openGate('Luna AI chat')}
           />
-          {gateOpen && <GateOverlay featureName={gateFeature} onClose={() => setGateOpen(false)} />}
+          {gateOpen && <GateOverlay featureName={gateFeature} onClose={() => setGateOpen(false)} returnUrl={prompt ? `/plan?prompt=${encodeURIComponent(prompt)}` : undefined} />}
           </>
         )}
 
