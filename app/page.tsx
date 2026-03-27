@@ -593,7 +593,7 @@ Traveller Profile:
       <NavBar />
 
       {/* ───── HERO ───── */}
-      <section style={{ position:'relative', minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', overflow:'visible', padding:'80px 24px' }}>
+      <section id="planner" style={{ position:'relative', minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', overflow:'visible', padding:'80px 24px' }}>
         {/* Photo — rotates every 10s */}
         {HERO_IMAGES.map((img,i) => (
           <div key={img.url} style={{ position:'absolute', inset:0, backgroundImage:`url(${img.url})`, backgroundSize:'cover', backgroundPosition:'center 40%', transition:'opacity 1.5s ease', opacity:i===heroImgIdx?1:0 }} />

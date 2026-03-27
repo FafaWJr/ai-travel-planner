@@ -37,7 +37,7 @@ export default function Footer() {
           <div>
             <p className="footer-heading">Quick Links</p>
             <nav style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <Link href="/"        className="footer-link">Plan a Trip</Link>
+              <Link href="/#planner" className="footer-link">Plan a Trip</Link>
               <Link href="/blog"    className="footer-link">Blog</Link>
               <Link href="/deals"   className="footer-link">Deals</Link>
               <Link href="/my-trips" className="footer-link">My Trips</Link>
