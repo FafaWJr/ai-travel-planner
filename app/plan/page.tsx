@@ -372,49 +372,40 @@ function PlanContent() {
     setGateOpen(true);
   };
 
-  const ensureProfile = async () => {
-    const { error } = await supabase.from('profiles').upsert(
-      {
-        id: user!.id,
-        email: user!.email ?? null,
-        full_name: user!.user_metadata?.full_name ?? user!.user_metadata?.name ?? null,
-        avatar_url: user!.user_metadata?.avatar_url ?? null,
-      },
-      { onConflict: 'id' }
-    );
-    if (error) console.error('[ensureProfile] upsert error:', error);
+  const buildTripPayload = () => {
+    const dest = prompt.replace(/^plan a (trip to |)?/i,'').replace(/\b(from \d{4}-\d{2}-\d{2}.*)$/i,'').trim().split(' ').slice(0,5).join(' ');
+    const ciM = prompt.match(/from (\d{4}-\d{2}-\d{2})/);
+    const coM = prompt.match(/to (\d{4}-\d{2}-\d{2})/);
+    const sd = ciM?.[1] ?? null;
+    const ed = coM?.[1] ?? null;
+    const numDays = sd && ed ? Math.round((new Date(ed).getTime() - new Date(sd).getTime()) / 86400000) : null;
+    const title = `${dest}${numDays ? ` · ${numDays} days` : ''}`;
+    const snapshot = itineraryRef.current?.getDaysSnapshot() ?? [];
+    const trip_data = { plan, photos, acceptedHotels, prompt, itineraryDays: snapshot };
+    return { dest, sd, ed, title, trip_data };
   };
 
   const saveTrip = async () => {
     if (!user) { openGate('Save trip'); return; }
     setSaveLoading(true);
     try {
-      // Guarantee the profiles row exists — saved_trips.user_id has a FK → profiles.id
-      await ensureProfile();
-
-      const dest = prompt.replace(/^plan a (trip to |)?/i,'').replace(/\b(from \d{4}-\d{2}-\d{2}.*)$/i,'').trim().split(' ').slice(0,5).join(' ');
-      const ciM = prompt.match(/from (\d{4}-\d{2}-\d{2})/);
-      const coM = prompt.match(/to (\d{4}-\d{2}-\d{2})/);
-      const sd = ciM?.[1] ?? null;
-      const ed = coM?.[1] ?? null;
-      const numDays = sd && ed ? Math.round((new Date(ed).getTime() - new Date(sd).getTime()) / 86400000) : null;
-      const title = `${dest}${numDays ? ` · ${numDays} days` : ''}`;
-      const snapshot = itineraryRef.current?.getDaysSnapshot() ?? [];
-      const tripData = { plan, photos, acceptedHotels, prompt, itineraryDays: snapshot };
-
+      const { dest, sd, ed, title, trip_data } = buildTripPayload();
       if (savedTripId) {
-        const { error } = await supabase.from('saved_trips')
-          .update({ title, trip_data: tripData })
-          .eq('id', savedTripId)
-          .eq('user_id', user.id);
-        if (error) throw error;
+        const res = await fetch('/api/trips', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: savedTripId, title, trip_data }),
+        });
+        if (!res.ok) throw new Error((await res.json()).error || 'Update failed');
       } else {
-        const { data, error } = await supabase.from('saved_trips')
-          .insert({ user_id: user.id, title, destination: dest, start_date: sd, end_date: ed, trip_data: tripData, is_favorite: false })
-          .select('id')
-          .single();
-        if (error) throw error;
-        if (data) setSavedTripId((data as { id: string }).id);
+        const res = await fetch('/api/trips', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, destination: dest, start_date: sd, end_date: ed, trip_data }),
+        });
+        if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
+        const json = await res.json();
+        if (json.id) setSavedTripId(json.id);
       }
       setToast(savedTripId ? 'Trip updated! ✓' : 'Trip saved! ✓');
     } catch (err) {
@@ -507,7 +498,6 @@ function PlanContent() {
   const saveRestoredDraft = async (draft: { prompt: string; plan: string; photos: string[]; acceptedHotels: AcceptedHotel[]; itineraryDays: Day[] }) => {
     if (!user) return;
     try {
-      await ensureProfile();
       const p = draft.prompt;
       const dest = p.replace(/^plan a (trip to |)?/i,'').replace(/\b(from \d{4}-\d{2}-\d{2}.*)$/i,'').trim().split(' ').slice(0,5).join(' ');
       const ciM = p.match(/from (\d{4}-\d{2}-\d{2})/);
@@ -516,14 +506,17 @@ function PlanContent() {
       const ed = coM?.[1] ?? null;
       const numDays = sd && ed ? Math.round((new Date(ed).getTime() - new Date(sd).getTime()) / 86400000) : null;
       const title = `${dest}${numDays ? ` · ${numDays} days` : ''}`;
-      const { data, error } = await supabase.from('saved_trips').insert({
-        user_id: user.id, title, destination: dest,
-        start_date: sd, end_date: ed,
-        trip_data: { plan: draft.plan, photos: draft.photos, acceptedHotels: draft.acceptedHotels, prompt: p, itineraryDays: draft.itineraryDays },
-        is_favorite: false,
-      }).select('id').single();
-      if (error) throw error;
-      if (data) setSavedTripId((data as { id: string }).id);
+      const res = await fetch('/api/trips', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title, destination: dest, start_date: sd, end_date: ed,
+          trip_data: { plan: draft.plan, photos: draft.photos, acceptedHotels: draft.acceptedHotels, prompt: p, itineraryDays: draft.itineraryDays },
+        }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
+      const json = await res.json();
+      if (json.id) setSavedTripId(json.id);
       setToast('Your trip has been saved! ✓');
     } catch (err) {
       console.error('[saveRestoredDraft] error:', err);
@@ -535,11 +528,12 @@ function PlanContent() {
     if (!user || !savedTripId || !plan) return;
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     autoSaveTimer.current = setTimeout(async () => {
-      const snapshot = itineraryRef.current?.getDaysSnapshot() ?? [];
-      await supabase.from('saved_trips')
-        .update({ trip_data: { plan, photos, acceptedHotels, prompt, itineraryDays: snapshot }, updated_at: new Date().toISOString() })
-        .eq('id', savedTripId)
-        .eq('user_id', user.id);
+      const { title, trip_data } = buildTripPayload();
+      await fetch('/api/trips', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: savedTripId, title, trip_data }),
+      });
     }, 2500);
     return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); };
   }, [itineraryVersion]); // eslint-disable-line
