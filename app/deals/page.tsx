@@ -6,6 +6,79 @@ type DealCategory = 'All' | 'Flights' | 'Hotels' | 'Excursions' | 'Tickets';
 
 const CATEGORIES: DealCategory[] = ['All', 'Flights', 'Hotels', 'Excursions', 'Tickets'];
 
+/* ── Flat SVG icons per deal category — brand colours only ── */
+const IconHotel = () => (
+  <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+    <rect x="6" y="18" width="40" height="28" rx="3" fill="rgba(255,255,255,0.18)" stroke="#fff" strokeWidth="1.8"/>
+    <rect x="14" y="10" width="24" height="10" rx="2" fill="rgba(255,255,255,0.25)" stroke="#fff" strokeWidth="1.8"/>
+    <rect x="14" y="2" width="24" height="10" rx="2" fill="rgba(255,255,255,0.18)" stroke="#fff" strokeWidth="1.8"/>
+    <rect x="16" y="30" width="8" height="8" rx="1.5" fill="#fff" opacity=".5"/>
+    <rect x="28" y="30" width="8" height="8" rx="1.5" fill="#fff" opacity=".5"/>
+    <rect x="20" y="36" width="12" height="10" rx="1.5" fill="#fff" opacity=".7"/>
+  </svg>
+);
+
+const IconFlight = () => (
+  <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+    <path d="M42 18 C42 18 38 10 26 10 C14 10 8 18 8 26 C8 34 14 42 26 42 C38 42 46 34 46 26" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round" opacity=".3"/>
+    <path d="M10 32 L20 24 L16 14 L20 14 L28 22 L38 18 C41 17 44 18 44 21 C44 24 41 26 38 26 L28 26 L24 36 L20 36 L22 26 L12 32Z" fill="#fff" opacity=".85"/>
+  </svg>
+);
+
+const IconCompass = () => (
+  <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+    <circle cx="26" cy="26" r="20" stroke="#fff" strokeWidth="2" opacity=".4"/>
+    <circle cx="26" cy="26" r="14" stroke="#fff" strokeWidth="1.5" opacity=".25"/>
+    <polygon points="26,10 30,26 26,22 22,26" fill="#fff" opacity=".9"/>
+    <polygon points="26,42 22,26 26,30 30,26" fill="#fff" opacity=".5"/>
+    <circle cx="26" cy="26" r="3" fill="#fff"/>
+    <line x1="6" y1="26" x2="12" y2="26" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" opacity=".4"/>
+    <line x1="40" y1="26" x2="46" y2="26" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" opacity=".4"/>
+    <line x1="26" y1="6" x2="26" y2="12" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" opacity=".4"/>
+    <line x1="26" y1="40" x2="26" y2="46" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" opacity=".4"/>
+  </svg>
+);
+
+const IconTicket = () => (
+  <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+    <path d="M6 18 L6 34 C10 34 14 30 14 26 C14 22 10 18 6 18Z" fill="#fff" opacity=".25"/>
+    <rect x="6" y="18" width="40" height="16" rx="3" stroke="#fff" strokeWidth="1.8" fill="rgba(255,255,255,0.12)"/>
+    <line x1="18" y1="18" x2="18" y2="34" stroke="#fff" strokeWidth="1.5" strokeDasharray="3 2" opacity=".5"/>
+    <rect x="22" y="22" width="16" height="2.5" rx="1.25" fill="#fff" opacity=".7"/>
+    <rect x="22" y="28" width="10" height="2.5" rx="1.25" fill="#fff" opacity=".5"/>
+    <circle cx="14" cy="26" r="4" fill="rgba(0,0,0,0.2)" stroke="#fff" strokeWidth="1.5" opacity=".6"/>
+  </svg>
+);
+
+const IconHouse = () => (
+  <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+    <path d="M26 8 L46 24 L46 44 L6 44 L6 24Z" fill="rgba(255,255,255,0.15)" stroke="#fff" strokeWidth="1.8"/>
+    <path d="M6 24 L26 8 L46 24" stroke="#fff" strokeWidth="2" strokeLinejoin="round" fill="none"/>
+    <rect x="18" y="30" width="16" height="14" rx="2" fill="rgba(255,255,255,0.3)" stroke="#fff" strokeWidth="1.5"/>
+    <rect x="14" y="26" width="10" height="8" rx="1.5" fill="#fff" opacity=".5"/>
+    <circle cx="36" cy="30" r="1.5" fill="#fff" opacity=".7"/>
+  </svg>
+);
+
+const IconMountain = () => (
+  <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+    <path d="M4 44 L20 18 L28 28 L34 20 L48 44Z" fill="rgba(255,255,255,0.15)" stroke="#fff" strokeWidth="1.8" strokeLinejoin="round"/>
+    <path d="M16 24 L20 18 L24 24" fill="#fff" opacity=".5"/>
+    <path d="M30 26 L34 20 L38 26" fill="#fff" opacity=".5"/>
+    <circle cx="40" cy="12" r="6" fill="#fff" opacity=".2" stroke="#fff" strokeWidth="1.5"/>
+    <path d="M37 12 L40 8 L43 12" fill="#fff" opacity=".6"/>
+  </svg>
+);
+
+const DEAL_ICONS: Record<number, () => React.ReactElement> = {
+  1: IconHotel,
+  2: IconFlight,
+  3: IconCompass,
+  4: IconTicket,
+  5: IconHouse,
+  6: IconMountain,
+};
+
 const PLACEHOLDER_DEALS = [
   {
     id: 1,
@@ -18,7 +91,6 @@ const PLACEHOLDER_DEALS = [
     badge: 'HOT DEAL',
     badgeColor: '#FF8210',
     gradient: 'linear-gradient(135deg, #00447B 0%, #679AC1 100%)',
-    emoji: '🏨',
   },
   {
     id: 2,
@@ -31,7 +103,6 @@ const PLACEHOLDER_DEALS = [
     badge: 'FLASH SALE',
     badgeColor: '#00447B',
     gradient: 'linear-gradient(135deg, #FF8210 0%, #FFBD59 100%)',
-    emoji: '✈️',
   },
   {
     id: 3,
@@ -44,7 +115,6 @@ const PLACEHOLDER_DEALS = [
     badge: 'TOP PICK',
     badgeColor: '#FF8210',
     gradient: 'linear-gradient(135deg, #679AC1 0%, #00447B 100%)',
-    emoji: '🌿',
   },
   {
     id: 4,
@@ -57,7 +127,6 @@ const PLACEHOLDER_DEALS = [
     badge: 'BUNDLE',
     badgeColor: '#00447B',
     gradient: 'linear-gradient(135deg, #00447B 0%, #FF8210 100%)',
-    emoji: '🎟️',
   },
   {
     id: 5,
@@ -70,7 +139,6 @@ const PLACEHOLDER_DEALS = [
     badge: 'EXCLUSIVE',
     badgeColor: '#FF8210',
     gradient: 'linear-gradient(135deg, #FFBD59 0%, #FF8210 100%)',
-    emoji: '🏡',
   },
   {
     id: 6,
@@ -83,7 +151,6 @@ const PLACEHOLDER_DEALS = [
     badge: 'ADVENTURE',
     badgeColor: '#00447B',
     gradient: 'linear-gradient(135deg, #679AC1 0%, #FFBD59 100%)',
-    emoji: '⛰️',
   },
 ];
 
@@ -290,7 +357,7 @@ export default function DealsPage() {
                     {deal.badge}
                   </div>
 
-                  <span style={{ fontSize: 40 }}>{deal.emoji}</span>
+                  {(() => { const Icon = DEAL_ICONS[deal.id]; return Icon ? <Icon /> : null; })()}
                   <span style={{
                     fontFamily: 'var(--font-head)', fontWeight: 700,
                     fontSize: 'clamp(20px, 3vw, 26px)', color: '#fff',

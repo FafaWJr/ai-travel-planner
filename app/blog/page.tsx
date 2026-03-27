@@ -2,6 +2,70 @@
 import { useState } from 'react';
 import Link from 'next/link';
 
+/* ── Flat SVG illustrations — brand colours only (#FF8210 / #00447B / #679AC1) ── */
+const BlogIllustrations: Record<number, () => React.ReactElement> = {
+  1: () => (
+    /* Bali: palm tree + ocean waves */
+    <svg width="96" height="96" viewBox="0 0 96 96" fill="none">
+      {/* Sun */}
+      <circle cx="72" cy="22" r="12" fill="#FF8210" opacity=".85"/>
+      {/* Ground */}
+      <ellipse cx="48" cy="80" rx="38" ry="6" fill="#00447B" opacity=".18"/>
+      {/* Trunk */}
+      <path d="M46 78 C45 60 43 44 44 30" stroke="#00447B" strokeWidth="4" strokeLinecap="round"/>
+      {/* Fronds */}
+      <path d="M44 30 C30 20 16 22 12 28" stroke="#00447B" strokeWidth="3" strokeLinecap="round"/>
+      <path d="M44 30 C38 16 42 8 50 8" stroke="#00447B" strokeWidth="3" strokeLinecap="round"/>
+      <path d="M44 30 C52 18 62 18 66 26" stroke="#00447B" strokeWidth="3" strokeLinecap="round"/>
+      <path d="M44 30 C28 30 20 36 20 42" stroke="#679AC1" strokeWidth="2.5" strokeLinecap="round"/>
+      <path d="M44 30 C54 28 60 32 60 40" stroke="#679AC1" strokeWidth="2.5" strokeLinecap="round"/>
+      {/* Waves */}
+      <path d="M8 72 Q18 66 28 72 Q38 78 48 72 Q58 66 68 72 Q78 78 88 72" stroke="#679AC1" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+      <path d="M8 80 Q18 74 28 80 Q38 86 48 80 Q58 74 68 80 Q78 86 88 80" stroke="#FF8210" strokeWidth="2" fill="none" strokeLinecap="round" opacity=".6"/>
+    </svg>
+  ),
+  2: () => (
+    /* Japan: torii gate + mount fuji silhouette */
+    <svg width="96" height="96" viewBox="0 0 96 96" fill="none">
+      {/* Sky circle */}
+      <circle cx="48" cy="38" r="22" fill="#FF8210" opacity=".15"/>
+      {/* Mt Fuji */}
+      <path d="M12 72 L40 36 L48 42 L56 36 L84 72Z" fill="#00447B" opacity=".20"/>
+      <path d="M36 48 L48 36 L60 48" fill="#fff" opacity=".7"/>
+      {/* Torii top bar */}
+      <rect x="22" y="32" width="52" height="5" rx="2.5" fill="#FF8210"/>
+      {/* Torii second bar */}
+      <rect x="26" y="40" width="44" height="3.5" rx="1.75" fill="#FF8210" opacity=".7"/>
+      {/* Torii pillars */}
+      <rect x="26" y="43" width="6" height="30" rx="3" fill="#FF8210"/>
+      <rect x="64" y="43" width="6" height="30" rx="3" fill="#FF8210"/>
+      {/* Path */}
+      <path d="M35 73 L48 60 L61 73" stroke="#679AC1" strokeWidth="2" fill="none" strokeLinecap="round"/>
+    </svg>
+  ),
+  3: () => (
+    /* Amalfi: clifftop arch + sailboat */
+    <svg width="96" height="96" viewBox="0 0 96 96" fill="none">
+      {/* Water */}
+      <rect x="0" y="66" width="96" height="30" rx="0" fill="#679AC1" opacity=".25"/>
+      {/* Cliff left */}
+      <path d="M0 96 L0 50 C8 46 16 52 20 48 C24 44 22 36 28 34 L36 66 L0 66Z" fill="#00447B" opacity=".35"/>
+      {/* Cliff right */}
+      <path d="M96 96 L96 44 C88 40 80 46 74 42 C68 38 70 28 62 26 L58 66 L96 66Z" fill="#00447B" opacity=".35"/>
+      {/* Arch */}
+      <path d="M30 66 L30 50 Q48 30 66 50 L66 66" stroke="#00447B" strokeWidth="4" fill="none" strokeLinecap="round"/>
+      {/* Sailboat hull */}
+      <path d="M36 74 Q48 70 60 74 L58 80 L38 80Z" fill="#FF8210"/>
+      {/* Sail */}
+      <path d="M48 70 L48 50 L62 70Z" fill="#fff" opacity=".9"/>
+      <path d="M48 70 L48 54 L36 70Z" fill="#FFBD59" opacity=".8"/>
+      {/* Waves */}
+      <path d="M8 78 Q16 74 24 78 Q32 82 40 78" stroke="#fff" strokeWidth="1.5" fill="none" strokeLinecap="round" opacity=".5"/>
+      <path d="M58 82 Q66 78 74 82 Q82 86 90 82" stroke="#fff" strokeWidth="1.5" fill="none" strokeLinecap="round" opacity=".5"/>
+    </svg>
+  ),
+};
+
 const PLACEHOLDER_POSTS = [
   {
     id: 1,
@@ -12,7 +76,6 @@ const PLACEHOLDER_POSTS = [
     destination: 'Bali, Indonesia',
     readTime: '8 min read',
     gradient: 'linear-gradient(135deg, #00447B 0%, #679AC1 100%)',
-    emoji: '🌴',
     date: 'Coming soon',
   },
   {
@@ -24,7 +87,6 @@ const PLACEHOLDER_POSTS = [
     destination: 'Japan',
     readTime: '12 min read',
     gradient: 'linear-gradient(135deg, #FF8210 0%, #FFBD59 100%)',
-    emoji: '🗾',
     date: 'Coming soon',
   },
   {
@@ -36,7 +98,6 @@ const PLACEHOLDER_POSTS = [
     destination: 'Amalfi Coast, Italy',
     readTime: '7 min read',
     gradient: 'linear-gradient(135deg, #679AC1 0%, #00447B 100%)',
-    emoji: '🍋',
     date: 'Coming soon',
   },
 ];
@@ -193,7 +254,7 @@ export default function BlogPage() {
                   alignItems: 'center', justifyContent: 'center', gap: 10,
                   position: 'relative',
                 }}>
-                  <span style={{ fontSize: 52 }}>{post.emoji}</span>
+                  {(() => { const Illus = BlogIllustrations[post.id]; return Illus ? <Illus /> : null; })()}
                   <span style={{
                     fontFamily: 'var(--font-body)', fontSize: 12,
                     color: 'rgba(255,255,255,0.8)', letterSpacing: '0.06em',
