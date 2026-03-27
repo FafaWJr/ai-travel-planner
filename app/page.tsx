@@ -1,6 +1,7 @@
 'use client';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import NavBar from '@/components/NavBar';
 
 /* ── Destination autocomplete (geocoding-api.open-meteo.com, no API key) ── */
 interface GeoResult { id:number; name:string; country:string; country_code:string; admin1?:string; }
@@ -589,30 +590,7 @@ Traveller Profile:
     <div style={{ fontFamily:'var(--font-body)', color:'#000', background:'#fff', overflowX:'hidden' }}>
 
       {/* ───── NAV ───── */}
-      <nav style={{
-        position:'fixed', top:0, left:0, right:0, zIndex:100,
-        height:68, padding:'0 40px',
-        display:'flex', alignItems:'center', justifyContent:'space-between',
-        background:'rgba(255,255,255,0.92)', backdropFilter:'blur(20px)',
-        borderBottom:'1px solid var(--border)',
-      }}>
-        <a href="/" style={{ display:'flex', alignItems:'center' }}>
-          <img src="/luna_letsgo_bigger_3.PNG" alt="Luna Let's Go" style={{ height:72, width:'auto' }} />
-        </a>
-        <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-          {['Trip Ideas','Quiz'].map(l => (
-            <a key={l} href={`#${l.toLowerCase().replace(' ','-')}`}
-               style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:14, color:'var(--gray-dark)', padding:'8px 14px', borderRadius:8 }}>
-              {l}
-            </a>
-          ))}
-          <a href="#" onClick={e=>{e.preventDefault();window.scrollTo({top:0,behavior:'smooth'});}} style={{
-            marginLeft:12, background:'var(--navy)', color:'#fff',
-            fontFamily:'var(--font-head)', fontWeight:600, fontSize:14,
-            padding:'10px 22px', borderRadius:'var(--r-pill)',
-          }}>Plan a Trip</a>
-        </div>
-      </nav>
+      <NavBar />
 
       {/* ───── HERO ───── */}
       <section style={{ position:'relative', minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', overflow:'visible', padding:'80px 24px' }}>
