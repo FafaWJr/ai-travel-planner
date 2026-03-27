@@ -606,6 +606,14 @@ Traveller Profile:
               {l}
             </a>
           ))}
+          <a href="/blog"
+             style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:14, color:'var(--gray-dark)', padding:'8px 14px', borderRadius:8 }}>
+            Blog
+          </a>
+          <a href="/deals"
+             style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:14, color:'var(--gray-dark)', padding:'8px 14px', borderRadius:8 }}>
+            Deals
+          </a>
           <a href="#" onClick={e=>{e.preventDefault();window.scrollTo({top:0,behavior:'smooth'});}} style={{
             marginLeft:12, background:'var(--navy)', color:'#fff',
             fontFamily:'var(--font-head)', fontWeight:600, fontSize:14,
