@@ -1033,14 +1033,6 @@ Traveller Profile:
         </div>
       </section>
 
-      {/* ───── FOOTER ───── */}
-      <footer style={{ background:'var(--navy)', padding:'48px 40px', display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:16 }}>
-        <img src="/luna_letsgo_bigger_3.PNG" alt="Luna Let's Go" style={{ height:70, width:'auto' }} />
-        <p style={{ fontFamily:'var(--font-body)', color:'rgba(255,255,255,0.45)', fontSize:13 }}>
-          © 2026 GOTO AI Travel Planner. Built with Next.js &amp; OpenRouter.{' '}
-          <a href="https://open-meteo.com" style={{ color:'rgba(255,255,255,0.5)', textDecoration:'underline' }}>Weather by Open-Meteo</a>
-        </p>
-      </footer>
 
       <style>{`
         @keyframes fadeUp { from { opacity:0; transform:translateY(28px); } to { opacity:1; transform:translateY(0); } }

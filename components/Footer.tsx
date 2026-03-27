@@ -11,17 +11,13 @@ export default function Footer() {
       {/* ── Main content ──────────────────────────────────────────────── */}
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '64px 24px 48px' }}>
 
-        {/* Brand name */}
+        {/* Brand logo */}
         <div className="footer-brand">
-          <span style={{
-            fontFamily: 'var(--font-head)',
-            fontWeight: 700,
-            fontSize: 26,
-            color: '#fff',
-            letterSpacing: '-0.3px',
-          }}>
-            Luna Let&apos;s Go
-          </span>
+          <img
+            src="/luna_letsgo_bigger_3.PNG"
+            alt="Luna Let's Go"
+            style={{ height: 56, width: 'auto' }}
+          />
         </div>
 
         {/* 4-column grid */}
