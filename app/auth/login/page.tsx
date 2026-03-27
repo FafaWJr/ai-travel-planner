@@ -2,7 +2,7 @@
 export const dynamic = 'force-dynamic';
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 /* ── Google "G" SVG logo ──────────────────────────────────── */
@@ -18,7 +18,6 @@ function GoogleIcon() {
 }
 
 export default function LoginPage() {
-  const router      = useRouter();
   const searchParams = useSearchParams();
   const next        = searchParams.get('next') || '/';
   const supabase    = createClient();
@@ -44,10 +43,14 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) { setError(error.message); return; }
-    router.push(next);
+    if (!data.session) { setError('Login failed — please try again.'); return; }
+    // Hard navigation so the page fully reloads and AuthContext reads the
+    // fresh session from cookies (soft router.push keeps the old React tree
+    // alive and the auth state doesn't propagate across client instances).
+    window.location.href = next;
   };
 
   return (
