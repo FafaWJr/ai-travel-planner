@@ -33,6 +33,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
       }
       setLoading(false);
+    }).catch(() => {
+      setLoading(false);
     });
 
     // Keep in sync with auth state changes (login, logout, token refresh)

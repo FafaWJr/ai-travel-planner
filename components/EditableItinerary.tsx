@@ -302,6 +302,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
 
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
     setActiveId(null);
+    if (isGuest) { onGateRequired?.(); return; }
     if (!over || active.id === over.id) return;
 
     const from = findContainer(active.id);
