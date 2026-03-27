@@ -113,13 +113,20 @@ export default function NavBar() {
         )}
 
         {/* Plan a Trip CTA */}
-        <Link href="/#planner" style={{
-          marginLeft: 8,
-          background: 'var(--navy)', color: '#fff',
-          fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 14,
-          padding: '10px 22px', borderRadius: 'var(--r-pill)',
-          textDecoration: 'none',
-        }}>
+        <Link
+          href="/#planner"
+          onClick={e => {
+            const el = document.getElementById('planner');
+            if (el) { e.preventDefault(); el.scrollIntoView({ behavior: 'smooth' }); }
+          }}
+          style={{
+            marginLeft: 8,
+            background: 'var(--navy)', color: '#fff',
+            fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 14,
+            padding: '10px 22px', borderRadius: 'var(--r-pill)',
+            textDecoration: 'none',
+          }}
+        >
           Plan a Trip
         </Link>
 
