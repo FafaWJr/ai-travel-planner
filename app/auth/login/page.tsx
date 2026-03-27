@@ -2,7 +2,7 @@
 export const dynamic = 'force-dynamic';
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 /* ── Google "G" SVG logo ──────────────────────────────────── */
@@ -18,8 +18,10 @@ function GoogleIcon() {
 }
 
 export default function LoginPage() {
-  const router = useRouter();
-  const supabase = createClient();
+  const router      = useRouter();
+  const searchParams = useSearchParams();
+  const next        = searchParams.get('next') || '/';
+  const supabase    = createClient();
 
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
@@ -30,7 +32,6 @@ export default function LoginPage() {
   /* ── Google OAuth ── */
   const handleGoogle = async () => {
     setError('');
-    const next = new URLSearchParams(window.location.search).get('next') || '/';
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
@@ -46,9 +47,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) { setError(error.message); return; }
-    const next = new URLSearchParams(window.location.search).get('next') || '/';
     router.push(next);
-    router.refresh();
   };
 
   return (

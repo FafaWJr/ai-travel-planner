@@ -2,7 +2,7 @@
 export const dynamic = 'force-dynamic';
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 /* ── Google "G" SVG logo ──────────────────────────────────── */
@@ -18,8 +18,10 @@ function GoogleIcon() {
 }
 
 export default function SignupPage() {
-  const router   = useRouter();
-  const supabase = createClient();
+  const router       = useRouter();
+  const searchParams = useSearchParams();
+  const next         = searchParams.get('next') || '/';
+  const supabase     = createClient();
 
   const [fullName, setFullName]       = useState('');
   const [email, setEmail]             = useState('');
@@ -36,7 +38,7 @@ export default function SignupPage() {
     setError('');
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
     });
     if (error) setError(error.message);
   };
@@ -54,7 +56,7 @@ export default function SignupPage() {
       password,
       options: {
         data: { full_name: fullName },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
       },
     });
     setLoading(false);
