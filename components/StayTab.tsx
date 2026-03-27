@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
+import type { ItineraryHandle } from '@/components/EditableItinerary';
 
 type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'night';
 
@@ -35,7 +36,9 @@ interface Props {
   checkIn: string;
   checkOut: string;
   budget: string;
+  itineraryRef?: React.RefObject<ItineraryHandle | null>;
   onAddToItinerary: (text: string, dayNum: number, slot: TimeSlot) => void;
+  onRemoveActivitiesMatching: (pattern: string) => void;
   onHotelsConfirmed: (hotels: AcceptedHotel[]) => void;
 }
 
@@ -79,15 +82,8 @@ function AmenityPill({ label }: { label: string }) {
 function PhotoGallery({ photos, name }: { photos: string[] | null | '__loading__'; name: string }) {
   const [idx, setIdx] = useState(0);
 
-  if (photos === '__loading__') {
-    return (
-      <div style={{ height: 180, background: 'linear-gradient(135deg,#e8f0f7,#d1e2f0)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 24, height: 24, borderRadius: '50%', border: '3px solid rgba(0,68,123,0.15)', borderTop: '3px solid #FF8210', animation: 'spin 0.9s linear infinite' }} />
-      </div>
-    );
-  }
-
-  if (!photos || photos.length === 0) {
+  // Treat '__loading__' same as null — show placeholder immediately, swap in photos when ready
+  if (!photos || photos.length === 0 || photos === '__loading__') {
     return (
       <div style={{ height: 180, background: 'linear-gradient(135deg,#00447B,#0369A1)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
         <span style={{ fontSize: 32 }}>🏨</span>
@@ -282,8 +278,39 @@ function ConfirmedSummary({ hotel, segment }: AcceptedHotel) {
   );
 }
 
+/* ─── MediaWiki Action API photo lookup (client-side, CORS-enabled via origin=*) ─
+   Uses prop=pageimages with piprop=original|thumbnail — reliably returns
+   the article's lead image for any city, neighbourhood, or hotel name.     ─ */
+async function wikiPhoto(query: string): Promise<string | null> {
+  try {
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 6000);
+    const params = new URLSearchParams({
+      action: 'query',
+      titles: query,
+      prop: 'pageimages',
+      piprop: 'original|thumbnail',
+      pithumbsize: '800',
+      pilimit: '1',
+      redirects: '1',
+      format: 'json',
+      origin: '*',
+    });
+    const r = await fetch(`https://en.wikipedia.org/w/api.php?${params}`, { signal: ctrl.signal });
+    clearTimeout(tid);
+    if (!r.ok) return null;
+    const d = await r.json();
+    const pages = Object.values((d?.query?.pages ?? {})) as any[];
+    if (!pages.length) return null;
+    const page = pages[0];
+    // -1 means missing page
+    if (page.pageid === -1 || 'missing' in page) return null;
+    return page.original?.source ?? page.thumbnail?.source ?? null;
+  } catch { return null; }
+}
+
 /* ─── Main component ─────────────────────────────────────────── */
-export default function StayTab({ prompt, destination, checkIn, checkOut, budget, onAddToItinerary, onHotelsConfirmed }: Props) {
+export default function StayTab({ prompt, destination, checkIn, checkOut, budget, itineraryRef, onAddToItinerary, onRemoveActivitiesMatching, onHotelsConfirmed }: Props) {
   const [segments,        setSegments]        = useState<LocationSegment[]>([]);
   const [seenIds,         setSeenIds]         = useState<Set<string>>(new Set());
   const [confirmed,       setConfirmed]       = useState<Record<string, AcceptedHotel>>({});
@@ -295,36 +322,31 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
   const [toast,           setToast]           = useState<string | null>(null);
   const [photoCache,      setPhotoCache]      = useState<Record<string, string[] | null | '__loading__'>>({});
   const hasFetched = useRef(false);
+  const allSeenNamesRef = useRef<string[]>([]);
 
-  /* ── Fetch hotel photos for a segment's hotels ── */
+  /* ── Fetch hotel photos via Wikipedia REST API ── */
+  const fetchedRef = useRef<Set<string>>(new Set());
+
   const fetchPhotos = useCallback(async (hotels: Hotel[]) => {
-    for (const hotel of hotels) {
-      const key = hotel.id;
-      if (photoCache[key] !== undefined) continue;
+    const unfetched = hotels.filter(h => !fetchedRef.current.has(h.id));
+    if (unfetched.length === 0) return;
+    unfetched.forEach(h => fetchedRef.current.add(h.id));
 
-      setPhotoCache(prev => ({ ...prev, [key]: '__loading__' }));
+    // City photo — always available for any major destination
+    const cityPhoto = await wikiPhoto(destination);
 
-      const urls: string[] = [];
-      try {
-        // 1. Try hotel Wikipedia page
-        const r1 = await fetch(`/api/place-photo?q=${encodeURIComponent(hotel.name)}`);
-        const d1 = await r1.json();
-        if (d1.url) urls.push(d1.url);
-      } catch { /* ignore */ }
-
-      try {
-        // 2. Area/neighbourhood photos for gallery filler
-        const q2 = `${hotel.neighborhood} ${destination}`;
-        const r2 = await fetch(`/api/destination-photos?city=${encodeURIComponent(q2)}`);
-        const d2 = await r2.json();
-        (d2.photos as string[] || []).forEach((u: string) => {
-          if (!urls.includes(u)) urls.push(u);
-        });
-      } catch { /* ignore */ }
-
-      setPhotoCache(prev => ({ ...prev, [key]: urls.length > 0 ? urls.slice(0, 4) : null }));
-    }
-  }, [destination, photoCache]);
+    await Promise.all(unfetched.map(async (hotel) => {
+      // Run hotel name + neighbourhood lookups in parallel
+      const [hotelPhoto, areaPhoto] = await Promise.all([
+        wikiPhoto(hotel.name),
+        wikiPhoto(`${hotel.neighborhood} ${destination}`),
+      ]);
+      const urls = [hotelPhoto, areaPhoto, cityPhoto]
+        .filter((u): u is string => !!u);
+      const unique = [...new Set(urls)].slice(0, 3);
+      setPhotoCache(prev => ({ ...prev, [hotel.id]: unique.length > 0 ? unique : null }));
+    }));
+  }, [destination]);
 
   /* ── Load suggestions ── */
   const loadSuggestions = useCallback(async (opts: { excludeNames?: string[]; isMore?: boolean } = {}) => {
@@ -333,10 +355,24 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
     setError('');
 
     try {
+      // Build a compact day-by-day text from the live itinerary so the AI can
+      // detect location transitions (e.g. "Travel to Santorini" on Day 5).
+      let itineraryText = '';
+      if (itineraryRef?.current) {
+        const snap = itineraryRef.current.getDaysSnapshot();
+        itineraryText = snap.map(d => {
+          const acts = d.activities
+            .filter(a => a.status !== 'declined')
+            .map(a => `  ${a.slot}: ${a.text.replace(/\*\*/g, '')}`)
+            .join('\n');
+          return acts ? `Day ${d.number}: ${d.title}\n${acts}` : `Day ${d.number}: ${d.title}`;
+        }).join('\n');
+      }
+
       const res = await fetch('/api/hotel-suggestions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, destination, checkIn, checkOut, budget, excludeNames, filters: activeFilters }),
+        body: JSON.stringify({ prompt, destination, checkIn, checkOut, budget, excludeNames, filters: activeFilters, itineraryText }),
       });
       if (!res.ok) throw new Error('Failed to load suggestions');
       const data = await res.json();
@@ -349,6 +385,9 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
       newSegs.forEach(s => s.hotels.forEach(h => newSeen.add(h.id)));
       setSeenIds(newSeen);
       setSegments(newSegs);
+
+      const newNames = newSegs.flatMap(s => s.hotels.map(h => h.name));
+      newNames.forEach(n => { if (!allSeenNamesRef.current.includes(n)) allSeenNamesRef.current.push(n); });
 
       // Kick off photo fetching for all hotels
       const allHotels = newSegs.flatMap(s => s.hotels);
@@ -376,13 +415,24 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
 
   /* ── Choose hotel ── */
   const chooseHotel = (hotel: Hotel, segment: LocationSegment) => {
+    // Remove previous hotel's check-in/check-out for this segment before adding the new one
+    const previous = confirmed[segment.location];
+    if (previous) {
+      onRemoveActivitiesMatching(`Check-in: ${previous.hotel.name}`);
+      onRemoveActivitiesMatching(`Check-out: ${previous.hotel.name}`);
+    }
+
     const newConfirmed = { ...confirmed, [segment.location]: { hotel, segment } };
     setConfirmed(newConfirmed);
     onHotelsConfirmed(Object.values(newConfirmed));
 
-    // Add check-in to first day of segment
     const checkInDay = segment.dayRange[0];
-    const checkOutDay = segment.dayRange[1];
+    // If there's a following segment, check-out on the same day as that segment's check-in
+    // to avoid a one-night gap with no accommodation between locations.
+    const segIdx = segments.findIndex(s => s.location === segment.location);
+    const nextSeg = segments[segIdx + 1];
+    const checkOutDay = nextSeg ? nextSeg.dayRange[0] : segment.dayRange[1];
+
     onAddToItinerary(
       `🏨 **Check-in: ${hotel.name}** (${hotel.neighborhood}) — ${hotel.priceRange}`,
       checkInDay,
@@ -397,8 +447,7 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
 
   /* ── Give me more ── */
   const handleMoreOptions = () => {
-    const allCurrentNames = segments.flatMap(s => s.hotels.map(h => h.name));
-    loadSuggestions({ excludeNames: allCurrentNames, isMore: true });
+    loadSuggestions({ excludeNames: allSeenNamesRef.current, isMore: true });
   };
 
   /* ── Toggle filter ── */

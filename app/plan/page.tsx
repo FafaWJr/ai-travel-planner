@@ -1,10 +1,11 @@
 'use client';
-import { useState, useEffect, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import EditableItinerary, { type ItineraryHandle } from '@/components/EditableItinerary';
 import FloatingChat from '@/components/FloatingChat';
 import Toast from '@/components/Toast';
 import StayTab, { type AcceptedHotel } from '@/components/StayTab';
+import BudgetTab from '@/components/BudgetTab';
 
 type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'night';
 const SLOTS_LIST: { key: TimeSlot; label: string; icon: string }[] = [
@@ -335,7 +336,16 @@ function PlanContent() {
   const [showExtraIdeas,  setShowExtraIdeas]  = useState(false);
   const [toast,           setToast]           = useState<string | null>(null);
   const [acceptedHotels,  setAcceptedHotels]  = useState<AcceptedHotel[]>([]);
+  const [seenIdeaNames,   setSeenIdeaNames]   = useState<string[]>([]);
+  const [itineraryVersion, setItineraryVersion] = useState(0);
   const itineraryRef = useRef<ItineraryHandle>(null);
+
+  const liveActivitiesText = React.useMemo(() => {
+    const days = itineraryRef.current?.getDaysSnapshot() ?? [];
+    return days
+      .flatMap(d => d.activities.filter(a => a.status !== 'declined').map(a => `Day ${d.number}: ${a.text.replace(/\*\*/g, '')}`))
+      .join('\n');
+  }, [itineraryVersion]); // eslint-disable-line
 
   // Place photo popup
   const [popup, setPopup] = useState<{ name:string; x:number; y:number } | null>(null);
@@ -386,16 +396,22 @@ function PlanContent() {
   };
 
   const fetchExtraIdeas = async () => {
-    if (extraIdeas || extraIdeasLoading) return;
+    if (extraIdeasLoading) return;
     setExtraIdeasLoading(true);
     try {
+      const days = itineraryRef.current?.getDaysSnapshot() ?? [];
+      const existingActivities = days.flatMap(d =>
+        d.activities.map(a => a.text.replace(/\*\*/g, '').replace(/^\s*[-*]\s*/, '').trim())
+      );
       const res = await fetch('/api/extra-ideas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ prompt, existingActivities, seenIdeas: seenIdeaNames }),
       });
       if (!res.ok) throw new Error('Failed');
       const data = await res.json();
+      const newIdeas = parseIdeas(data.ideas || '');
+      setSeenIdeaNames(prev => [...new Set([...prev, ...newIdeas.map(i => i.name.toLowerCase())])]);
       setExtraIdeas(data.ideas || '');
     } catch {
       setExtraIdeas('Sorry, could not load extra ideas. Please try again.');
@@ -406,7 +422,7 @@ function PlanContent() {
 
   const handleExtraIdeas = () => {
     setShowExtraIdeas(v => !v);
-    if (!extraIdeas && !extraIdeasLoading) fetchExtraIdeas();
+    fetchExtraIdeas();
   };
 
   const sectionContent = plan ? extractSection(plan, activeSection) : '';
@@ -524,6 +540,7 @@ function PlanContent() {
                   tripPrompt={prompt}
                   photos={photos}
                   acceptedHotels={acceptedHotels}
+                  onActivityStatusChange={() => setItineraryVersion(v => v + 1)}
                   onPlaceHover={handlePlaceMouseOver}
                   onPlaceLeave={handlePlaneMouseLeave}
                 />
@@ -542,17 +559,30 @@ function PlanContent() {
                       checkIn={ciMatch?.[1] || ''}
                       checkOut={coMatch?.[1] || ''}
                       budget={stayBudget}
+                      itineraryRef={itineraryRef}
                       onAddToItinerary={(text, dayNum, slot) => {
                         setActiveSection('itinerary');
                         itineraryRef.current?.addActivity(text, dayNum, slot, true);
                         setToast(text.replace(/\*\*/g, '').slice(0, 60));
+                      }}
+                      onRemoveActivitiesMatching={(pattern) => {
+                        itineraryRef.current?.removeActivitiesMatching(pattern);
                       }}
                       onHotelsConfirmed={setAcceptedHotels}
                     />
                   </div>
                 );
               })()}
-              {activeSection !== 'itinerary' && activeSection !== 'accommodation' && (
+              {/* BudgetTab — always mounted to preserve state */}
+              <div style={{ display: activeSection === 'budget' ? 'block' : 'none' }}>
+                <BudgetTab
+                  itineraryRef={itineraryRef}
+                  acceptedHotels={acceptedHotels}
+                  prompt={prompt}
+                  version={itineraryVersion}
+                />
+              </div>
+              {activeSection !== 'itinerary' && activeSection !== 'accommodation' && activeSection !== 'budget' && (
                 <div style={{ background:'#fff', borderRadius:16, padding:'32px 36px', boxShadow:'0 2px 20px rgba(0,68,123,0.07)', border:'1px solid rgba(0,68,123,0.08)' }}>
                   <div
                     onMouseOver={handlePlaceMouseOver}
@@ -583,6 +613,7 @@ function PlanContent() {
               </div>
 
               {/* ── Extra Ideas ── */}
+              {activeSection === 'itinerary' && (
               <div style={{ marginTop:20 }}>
                 <button
                   onClick={handleExtraIdeas}
@@ -638,6 +669,7 @@ function PlanContent() {
                   </div>
                 )}
               </div>
+              )}
 
               {/* ── Affiliate booking links ── */}
               {(() => {
@@ -706,6 +738,7 @@ function PlanContent() {
                 ).join('\n')
               : undefined
             }
+            currentActivities={liveActivitiesText}
             onAddToItinerary={(text, dayNum, slot) => {
               setActiveSection('itinerary');
               itineraryRef.current?.addActivity(text, dayNum, slot, true);

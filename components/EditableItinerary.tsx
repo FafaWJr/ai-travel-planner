@@ -26,10 +26,10 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 
 /* ─── Types ──────────────────────────────────────────────────── */
-type Status   = 'pending' | 'accepted' | 'declined';
-type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'night';
+export type Status   = 'pending' | 'accepted' | 'declined';
+export type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'night';
 
-interface Activity {
+export interface Activity {
   id: string;
   text: string;
   status: Status;
@@ -42,7 +42,7 @@ interface Suggestion {
   description: string;
   timing: string;
 }
-interface Day {
+export interface Day {
   number: number;
   title: string;
   activities: Activity[];
@@ -178,17 +178,21 @@ interface Props {
   tripPrompt: string;
   photos: string[];
   acceptedHotels?: AcceptedHotel[];
+  onActivityStatusChange?: () => void;
   onPlaceHover: (e: React.MouseEvent) => void;
   onPlaceLeave: () => void;
 }
 
 export interface ItineraryHandle {
   addActivity: (text: string, dayNum: number, slot: TimeSlot, manuallyAdded?: boolean) => void;
+  removeActivitiesMatching: (pattern: string) => void;
   getDays: () => { number: number; title: string }[];
+  getDaysSnapshot: () => Day[];
 }
 
 const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableItinerary({
   itineraryMd, destination, tripPrompt, photos, acceptedHotels = [],
+  onActivityStatusChange,
   onPlaceHover, onPlaceLeave,
 }, ref) {
   const [days, setDays] = useState<Day[]>(() => parseItinerary(itineraryMd));
@@ -233,8 +237,18 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
         return { ...d, activities: [...d.activities, newActivity], open: true };
       }));
     },
+    removeActivitiesMatching(pattern: string) {
+      const lower = pattern.toLowerCase();
+      setDays(prev => prev.map(d => ({
+        ...d,
+        activities: d.activities.filter(a => !a.text.toLowerCase().includes(lower)),
+      })));
+    },
     getDays() {
       return days.map(d => ({ number: d.number, title: d.title }));
+    },
+    getDaysSnapshot() {
+      return days;
     },
   }));
 
@@ -321,7 +335,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
   };
 
   /* ── Mutations ── */
-  const setActivityStatus = (dayNum: number, actId: string, status: Status) =>
+  const setActivityStatus = (dayNum: number, actId: string, status: Status) => {
     setDays(prev => prev.map(d =>
       d.number !== dayNum ? d : {
         ...d,
@@ -330,6 +344,8 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
         ),
       }
     ));
+    onActivityStatusChange?.();
+  };
 
   const toggleDay = (num: number) =>
     setDays(prev => prev.map(d => d.number === num ? { ...d, open: !d.open } : d));
