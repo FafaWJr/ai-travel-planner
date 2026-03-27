@@ -559,6 +559,7 @@ function PlanContent() {
                       checkIn={ciMatch?.[1] || ''}
                       checkOut={coMatch?.[1] || ''}
                       budget={stayBudget}
+                      itineraryRef={itineraryRef}
                       onAddToItinerary={(text, dayNum, slot) => {
                         setActiveSection('itinerary');
                         itineraryRef.current?.addActivity(text, dayNum, slot, true);

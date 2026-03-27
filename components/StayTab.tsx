@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
+import type { ItineraryHandle } from '@/components/EditableItinerary';
 
 type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'night';
 
@@ -35,6 +36,7 @@ interface Props {
   checkIn: string;
   checkOut: string;
   budget: string;
+  itineraryRef?: React.RefObject<ItineraryHandle | null>;
   onAddToItinerary: (text: string, dayNum: number, slot: TimeSlot) => void;
   onRemoveActivitiesMatching: (pattern: string) => void;
   onHotelsConfirmed: (hotels: AcceptedHotel[]) => void;
@@ -276,27 +278,39 @@ function ConfirmedSummary({ hotel, segment }: AcceptedHotel) {
   );
 }
 
-/* ─── Wikipedia REST API photo lookup (client-side, CORS-enabled) ─
-   summary/${title} returns the main article image for any place name.
-   Works for cities, neighbourhoods, and named hotel properties.        ─ */
+/* ─── MediaWiki Action API photo lookup (client-side, CORS-enabled via origin=*) ─
+   Uses prop=pageimages with piprop=original|thumbnail — reliably returns
+   the article's lead image for any city, neighbourhood, or hotel name.     ─ */
 async function wikiPhoto(query: string): Promise<string | null> {
   try {
     const ctrl = new AbortController();
-    setTimeout(() => ctrl.abort(), 5000);
-    const r = await fetch(
-      `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`,
-      { signal: ctrl.signal },
-    );
+    const tid = setTimeout(() => ctrl.abort(), 6000);
+    const params = new URLSearchParams({
+      action: 'query',
+      titles: query,
+      prop: 'pageimages',
+      piprop: 'original|thumbnail',
+      pithumbsize: '800',
+      pilimit: '1',
+      redirects: '1',
+      format: 'json',
+      origin: '*',
+    });
+    const r = await fetch(`https://en.wikipedia.org/w/api.php?${params}`, { signal: ctrl.signal });
+    clearTimeout(tid);
     if (!r.ok) return null;
     const d = await r.json();
-    // Skip disambiguation pages and not-found errors
-    if ((d.type ?? '').includes('disambiguation') || (d.type ?? '').includes('not_found')) return null;
-    return d.originalimage?.source ?? d.thumbnail?.source ?? null;
+    const pages = Object.values((d?.query?.pages ?? {})) as any[];
+    if (!pages.length) return null;
+    const page = pages[0];
+    // -1 means missing page
+    if (page.pageid === -1 || 'missing' in page) return null;
+    return page.original?.source ?? page.thumbnail?.source ?? null;
   } catch { return null; }
 }
 
 /* ─── Main component ─────────────────────────────────────────── */
-export default function StayTab({ prompt, destination, checkIn, checkOut, budget, onAddToItinerary, onRemoveActivitiesMatching, onHotelsConfirmed }: Props) {
+export default function StayTab({ prompt, destination, checkIn, checkOut, budget, itineraryRef, onAddToItinerary, onRemoveActivitiesMatching, onHotelsConfirmed }: Props) {
   const [segments,        setSegments]        = useState<LocationSegment[]>([]);
   const [seenIds,         setSeenIds]         = useState<Set<string>>(new Set());
   const [confirmed,       setConfirmed]       = useState<Record<string, AcceptedHotel>>({});
@@ -341,10 +355,24 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
     setError('');
 
     try {
+      // Build a compact day-by-day text from the live itinerary so the AI can
+      // detect location transitions (e.g. "Travel to Santorini" on Day 5).
+      let itineraryText = '';
+      if (itineraryRef?.current) {
+        const snap = itineraryRef.current.getDaysSnapshot();
+        itineraryText = snap.map(d => {
+          const acts = d.activities
+            .filter(a => a.status !== 'declined')
+            .map(a => `  ${a.slot}: ${a.text.replace(/\*\*/g, '')}`)
+            .join('\n');
+          return acts ? `Day ${d.number}: ${d.title}\n${acts}` : `Day ${d.number}: ${d.title}`;
+        }).join('\n');
+      }
+
       const res = await fetch('/api/hotel-suggestions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, destination, checkIn, checkOut, budget, excludeNames, filters: activeFilters }),
+        body: JSON.stringify({ prompt, destination, checkIn, checkOut, budget, excludeNames, filters: activeFilters, itineraryText }),
       });
       if (!res.ok) throw new Error('Failed to load suggestions');
       const data = await res.json();
