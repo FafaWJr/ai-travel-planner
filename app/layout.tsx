@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
+import Footer from '@/components/Footer';
+import FooterWrapper from '@/components/FooterWrapper';
 
 export const metadata: Metadata = {
   title: 'AI Travel Planner — Plan Your Perfect Trip',
@@ -25,6 +27,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <AuthProvider>
           {children}
+          <FooterWrapper>
+            <Footer />
+          </FooterWrapper>
         </AuthProvider>
       </body>
     </html>
