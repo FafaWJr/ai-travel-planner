@@ -48,7 +48,7 @@ export default function Footer() {
           <div>
             <p className="footer-heading">Legal</p>
             <nav style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <Link href="/privacy" className="footer-link">Privacy Policy</Link>
+              <Link href="/privacy-policy" className="footer-link">Privacy Policy</Link>
               <Link href="/terms"   className="footer-link">Terms of Service</Link>
             </nav>
           </div>
