@@ -1,7 +1,9 @@
 import { NextRequest } from 'next/server';
 import { streamCompletion } from '@/lib/ai-stream';
 
-export const maxDuration = 30;
+export const maxDuration = 60;
+
+// ─── SSE collector ────────────────────────────────────────────────────────────
 
 async function collectText(stream: ReadableStream<Uint8Array>): Promise<string> {
   const reader = stream.getReader();
@@ -27,6 +29,131 @@ async function collectText(stream: ReadableStream<Uint8Array>): Promise<string> 
   return result;
 }
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Estimate the number of days in the trip from itinerary text. */
+function countDays(itineraryText: string): number {
+  const nums = (itineraryText.match(/\bday\s*\d+/gi) ?? [])
+    .map(m => parseInt(m.replace(/\D/g, ''), 10))
+    .filter(Boolean);
+  return nums.length > 0 ? Math.max(...nums) : 1;
+}
+
+interface Segment {
+  location: string;
+  label: string;
+  checkIn: string;
+  checkOut: string;
+  dayRange: [number, number];
+}
+
+interface Hotel {
+  id: string;
+  name: string;
+  stars: number;
+  description: string;
+  priceRange: string;
+  neighborhood: string;
+  amenities: string[];
+  googleMapsQuery: string;
+}
+
+// ─── Phase 1: detect overnight location segments ──────────────────────────────
+// Small, fast call — outputs only segment metadata (no hotel data).
+// Max output is ~600 tokens even for a 30-city trip.
+
+async function detectSegments(
+  itineraryText: string,
+  checkIn: string,
+  checkOut: string,
+): Promise<Segment[]> {
+  const stream = await streamCompletion(
+    [
+      {
+        role: 'system',
+        content: 'You are a travel itinerary parser. Output ONLY valid JSON. No markdown.',
+      },
+      {
+        role: 'user',
+        content:
+          `Identify every distinct overnight location in this itinerary.\n` +
+          `Trip dates: ${checkIn || 'unknown'} → ${checkOut || 'unknown'}\n\n` +
+          `${itineraryText}\n\n` +
+          `Return ONLY this JSON (no extra text):\n` +
+          `{"segments":[{"location":"city name","label":"City — Days X–Y","checkIn":"YYYY-MM-DD","checkOut":"YYYY-MM-DD","dayRange":[1,3]}]}`,
+      },
+    ],
+    800, // segment metadata is tiny — 800 tokens is more than enough
+  );
+
+  const raw = await collectText(stream);
+  const match = raw.match(/\{[\s\S]*\}/);
+  if (!match) return [];
+
+  try {
+    const parsed = JSON.parse(match[0]);
+    return Array.isArray(parsed.segments) ? parsed.segments : [];
+  } catch {
+    return [];
+  }
+}
+
+// ─── Phase 2: generate 3 hotels for a single segment ─────────────────────────
+// Each call is small and bounded: 1 city, 3 hotels ≈ 600–1000 tokens output.
+// Running N of these in parallel is faster and more reliable than one big call.
+
+async function hotelsForSegment(
+  segment: Segment,
+  tripPrompt: string,
+  budget: string,
+  excludeNames: string[],
+  filters: string[],
+): Promise<Segment & { hotels: Hotel[] }> {
+  const excludeNote = excludeNames.length
+    ? `\nDo NOT suggest any of these (already shown): ${excludeNames.join(', ')}.`
+    : '';
+  const filtersNote = filters.length
+    ? `\nRequired filters: ${filters.join(', ')}.`
+    : '';
+
+  const prompt =
+    `Trip context: ${tripPrompt}\n` +
+    `Location: ${segment.location} (${segment.label})\n` +
+    `Dates: ${segment.checkIn || 'unknown'} → ${segment.checkOut || 'unknown'}\n` +
+    `Budget level: ${budget}${filtersNote}${excludeNote}\n\n` +
+    `Suggest exactly 3 real, well-known hotels located in ${segment.location}.\n` +
+    `Return ONLY valid JSON (no markdown, no extra text):\n` +
+    `{"hotels":[{"id":"unique-slug","name":"Full Hotel Name","stars":4,` +
+    `"description":"2 sentences: why this hotel fits THIS traveller","priceRange":"~$150/night",` +
+    `"neighborhood":"area name","amenities":["Pool","Free WiFi"],"googleMapsQuery":"Hotel Name City Country"}]}`;
+
+  try {
+    const stream = await streamCompletion(
+      [
+        {
+          role: 'system',
+          content: 'You are a luxury travel concierge AI. Respond ONLY with valid JSON. No markdown code fences.',
+        },
+        { role: 'user', content: prompt },
+      ],
+      1200, // 3 hotels × ~400 tokens — never truncated
+    );
+
+    const raw = await collectText(stream);
+    const match = raw.match(/\{[\s\S]*\}/);
+    if (!match) return { ...segment, hotels: [] };
+
+    const parsed = JSON.parse(match[0]);
+    const hotels = Array.isArray(parsed.hotels) ? parsed.hotels : [];
+    return { ...segment, hotels };
+  } catch {
+    // Return the segment with empty hotels rather than killing the whole request
+    return { ...segment, hotels: [] };
+  }
+}
+
+// ─── Route handler ────────────────────────────────────────────────────────────
+
 export async function POST(request: NextRequest) {
   try {
     const {
@@ -40,76 +167,37 @@ export async function POST(request: NextRequest) {
       itineraryText = '',
     } = await request.json();
 
-    const filtersNote = filters.length ? `\nActive filters: ${filters.join(', ')}.` : '';
-    const excludeNote = excludeNames.length
-      ? `\nDo NOT suggest any of these hotels (already shown): ${excludeNames.join(', ')}.`
-      : '';
+    // Phase 1: identify all overnight location segments from the itinerary.
+    // This is a lightweight call — its output is just metadata, not hotel data.
+    const days = countDays(itineraryText);
+    const rawSegments = itineraryText
+      ? await detectSegments(itineraryText, checkIn, checkOut)
+      : [];
 
-    const itinerarySection = itineraryText
-      ? `\n\nFull day-by-day itinerary (use this to detect EVERY location change):\n${itineraryText}`
-      : '';
+    // If segment detection finds nothing, fall back to a single-destination segment.
+    const segments: Segment[] = rawSegments.length > 0
+      ? rawSegments
+      : [{ location: destination, label: destination, checkIn, checkOut, dayRange: [1, days] }];
 
-    const userPrompt = `Trip: ${prompt}
-Destination: ${destination}
-Overall check-in: ${checkIn || 'see itinerary'}
-Overall check-out: ${checkOut || 'see itinerary'}
-Budget level: ${budget}${filtersNote}${excludeNote}${itinerarySection}
+    // Phase 2: generate 3 hotels per segment, all in parallel.
+    // Each call is bounded to ~1200 tokens regardless of trip length,
+    // so this scales to 30-day, multi-city trips without hitting token limits.
+    const segmentsWithHotels = await Promise.all(
+      segments.map(seg =>
+        hotelsForSegment(seg, prompt, budget, excludeNames, filters)
+      ),
+    );
 
-TASK: Identify ALL distinct overnight locations in the itinerary and create one hotel segment per location.
-
-Segment detection rules:
-1. Read every day title and activity. Clues like "Travel to X", "Arrive in X", "Ferry to X", "Fly to X" or simply day titles mentioning a new place signal a location transition.
-2. Each segment starts on the day the traveller ARRIVES at that location and ends the day before they move to the next location (or the last day of the trip).
-3. dayRange[0] = arrival day number, dayRange[1] = last full day at that location.
-4. checkIn / checkOut dates: derive from the trip's start date (${checkIn}) and the day numbers. If dates are unknown, use empty strings.
-5. For single-destination trips with no transitions → exactly one segment.
-
-Return ONLY a valid JSON object (no markdown, no explanation):
-
-{
-  "segments": [
-    {
-      "location": "city or island name",
-      "label": "e.g. Mykonos — Days 1–4",
-      "checkIn": "YYYY-MM-DD or empty string",
-      "checkOut": "YYYY-MM-DD or empty string",
-      "dayRange": [1, 4],
-      "hotels": [
-        {
-          "id": "unique-kebab-slug",
-          "name": "Full Hotel Name",
-          "stars": 4,
-          "description": "2 sentences: why this hotel fits THIS specific traveller — mention proximity to planned activities or the local area, budget match, traveller type",
-          "priceRange": "approx per night in local currency",
-          "neighborhood": "neighbourhood or beach/area name",
-          "amenities": ["Pool", "Free Breakfast"],
-          "googleMapsQuery": "Hotel Name City Country"
-        }
-      ]
+    // Validate that at least one segment has hotels before returning
+    const hasAny = segmentsWithHotels.some(s => s.hotels.length > 0);
+    if (!hasAny) {
+      throw new Error('No hotel suggestions could be generated. Please try again.');
     }
-  ]
-}
 
-Additional rules:
-- Exactly 3 hotels per segment, each a real well-known property at that specific location (not the overall destination).
-- Stars: integer 1–5 matching budget level (budget→2-3★, comfortable→3-4★, premium/luxury→4-5★).
-- Amenities: pick 3–5 from: Pool, Free Breakfast, Spa, Gym, Beach Access, Pet Friendly, Rooftop Bar, Airport Shuttle, Restaurant, Bar, Kid Friendly, Sea View, City View, Free WiFi.
-- Hotel must be in the correct specific location (e.g. a Santorini hotel must be in Santorini, not Mykonos).
-- Description must feel personal to this exact trip and location.`;
-
-    const stream = await streamCompletion([
-      { role: 'system', content: 'You are a luxury travel concierge AI. Respond ONLY with valid JSON. No markdown code fences, no extra text.' },
-      { role: 'user', content: userPrompt },
-    ], 4000);
-
-    const raw = await collectText(stream);
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('No JSON returned');
-    const data = JSON.parse(jsonMatch[0]);
-
-    return Response.json(data);
-  } catch (err: any) {
-    console.error('hotel-suggestions error:', err);
-    return Response.json({ error: err.message || 'Failed' }, { status: 500 });
+    return Response.json({ segments: segmentsWithHotels });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Could not generate hotel suggestions. Please try again.';
+    console.error('hotel-suggestions error:', message);
+    return Response.json({ error: message }, { status: 500 });
   }
 }

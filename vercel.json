@@ -1,0 +1,10 @@
+{
+  "functions": {
+    "app/api/generate/route.ts": { "maxDuration": 60 },
+    "app/api/chat/route.ts": { "maxDuration": 60 },
+    "app/api/hotel-suggestions/route.ts": { "maxDuration": 60 },
+    "app/api/budget-estimate/route.ts": { "maxDuration": 60 },
+    "app/api/extra-ideas/route.ts": { "maxDuration": 60 },
+    "app/api/day-suggestions/route.ts": { "maxDuration": 60 }
+  }
+}
