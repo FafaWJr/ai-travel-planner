@@ -1311,7 +1311,7 @@ function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; 
             </div>
             <div style={{ display:'flex',justifyContent:'space-between',paddingTop:4 }}>
               <button onClick={()=>setStep(1)} style={navBtn(false)}>← Back</button>
-              <button onClick={submit} style={{ ...navBtn(),background:'var(--orange)',boxShadow:'0 6px 20px rgba(255,130,16,0.30)',letterSpacing:0.3 }}>✈ Generate My Travel Plan</button>
+              <button onClick={submit} style={{ ...navBtn(),background:'var(--orange)',boxShadow:'0 6px 20px rgba(255,130,16,0.30)',letterSpacing:0.3 }}>✈ Let's Go!</button>
             </div>
           </div>
         )}
@@ -1597,7 +1597,7 @@ function PlanForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; preF
           boxShadow: dest ? '0 8px 28px rgba(255,130,16,0.30)' : 'none',
           transition:'all 0.2s', letterSpacing:0.3,
         }}>
-          ✈ Generate My Travel Plan
+          ✈ Let's Go!
         </button>
         {!dest && <p style={{ fontFamily:'var(--font-body)', fontSize:12, color:'var(--gray-dark)', textAlign:'center', marginTop:10 }}>Enter a destination to get started</p>}
       </div>
