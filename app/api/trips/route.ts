@@ -2,8 +2,8 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
-function makeSupabase() {
-  const cookieStore = cookies()
+async function makeSupabase() {
+  const cookieStore = await cookies()
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -24,7 +24,7 @@ function makeSupabase() {
 
 /* ── GET /api/trips  — list all trips for the authenticated user ── */
 export async function GET() {
-  const supabase = makeSupabase()
+  const supabase = await makeSupabase()
 
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) {
@@ -47,7 +47,7 @@ export async function GET() {
 
 /* ── POST /api/trips  — create a new saved trip ── */
 export async function POST(request: NextRequest) {
-  const supabase = makeSupabase()
+  const supabase = await makeSupabase()
 
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) {
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
 
 /* ── PATCH /api/trips  — update an existing saved trip ── */
 export async function PATCH(request: NextRequest) {
-  const supabase = makeSupabase()
+  const supabase = await makeSupabase()
 
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) {
@@ -126,7 +126,7 @@ export async function PATCH(request: NextRequest) {
 
 /* ── DELETE /api/trips?id=  — remove a saved trip ── */
 export async function DELETE(request: NextRequest) {
-  const supabase = makeSupabase()
+  const supabase = await makeSupabase()
 
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) {
