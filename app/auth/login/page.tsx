@@ -1,223 +1,308 @@
-'use client';
-export const dynamic = 'force-dynamic';
-import { Suspense, useState } from 'react';
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
+'use client'
 
-/* ── Google "G" SVG logo ──────────────────────────────────── */
-function GoogleIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 48 48" fill="none">
-      <path d="M47.5 24.5c0-1.63-.15-3.2-.42-4.71H24.5v8.92h12.92c-.56 2.96-2.24 5.47-4.77 7.15v5.93h7.73C44.5 37.58 47.5 31.52 47.5 24.5z" fill="#4285F4"/>
-      <path d="M24.5 48c6.48 0 11.92-2.15 15.88-5.81l-7.73-5.93c-2.15 1.44-4.9 2.29-8.15 2.29-6.27 0-11.58-4.24-13.48-9.93H3.05v6.12C6.99 42.69 15.12 48 24.5 48z" fill="#34A853"/>
-      <path d="M11.02 28.62A14.44 14.44 0 0 1 10.5 24c0-1.6.27-3.15.52-4.62V13.26H3.05A23.97 23.97 0 0 0 .5 24c0 3.87.93 7.53 2.55 10.74l8.47-6.12z" fill="#FBBC05"/>
-      <path d="M24.5 9.55c3.54 0 6.71 1.22 9.21 3.6l6.9-6.9C36.4 2.39 30.97 0 24.5 0 15.12 0 6.99 5.31 3.05 13.26l8.47 6.12C13.42 13.78 18.73 9.55 24.5 9.55z" fill="#EA4335"/>
-    </svg>
-  );
-}
+import { useState, Suspense } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
 
 function LoginForm() {
-  const searchParams = useSearchParams();
-  const next        = searchParams.get('next') || '/';
-  const supabase    = createClient();
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const supabase = createClient()
 
-  const [email, setEmail]       = useState('');
-  const [password, setPassword] = useState('');
-  const [showPw, setShowPw]     = useState(false);
-  const [error, setError]       = useState('');
-  const [loading, setLoading]   = useState(false);
+  // ?next= contains the URL to return to after login (e.g. /plan?prompt=...)
+  const next = searchParams.get('next') || '/'
 
-  /* ── Google OAuth ── */
-  const handleGoogle = async () => {
-    setError('');
-    const { error } = await supabase.auth.signInWithOAuth({
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (signInError) {
+      setError(signInError.message)
+      setLoading(false)
+      return
+    }
+
+    if (!data.session) {
+      setError('Login failed — please check your email and password.')
+      setLoading(false)
+      return
+    }
+
+    // Hard navigate so AuthProvider remounts and picks up the new session.
+    // This also correctly returns the user to their plan page with all state
+    // (the plan page restores from localStorage on mount).
+    window.location.href = next
+  }
+
+  const handleGoogleLogin = async () => {
+    setLoading(true)
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
-    });
-    if (error) setError(error.message);
-  };
-
-  /* ── Email / password ── */
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
-    if (error) { setError(error.message); return; }
-    if (!data.session) { setError('Login failed — please try again.'); return; }
-    // Hard navigation so the page fully reloads and AuthContext reads the
-    // fresh session from cookies (soft router.push keeps the old React tree
-    // alive and the auth state doesn't propagate across client instances).
-    window.location.href = next;
-  };
+      options: {
+        // Pass ?next= through the OAuth flow so the callback route can redirect correctly
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+      },
+    })
+    if (oauthError) {
+      setError(oauthError.message)
+      setLoading(false)
+    }
+  }
 
   return (
     <div style={{
-      minHeight: '100vh', display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center',
-      background: 'var(--bg-section)', padding: '24px 16px',
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: '#F4F7FB',
+      fontFamily: 'var(--font-body)',
+      padding: '24px',
     }}>
-      {/* Logo */}
-      <Link href="/" style={{ marginBottom: 32, display: 'block' }}>
-        <img src="/luna_letsgo_bigger_3.PNG" alt="Luna Let's Go" style={{ height: 64, width: 'auto' }} />
-      </Link>
-
-      {/* Card */}
       <div style={{
-        width: '100%', maxWidth: 420,
-        background: '#fff', borderRadius: 'var(--r-lg)',
-        border: '1.5px solid var(--border)',
-        boxShadow: 'var(--shadow-card)',
-        padding: 'clamp(28px, 5vw, 40px)',
+        background: '#fff',
+        borderRadius: 20,
+        boxShadow: '0 8px 48px rgba(0,68,123,0.10)',
+        padding: '48px 40px',
+        width: '100%',
+        maxWidth: 420,
       }}>
+        {/* Logo */}
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <Link href="/">
+            <img
+              src="/luna_letsgo_bigger_3.PNG"
+              alt="Luna Let's Go"
+              style={{ height: 56, width: 'auto' }}
+            />
+          </Link>
+        </div>
+
         <h1 style={{
-          fontFamily: 'var(--font-head)', fontWeight: 700, fontSize: 26,
-          color: 'var(--navy)', marginBottom: 6,
+          fontFamily: 'var(--font-head)',
+          fontWeight: 700,
+          fontSize: 24,
+          color: '#00447B',
+          marginBottom: 8,
+          textAlign: 'center',
         }}>
           Welcome back
         </h1>
-        <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--gray-dark)', marginBottom: 28 }}>
-          Sign in to your Luna Let's Go account
+        <p style={{
+          fontFamily: 'var(--font-body)',
+          fontSize: 15,
+          color: '#6C6D6F',
+          textAlign: 'center',
+          marginBottom: 32,
+        }}>
+          Sign in to save and continue your trips
         </p>
 
-        {/* Google button */}
+        {/* Google OAuth */}
         <button
-          onClick={handleGoogle}
+          onClick={handleGoogleLogin}
+          disabled={loading}
           style={{
-            width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-            padding: '11px 16px', borderRadius: 'var(--r-md)',
-            border: '1.5px solid var(--navy)', background: '#fff',
-            fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 14, color: 'var(--navy)',
-            cursor: 'pointer', transition: 'background 0.15s',
+            width: '100%',
+            padding: '12px 20px',
+            border: '1.5px solid rgba(0,68,123,0.18)',
+            borderRadius: 12,
+            background: '#fff',
+            cursor: loading ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 12,
+            fontFamily: 'var(--font-head)',
+            fontWeight: 600,
+            fontSize: 14,
+            color: '#333',
+            marginBottom: 20,
+            transition: 'background 0.15s',
           }}
-          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,68,123,0.04)')}
-          onMouseLeave={e => (e.currentTarget.style.background = '#fff')}
+          onMouseEnter={e => { if (!loading) (e.currentTarget as HTMLButtonElement).style.background = '#F4F7FB' }}
+          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = '#fff' }}
         >
-          <GoogleIcon />
+          <svg width="18" height="18" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
           Continue with Google
         </button>
 
         {/* Divider */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0' }}>
-          <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-          <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--gray-dark)' }}>or</span>
-          <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+          <div style={{ flex: 1, height: 1, background: 'rgba(0,68,123,0.10)' }} />
+          <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: '#C0C0C0' }}>or</span>
+          <div style={{ flex: 1, height: 1, background: 'rgba(0,68,123,0.10)' }} />
         </div>
 
-        {/* Email / password form */}
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 13, color: 'var(--navy)' }}>
+        {/* Email/Password form */}
+        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div>
+            <label style={{
+              fontFamily: 'var(--font-head)',
+              fontWeight: 600,
+              fontSize: 11,
+              color: '#00447B',
+              display: 'block',
+              marginBottom: 6,
+              textTransform: 'uppercase',
+              letterSpacing: 0.8,
+            }}>
               Email
             </label>
             <input
-              type="email" required autoComplete="email"
-              value={email} onChange={e => setEmail(e.target.value)}
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
               placeholder="you@example.com"
               style={{
-                padding: '11px 14px', borderRadius: 'var(--r-md)',
-                border: '1.5px solid var(--border)',
-                fontFamily: 'var(--font-body)', fontSize: 14, color: '#000',
-                outline: 'none', background: '#fff', transition: 'border-color 0.15s',
+                width: '100%',
+                boxSizing: 'border-box',
+                padding: '12px 16px',
+                border: '1.5px solid rgba(0,68,123,0.15)',
+                borderRadius: 10,
+                fontFamily: 'var(--font-body)',
+                fontSize: 15,
+                color: '#000',
+                outline: 'none',
+                transition: 'border-color 0.18s',
               }}
-              onFocus={e => (e.target.style.borderColor = 'var(--navy)')}
-              onBlur={e => (e.target.style.borderColor = 'var(--border)')}
+              onFocus={e => e.target.style.borderColor = '#00447B'}
+              onBlur={e => e.target.style.borderColor = 'rgba(0,68,123,0.15)'}
             />
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 13, color: 'var(--navy)' }}>
-              Password
-            </label>
-            <div style={{ position: 'relative' }}>
-              <input
-                type={showPw ? 'text' : 'password'} required autoComplete="current-password"
-                value={password} onChange={e => setPassword(e.target.value)}
-                placeholder="••••••••"
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+              <label style={{
+                fontFamily: 'var(--font-head)',
+                fontWeight: 600,
+                fontSize: 11,
+                color: '#00447B',
+                textTransform: 'uppercase',
+                letterSpacing: 0.8,
+              }}>
+                Password
+              </label>
+              <Link
+                href="/auth/forgot-password"
                 style={{
-                  width: '100%', padding: '11px 42px 11px 14px', borderRadius: 'var(--r-md)',
-                  border: '1.5px solid var(--border)',
-                  fontFamily: 'var(--font-body)', fontSize: 14, color: '#000',
-                  outline: 'none', background: '#fff', transition: 'border-color 0.15s',
-                  boxSizing: 'border-box',
-                }}
-                onFocus={e => (e.target.style.borderColor = 'var(--navy)')}
-                onBlur={e => (e.target.style.borderColor = 'var(--border)')}
-              />
-              <button
-                type="button" onClick={() => setShowPw(v => !v)}
-                style={{
-                  position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
-                  background: 'none', border: 'none', cursor: 'pointer', padding: 4,
-                  color: 'var(--gray-dark)',
+                  fontFamily: 'var(--font-body)',
+                  fontSize: 12,
+                  color: '#FF8210',
+                  textDecoration: 'none',
                 }}
               >
-                {showPw ? (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
-                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
-                    <line x1="1" y1="1" x2="23" y2="23"/>
-                  </svg>
-                ) : (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                    <circle cx="12" cy="12" r="3"/>
-                  </svg>
-                )}
-              </button>
+                Forgot password?
+              </Link>
             </div>
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+              placeholder="••••••••"
+              style={{
+                width: '100%',
+                boxSizing: 'border-box',
+                padding: '12px 16px',
+                border: '1.5px solid rgba(0,68,123,0.15)',
+                borderRadius: 10,
+                fontFamily: 'var(--font-body)',
+                fontSize: 15,
+                color: '#000',
+                outline: 'none',
+                transition: 'border-color 0.18s',
+              }}
+              onFocus={e => e.target.style.borderColor = '#00447B'}
+              onBlur={e => e.target.style.borderColor = 'rgba(0,68,123,0.15)'}
+            />
           </div>
 
-          {/* Error */}
           {error && (
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: '#DC2626', margin: 0 }}>
+            <p style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: 13,
+              color: '#DC2626',
+              background: 'rgba(220,38,38,0.06)',
+              border: '1px solid rgba(220,38,38,0.15)',
+              borderRadius: 8,
+              padding: '10px 14px',
+              margin: 0,
+            }}>
               {error}
             </p>
           )}
 
-          {/* Submit */}
           <button
-            type="submit" disabled={loading}
+            type="submit"
+            disabled={loading}
             style={{
-              marginTop: 4, padding: '12px 0', borderRadius: 'var(--r-md)',
-              background: loading ? 'rgba(255,130,16,0.6)' : 'var(--orange)',
-              color: '#fff', border: 'none',
-              fontFamily: 'var(--font-head)', fontWeight: 700, fontSize: 15,
-              cursor: loading ? 'default' : 'pointer', transition: 'background 0.15s',
+              width: '100%',
+              padding: '14px',
+              background: loading ? '#C0C0C0' : '#00447B',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 12,
+              fontFamily: 'var(--font-head)',
+              fontWeight: 700,
+              fontSize: 15,
+              cursor: loading ? 'not-allowed' : 'pointer',
+              transition: 'background 0.15s',
+              marginTop: 4,
             }}
-            onMouseEnter={e => { if (!loading) e.currentTarget.style.background = '#e8720a'; }}
-            onMouseLeave={e => { if (!loading) e.currentTarget.style.background = 'var(--orange)'; }}
           >
             {loading ? 'Signing in…' : 'Sign in'}
           </button>
-
-          {/* Forgot password */}
-          <Link href="/auth/forgot-password" style={{
-            fontFamily: 'var(--font-body)', fontSize: 13,
-            color: 'var(--navy-mid)', textAlign: 'center', textDecoration: 'underline',
-          }}>
-            Forgot password?
-          </Link>
         </form>
-      </div>
 
-      {/* Footer link */}
-      <p style={{ marginTop: 24, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--gray-dark)' }}>
-        Don't have an account?{' '}
-        <Link href="/auth/signup" style={{ color: 'var(--navy)', fontWeight: 600, textDecoration: 'underline' }}>
-          Sign up
-        </Link>
-      </p>
+        <p style={{
+          fontFamily: 'var(--font-body)',
+          fontSize: 14,
+          color: '#6C6D6F',
+          textAlign: 'center',
+          marginTop: 24,
+          marginBottom: 0,
+        }}>
+          Don&apos;t have an account?{' '}
+          <Link
+            href={`/auth/signup?next=${encodeURIComponent(next)}`}
+            style={{ color: '#FF8210', fontWeight: 600, textDecoration: 'none' }}
+          >
+            Sign up free
+          </Link>
+        </p>
+      </div>
     </div>
-  );
+  )
 }
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F4F7FB' }}>
+        <div style={{ width: 40, height: 40, borderRadius: '50%', border: '3px solid rgba(0,68,123,0.12)', borderTop: '3px solid #FF8210', animation: 'spin 1s linear infinite' }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    }>
       <LoginForm />
     </Suspense>
-  );
+  )
 }
