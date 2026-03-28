@@ -32,11 +32,15 @@ function NavInner() {
   const supabase = createClient()
   const [menuOpen, setMenuOpen] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const menuRef = useRef<HTMLDivElement>(null)
+  const menuDesktopRef = useRef<HTMLDivElement>(null)
+  const menuMobileRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+      const target = e.target as Node
+      const insideDesktop = menuDesktopRef.current?.contains(target)
+      const insideMobile = menuMobileRef.current?.contains(target)
+      if (!insideDesktop && !insideMobile) {
         setMenuOpen(false)
       }
     }
@@ -89,7 +93,7 @@ function NavInner() {
 
           {!loading && (
             user ? (
-              <div ref={menuRef} style={{ position: 'relative', marginLeft: 8 }}>
+              <div ref={menuDesktopRef} style={{ position: 'relative', marginLeft: 8 }}>
                 <button
                   onClick={() => setMenuOpen(v => !v)}
                   aria-label="Account menu"
@@ -142,7 +146,7 @@ function NavInner() {
           )}
           {!loading && (
             user ? (
-              <div ref={menuRef} style={{ position: 'relative' }}>
+              <div ref={menuMobileRef} style={{ position: 'relative' }}>
                 <button
                   onClick={() => setMenuOpen(v => !v)}
                   aria-label="Account menu"
