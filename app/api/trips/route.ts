@@ -1,17 +1,61 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+import { NextRequest, NextResponse } from 'next/server'
+
+function makeSupabase() {
+  const cookieStore = cookies()
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() { return cookieStore.getAll() },
+        setAll(toSet) {
+          try {
+            toSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            )
+          } catch {}
+        },
+      },
+    }
+  )
+}
+
+/* ── GET /api/trips  — list all trips for the authenticated user ── */
+export async function GET() {
+  const supabase = makeSupabase()
+
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const { data, error } = await supabase
+    .from('saved_trips')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('[GET /api/trips] Supabase error:', error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  return NextResponse.json({ trips: data })
+}
 
 /* ── POST /api/trips  — create a new saved trip ── */
 export async function POST(request: NextRequest) {
-  const supabase = await createClient();
+  const supabase = makeSupabase()
 
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const body = await request.json();
-  const { title, destination, start_date, end_date, trip_data } = body;
+  const body = await request.json()
+  const { title, destination, start_date, end_date, trip_data } = body
 
   // Guarantee the profiles row exists — saved_trips.user_id has FK → profiles.id
   await supabase.from('profiles').upsert(
@@ -22,7 +66,7 @@ export async function POST(request: NextRequest) {
       avatar_url: user.user_metadata?.avatar_url ?? null,
     },
     { onConflict: 'id' }
-  );
+  )
 
   const { data, error } = await supabase
     .from('saved_trips')
@@ -36,42 +80,74 @@ export async function POST(request: NextRequest) {
       is_favorite: false,
     })
     .select('id')
-    .single();
+    .single()
 
   if (error) {
-    console.error('[POST /api/trips] Supabase error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('[POST /api/trips] Supabase error:', error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json({ id: (data as { id: string }).id });
+  return NextResponse.json({ id: (data as { id: string }).id }, { status: 201 })
 }
 
 /* ── PATCH /api/trips  — update an existing saved trip ── */
 export async function PATCH(request: NextRequest) {
-  const supabase = await createClient();
+  const supabase = makeSupabase()
 
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const body = await request.json();
-  const { id, title, trip_data } = body;
+  const body = await request.json()
+  const { id, title, trip_data } = body
 
   if (!id) {
-    return NextResponse.json({ error: 'Missing trip id' }, { status: 400 });
+    return NextResponse.json({ error: 'Missing trip id' }, { status: 400 })
+  }
+
+  const updatePayload: Record<string, unknown> = { updated_at: new Date().toISOString() }
+  if (title !== undefined) updatePayload.title = title
+  if (trip_data !== undefined) updatePayload.trip_data = trip_data
+
+  const { error } = await supabase
+    .from('saved_trips')
+    .update(updatePayload)
+    .eq('id', id)
+    .eq('user_id', user.id)
+
+  if (error) {
+    console.error('[PATCH /api/trips] Supabase error:', error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  return NextResponse.json({ ok: true })
+}
+
+/* ── DELETE /api/trips?id=  — remove a saved trip ── */
+export async function DELETE(request: NextRequest) {
+  const supabase = makeSupabase()
+
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const id = request.nextUrl.searchParams.get('id')
+  if (!id) {
+    return NextResponse.json({ error: 'Missing trip id' }, { status: 400 })
   }
 
   const { error } = await supabase
     .from('saved_trips')
-    .update({ title, trip_data, updated_at: new Date().toISOString() })
+    .delete()
     .eq('id', id)
-    .eq('user_id', user.id);
+    .eq('user_id', user.id)
 
   if (error) {
-    console.error('[PATCH /api/trips] Supabase error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('[DELETE /api/trips] Supabase error:', error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ ok: true })
 }
