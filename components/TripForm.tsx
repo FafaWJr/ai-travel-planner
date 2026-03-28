@@ -409,7 +409,7 @@ export function TripForm({ onSubmit, isLoading, defaultDestination }: TripFormPr
         ) : (
           <span className="flex items-center justify-center gap-3">
             <Plane className="w-5 h-5" aria-hidden="true" />
-            Generate My Travel Plan
+            Let's Go!
           </span>
         )}
       </button>
