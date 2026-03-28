@@ -669,26 +669,48 @@ function PlanContent() {
               )}
 
               {/* Destination title + action buttons */}
-              <div style={{ marginBottom:20, display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
-                <div>
-                  <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:24, color:'#00447B', marginBottom:4 }}>
-                    {prompt.replace(/^plan a (trip to |)?/i,'').replace(/\b(from \d{4}-\d{2}-\d{2}.*)/i,'').trim().split(' ').slice(0,5).join(' ')}
-                  </p>
-                  {(() => {
-                    const ciM = prompt.match(/from (\d{4}-\d{2}-\d{2})/);
-                    const coM = prompt.match(/to (\d{4}-\d{2}-\d{2})/);
-                    const sd = ciM?.[1]; const ed = coM?.[1];
-                    const fmt = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).replace(/ /g, ' ');
-                    const numDays = sd && ed ? Math.round((new Date(ed).getTime() - new Date(sd).getTime()) / 86400000) : null;
-                    return (
-                      <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
-                        {numDays !== null && <p style={{ fontFamily:"'Inter',sans-serif", fontSize:13, color:'#6C6D6F', margin:0 }}>{numDays} day{numDays !== 1 ? 's' : ''} trip</p>}
-                        {sd && ed && <p style={{ fontFamily:"'Inter',sans-serif", fontSize:13, color:'#6C6D6F', margin:0 }}>{fmt(sd)} – {fmt(ed)}</p>}
+              {(() => {
+                const ciM = prompt.match(/from (\d{4}-\d{2}-\d{2})/);
+                const coM = prompt.match(/to (\d{4}-\d{2}-\d{2})/);
+                const sd = ciM?.[1]; const ed = coM?.[1];
+                const fmt = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+                const numDays = sd && ed ? Math.round((new Date(ed).getTime() - new Date(sd).getTime()) / 86400000) : null;
+                const destination = prompt.replace(/^plan a (trip to |)?/i,'').replace(/\b(from \d{4}-\d{2}-\d{2}.*)/i,'').trim().split(' ').slice(0,5).join(' ');
+                return (
+                  <div style={{ marginBottom:20, display:'flex', borderRadius:16, border:'1px solid #E5E7EB', background:'#fff', overflow:'hidden' }}>
+                    {/* Orange accent bar */}
+                    <div style={{ width:5, flexShrink:0, background:'#FF8210', borderRadius:'16px 0 0 16px' }} />
+                    {/* Content */}
+                    <div style={{ flex:1, padding:'20px 24px', display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
+                      <div>
+                        {/* Destination + duration badge */}
+                        <div style={{ display:'flex', alignItems:'center', gap:12, flexWrap:'wrap', marginBottom: sd && ed ? 10 : 0 }}>
+                          <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:28, color:'#00447B', margin:0, lineHeight:1.2 }}>
+                            {destination}
+                          </p>
+                          {numDays !== null && (
+                            <span style={{ display:'inline-flex', alignItems:'center', gap:5, background:'#FFF4EA', color:'#CC6200', border:'1px solid #FFD0A0', borderRadius:20, padding:'5px 14px', fontSize:12, fontWeight:600, fontFamily:"'Inter',sans-serif", whiteSpace:'nowrap' }}>
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                              {numDays} {numDays === 1 ? 'day' : 'days'} trip
+                            </span>
+                          )}
+                        </div>
+                        {/* Date pills */}
+                        {sd && ed && (
+                          <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
+                            <span style={{ display:'inline-flex', alignItems:'center', gap:5, background:'#EEF4FB', color:'#00447B', borderRadius:20, padding:'5px 14px', fontSize:13, fontWeight:500, fontFamily:"'Inter',sans-serif" }}>
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                              {fmt(sd)}
+                            </span>
+                            <span style={{ color:'#9CA3AF', fontSize:14 }}>→</span>
+                            <span style={{ display:'inline-flex', alignItems:'center', gap:5, background:'#EEF4FB', color:'#00447B', borderRadius:20, padding:'5px 14px', fontSize:13, fontWeight:500, fontFamily:"'Inter',sans-serif" }}>
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                              {fmt(ed)}
+                            </span>
+                          </div>
+                        )}
                       </div>
-                    );
-                  })()}
-                </div>
-                <div style={{ display:'flex', gap:8, alignItems:'center', flexShrink:0, flexWrap:'wrap' }}>
+                      <div style={{ display:'flex', gap:8, alignItems:'center', flexShrink:0, flexWrap:'wrap' }}>
                   <button
                     onClick={() => user ? window.print() : openGate('Print / Save PDF')}
                     style={{ background:'none', border:'1.5px solid rgba(0,68,123,0.20)', color:'#00447B', fontFamily:"'Poppins',sans-serif", fontWeight:500, fontSize:13, padding:'7px 16px', borderRadius:100, cursor:'pointer' }}
@@ -707,6 +729,9 @@ function PlanContent() {
                   </button>
                 </div>
               </div>
+            </div>
+          );
+        })()}
 
               {/* Section tabs — folder-tab style */}
               <div style={{ display:'flex', overflowX:'auto', marginBottom:0, borderBottom:'2px solid rgba(0,68,123,0.10)' }}>
