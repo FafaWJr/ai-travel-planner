@@ -696,8 +696,8 @@ function PlanContent() {
                 </div>
               </div>
 
-              {/* Section tabs */}
-              <div style={{ display:'flex', gap:6, marginBottom:20, overflowX:'auto', paddingBottom:4 }}>
+              {/* Section tabs — folder-tab style */}
+              <div style={{ display:'flex', overflowX:'auto', marginBottom:0, borderBottom:'2px solid rgba(0,68,123,0.10)' }}>
                 {SECTIONS.map(s => {
                   const active = activeSection === s.id;
                   return (
@@ -708,12 +708,15 @@ function PlanContent() {
                         setActiveSection(s.id);
                       }
                     }} style={{
-                      display:'flex', alignItems:'center', gap:6, padding:'8px 16px',
-                      borderRadius:100, border:`1.5px solid ${active ? '#FF8210' : 'rgba(0,68,123,0.15)'}`,
-                      background: active ? '#FF8210' : '#fff',
-                      color: active ? '#fff' : '#00447B',
-                      fontFamily:"'Poppins',sans-serif", fontWeight:500, fontSize:13,
-                      cursor:'pointer', whiteSpace:'nowrap', transition:'all 0.15s', flexShrink:0,
+                      display:'flex', alignItems:'center', gap:6, padding:'10px 18px',
+                      borderRadius:'8px 8px 0 0',
+                      border: active ? '1.5px solid rgba(0,68,123,0.10)' : 'none',
+                      borderBottom: active ? '2px solid #fff' : 'none',
+                      marginBottom: active ? -2 : 0,
+                      background: active ? '#fff' : 'transparent',
+                      color: active ? '#FF8210' : '#6C6D6F',
+                      fontFamily:"'Poppins',sans-serif", fontWeight: active ? 600 : 500, fontSize:13,
+                      cursor:'pointer', whiteSpace:'nowrap', transition:'color 0.15s, background 0.15s', flexShrink:0,
                     }}>
                       <s.Icon /> {s.label}
                     </button>
@@ -777,7 +780,7 @@ function PlanContent() {
                 />
               </div>
               {activeSection !== 'itinerary' && activeSection !== 'accommodation' && activeSection !== 'budget' && (
-                <div style={{ background:'#fff', borderRadius:16, padding:'32px 36px', boxShadow:'0 2px 20px rgba(0,68,123,0.07)', border:'1px solid rgba(0,68,123,0.08)' }}>
+                <div style={{ background:'#fff', borderRadius:'0 0 16px 16px', padding:'32px 36px', boxShadow:'0 2px 20px rgba(0,68,123,0.07)', border:'1px solid rgba(0,68,123,0.08)', borderTop:'none' }}>
                   <div
                     onMouseOver={handlePlaceMouseOver}
                     onMouseLeave={handlePlaneMouseLeave}

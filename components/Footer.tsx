@@ -20,28 +20,25 @@ export default function Footer() {
           />
         </div>
 
-        {/* 4-column grid */}
-        <div className="footer-grid">
+        {/* About CTA */}
+        <div className="footer-about-cta">
+          <Link href="/about" className="footer-about-btn">
+            The Purpose Behind Luna
+          </Link>
+        </div>
 
-          {/* About Us */}
-          <div>
-            <p className="footer-heading">About Us</p>
-            <p className="footer-body">
-              Luna Let&apos;s Go is your AI-powered travel companion, crafting personalised
-              itineraries for every kind of explorer. From weekend escapes to epic adventures,
-              we help you travel smarter.
-            </p>
-          </div>
+        {/* 3-column grid */}
+        <div className="footer-grid">
 
           {/* Quick Links */}
           <div>
             <p className="footer-heading">Quick Links</p>
-            <nav style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <nav className="footer-links-grid">
               <Link href="/#planner" className="footer-link">Plan a Trip</Link>
-              <Link href="/blog"    className="footer-link">Blog</Link>
-              <Link href="/deals"   className="footer-link">Deals</Link>
+              <Link href="/blog"     className="footer-link">Blog</Link>
+              <Link href="/deals"    className="footer-link">Deals</Link>
               <Link href="/my-trips" className="footer-link">My Trips</Link>
-              <Link href="/about"   className="footer-link">About Us</Link>
+              <Link href="/about"    className="footer-link">About Us</Link>
             </nav>
           </div>
 
@@ -121,9 +118,36 @@ export default function Footer() {
           margin-bottom: 48px;
           text-align: left;
         }
+        .footer-about-cta {
+          text-align: center;
+          margin-bottom: 48px;
+        }
+        .footer-about-btn {
+          display: inline-block;
+          padding: 11px 28px;
+          border: 1.5px solid rgba(255,255,255,0.30);
+          border-radius: 100px;
+          font-family: var(--font-head);
+          font-weight: 600;
+          font-size: 14px;
+          color: rgba(255,255,255,0.85);
+          text-decoration: none;
+          letter-spacing: 0.2px;
+          transition: border-color 0.2s, color 0.2s, background 0.2s;
+        }
+        .footer-about-btn:hover {
+          border-color: var(--orange);
+          color: #fff;
+          background: rgba(255,130,16,0.12);
+        }
+        .footer-links-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px 20px;
+        }
         .footer-grid {
           display: grid;
-          grid-template-columns: repeat(4, 1fr);
+          grid-template-columns: repeat(3, 1fr);
           gap: 48px;
         }
         .footer-heading {
@@ -183,6 +207,7 @@ export default function Footer() {
         /* Tablet — 2 columns */
         @media (max-width: 900px) {
           .footer-grid { grid-template-columns: repeat(2, 1fr); gap: 36px; }
+          .footer-links-grid { grid-template-columns: 1fr 1fr; }
         }
         /* Mobile — 1 column, centred brand */
         @media (max-width: 540px) {
