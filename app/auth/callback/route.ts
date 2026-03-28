@@ -6,8 +6,6 @@ import type { NextRequest } from 'next/server'
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  // Preserve the ?next= param so the user lands back on the right page
-  const next = searchParams.get('next') ?? '/'
 
   if (code) {
     const cookieStore = await cookies()
@@ -31,13 +29,15 @@ export async function GET(request: NextRequest) {
     )
 
     const { error } = await supabase.auth.exchangeCodeForSession(code)
+
     if (!error) {
-      // Redirect back to wherever the user was (plan page, etc.)
-      const redirectTo = next.startsWith('/') ? `${origin}${next}` : origin
-      return NextResponse.redirect(redirectTo)
+      // Redirect to the client-side "returning" page which reads
+      // the post_auth_redirect key from localStorage and navigates there.
+      // This avoids any dependency on Supabase URL allowlist for ?next= params.
+      return NextResponse.redirect(`${origin}/auth/returning`)
     }
   }
 
-  // Auth failure — redirect to login with error hint
+  // Auth failure — send to login with error
   return NextResponse.redirect(`${origin}/auth/login?error=auth_callback_failed`)
 }
