@@ -674,7 +674,19 @@ function PlanContent() {
                   <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:24, color:'#00447B', marginBottom:4 }}>
                     {prompt.replace(/^plan a (trip to |)?/i,'').replace(/\b(from \d{4}-\d{2}-\d{2}.*)/i,'').trim().split(' ').slice(0,5).join(' ')}
                   </p>
-                  <p style={{ fontFamily:"'Inter',sans-serif", fontSize:13, color:'#6C6D6F' }}>AI-generated travel plan · {new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</p>
+                  {(() => {
+                    const ciM = prompt.match(/from (\d{4}-\d{2}-\d{2})/);
+                    const coM = prompt.match(/to (\d{4}-\d{2}-\d{2})/);
+                    const sd = ciM?.[1]; const ed = coM?.[1];
+                    const fmt = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).replace(/ /g, ' ');
+                    const numDays = sd && ed ? Math.round((new Date(ed).getTime() - new Date(sd).getTime()) / 86400000) : null;
+                    return (
+                      <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
+                        {numDays !== null && <p style={{ fontFamily:"'Inter',sans-serif", fontSize:13, color:'#6C6D6F', margin:0 }}>{numDays} day{numDays !== 1 ? 's' : ''} trip</p>}
+                        {sd && ed && <p style={{ fontFamily:"'Inter',sans-serif", fontSize:13, color:'#6C6D6F', margin:0 }}>{fmt(sd)} – {fmt(ed)}</p>}
+                      </div>
+                    );
+                  })()}
                 </div>
                 <div style={{ display:'flex', gap:8, alignItems:'center', flexShrink:0, flexWrap:'wrap' }}>
                   <button
