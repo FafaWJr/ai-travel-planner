@@ -52,6 +52,12 @@ const QUICK_FILTERS = [
   { id: 'pets',      label: '🐾 Pet friendly' },
 ];
 
+/* ─── Picsum fallback ────────────────────────────────────────── */
+function picsumFallback(seed: string): string {
+  // Deterministic, always-available fallback using picsum.photos
+  return `https://picsum.photos/seed/${encodeURIComponent(seed)}/800/500`;
+}
+
 /* ─── Star rating display ────────────────────────────────────── */
 function Stars({ n }: { n: number }) {
   return (
@@ -81,9 +87,9 @@ function AmenityPill({ label }: { label: string }) {
 /* ─── Photo gallery carousel ─────────────────────────────────── */
 function PhotoGallery({ photos, name }: { photos: string[] | null | '__loading__'; name: string }) {
   const [idx, setIdx] = useState(0);
+  const fallback = picsumFallback(name);
 
-  // Treat '__loading__' same as null — show placeholder immediately, swap in photos when ready
-  if (!photos || photos.length === 0 || photos === '__loading__') {
+  if (!photos || photos === '__loading__') {
     return (
       <div style={{ height: 180, background: 'linear-gradient(135deg,#00447B,#0369A1)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
         <span style={{ fontSize: 32 }}>🏨</span>
@@ -92,47 +98,33 @@ function PhotoGallery({ photos, name }: { photos: string[] | null | '__loading__
     );
   }
 
+  const urls = photos.length > 0 ? photos : [fallback];
+
   return (
-    <div style={{ position: 'relative', height: 180, overflow: 'hidden' }}>
+    <div style={{ position: 'relative', height: 180, overflow: 'hidden', background: '#e5e7eb' }}>
       <img
-        src={photos[idx]}
+        src={urls[idx]}
         alt={name}
         style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'opacity 0.3s' }}
-        onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+        onError={e => {
+          const img = e.target as HTMLImageElement;
+          if (!img.src.includes('picsum.photos')) img.src = fallback;
+        }}
       />
-      {/* Navigation arrows */}
-      {photos.length > 1 && (
+      {urls.length > 1 && (
         <>
           <button
-            onClick={e => { e.stopPropagation(); setIdx(i => (i - 1 + photos.length) % photos.length); }}
-            style={{
-              position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)',
-              width: 28, height: 28, borderRadius: '50%', border: 'none',
-              background: 'rgba(0,0,0,0.45)', color: '#fff', fontSize: 14,
-              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}
+            onClick={e => { e.stopPropagation(); setIdx(i => (i - 1 + urls.length) % urls.length); }}
+            style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', width: 28, height: 28, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,0.45)', color: '#fff', fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >‹</button>
           <button
-            onClick={e => { e.stopPropagation(); setIdx(i => (i + 1) % photos.length); }}
-            style={{
-              position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
-              width: 28, height: 28, borderRadius: '50%', border: 'none',
-              background: 'rgba(0,0,0,0.45)', color: '#fff', fontSize: 14,
-              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}
+            onClick={e => { e.stopPropagation(); setIdx(i => (i + 1) % urls.length); }}
+            style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', width: 28, height: 28, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,0.45)', color: '#fff', fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >›</button>
-          {/* Dots */}
           <div style={{ position: 'absolute', bottom: 8, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 5 }}>
-            {photos.map((_, i) => (
-              <div
-                key={i}
-                onClick={e => { e.stopPropagation(); setIdx(i); }}
-                style={{
-                  width: i === idx ? 16 : 6, height: 6, borderRadius: 100,
-                  background: i === idx ? '#fff' : 'rgba(255,255,255,0.5)',
-                  cursor: 'pointer', transition: 'all 0.2s',
-                }}
-              />
+            {urls.map((_, i) => (
+              <div key={i} onClick={e => { e.stopPropagation(); setIdx(i); }}
+                style={{ width: i === idx ? 16 : 6, height: 6, borderRadius: 100, background: i === idx ? '#fff' : 'rgba(255,255,255,0.5)', cursor: 'pointer', transition: 'all 0.2s' }} />
             ))}
           </div>
         </>
@@ -143,10 +135,9 @@ function PhotoGallery({ photos, name }: { photos: string[] | null | '__loading__
 
 /* ─── Hotel card ─────────────────────────────────────────────── */
 function HotelCard({
-  hotel, isSeen, isConfirmed, onChoose, photos,
+  hotel, isConfirmed, onChoose, photos,
 }: {
   hotel: Hotel;
-  isSeen: boolean;
   isConfirmed: boolean;
   onChoose: () => void;
   photos: string[] | null | '__loading__';
@@ -158,96 +149,110 @@ function HotelCard({
       background: '#fff',
       borderRadius: 16,
       overflow: 'hidden',
-      border: isConfirmed
-        ? '2px solid #16A34A'
-        : '1.5px solid rgba(0,68,123,0.10)',
-      boxShadow: isConfirmed
-        ? '0 4px 20px rgba(22,163,74,0.12)'
-        : '0 2px 12px rgba(0,68,123,0.06)',
+      border: isConfirmed ? '2px solid #16A34A' : '1.5px solid rgba(0,68,123,0.10)',
+      boxShadow: isConfirmed ? '0 4px 20px rgba(22,163,74,0.12)' : '0 2px 12px rgba(0,68,123,0.06)',
       transition: 'box-shadow 0.2s, border-color 0.2s',
       position: 'relative',
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
     }}>
-      {/* Already seen badge */}
-      {isSeen && !isConfirmed && (
-        <div style={{
-          position: 'absolute', top: 10, left: 10, zIndex: 5,
-          background: 'rgba(0,0,0,0.55)', color: '#fff',
-          fontFamily: "'Inter',sans-serif", fontSize: 10, fontWeight: 600,
-          padding: '3px 8px', borderRadius: 100,
-        }}>Already seen</div>
-      )}
-      {/* Confirmed badge */}
       {isConfirmed && (
-        <div style={{
-          position: 'absolute', top: 10, right: 10, zIndex: 5,
-          background: '#16A34A', color: '#fff',
-          fontFamily: "'Poppins',sans-serif", fontSize: 11, fontWeight: 700,
-          padding: '4px 12px', borderRadius: 100,
-          display: 'flex', alignItems: 'center', gap: 5,
-        }}>✓ Your stay</div>
+        <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 5, background: '#16A34A', color: '#fff', fontFamily: "'Poppins',sans-serif", fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 100, display: 'flex', alignItems: 'center', gap: 5 }}>✓ Your stay</div>
       )}
-
-      {/* Photos */}
       <PhotoGallery photos={photos} name={hotel.name} />
-
-      {/* Content */}
-      <div style={{ padding: '14px 16px 16px' }}>
-        {/* Name + stars */}
+      <div style={{ padding: '14px 16px 16px', flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
           <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 15, color: '#111', margin: 0, flex: 1 }}>{hotel.name}</p>
           <Stars n={hotel.stars} />
         </div>
-
-        {/* Neighborhood + map link */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
           <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: '#6C6D6F' }}>📍 {hotel.neighborhood}</span>
-          <a
-            href={mapsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={e => e.stopPropagation()}
-            style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: '#FF8210', fontWeight: 600, textDecoration: 'none', marginLeft: 2 }}
-          >
+          <a href={mapsUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+            style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: '#FF8210', fontWeight: 600, textDecoration: 'none', marginLeft: 2 }}>
             View on map ↗
           </a>
         </div>
-
-        {/* Description */}
-        <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, color: '#555', lineHeight: 1.6, margin: '0 0 10px' }}>
+        <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, color: '#555', lineHeight: 1.6, margin: '0 0 10px', flex: 1 }}>
           {hotel.description}
         </p>
-
-        {/* Amenities */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 12 }}>
           {hotel.amenities.slice(0, 5).map(a => <AmenityPill key={a} label={a} />)}
         </div>
-
-        {/* Price + CTA */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
           <div>
             <span style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 14, color: '#00447B' }}>{hotel.priceRange}</span>
-            <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: '#9CA3AF', marginLeft: 4 }}>(estimated)</span>
+            <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: '#9CA3AF', marginLeft: 4 }}>(est.)</span>
           </div>
           {isConfirmed ? (
-            <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: 12, color: '#16A34A', fontWeight: 600 }}>✓ Added to itinerary</span>
+            <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: 12, color: '#16A34A', fontWeight: 600 }}>✓ Added</span>
           ) : (
-            <button
-              onClick={onChoose}
-              style={{
-                background: '#00447B', color: '#fff', border: 'none',
-                borderRadius: 100, padding: '9px 18px',
-                fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 13,
-                cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
-                transition: 'background 0.15s',
-              }}
-              onMouseEnter={e => { (e.currentTarget).style.background = '#003566'; }}
-              onMouseLeave={e => { (e.currentTarget).style.background = '#00447B'; }}
-            >
-              Choose This Stay
-            </button>
+            <button onClick={onChoose}
+              style={{ background: '#00447B', color: '#fff', border: 'none', borderRadius: 100, padding: '9px 18px', fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, transition: 'background 0.15s' }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#003566'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = '#00447B'; }}
+            >Choose This Stay</button>
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ─── Hotel carousel ─────────────────────────────────────────── */
+function HotelCarousel({ hotels, segment, segConfirmed, chooseHotel, photoCache }: {
+  hotels: Hotel[];
+  segment: LocationSegment;
+  segConfirmed: AcceptedHotel | undefined;
+  chooseHotel: (hotel: Hotel, segment: LocationSegment) => void;
+  photoCache: Record<string, string[] | null | '__loading__'>;
+}) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const scroll = (dir: -1 | 1) => trackRef.current?.scrollBy({ left: dir * 316, behavior: 'smooth' });
+
+  return (
+    <div style={{ position: 'relative' }}>
+      {/* Left arrow */}
+      {hotels.length > 1 && (
+        <button onClick={() => scroll(-1)} aria-label="Previous hotels" style={{
+          position: 'absolute', left: 0, top: 90, transform: 'translateY(-50%)',
+          zIndex: 2, width: 36, height: 36, borderRadius: '50%',
+          background: '#00447B', color: '#fff', border: 'none',
+          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 2px 10px rgba(0,68,123,0.30)', fontSize: 20, lineHeight: 1,
+        }}>‹</button>
+      )}
+
+      {/* Scrollable track */}
+      <div ref={trackRef} style={{
+        display: 'flex', gap: 16, overflowX: 'auto',
+        scrollSnapType: 'x mandatory',
+        scrollbarWidth: 'none',
+        padding: hotels.length > 1 ? '4px 44px 12px' : '4px 0 12px',
+      }}>
+        <style>{`div[data-carousel-track]::-webkit-scrollbar{display:none}`}</style>
+        {hotels.map(hotel => (
+          <div key={hotel.id} style={{ flex: '0 0 300px', scrollSnapAlign: 'start' }}>
+            <HotelCard
+              hotel={hotel}
+              isConfirmed={segConfirmed?.hotel.id === hotel.id}
+              onChoose={() => chooseHotel(hotel, segment)}
+              photos={photoCache[hotel.id] ?? '__loading__'}
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* Right arrow */}
+      {hotels.length > 1 && (
+        <button onClick={() => scroll(1)} aria-label="Next hotels" style={{
+          position: 'absolute', right: 0, top: 90, transform: 'translateY(-50%)',
+          zIndex: 2, width: 36, height: 36, borderRadius: '50%',
+          background: '#00447B', color: '#fff', border: 'none',
+          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 2px 10px rgba(0,68,123,0.30)', fontSize: 20, lineHeight: 1,
+        }}>›</button>
+      )}
     </div>
   );
 }
@@ -256,10 +261,7 @@ function HotelCard({
 function ConfirmedSummary({ hotel, segment }: AcceptedHotel) {
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hotel.googleMapsQuery)}`;
   return (
-    <div style={{
-      background: 'rgba(22,163,74,0.06)', border: '1.5px solid rgba(22,163,74,0.25)',
-      borderRadius: 12, padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: 14,
-    }}>
+    <div style={{ background: 'rgba(22,163,74,0.06)', border: '1.5px solid rgba(22,163,74,0.25)', borderRadius: 12, padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
       <span style={{ fontSize: 26, flexShrink: 0 }}>🏨</span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 14, color: '#111', margin: '0 0 2px' }}>{hotel.name}</p>
@@ -278,23 +280,15 @@ function ConfirmedSummary({ hotel, segment }: AcceptedHotel) {
   );
 }
 
-/* ─── MediaWiki Action API photo lookup (client-side, CORS-enabled via origin=*) ─
-   Uses prop=pageimages with piprop=original|thumbnail — reliably returns
-   the article's lead image for any city, neighbourhood, or hotel name.     ─ */
+/* ─── Wikipedia photo lookup ─────────────────────────────────── */
 async function wikiPhoto(query: string): Promise<string | null> {
   try {
     const ctrl = new AbortController();
     const tid = setTimeout(() => ctrl.abort(), 6000);
     const params = new URLSearchParams({
-      action: 'query',
-      titles: query,
-      prop: 'pageimages',
-      piprop: 'original|thumbnail',
-      pithumbsize: '800',
-      pilimit: '1',
-      redirects: '1',
-      format: 'json',
-      origin: '*',
+      action: 'query', titles: query, prop: 'pageimages',
+      piprop: 'original|thumbnail', pithumbsize: '800',
+      pilimit: '1', redirects: '1', format: 'json', origin: '*',
     });
     const r = await fetch(`https://en.wikipedia.org/w/api.php?${params}`, { signal: ctrl.signal });
     clearTimeout(tid);
@@ -303,7 +297,6 @@ async function wikiPhoto(query: string): Promise<string | null> {
     const pages = Object.values((d?.query?.pages ?? {})) as any[];
     if (!pages.length) return null;
     const page = pages[0];
-    // -1 means missing page
     if (page.pageid === -1 || 'missing' in page) return null;
     return page.original?.source ?? page.thumbnail?.source ?? null;
   } catch { return null; }
@@ -311,40 +304,40 @@ async function wikiPhoto(query: string): Promise<string | null> {
 
 /* ─── Main component ─────────────────────────────────────────── */
 export default function StayTab({ prompt, destination, checkIn, checkOut, budget, itineraryRef, onAddToItinerary, onRemoveActivitiesMatching, onHotelsConfirmed }: Props) {
-  const [segments,        setSegments]        = useState<LocationSegment[]>([]);
-  const [seenIds,         setSeenIds]         = useState<Set<string>>(new Set());
-  const [confirmed,       setConfirmed]       = useState<Record<string, AcceptedHotel>>({});
-  const [loading,         setLoading]         = useState(false);
-  const [loadingMore,     setLoadingMore]     = useState(false);
-  const [error,           setError]           = useState('');
-  const [activeFilters,   setActiveFilters]   = useState<string[]>([]);
-  const [showFilters,     setShowFilters]     = useState(false);
-  const [toast,           setToast]           = useState<string | null>(null);
-  const [photoCache,      setPhotoCache]      = useState<Record<string, string[] | null | '__loading__'>>({});
+  const [segments,      setSegments]      = useState<LocationSegment[]>([]);
+  const [seenIds,       setSeenIds]       = useState<Set<string>>(new Set());
+  const [confirmed,     setConfirmed]     = useState<Record<string, AcceptedHotel>>({});
+  const [loading,       setLoading]       = useState(false);
+  const [loadingMore,   setLoadingMore]   = useState(false);
+  const [error,         setError]         = useState('');
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const [showFilters,   setShowFilters]   = useState(false);
+  const [toast,         setToast]         = useState<string | null>(null);
+  const [photoCache,    setPhotoCache]    = useState<Record<string, string[] | null | '__loading__'>>({});
   const hasFetched = useRef(false);
   const allSeenNamesRef = useRef<string[]>([]);
-
-  /* ── Fetch hotel photos via Wikipedia REST API ── */
   const fetchedRef = useRef<Set<string>>(new Set());
 
+  /* ── Fetch hotel photos via Wikipedia REST API ── */
   const fetchPhotos = useCallback(async (hotels: Hotel[]) => {
     const unfetched = hotels.filter(h => !fetchedRef.current.has(h.id));
     if (unfetched.length === 0) return;
     unfetched.forEach(h => fetchedRef.current.add(h.id));
 
-    // City photo — always available for any major destination
     const cityPhoto = await wikiPhoto(destination);
 
     await Promise.all(unfetched.map(async (hotel) => {
-      // Run hotel name + neighbourhood lookups in parallel
       const [hotelPhoto, areaPhoto] = await Promise.all([
         wikiPhoto(hotel.name),
         wikiPhoto(`${hotel.neighborhood} ${destination}`),
       ]);
-      const urls = [hotelPhoto, areaPhoto, cityPhoto]
-        .filter((u): u is string => !!u);
+      const urls = [hotelPhoto, areaPhoto, cityPhoto].filter((u): u is string => !!u);
       const unique = [...new Set(urls)].slice(0, 3);
-      setPhotoCache(prev => ({ ...prev, [hotel.id]: unique.length > 0 ? unique : null }));
+      // Use picsum as guaranteed fallback when Wikipedia returns nothing
+      setPhotoCache(prev => ({
+        ...prev,
+        [hotel.id]: unique.length > 0 ? unique : [picsumFallback(hotel.id)],
+      }));
     }));
   }, [destination]);
 
@@ -355,8 +348,6 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
     setError('');
 
     try {
-      // Build a compact day-by-day text from the live itinerary so the AI can
-      // detect location transitions (e.g. "Travel to Santorini" on Day 5).
       let itineraryText = '';
       if (itineraryRef?.current) {
         const snap = itineraryRef.current.getDaysSnapshot();
@@ -380,7 +371,6 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
 
       const newSegs: LocationSegment[] = data.segments || [];
 
-      // Track all IDs we've now seen (before state update, so old seenIds apply for badge logic)
       const newSeen = new Set(seenIds);
       newSegs.forEach(s => s.hotels.forEach(h => newSeen.add(h.id)));
       setSeenIds(newSeen);
@@ -389,7 +379,6 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
       const newNames = newSegs.flatMap(s => s.hotels.map(h => h.name));
       newNames.forEach(n => { if (!allSeenNamesRef.current.includes(n)) allSeenNamesRef.current.push(n); });
 
-      // Kick off photo fetching for all hotels
       const allHotels = newSegs.flatMap(s => s.hotels);
       fetchPhotos(allHotels);
     } catch (e: any) {
@@ -415,7 +404,6 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
 
   /* ── Choose hotel ── */
   const chooseHotel = (hotel: Hotel, segment: LocationSegment) => {
-    // Remove previous hotel's check-in/check-out for this segment before adding the new one
     const previous = confirmed[segment.location];
     if (previous) {
       onRemoveActivitiesMatching(`Check-in: ${previous.hotel.name}`);
@@ -427,16 +415,13 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
     onHotelsConfirmed(Object.values(newConfirmed));
 
     const checkInDay = segment.dayRange[0];
-    // If there's a following segment, check-out on the same day as that segment's check-in
-    // to avoid a one-night gap with no accommodation between locations.
     const segIdx = segments.findIndex(s => s.location === segment.location);
     const nextSeg = segments[segIdx + 1];
     const checkOutDay = nextSeg ? nextSeg.dayRange[0] : segment.dayRange[1];
 
     onAddToItinerary(
       `🏨 **Check-in: ${hotel.name}** (${hotel.neighborhood}) — ${hotel.priceRange}`,
-      checkInDay,
-      'morning',
+      checkInDay, 'morning',
     );
     if (checkOutDay > checkInDay) {
       onAddToItinerary(`🏨 **Check-out: ${hotel.name}**`, checkOutDay, 'morning');
@@ -446,9 +431,7 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
   };
 
   /* ── Give me more ── */
-  const handleMoreOptions = () => {
-    loadSuggestions({ excludeNames: allSeenNamesRef.current, isMore: true });
-  };
+  const handleMoreOptions = () => loadSuggestions({ excludeNames: allSeenNamesRef.current, isMore: true });
 
   /* ── Toggle filter ── */
   const toggleFilter = (id: string) => {
@@ -473,20 +456,19 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
               Curated picks matched to your trip, budget and travel style
             </p>
           </div>
-          {/* Segment completion indicator */}
           {totalSegments > 1 && (
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {segments.map(seg => {
-                const isConfirmed = !!confirmed[seg.location];
+                const isDone = !!confirmed[seg.location];
                 return (
                   <span key={seg.location} style={{
                     display: 'inline-flex', alignItems: 'center', gap: 5,
-                    background: isConfirmed ? 'rgba(22,163,74,0.10)' : 'rgba(0,68,123,0.07)',
-                    color: isConfirmed ? '#16A34A' : '#6C6D6F',
+                    background: isDone ? 'rgba(22,163,74,0.10)' : 'rgba(0,68,123,0.07)',
+                    color: isDone ? '#16A34A' : '#6C6D6F',
                     fontFamily: "'Poppins',sans-serif", fontSize: 11, fontWeight: 600,
                     padding: '4px 12px', borderRadius: 100,
                   }}>
-                    {isConfirmed ? '✓' : '○'} {seg.location}
+                    {isDone ? '✓' : '○'} {seg.location}
                   </span>
                 );
               })}
@@ -508,10 +490,8 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
       {!loading && error && (
         <div style={{ background: '#fff', borderRadius: 16, padding: '32px 24px', textAlign: 'center', border: '1.5px solid rgba(220,38,38,0.15)' }}>
           <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 14, color: '#DC2626', marginBottom: 12 }}>{error}</p>
-          <button
-            onClick={() => loadSuggestions()}
-            style={{ background: '#FF8210', color: '#fff', border: 'none', borderRadius: 100, padding: '9px 22px', fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
-          >
+          <button onClick={() => loadSuggestions()}
+            style={{ background: '#FF8210', color: '#fff', border: 'none', borderRadius: 100, padding: '9px 22px', fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
             Try again
           </button>
         </div>
@@ -520,11 +500,10 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
       {/* ── Segments ── */}
       {!loading && !error && segments.map((segment, segIdx) => {
         const segConfirmed = confirmed[segment.location];
-
         return (
           <div key={segment.location} style={{ marginBottom: segIdx < segments.length - 1 ? 36 : 0 }}>
 
-            {/* Segment divider (multi-location) */}
+            {/* City heading */}
             {segments.length > 1 && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
                 <div style={{ flex: 1, height: 1, background: 'rgba(0,68,123,0.10)' }} />
@@ -543,31 +522,21 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
               </div>
             )}
 
-            {/* Confirmed hotel summary */}
+            {/* Confirmed summary */}
             {segConfirmed && (
               <div style={{ marginBottom: 16 }}>
                 <ConfirmedSummary hotel={segConfirmed.hotel} segment={segConfirmed.segment} />
               </div>
             )}
 
-            {/* Hotel cards grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
-              {segment.hotels.map(hotel => {
-                const isConfirmed = segConfirmed?.hotel.id === hotel.id;
-                // Mark as "already seen" only if shown BEFORE the current render batch
-                const wasSeen = seenIds.has(hotel.id) && !segment.hotels.some(h => h.id === hotel.id && !seenIds.has(h.id));
-                return (
-                  <HotelCard
-                    key={hotel.id}
-                    hotel={hotel}
-                    isSeen={false /* handled by separate "seen" tracking across refreshes */}
-                    isConfirmed={isConfirmed}
-                    onChoose={() => chooseHotel(hotel, segment)}
-                    photos={photoCache[hotel.id] ?? '__loading__'}
-                  />
-                );
-              })}
-            </div>
+            {/* Horizontal carousel */}
+            <HotelCarousel
+              hotels={segment.hotels}
+              segment={segment}
+              segConfirmed={segConfirmed}
+              chooseHotel={chooseHotel}
+              photoCache={photoCache}
+            />
           </div>
         );
       })}
@@ -575,18 +544,13 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
       {/* ── Give me more options ── */}
       {!loading && segments.length > 0 && (
         <div style={{ marginTop: 24 }}>
-
-          {/* Filter chips */}
           <div style={{ marginBottom: 12 }}>
-            <button
-              onClick={() => setShowFilters(v => !v)}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 6,
-                background: 'none', border: '1.5px dashed rgba(0,68,123,0.25)',
-                borderRadius: 100, padding: '7px 16px', cursor: 'pointer',
-                fontFamily: "'Poppins',sans-serif", fontWeight: 500, fontSize: 12, color: '#00447B',
-              }}
-            >
+            <button onClick={() => setShowFilters(v => !v)} style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              background: 'none', border: '1.5px dashed rgba(0,68,123,0.25)',
+              borderRadius: 100, padding: '7px 16px', cursor: 'pointer',
+              fontFamily: "'Poppins',sans-serif", fontWeight: 500, fontSize: 12, color: '#00447B',
+            }}>
               <span>⚙️</span> Refine preferences
               <span style={{ fontSize: 10, transition: 'transform 0.2s', transform: showFilters ? 'rotate(180deg)' : 'rotate(0deg)', display: 'inline-block' }}>▾</span>
               {activeFilters.length > 0 && (
@@ -600,35 +564,28 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
               {QUICK_FILTERS.map(f => {
                 const active = activeFilters.includes(f.id);
                 return (
-                  <button
-                    key={f.id}
-                    onClick={() => toggleFilter(f.id)}
-                    style={{
-                      background: active ? '#FF8210' : 'rgba(255,130,16,0.07)',
-                      color: active ? '#fff' : '#FF8210',
-                      border: `1.5px solid ${active ? '#FF8210' : 'rgba(255,130,16,0.30)'}`,
-                      borderRadius: 100, padding: '6px 14px',
-                      fontFamily: "'Poppins',sans-serif", fontWeight: 500, fontSize: 12,
-                      cursor: 'pointer', transition: 'all 0.15s',
-                    }}
-                  >{f.label}</button>
+                  <button key={f.id} onClick={() => toggleFilter(f.id)} style={{
+                    background: active ? '#FF8210' : 'rgba(255,130,16,0.07)',
+                    color: active ? '#fff' : '#FF8210',
+                    border: `1.5px solid ${active ? '#FF8210' : 'rgba(255,130,16,0.30)'}`,
+                    borderRadius: 100, padding: '6px 14px',
+                    fontFamily: "'Poppins',sans-serif", fontWeight: 500, fontSize: 12,
+                    cursor: 'pointer', transition: 'all 0.15s',
+                  }}>{f.label}</button>
                 );
               })}
             </div>
           )}
 
-          <button
-            onClick={handleMoreOptions}
-            disabled={loadingMore}
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-              background: loadingMore ? 'rgba(0,68,123,0.05)' : '#fff',
-              border: '1.5px solid rgba(0,68,123,0.20)',
-              borderRadius: 100, padding: '10px 22px',
-              fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 13, color: '#00447B',
-              cursor: loadingMore ? 'default' : 'pointer', transition: 'all 0.15s',
-              opacity: loadingMore ? 0.7 : 1,
-            }}
+          <button onClick={handleMoreOptions} disabled={loadingMore} style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            background: loadingMore ? 'rgba(0,68,123,0.05)' : '#fff',
+            border: '1.5px solid rgba(0,68,123,0.20)',
+            borderRadius: 100, padding: '10px 22px',
+            fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 13, color: '#00447B',
+            cursor: loadingMore ? 'default' : 'pointer', transition: 'all 0.15s',
+            opacity: loadingMore ? 0.7 : 1,
+          }}
             onMouseEnter={e => { if (!loadingMore) e.currentTarget.style.background = 'rgba(0,68,123,0.04)'; }}
             onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
           >
@@ -640,13 +597,9 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
         </div>
       )}
 
-      {/* ── Trip accommodation completion banner ── */}
+      {/* ── All confirmed banner ── */}
       {confirmedCount > 0 && confirmedCount >= totalSegments && totalSegments > 0 && (
-        <div style={{
-          marginTop: 24, padding: '14px 18px',
-          background: 'rgba(22,163,74,0.08)', border: '1.5px solid rgba(22,163,74,0.25)',
-          borderRadius: 12, display: 'flex', alignItems: 'center', gap: 10,
-        }}>
+        <div style={{ marginTop: 24, padding: '14px 18px', background: 'rgba(22,163,74,0.08)', border: '1.5px solid rgba(22,163,74,0.25)', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 20 }}>🎉</span>
           <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 13, color: '#15803D', margin: 0 }}>
             All accommodation confirmed! Your hotels have been added to the itinerary.
@@ -656,15 +609,7 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
 
       {/* ── Toast ── */}
       {toast && (
-        <div style={{
-          position: 'fixed', bottom: 96, left: '50%', transform: 'translateX(-50%)',
-          background: '#15803D', color: '#fff',
-          padding: '12px 22px', borderRadius: 100,
-          fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 13,
-          boxShadow: '0 6px 24px rgba(0,0,0,0.20)',
-          zIndex: 9999, whiteSpace: 'nowrap',
-          animation: 'fadeIn 0.2s ease both',
-        }}>
+        <div style={{ position: 'fixed', bottom: 96, left: '50%', transform: 'translateX(-50%)', background: '#15803D', color: '#fff', padding: '12px 22px', borderRadius: 100, fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 13, boxShadow: '0 6px 24px rgba(0,0,0,0.20)', zIndex: 9999, whiteSpace: 'nowrap', animation: 'fadeIn 0.2s ease both' }}>
           ✓ {toast}
         </div>
       )}
