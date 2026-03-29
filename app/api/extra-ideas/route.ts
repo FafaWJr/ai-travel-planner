@@ -30,7 +30,7 @@ async function collectStream(stream: ReadableStream<Uint8Array>): Promise<string
 
 export async function POST(request: NextRequest) {
   try {
-    const { prompt, existingActivities = [], seenIdeas = [] } = await request.json();
+    const { prompt, existingActivities = [], seenIdeas = [], itineraryContext = '' } = await request.json();
     if (!prompt) {
       return new Response(JSON.stringify({ error: 'Missing prompt' }), { status: 400 });
     }
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     const systemPrompt = `You are a travel assistant. When asked, you return only a plain bullet-point list of extra travel ideas — nothing else. No introductions, no section headers, no summaries. Just the bullet list.`;
 
     const userPrompt = `Trip: ${prompt}
-
+${itineraryContext ? `\nFULL ITINERARY:\n${itineraryContext}\n` : ''}
 List 7 extra places, activities or experiences the traveller could consider that would NOT typically be included in a standard itinerary for this trip. These could be nearby day-trip spots, a local neighbourhood worth walking, a food market, a viewpoint, a lesser-known attraction, a type of local restaurant, etc.
 
 ${existingActivities.length > 0 ? `ALREADY IN PLANNER — do NOT suggest these or anything similar:\n${existingActivities.map((a: string) => `- ${a}`).join('\n')}\n\n` : ''}${seenIdeas.length > 0 ? `ALREADY SUGGESTED — do NOT repeat these:\n${seenIdeas.map((n: string) => `- ${n}`).join('\n')}\n\n` : ''}Format each as:

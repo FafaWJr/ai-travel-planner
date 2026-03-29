@@ -369,6 +369,10 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
     if (!day || day.loadingMore) return;
     setDays(prev => prev.map(d => d.number === dayNum ? { ...d, loadingMore: true } : d));
     try {
+      const allDaysContext = days
+        .filter(d => d.number !== dayNum)
+        .map(d => `Day ${d.number} (${d.title}):\n${d.activities.filter(a => a.status !== 'declined').map(a => `  - ${a.text}`).join('\n')}`)
+        .join('\n\n');
       const res = await fetch('/api/day-suggestions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -378,6 +382,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
           dayTitle: day.title,
           destination,
           existingActivities: day.activities.map(a => a.text),
+          allDaysContext,
         }),
       });
       const data = await res.json();

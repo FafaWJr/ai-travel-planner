@@ -587,10 +587,13 @@ function PlanContent() {
       const existingActivities = days.flatMap(d =>
         d.activities.map(a => a.text.replace(/\*\*/g, '').replace(/^\s*[-*]\s*/, '').trim())
       );
+      const itineraryContext = days
+        .map(d => `Day ${d.number} (${d.title}):\n${d.activities.filter(a => a.status !== 'declined').map(a => `  - ${a.text.replace(/\*\*/g, '').replace(/^\s*[-*]\s*/, '').trim()}`).join('\n')}`)
+        .join('\n\n');
       const res = await fetch('/api/extra-ideas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, existingActivities, seenIdeas: seenIdeaNames }),
+        body: JSON.stringify({ prompt, existingActivities, seenIdeas: seenIdeaNames, itineraryContext }),
       });
       if (!res.ok) throw new Error('Failed');
       const data = await res.json();

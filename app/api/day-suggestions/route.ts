@@ -29,7 +29,7 @@ async function collectStream(stream: ReadableStream<Uint8Array>): Promise<string
 
 export async function POST(request: NextRequest) {
   try {
-    const { tripPrompt, dayNumber, dayTitle, destination, existingActivities } = await request.json();
+    const { tripPrompt, dayNumber, dayTitle, destination, existingActivities, allDaysContext = '' } = await request.json();
 
     const systemPrompt = `You are a travel activity suggester. You respond ONLY with a valid JSON array — no prose, no markdown, no explanation before or after. Just the raw JSON array.`;
 
@@ -38,8 +38,8 @@ Day ${dayNumber}: ${dayTitle} in ${destination}
 
 Existing activities already in this day's plan:
 ${(existingActivities as string[]).map((a, i) => `${i + 1}. ${a}`).join('\n')}
-
-Suggest exactly 3 NEW activities for this day that are NOT already in the list above. They must fit the trip style and budget.
+${allDaysContext ? `\nACTIVITIES ALREADY PLANNED ON OTHER DAYS — do NOT duplicate these:\n${allDaysContext}\n` : ''}
+Suggest exactly 3 NEW activities for this day that are NOT already in the list above and NOT duplicates of other days. They must fit the trip style and budget.
 
 Respond with ONLY a JSON array in this exact shape:
 [
