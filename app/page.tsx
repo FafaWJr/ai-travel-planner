@@ -2,6 +2,11 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import NavBar from '@/components/NavBar';
+import {
+  Globe, CloudSun, CalendarDays, Building2, Car, DollarSign,
+  Info, MessageCircle, FileDown, GripVertical, CirclePlus,
+  RefreshCw, Bookmark, Wand2, PenLine, Zap, Sliders, Calendar,
+} from 'lucide-react';
 
 /* ── Destination autocomplete (geocoding-api.open-meteo.com, no API key) ── */
 interface GeoResult { id:number; name:string; country:string; country_code:string; admin1?:string; }
@@ -442,18 +447,29 @@ const ALL_TRIP_IDEAS = [
   { title:'Spain Food & Culture', sub:'Madrid, Seville & Barcelona', img:'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?auto=format&fit=crop&w=600&q=80', tags:['Food','Culture'], dur:'10 days', bud:'Mid-range', q:'Plan a 10-day Spain road trip covering Madrid, Seville and Barcelona with food focus' },
 ];
 
-const FEATURES = [
-  { icon:<IconCompass/>, title:'Destination Overview',  desc:'What makes it special and must-see highlights' },
-  { icon:<IconBolt/>,    title:'Generated in 30s',       desc:'AI crafts your full plan in under 30 seconds' },
-  { icon:<IconMap/>,     title:'Day-by-Day Itinerary',   desc:'Morning, afternoon, and evening activities' },
-  { icon:<IconStar/>,    title:'Accommodation Picks',    desc:'Curated stays matching your budget' },
-  { icon:<IconChat/>,    title:'AI Chat Refinement',     desc:'Ask follow-up questions or tweak any detail' },
-  { icon:<IconShield/>,  title:'Practical Tips',         desc:'Visas, safety, culture, local apps and more' },
+const PLAN_FEATURES = [
+  { icon:<Globe color="#FF8210" size={26} strokeWidth={1.8}/>, title:'Destination Overview', desc:'What makes it special and must-see highlights' },
+  { icon:<CloudSun color="#00447B" size={26} strokeWidth={1.8}/>, title:'Weather & Season', desc:'Real forecasts or climate averages for your dates' },
+  { icon:<CalendarDays color="#FF8210" size={26} strokeWidth={1.8}/>, title:'Day-by-Day Itinerary', desc:'Morning, afternoon and evening activities' },
+  { icon:<Building2 color="#00447B" size={26} strokeWidth={1.8}/>, title:'Accommodation Picks', desc:'Curated stays matching your budget and style' },
+  { icon:<Car color="#FF8210" size={26} strokeWidth={1.8}/>, title:'Getting Around', desc:'Transport tips, passes and estimated costs' },
+  { icon:<DollarSign color="#00447B" size={26} strokeWidth={1.8}/>, title:'Budget Breakdown', desc:'Estimated costs per category with totals' },
+  { icon:<Info color="#FF8210" size={26} strokeWidth={1.8}/>, title:'Practical Tips', desc:'Visas, safety, culture, food and local apps' },
+  { icon:<MessageCircle color="#00447B" size={26} strokeWidth={1.8}/>, title:'AI Chat Refinement', desc:'Ask follow-up questions or tweak any detail' },
+  { icon:<FileDown color="#FF8210" size={26} strokeWidth={1.8}/>, title:'Export to PDF', desc:'Download your full plan, ready to travel' },
+];
+
+const CONTROL_FEATURES = [
+  { icon:<GripVertical color="#FF8210" size={26} strokeWidth={1.8}/>, title:'Drag & drop activities', desc:'Reorder your days exactly how you want' },
+  { icon:<CirclePlus color="#00447B" size={26} strokeWidth={1.8}/>, title:'Add or remove anything', desc:'Every suggestion is optional, nothing is locked in' },
+  { icon:<RefreshCw color="#FF8210" size={26} strokeWidth={1.8}/>, title:'Switch hotels & dates', desc:'Change stays, adjust timing, update your budget' },
+  { icon:<Bookmark color="#00447B" size={26} strokeWidth={1.8}/>, title:'Save & come back', desc:'Your plan is always there when you return' },
+  { icon:<FileDown color="#FF8210" size={26} strokeWidth={1.8}/>, title:'Export to PDF', desc:'Download a clean, print-ready version of your trip' },
+  { icon:<Wand2 color="#00447B" size={26} strokeWidth={1.8}/>, title:'Refine with AI', desc:'Ask Luna to adjust any detail at any time' },
 ];
 
 export default function HomePage() {
   const router = useRouter();
-  const [query, setQuery]         = useState('');
   const [quizStep,       setQuizStep]       = useState(0);
   const [showQuiz,       setShowQuiz]       = useState(false);
   const [quizDone,       setQuizDone]       = useState(false);
@@ -466,16 +482,14 @@ export default function HomePage() {
   const [destPhotos,     setDestPhotos]     = useState<Record<string,string|null>>({});
   const [aiDestinations, setAiDestinations] = useState<Array<{name:string;country:string;desc:string;query:string}>|null>(null);
   const [aiDestsLoading, setAiDestsLoading] = useState(false);
-  const [preFilledData, setPreFilledData] = useState<{budget:string; styles:string[]} | null>(null);
   const [heroImgIdx, setHeroImgIdx] = useState(0);
   const [tripIdeas] = useState(() => [...ALL_TRIP_IDEAS].sort(()=>Math.random()-0.5));
   const carouselRef = useRef<HTMLDivElement>(null);
   const carouselIdxRef = useRef(0);
 
-  const go = (q?: string) => {
-    const s = (q || query).trim();
-    if (!s) return;
-    router.push(`/plan?prompt=${encodeURIComponent(s)}`);
+  const go = (q: string) => {
+    if (!q.trim()) return;
+    router.push(`/plan?prompt=${encodeURIComponent(q)}`);
   };
 
   const scrollTo = (id: string) => {
@@ -545,7 +559,6 @@ Traveller Profile:
   const finishQuiz = () => {
     const persona = computePersona(quizVibes, quizAccom, quizHabits, quizDining, quizInterests);
     setQuizPersona(persona);
-    setPreFilledData({ budget: persona.budget, styles: persona.styles });
     setQuizDone(true);
     fetchAiDestinations(persona);
   };
@@ -615,13 +628,26 @@ Traveller Profile:
             <span style={{ color:'var(--orange-light)' }}>in 30 seconds.</span>
           </h1>
 
-          <p style={{ fontFamily:'var(--font-body)', fontWeight:400, fontSize:17, color:'rgba(255,255,255,0.70)', marginBottom:32, animation:'fadeUp 0.65s 0.2s ease both' }}>
-            Tell us where you want to go — we'll handle the rest.
+          <p style={{ fontFamily:'var(--font-body)', fontWeight:400, fontSize:17, color:'rgba(255,255,255,0.70)', marginBottom:40, animation:'fadeUp 0.65s 0.2s ease both' }}>
+            Tell us where you want to go — we&apos;ll handle the rest.
           </p>
 
-          {/* Form */}
-          <div style={{ display:'inline-block', width:'100%', maxWidth:560, animation:'fadeUp 0.65s 0.3s ease both', textAlign:'left' }}>
-            <HeroStepForm onSubmit={go} preFilledData={preFilledData} />
+          {/* CTA */}
+          <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:20, animation:'fadeUp 0.65s 0.3s ease both' }}>
+            <a
+              href="/plan" target="_blank" rel="noopener noreferrer"
+              style={{ display:'inline-flex', alignItems:'center', gap:10, background:'#FF8210', color:'#fff', fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:18, padding:'16px 44px', borderRadius:100, textDecoration:'none', boxShadow:'0 8px 32px rgba(255,130,16,0.40)', transition:'background 0.18s', letterSpacing:0.3 }}
+              onMouseEnter={e=>(e.currentTarget as HTMLAnchorElement).style.background='#e5730e'}
+              onMouseLeave={e=>(e.currentTarget as HTMLAnchorElement).style.background='#FF8210'}
+            >
+              Let&apos;s Go →
+            </a>
+            <button
+              onClick={()=>scrollTo('how-it-works')}
+              style={{ background:'none', border:'none', cursor:'pointer', fontFamily:"'Inter',sans-serif", fontSize:15, color:'rgba(255,255,255,0.72)', letterSpacing:0.2, padding:0 }}
+            >
+              See how it works ↓
+            </button>
           </div>
 
         </div>
@@ -653,27 +679,145 @@ Traveller Profile:
       </section>
 
 
-      {/* ───── HOW IT WORKS ───── */}
-      <section style={{ ...S.section, background:'var(--bg-section)' }}>
-        <div className="container" style={{ textAlign:'center' }}>
-          <p style={S.label}>Simple Process</p>
-          <h2 style={{ ...S.h2, textAlign:'center', marginBottom:56 }}>How it works</h2>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:40 }}>
-            {[
-              { n:'01', icon:'✏️', t:'Tell us your dream trip', d:'Destination, travel style, dates, group and budget — all in one natural sentence or our smart form.' },
-              { n:'02', icon:'⚡', t:'AI crafts your plan',     d:'Your personalised itinerary is generated in under 30 seconds with 7 detailed sections tailored to you.' },
-              { n:'03', icon:'✨', t:'Explore & refine',        d:'Chat with AI to adjust any detail. Add activities, change hotels, tweak the budget — all in real time, for free.' },
-            ].map(s=>(
-              <div key={s.n} style={{ textAlign:'center' }}>
-                <div style={{ width:72, height:72, borderRadius:20, background:'#fff', border:'1.5px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:28, margin:'0 auto 16px', boxShadow:'var(--shadow-card)' }}>{s.icon}</div>
-                <p style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:13, color:'var(--gray-light)', letterSpacing:2, marginBottom:10 }}>{s.n}</p>
-                <h3 style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:'var(--fs-h3)', color:'#000', marginBottom:10 }}>{s.t}</h3>
-                <p style={{ fontFamily:'var(--font-body)', fontSize:16, color:'var(--gray-dark)', lineHeight:1.65 }}>{s.d}</p>
+      {/* ───── HOW IT WORKS + EVERYTHING IN EVERY PLAN ───── */}
+      <section id="how-it-works" style={{ ...S.section, background:'var(--bg-section)' }}>
+        <div className="container">
+          {/* How It Works */}
+          <div style={{ textAlign:'center', marginBottom:80 }}>
+            <p style={S.label}>Simple Process</p>
+            <h2 style={{ ...S.h2, textAlign:'center', marginBottom:56 }}>How it works</h2>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:40 }}>
+              {[
+                { n:'01', icon:<PenLine color="#FF8210" size={28} strokeWidth={1.8}/>, t:'Tell us your dream trip', d:'Destination, travel style, dates, group and budget — all in one natural sentence or our smart form.' },
+                { n:'02', icon:<Zap color="#FF8210" size={28} strokeWidth={1.8}/>, t:'AI crafts your plan', d:'Your personalised itinerary is generated in under 30 seconds with 7 detailed sections tailored to you.' },
+                { n:'03', icon:<Sliders color="#FF8210" size={28} strokeWidth={1.8}/>, t:'Explore & refine', d:'Chat with AI to adjust any detail. Add activities, change hotels, tweak the budget — all in real time, for free.' },
+              ].map(s=>(
+                <div key={s.n} style={{ textAlign:'center' }}>
+                  <div style={{ width:72, height:72, borderRadius:20, background:'#fff', border:'1.5px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px', boxShadow:'var(--shadow-card)' }}>{s.icon}</div>
+                  <p style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:13, color:'var(--gray-light)', letterSpacing:2, marginBottom:10 }}>{s.n}</p>
+                  <h3 style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:'var(--fs-h3)', color:'#000', marginBottom:10 }}>{s.t}</h3>
+                  <p style={{ fontFamily:'var(--font-body)', fontSize:16, color:'var(--gray-dark)', lineHeight:1.65 }}>{s.d}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div style={{ borderTop:'2px solid rgba(0,68,123,0.08)', marginBottom:80 }} />
+
+          {/* Everything in Every Plan */}
+          <div style={{ textAlign:'center', marginBottom:52 }}>
+            <p style={S.label}>Full Coverage</p>
+            <h2 style={{ ...S.h2, textAlign:'center' }}>Everything in every plan</h2>
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(300px,1fr))', gap:20 }}>
+            {PLAN_FEATURES.map(f=>(
+              <div key={f.title} style={{ background:'#fff', borderRadius:'var(--r-md)', padding:'24px 22px', display:'flex', gap:16, alignItems:'flex-start', border:'1px solid rgba(0,68,123,0.08)', boxShadow:'var(--shadow-card)' }}>
+                <div style={{ flexShrink:0, width:44, height:44, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(255,130,16,0.08)', borderRadius:12 }}>{f.icon}</div>
+                <div>
+                  <h3 style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:'var(--fs-h3)', color:'#000', marginBottom:6 }}>{f.title}</h3>
+                  <p style={{ fontFamily:'var(--font-body)', fontSize:15, color:'var(--gray-dark)', lineHeight:1.6 }}>{f.desc}</p>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
+
+      {/* ───── YOUR TRIP, YOUR WAY ───── */}
+      <section style={{ padding:'96px 0', background:'#fff' }}>
+        <div className="container">
+          <div style={{ textAlign:'center', marginBottom:56 }}>
+            <p style={S.label}>Full Control</p>
+            <h2 style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:'var(--fs-h2)', color:'#000', lineHeight:1.3, marginBottom:16, textAlign:'center' }}>Your trip. Fully yours.</h2>
+            <p style={{ fontFamily:"'Inter',sans-serif", color:'#6C6D6F', fontSize:17, maxWidth:580, margin:'0 auto', lineHeight:1.65 }}>
+              This isn&apos;t just another AI planner. Luna works with you, every step towards your perfect trip.
+            </p>
+          </div>
+          <div className="control-grid" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:24 }}>
+            {CONTROL_FEATURES.map(f=>(
+              <div key={f.title} style={{ background:'var(--bg-section)', borderRadius:'var(--r-md)', padding:'28px 24px', border:'1px solid rgba(0,68,123,0.06)' }}>
+                <div style={{ width:48, height:48, display:'flex', alignItems:'center', justifyContent:'center', background:'#fff', borderRadius:14, border:'1px solid rgba(0,68,123,0.08)', marginBottom:18, boxShadow:'0 2px 8px rgba(0,0,0,0.06)' }}>{f.icon}</div>
+                <h3 style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:17, color:'#000', marginBottom:8 }}>{f.title}</h3>
+                <p style={{ fontFamily:'var(--font-body)', fontSize:15, color:'var(--gray-dark)', lineHeight:1.6 }}>{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ───── TRIP IDEAS ───── */}
+      <section id="trip-ideas" style={{ ...S.section, background:'#fff', overflow:'hidden' }}>
+        <div className="container" style={{ paddingBottom:0 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', marginBottom:40, flexWrap:'wrap', gap:16 }}>
+            <div>
+              <p style={S.label}>Curated Itineraries</p>
+              <h2 style={S.h2}>Ready-made trip ideas.</h2>
+            </div>
+            <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+              <a href="/plan" target="_blank" rel="noopener noreferrer" style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:15, color:'var(--navy)', borderBottom:'2px solid var(--navy)', paddingBottom:2, textDecoration:'none' }}>Create a custom trip →</a>
+              <div style={{ display:'flex', gap:8 }}>
+                <button
+                  aria-label="Previous"
+                  onClick={()=>{
+                    const el=carouselRef.current; if(!el) return;
+                    const CARD_W=320+20;
+                    carouselIdxRef.current=Math.max(0,carouselIdxRef.current-1);
+                    el.scrollBy({left:-CARD_W,behavior:'smooth'});
+                  }}
+                  style={{ width:40,height:40,borderRadius:'50%',border:'1.5px solid var(--border)',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,color:'var(--navy)',transition:'all 0.18s' }}
+                >‹</button>
+                <button
+                  aria-label="Next"
+                  onClick={()=>{
+                    const el=carouselRef.current; if(!el) return;
+                    const CARD_W=320+20; const maxIdx=tripIdeas.length-1;
+                    if(carouselIdxRef.current>=maxIdx){carouselIdxRef.current=0;el.scrollTo({left:0,behavior:'smooth'});}
+                    else{carouselIdxRef.current+=1;el.scrollBy({left:CARD_W,behavior:'smooth'});}
+                  }}
+                  style={{ width:40,height:40,borderRadius:'50%',border:'1.5px solid var(--border)',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,color:'var(--navy)',transition:'all 0.18s' }}
+                >›</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          ref={carouselRef}
+          className="carousel-scroll"
+          style={{ display:'flex', gap:20, overflowX:'auto', scrollSnapType:'x mandatory', paddingLeft:32, paddingRight:32, paddingBottom:24, cursor:'grab' }}
+        >
+          {tripIdeas.map(t=>(
+            <div
+              key={t.title}
+              onClick={()=>go(t.q)}
+              style={{ flexShrink:0, width:320, scrollSnapAlign:'start', background:'#fff', borderRadius:'var(--r-lg)', overflow:'hidden', cursor:'pointer', border:'1px solid var(--border)', boxShadow:'var(--shadow-card)', transition:'transform 0.2s, box-shadow 0.2s' }}
+              onMouseEnter={e=>{(e.currentTarget as HTMLDivElement).style.transform='translateY(-4px)';(e.currentTarget as HTMLDivElement).style.boxShadow='0 12px 36px rgba(0,0,0,0.12)';}}
+              onMouseLeave={e=>{(e.currentTarget as HTMLDivElement).style.transform='translateY(0)';(e.currentTarget as HTMLDivElement).style.boxShadow='var(--shadow-card)';}}
+            >
+              <div style={{ position:'relative', height:200, overflow:'hidden' }}>
+                <img src={t.img} alt={t.title} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                <div style={{ position:'absolute', top:12, left:12, display:'flex', gap:6, flexWrap:'wrap' }}>
+                  {t.tags.map(tag=>(
+                    <span key={tag} style={{ background:'rgba(0,0,0,0.5)', backdropFilter:'blur(6px)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:600, fontSize:11, padding:'3px 10px', borderRadius:'var(--r-pill)', textTransform:'uppercase', letterSpacing:0.4 }}>{tag}</span>
+                  ))}
+                </div>
+              </div>
+              <div style={{ padding:'18px 20px 20px' }}>
+                <h3 style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:'var(--fs-h3)', color:'#000', marginBottom:4 }}>{t.title}</h3>
+                <p style={{ fontFamily:'var(--font-body)', color:'var(--gray-dark)', fontSize:14, marginBottom:14 }}>{t.sub}</p>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                  <div style={{ display:'flex', gap:14 }}>
+                    <span style={{ fontFamily:'var(--font-body)', color:'var(--gray-dark)', fontSize:13, display:'flex', alignItems:'center', gap:4 }}><Calendar size={13} color="#6C6D6F" strokeWidth={2}/> {t.dur}</span>
+                    <span style={{ fontFamily:'var(--font-body)', color:'var(--gray-dark)', fontSize:13, display:'flex', alignItems:'center', gap:4 }}><DollarSign size={13} color="#6C6D6F" strokeWidth={2}/> {t.bud}</span>
+                  </div>
+                  <span style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:13, color:'var(--orange)' }}>Plan this ↗</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
 
       {/* ───── QUIZ ───── */}
       <section id="quiz" style={{ ...S.section, background:'var(--navy)', position:'relative', overflow:'hidden' }}>
@@ -687,7 +831,7 @@ Traveller Profile:
 
           {!showQuiz && !quizDone ? (
             <button onClick={()=>setShowQuiz(true)} style={{ background:'var(--orange)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:16, padding:'18px 44px', borderRadius:'var(--r-pill)', border:'none', cursor:'pointer', boxShadow:'0 8px 32px rgba(255,130,16,0.40)', letterSpacing:0.3 }}>
-              🎯 Find my travel persona
+              Find my travel persona
             </button>
 
           ) : quizDone && quizPersona ? (
@@ -781,8 +925,8 @@ Traveller Profile:
                 </ul>
               </div>
               <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
-                <button onClick={()=>window.scrollTo({top:0,behavior:'smooth'})} style={{ background:'var(--orange)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, padding:'14px 32px', borderRadius:'var(--r-pill)', border:'none', cursor:'pointer', boxShadow:'0 6px 20px rgba(255,130,16,0.35)' }}>
-                  ✈ Go to my planner ↑
+                <button onClick={()=>router.push('/plan')} style={{ background:'var(--orange)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, padding:'14px 32px', borderRadius:'var(--r-pill)', border:'none', cursor:'pointer', boxShadow:'0 6px 20px rgba(255,130,16,0.35)' }}>
+                  Plan my trip →
                 </button>
                 <button onClick={resetQuiz} style={{ background:'rgba(255,255,255,0.10)', color:'rgba(255,255,255,0.8)', fontFamily:'var(--font-head)', fontWeight:500, fontSize:15, padding:'14px 24px', borderRadius:'var(--r-pill)', border:'1px solid rgba(255,255,255,0.20)', cursor:'pointer' }}>
                   ↺ Retake quiz
@@ -938,98 +1082,20 @@ Traveller Profile:
         </div>
       </section>
 
-      {/* ───── TRIP IDEAS ───── */}
-      <section id="trip-ideas" style={{ ...S.section, background:'#fff', overflow:'hidden' }}>
-        <div className="container" style={{ paddingBottom:0 }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', marginBottom:40, flexWrap:'wrap', gap:16 }}>
-            <div>
-              <p style={S.label}>Curated Itineraries</p>
-              <h2 style={S.h2}>Ready-made trip ideas.</h2>
-            </div>
-            <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-              <a href="#" onClick={e=>{e.preventDefault();window.scrollTo({top:0,behavior:'smooth'});}} style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:15, color:'var(--navy)', borderBottom:'2px solid var(--navy)', paddingBottom:2 }}>Create a custom trip →</a>
-              <div style={{ display:'flex', gap:8 }}>
-                <button
-                  aria-label="Previous"
-                  onClick={()=>{
-                    const el=carouselRef.current; if(!el) return;
-                    const CARD_W=320+20;
-                    carouselIdxRef.current=Math.max(0,carouselIdxRef.current-1);
-                    el.scrollBy({left:-CARD_W,behavior:'smooth'});
-                  }}
-                  style={{ width:40,height:40,borderRadius:'50%',border:'1.5px solid var(--border)',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,color:'var(--navy)',transition:'all 0.18s' }}
-                >‹</button>
-                <button
-                  aria-label="Next"
-                  onClick={()=>{
-                    const el=carouselRef.current; if(!el) return;
-                    const CARD_W=320+20; const maxIdx=tripIdeas.length-1;
-                    if(carouselIdxRef.current>=maxIdx){carouselIdxRef.current=0;el.scrollTo({left:0,behavior:'smooth'});}
-                    else{carouselIdxRef.current+=1;el.scrollBy({left:CARD_W,behavior:'smooth'});}
-                  }}
-                  style={{ width:40,height:40,borderRadius:'50%',border:'1.5px solid var(--border)',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,color:'var(--navy)',transition:'all 0.18s' }}
-                >›</button>
-              </div>
-            </div>
-          </div>
-        </div>
-        {/* Full-bleed scroll track */}
-        <div
-          ref={carouselRef}
-          className="carousel-scroll"
-          style={{ display:'flex', gap:20, overflowX:'auto', scrollSnapType:'x mandatory', paddingLeft:32, paddingRight:32, paddingBottom:24, cursor:'grab' }}
-        >
-          {tripIdeas.map(t=>(
-            <div
-              key={t.title}
-              onClick={()=>go(t.q)}
-              style={{ flexShrink:0, width:320, scrollSnapAlign:'start', background:'#fff', borderRadius:'var(--r-lg)', overflow:'hidden', cursor:'pointer', border:'1px solid var(--border)', boxShadow:'var(--shadow-card)', transition:'transform 0.2s, box-shadow 0.2s' }}
-              onMouseEnter={e=>{(e.currentTarget as HTMLDivElement).style.transform='translateY(-4px)';(e.currentTarget as HTMLDivElement).style.boxShadow='0 12px 36px rgba(0,0,0,0.12)';}}
-              onMouseLeave={e=>{(e.currentTarget as HTMLDivElement).style.transform='translateY(0)';(e.currentTarget as HTMLDivElement).style.boxShadow='var(--shadow-card)';}}
-            >
-              <div style={{ position:'relative', height:200, overflow:'hidden' }}>
-                <img src={t.img} alt={t.title} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
-                <div style={{ position:'absolute', top:12, left:12, display:'flex', gap:6, flexWrap:'wrap' }}>
-                  {t.tags.map(tag=>(
-                    <span key={tag} style={{ background:'rgba(0,0,0,0.5)', backdropFilter:'blur(6px)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:600, fontSize:11, padding:'3px 10px', borderRadius:'var(--r-pill)', textTransform:'uppercase', letterSpacing:0.4 }}>{tag}</span>
-                  ))}
-                </div>
-              </div>
-              <div style={{ padding:'18px 20px 20px' }}>
-                <h3 style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:'var(--fs-h3)', color:'#000', marginBottom:4 }}>{t.title}</h3>
-                <p style={{ fontFamily:'var(--font-body)', color:'var(--gray-dark)', fontSize:14, marginBottom:14 }}>{t.sub}</p>
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                  <div style={{ display:'flex', gap:14 }}>
-                    <span style={{ fontFamily:'var(--font-body)', color:'var(--gray-dark)', fontSize:13 }}>📅 {t.dur}</span>
-                    <span style={{ fontFamily:'var(--font-body)', color:'var(--gray-dark)', fontSize:13 }}>💰 {t.bud}</span>
-                  </div>
-                  <span style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:13, color:'var(--orange)' }}>Plan this ↗</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-
-      {/* ───── FEATURES ───── */}
-      <section style={{ ...S.section, background:'#fff' }}>
-        <div className="container">
-          <div style={{ textAlign:'center', marginBottom:52 }}>
-            <p style={S.label}>Full Coverage</p>
-            <h2 style={{ ...S.h2, textAlign:'center' }}>Everything in every plan</h2>
-          </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(300px,1fr))', gap:20 }}>
-            {FEATURES.map(f=>(
-              <div key={f.title} style={{ background:'var(--bg-section)', borderRadius:'var(--r-md)', padding:'24px 22px', display:'flex', gap:16, alignItems:'flex-start' }}>
-                <div style={{ flexShrink:0 }}>{f.icon}</div>
-                <div>
-                  <h3 style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:'var(--fs-h3)', color:'#000', marginBottom:6 }}>{f.title}</h3>
-                  <p style={{ fontFamily:'var(--font-body)', fontSize:15, color:'var(--gray-dark)', lineHeight:1.6 }}>{f.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+      {/* ───── FINAL CTA ───── */}
+      <section style={{ background:'#00447B', padding:'96px 24px' }}>
+        <div style={{ maxWidth:640, margin:'0 auto', textAlign:'center' }}>
+          <h2 style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:40, color:'#fff', marginBottom:36, lineHeight:1.2 }}>
+            Ready to plan your perfect trip?
+          </h2>
+          <a
+            href="/plan" target="_blank" rel="noopener noreferrer"
+            style={{ display:'inline-flex', alignItems:'center', gap:10, background:'#FF8210', color:'#fff', fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:18, padding:'16px 44px', borderRadius:100, textDecoration:'none', boxShadow:'0 8px 32px rgba(255,130,16,0.40)', letterSpacing:0.3, transition:'background 0.18s' }}
+            onMouseEnter={e=>(e.currentTarget as HTMLAnchorElement).style.background='#e5730e'}
+            onMouseLeave={e=>(e.currentTarget as HTMLAnchorElement).style.background='#FF8210'}
+          >
+            Let&apos;s Go →
+          </a>
         </div>
       </section>
 
@@ -1060,6 +1126,12 @@ Traveller Profile:
         .luna2-avatar { display: none; }
         @media (min-width: 1024px) {
           .luna2-avatar { display: block; }
+        }
+        @media (max-width: 900px) {
+          .control-grid { grid-template-columns: repeat(2,1fr) !important; }
+        }
+        @media (max-width: 560px) {
+          .control-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
     </div>
