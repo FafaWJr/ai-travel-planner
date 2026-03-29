@@ -446,35 +446,28 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
     <div style={{ fontFamily: "'Inter',sans-serif" }}>
 
       {/* ── Header ── */}
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
-          <div>
-            <h2 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 20, color: '#00447B', margin: '0 0 4px' }}>
-              Where to Stay
-            </h2>
-            <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, color: '#6C6D6F', margin: 0 }}>
-              Curated picks matched to your trip, budget and travel style
-            </p>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginBottom: 14, paddingBottom: 10, borderBottom: '2px solid rgba(0,68,123,0.10)' }}>
+        <h2 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 22, color: '#00447B', margin: 0 }}>
+          Where to Stay
+        </h2>
+        {totalSegments > 1 && (
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {segments.map(seg => {
+              const isDone = !!confirmed[seg.location];
+              return (
+                <span key={seg.location} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                  background: isDone ? 'rgba(22,163,74,0.10)' : 'rgba(0,68,123,0.07)',
+                  color: isDone ? '#16A34A' : '#6C6D6F',
+                  fontFamily: "'Poppins',sans-serif", fontSize: 11, fontWeight: 600,
+                  padding: '4px 12px', borderRadius: 100,
+                }}>
+                  {isDone ? '✓' : '○'} {seg.location}
+                </span>
+              );
+            })}
           </div>
-          {totalSegments > 1 && (
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {segments.map(seg => {
-                const isDone = !!confirmed[seg.location];
-                return (
-                  <span key={seg.location} style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 5,
-                    background: isDone ? 'rgba(22,163,74,0.10)' : 'rgba(0,68,123,0.07)',
-                    color: isDone ? '#16A34A' : '#6C6D6F',
-                    fontFamily: "'Poppins',sans-serif", fontSize: 11, fontWeight: 600,
-                    padding: '4px 12px', borderRadius: 100,
-                  }}>
-                    {isDone ? '✓' : '○'} {seg.location}
-                  </span>
-                );
-              })}
-            </div>
-          )}
-        </div>
+        )}
       </div>
 
       {/* ── Loading state ── */}
@@ -505,20 +498,19 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
 
             {/* City heading */}
             {segments.length > 1 && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                <div style={{ flex: 1, height: 1, background: 'rgba(0,68,123,0.10)' }} />
-                <div style={{
-                  background: segConfirmed ? 'rgba(22,163,74,0.10)' : 'rgba(0,68,123,0.08)',
-                  border: `1.5px solid ${segConfirmed ? 'rgba(22,163,74,0.3)' : 'rgba(0,68,123,0.15)'}`,
-                  borderRadius: 100, padding: '5px 16px',
-                  fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 12,
-                  color: segConfirmed ? '#16A34A' : '#00447B',
-                  display: 'flex', alignItems: 'center', gap: 6,
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                <h3 style={{
+                  fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 16,
+                  color: segConfirmed ? '#16A34A' : '#00447B', margin: 0,
                 }}>
-                  <span>🏙️</span> {segment.label}
-                  {segConfirmed && <span style={{ marginLeft: 4 }}>✓</span>}
-                </div>
-                <div style={{ flex: 1, height: 1, background: 'rgba(0,68,123,0.10)' }} />
+                  🏙️ {segment.location}
+                  {segment.dayRange[1] > segment.dayRange[0] && (
+                    <span style={{ fontWeight: 500, color: '#6C6D6F', fontSize: 14, marginLeft: 8 }}>
+                      · {segment.dayRange[1] - segment.dayRange[0]} night{segment.dayRange[1] - segment.dayRange[0] !== 1 ? 's' : ''}
+                    </span>
+                  )}
+                  {segConfirmed && <span style={{ marginLeft: 8, fontSize: 13, color: '#16A34A' }}>✓</span>}
+                </h3>
               </div>
             )}
 

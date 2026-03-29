@@ -76,14 +76,18 @@ async function detectSegments(
       {
         role: 'user',
         content:
-          `Identify every distinct overnight location in this itinerary.\n` +
+          `Identify every distinct overnight stay location in this itinerary.\n` +
           `Trip dates: ${checkIn || 'unknown'} → ${checkOut || 'unknown'}\n\n` +
           `${itineraryText}\n\n` +
+          `RULES:\n` +
+          `- Only include cities/areas where the traveller actually sleeps overnight.\n` +
+          `- Day trips and excursions do NOT create a new segment — only overnight stops.\n` +
+          `- A new segment starts when the traveller moves to a different city to sleep.\n\n` +
           `Return ONLY this JSON (no extra text):\n` +
           `{"segments":[{"location":"city name","label":"City — Days X–Y","checkIn":"YYYY-MM-DD","checkOut":"YYYY-MM-DD","dayRange":[1,3]}]}`,
       },
     ],
-    800, // segment metadata is tiny — 800 tokens is more than enough
+    1000, // segment metadata is tiny — 1000 tokens is enough even for 30-day trips
   );
 
   const raw = await collectText(stream);
@@ -98,9 +102,9 @@ async function detectSegments(
   }
 }
 
-// ─── Phase 2: generate 3 hotels for a single segment ─────────────────────────
-// Each call is small and bounded: 1 city, 3 hotels ≈ 600–1000 tokens output.
-// Running N of these in parallel is faster and more reliable than one big call.
+// ─── Phase 2: generate 5 hotels for a single segment ─────────────────────────
+// Each call is bounded to one city, 5 hotels ≈ 2000–2500 tokens output.
+// Running N of these in parallel scales to any trip length.
 
 async function hotelsForSegment(
   segment: Segment,
@@ -121,7 +125,10 @@ async function hotelsForSegment(
     `Location: ${segment.location} (${segment.label})\n` +
     `Dates: ${segment.checkIn || 'unknown'} → ${segment.checkOut || 'unknown'}\n` +
     `Budget level: ${budget}${filtersNote}${excludeNote}\n\n` +
-    `Suggest exactly 3 real, well-known hotels located in ${segment.location}.\n` +
+    `Suggest exactly 5 real, well-known hotels located in ${segment.location}, covering a range of price tiers:\n` +
+    `- 1-2 budget options (~$80-150/night)\n` +
+    `- 2 mid-range options (~$150-300/night)\n` +
+    `- 1-2 premium/luxury options ($300+/night)\n\n` +
     `Return ONLY valid JSON (no markdown, no extra text):\n` +
     `{"hotels":[{"id":"unique-slug","name":"Full Hotel Name","stars":4,` +
     `"description":"2 sentences: why this hotel fits THIS traveller","priceRange":"~$150/night",` +
@@ -136,7 +143,7 @@ async function hotelsForSegment(
         },
         { role: 'user', content: prompt },
       ],
-      1200, // 3 hotels × ~400 tokens — never truncated
+      2500, // 5 hotels × ~500 tokens — sufficient for full descriptions
     );
 
     const raw = await collectText(stream);
