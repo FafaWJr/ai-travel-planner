@@ -634,14 +634,14 @@ Traveller Profile:
 
           {/* CTA */}
           <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:20, animation:'fadeUp 0.65s 0.3s ease both' }}>
-            <a
-              href="/plan" target="_blank" rel="noopener noreferrer"
-              style={{ display:'inline-flex', alignItems:'center', gap:10, background:'#FF8210', color:'#fff', fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:18, padding:'16px 44px', borderRadius:100, textDecoration:'none', boxShadow:'0 8px 32px rgba(255,130,16,0.40)', transition:'background 0.18s', letterSpacing:0.3 }}
-              onMouseEnter={e=>(e.currentTarget as HTMLAnchorElement).style.background='#e5730e'}
-              onMouseLeave={e=>(e.currentTarget as HTMLAnchorElement).style.background='#FF8210'}
+            <button
+              onClick={()=>scrollTo('plan-form')}
+              style={{ display:'inline-flex', alignItems:'center', gap:10, background:'#FF8210', color:'#fff', fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:18, padding:'16px 44px', borderRadius:100, border:'none', cursor:'pointer', boxShadow:'0 8px 32px rgba(255,130,16,0.40)', transition:'background 0.18s', letterSpacing:0.3 }}
+              onMouseEnter={e=>(e.currentTarget as HTMLButtonElement).style.background='#e5730e'}
+              onMouseLeave={e=>(e.currentTarget as HTMLButtonElement).style.background='#FF8210'}
             >
               Let&apos;s Go →
-            </a>
+            </button>
             <button
               onClick={()=>scrollTo('how-it-works')}
               style={{ background:'none', border:'none', cursor:'pointer', fontFamily:"'Inter',sans-serif", fontSize:15, color:'rgba(255,255,255,0.72)', letterSpacing:0.2, padding:0 }}
@@ -678,6 +678,18 @@ Traveller Profile:
         </div>
       </section>
 
+
+      {/* ───── PLAN FORM ───── */}
+      <section id="plan-form" style={{ background:'var(--bg-section)', padding:'80px 24px' }}>
+        <div style={{ maxWidth:600, margin:'0 auto' }}>
+          <div style={{ textAlign:'center', marginBottom:36 }}>
+            <p style={S.label}>Start Planning</p>
+            <h2 style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:32, color:'#000', marginBottom:12, lineHeight:1.2 }}>Where do you want to go?</h2>
+            <p style={{ fontFamily:"'Inter',sans-serif", fontSize:16, color:'#6C6D6F' }}>Fill in the details and we&apos;ll build your perfect trip in 30 seconds.</p>
+          </div>
+          <HeroStepForm onSubmit={go} />
+        </div>
+      </section>
 
       {/* ───── HOW IT WORKS + EVERYTHING IN EVERY PLAN ───── */}
       <section id="how-it-works" style={{ ...S.section, background:'var(--bg-section)' }}>
@@ -1088,14 +1100,14 @@ Traveller Profile:
           <h2 style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:40, color:'#fff', marginBottom:36, lineHeight:1.2 }}>
             Ready to plan your perfect trip?
           </h2>
-          <a
-            href="/plan" target="_blank" rel="noopener noreferrer"
-            style={{ display:'inline-flex', alignItems:'center', gap:10, background:'#FF8210', color:'#fff', fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:18, padding:'16px 44px', borderRadius:100, textDecoration:'none', boxShadow:'0 8px 32px rgba(255,130,16,0.40)', letterSpacing:0.3, transition:'background 0.18s' }}
-            onMouseEnter={e=>(e.currentTarget as HTMLAnchorElement).style.background='#e5730e'}
-            onMouseLeave={e=>(e.currentTarget as HTMLAnchorElement).style.background='#FF8210'}
+          <button
+            onClick={()=>scrollTo('plan-form')}
+            style={{ display:'inline-flex', alignItems:'center', gap:10, background:'#FF8210', color:'#fff', fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:18, padding:'16px 44px', borderRadius:100, border:'none', cursor:'pointer', boxShadow:'0 8px 32px rgba(255,130,16,0.40)', letterSpacing:0.3, transition:'background 0.18s' }}
+            onMouseEnter={e=>(e.currentTarget as HTMLButtonElement).style.background='#e5730e'}
+            onMouseLeave={e=>(e.currentTarget as HTMLButtonElement).style.background='#FF8210'}
           >
             Let&apos;s Go →
-          </a>
+          </button>
         </div>
       </section>
 
