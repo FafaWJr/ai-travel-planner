@@ -644,7 +644,7 @@ Traveller Profile:
             </button>
             <button
               onClick={()=>scrollTo('how-it-works')}
-              style={{ background:'none', border:'none', cursor:'pointer', fontFamily:"'Inter',sans-serif", fontSize:15, color:'rgba(255,255,255,0.72)', letterSpacing:0.2, padding:0 }}
+              style={{ background:'#00447B', border:'none', cursor:'pointer', fontFamily:"'Inter',sans-serif", fontWeight:600, fontSize:15, color:'#fff', letterSpacing:0.2, padding:'12px 28px', borderRadius:100 }}
             >
               See how it works ↓
             </button>
@@ -832,12 +832,11 @@ Traveller Profile:
 
 
       {/* ───── QUIZ ───── */}
-      <section id="quiz" style={{ ...S.section, background:'var(--navy)', position:'relative', overflow:'hidden' }}>
-        <div style={{ position:'absolute', inset:0, backgroundImage:'radial-gradient(circle at 20% 50%, rgba(103,154,193,0.15) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255,130,16,0.10) 0%, transparent 40%)', pointerEvents:'none' }} />
+      <section id="quiz" style={{ ...S.section, background:'var(--bg-section)', position:'relative', overflow:'hidden' }}>
         <div className="container" style={{ maxWidth:820, textAlign:'center', position:'relative', zIndex:1 }}>
-          <p style={{ ...S.label, color:'var(--orange-light)' }}>Not Sure Where to Go?</p>
-          <h2 style={{ ...S.h2, color:'#fff', fontSize:32, marginBottom:12 }}>Discover your traveller persona</h2>
-          <p style={{ fontFamily:'var(--font-body)', fontSize:17, color:'rgba(255,255,255,0.55)', marginBottom:48 }}>
+          <p style={S.label}>Not Sure Where to Go?</p>
+          <h2 style={{ ...S.h2, fontSize:32, marginBottom:12 }}>Discover your traveller persona</h2>
+          <p style={{ fontFamily:'var(--font-body)', fontSize:17, color:'var(--gray-dark)', marginBottom:48 }}>
             5 quick questions. We&apos;ll define your travel style, suggest destinations, and pre-fill your planner.
           </p>
 
@@ -848,21 +847,21 @@ Traveller Profile:
 
           ) : quizDone && quizPersona ? (
             /* ── PERSONA RESULTS ── */
-            <div style={{ background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:'var(--r-lg)', padding:'40px', textAlign:'left' }}>
+            <div style={{ background:'#fff', border:'1px solid rgba(0,68,123,0.12)', borderRadius:'var(--r-lg)', padding:'40px', textAlign:'left' }}>
               <div style={{ display:'flex', alignItems:'center', gap:20, marginBottom:24, flexWrap:'wrap' }}>
                 <div style={{ fontSize:56, lineHeight:1, flexShrink:0 }}>{quizPersona.icon}</div>
                 <div>
                   <p style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:11, color:'var(--orange-light)', letterSpacing:2, textTransform:'uppercase', marginBottom:6 }}>Your Traveller Persona</p>
-                  <h3 style={{ fontFamily:'var(--font-head)', fontWeight:800, fontSize:30, color:'#fff', lineHeight:1.1, marginBottom:4 }}>{quizPersona.name}</h3>
-                  <p style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:15, color:'rgba(255,255,255,0.55)' }}>{quizPersona.tagline}</p>
+                  <h3 style={{ fontFamily:'var(--font-head)', fontWeight:800, fontSize:30, color:'var(--navy)', lineHeight:1.1, marginBottom:4 }}>{quizPersona.name}</h3>
+                  <p style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:15, color:'var(--gray-dark)' }}>{quizPersona.tagline}</p>
                 </div>
               </div>
-              <p style={{ fontFamily:'var(--font-body)', fontSize:16, color:'rgba(255,255,255,0.75)', lineHeight:1.75, marginBottom:28, borderLeft:'3px solid var(--orange)', paddingLeft:18 }}>{quizPersona.desc}</p>
+              <p style={{ fontFamily:'var(--font-body)', fontSize:16, color:'#333', lineHeight:1.75, marginBottom:28, borderLeft:'3px solid var(--orange)', paddingLeft:18 }}>{quizPersona.desc}</p>
               <div style={{ marginBottom:24 }}>
                 <p style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:11, color:'var(--orange-light)', letterSpacing:2, textTransform:'uppercase', marginBottom:12 }}>Your Travel Profile</p>
                 <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
                   {quizPersona.traits.map((t:string) => (
-                    <span key={t} style={{ background:'rgba(255,255,255,0.10)', border:'1px solid rgba(255,255,255,0.18)', borderRadius:'var(--r-pill)', padding:'5px 14px', color:'#fff', fontFamily:'var(--font-head)', fontWeight:500, fontSize:13 }}>{t}</span>
+                    <span key={t} style={{ background:'rgba(0,68,123,0.07)', border:'1px solid rgba(0,68,123,0.18)', borderRadius:'var(--r-pill)', padding:'5px 14px', color:'var(--navy)', fontFamily:'var(--font-head)', fontWeight:500, fontSize:13 }}>{t}</span>
                   ))}
                 </div>
               </div>
@@ -878,20 +877,20 @@ Traveller Profile:
               <div style={{ marginBottom:32 }}>
                 <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
                   <p style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:11, color:'var(--orange-light)', letterSpacing:2, textTransform:'uppercase', margin:0 }}>Destinations for you</p>
-                  {aiDestsLoading && <span style={{ fontFamily:'var(--font-body)', fontSize:12, color:'rgba(255,255,255,0.40)', display:'flex', alignItems:'center', gap:6 }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ animation:'spin 0.9s linear infinite', flexShrink:0 }}><circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.2)" strokeWidth="3"/><path d="M12 2a10 10 0 0 1 10 10" stroke="#FF8210" strokeWidth="3" strokeLinecap="round"/></svg>
+                  {aiDestsLoading && <span style={{ fontFamily:'var(--font-body)', fontSize:12, color:'var(--gray-dark)', display:'flex', alignItems:'center', gap:6 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ animation:'spin 0.9s linear infinite', flexShrink:0 }}><circle cx="12" cy="12" r="10" stroke="rgba(0,68,123,0.15)" strokeWidth="3"/><path d="M12 2a10 10 0 0 1 10 10" stroke="#FF8210" strokeWidth="3" strokeLinecap="round"/></svg>
                     AI is picking destinations…
                   </span>}
                 </div>
                 {aiDestsLoading && !aiDestinations ? (
                   <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }}>
                     {[0,1,2].map(i => (
-                      <div key={i} style={{ borderRadius:'var(--r-md)', overflow:'hidden', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)' }}>
-                        <div style={{ height:130, background:'rgba(255,255,255,0.06)', animation:'shimmer 1.6s ease-in-out infinite' }} />
+                      <div key={i} style={{ borderRadius:'var(--r-md)', overflow:'hidden', background:'#f5f7fa', border:'1px solid rgba(0,68,123,0.08)' }}>
+                        <div style={{ height:130, background:'rgba(0,68,123,0.05)', animation:'shimmer 1.6s ease-in-out infinite' }} />
                         <div style={{ padding:'12px 14px' }}>
-                          <div style={{ height:13, background:'rgba(255,255,255,0.08)', borderRadius:4, marginBottom:8, width:'70%' }} />
-                          <div style={{ height:10, background:'rgba(255,255,255,0.05)', borderRadius:4, marginBottom:6, width:'45%' }} />
-                          <div style={{ height:10, background:'rgba(255,255,255,0.04)', borderRadius:4 }} />
+                          <div style={{ height:13, background:'rgba(0,68,123,0.08)', borderRadius:4, marginBottom:8, width:'70%' }} />
+                          <div style={{ height:10, background:'rgba(0,68,123,0.05)', borderRadius:4, marginBottom:6, width:'45%' }} />
+                          <div style={{ height:10, background:'rgba(0,68,123,0.04)', borderRadius:4 }} />
                         </div>
                       </div>
                     ))}
@@ -902,10 +901,10 @@ Traveller Profile:
                       const photo = destPhotos[d.name];
                       return (
                         <div key={d.name} onClick={()=>go(`Plan a trip to ${d.name}, ${d.country}`)}
-                          style={{ cursor:'pointer', borderRadius:'var(--r-md)', overflow:'hidden', background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.10)', transition:'all 0.2s' }}
+                          style={{ cursor:'pointer', borderRadius:'var(--r-md)', overflow:'hidden', background:'#fff', border:'1px solid rgba(0,68,123,0.10)', transition:'all 0.2s', boxShadow:'0 1px 4px rgba(0,0,0,0.05)' }}
                           onMouseEnter={e=>{(e.currentTarget as HTMLDivElement).style.border='1px solid rgba(255,130,16,0.45)';(e.currentTarget as HTMLDivElement).style.transform='translateY(-3px)';}}
-                          onMouseLeave={e=>{(e.currentTarget as HTMLDivElement).style.border='1px solid rgba(255,255,255,0.10)';(e.currentTarget as HTMLDivElement).style.transform='translateY(0)';}}>
-                          <div style={{ height:130, overflow:'hidden', background:'rgba(255,255,255,0.04)', position:'relative', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                          onMouseLeave={e=>{(e.currentTarget as HTMLDivElement).style.border='1px solid rgba(0,68,123,0.10)';(e.currentTarget as HTMLDivElement).style.transform='translateY(0)';}}>
+                          <div style={{ height:130, overflow:'hidden', background:'rgba(0,68,123,0.04)', position:'relative', display:'flex', alignItems:'center', justifyContent:'center' }}>
                             {photo
                               ? <img src={photo} alt={d.name} style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
                               : <span style={{ fontSize:32, opacity:0.25 }}>📍</span>
@@ -914,9 +913,9 @@ Traveller Profile:
                             <div style={{ position:'absolute', bottom:8, right:10, fontFamily:'var(--font-head)', fontWeight:600, fontSize:11, color:'rgba(255,255,255,0.7)' }}>Plan this →</div>
                           </div>
                           <div style={{ padding:'12px 14px 14px' }}>
-                            <div style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, color:'#fff', marginBottom:2 }}>{d.name}</div>
+                            <div style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, color:'var(--navy)', marginBottom:2 }}>{d.name}</div>
                             <div style={{ fontFamily:'var(--font-body)', fontSize:11, color:'var(--orange-light)', marginBottom:6 }}>{d.country}</div>
-                            <div style={{ fontFamily:'var(--font-body)', fontSize:12, color:'rgba(255,255,255,0.55)', lineHeight:1.55 }}>{d.desc}</div>
+                            <div style={{ fontFamily:'var(--font-body)', fontSize:12, color:'#555', lineHeight:1.55 }}>{d.desc}</div>
                           </div>
                         </div>
                       );
@@ -929,9 +928,9 @@ Traveller Profile:
                 <p style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:11, color:'var(--orange-light)', letterSpacing:2, textTransform:'uppercase', marginBottom:14 }}>You might want to ask</p>
                 <ul style={{ listStyle:'none', padding:0, margin:0, display:'flex', flexDirection:'column', gap:10 }}>
                   {quizPersona.questions.map((q:string, i:number) => (
-                    <li key={i} style={{ display:'flex', gap:12, alignItems:'flex-start', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:12, padding:'12px 16px' }}>
+                    <li key={i} style={{ display:'flex', gap:12, alignItems:'flex-start', background:'rgba(0,68,123,0.04)', border:'1px solid rgba(0,68,123,0.08)', borderRadius:12, padding:'12px 16px' }}>
                       <span style={{ color:'var(--orange)', fontFamily:'var(--font-head)', fontWeight:700, fontSize:16, flexShrink:0, lineHeight:1.4 }}>→</span>
-                      <span style={{ fontFamily:'var(--font-body)', fontSize:14, color:'rgba(255,255,255,0.72)', lineHeight:1.65 }}>{q}</span>
+                      <span style={{ fontFamily:'var(--font-body)', fontSize:14, color:'#444', lineHeight:1.65 }}>{q}</span>
                     </li>
                   ))}
                 </ul>
@@ -940,7 +939,7 @@ Traveller Profile:
                 <button onClick={()=>router.push('/plan')} style={{ background:'var(--orange)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, padding:'14px 32px', borderRadius:'var(--r-pill)', border:'none', cursor:'pointer', boxShadow:'0 6px 20px rgba(255,130,16,0.35)' }}>
                   Plan my trip →
                 </button>
-                <button onClick={resetQuiz} style={{ background:'rgba(255,255,255,0.10)', color:'rgba(255,255,255,0.8)', fontFamily:'var(--font-head)', fontWeight:500, fontSize:15, padding:'14px 24px', borderRadius:'var(--r-pill)', border:'1px solid rgba(255,255,255,0.20)', cursor:'pointer' }}>
+                <button onClick={resetQuiz} style={{ background:'rgba(0,68,123,0.07)', color:'var(--navy)', fontFamily:'var(--font-head)', fontWeight:500, fontSize:15, padding:'14px 24px', borderRadius:'var(--r-pill)', border:'1px solid rgba(0,68,123,0.20)', cursor:'pointer' }}>
                   ↺ Retake quiz
                 </button>
               </div>
@@ -948,23 +947,23 @@ Traveller Profile:
 
           ) : (
             /* ── QUIZ IN PROGRESS ── */
-            <div style={{ background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:'var(--r-lg)', padding:'40px 36px' }}>
+            <div style={{ background:'#fff', border:'1px solid rgba(0,68,123,0.12)', borderRadius:'var(--r-lg)', padding:'40px 36px' }}>
               {/* Progress */}
               <div style={{ display:'flex', gap:8, marginBottom:6 }}>
                 {['Vibe','Stay','Habits','Dining','Interests'].map((label,i) => (
                   <div key={i} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
-                    <div style={{ width:'100%', height:4, borderRadius:100, background:i<quizStep?'var(--orange)':i===quizStep?'var(--orange-light)':'rgba(255,255,255,0.15)', transition:'background 0.3s' }} />
-                    <span style={{ fontFamily:'var(--font-head)', fontSize:10, color:i<=quizStep?'var(--orange-light)':'rgba(255,255,255,0.25)', letterSpacing:0.5, textTransform:'uppercase' as const }}>{label}</span>
+                    <div style={{ width:'100%', height:4, borderRadius:100, background:i<quizStep?'var(--orange)':i===quizStep?'var(--orange-light)':'rgba(0,68,123,0.12)', transition:'background 0.3s' }} />
+                    <span style={{ fontFamily:'var(--font-head)', fontSize:10, color:i<=quizStep?'var(--orange-light)':'rgba(0,68,123,0.30)', letterSpacing:0.5, textTransform:'uppercase' as const }}>{label}</span>
                   </div>
                 ))}
               </div>
-              <p style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:11, color:'rgba(255,255,255,0.3)', letterSpacing:1.5, textTransform:'uppercase', marginBottom:28, marginTop:16 }}>Step {quizStep+1} of 5</p>
+              <p style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:11, color:'var(--gray-dark)', letterSpacing:1.5, textTransform:'uppercase', marginBottom:28, marginTop:16 }}>Step {quizStep+1} of 5</p>
 
               {/* Step 0: Vibe sliders */}
               {quizStep === 0 && (
                 <div style={{ textAlign:'left' }}>
-                  <h3 style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:22, color:'#fff', marginBottom:8, textAlign:'center' }}>What is your ideal travel vibe?</h3>
-                  <p style={{ fontFamily:'var(--font-body)', fontSize:14, color:'rgba(255,255,255,0.50)', marginBottom:36, textAlign:'center' }}>Drag each slider to find your sweet spot — there are no wrong answers.</p>
+                  <h3 style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:22, color:'var(--navy)', marginBottom:8, textAlign:'center' }}>What is your ideal travel vibe?</h3>
+                  <p style={{ fontFamily:'var(--font-body)', fontSize:14, color:'var(--gray-dark)', marginBottom:36, textAlign:'center' }}>Drag each slider to find your sweet spot — there are no wrong answers.</p>
                   {VIBE_SPECTRUMS.map(sp => {
                     const val = quizVibes[sp.key] ?? 2;
                     const pct = val * 25;
@@ -972,9 +971,9 @@ Traveller Profile:
                     return (
                       <div key={sp.key} style={{ marginBottom:32 }}>
                         <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
-                          <span style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:12, color:'rgba(255,255,255,0.55)' }}>{sp.leftIcon} {sp.left}</span>
+                          <span style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:12, color:'var(--gray-dark)' }}>{sp.leftIcon} {sp.left}</span>
                           <span style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:12, color:'var(--orange-light)', background:'rgba(255,130,16,0.12)', border:'1px solid rgba(255,130,16,0.25)', borderRadius:'var(--r-pill)', padding:'2px 10px' }}>{currentLabel}</span>
-                          <span style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:12, color:'rgba(255,255,255,0.55)' }}>{sp.right} {sp.rightIcon}</span>
+                          <span style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:12, color:'var(--gray-dark)' }}>{sp.right} {sp.rightIcon}</span>
                         </div>
                         <input
                           type="range" min={0} max={4} step={1} value={val}
@@ -994,22 +993,22 @@ Traveller Profile:
               {/* Step 1: Accommodation */}
               {quizStep === 1 && (
                 <div>
-                  <h3 style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:22, color:'#fff', marginBottom:8 }}>How do you like to stay?</h3>
-                  <p style={{ fontFamily:'var(--font-body)', fontSize:14, color:'rgba(255,255,255,0.50)', marginBottom:28 }}>Select all that appeal to you.</p>
+                  <h3 style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:22, color:'var(--navy)', marginBottom:8 }}>How do you like to stay?</h3>
+                  <p style={{ fontFamily:'var(--font-body)', fontSize:14, color:'var(--gray-dark)', marginBottom:28 }}>Select all that appeal to you.</p>
                   <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10, marginBottom:24 }}>
                     {ACCOM_OPTIONS.map(opt => {
                       const sel = quizAccom.includes(opt.v);
                       return (
-                        <button key={opt.v} onClick={()=>setQuizAccom(p=>p.includes(opt.v)?p.filter(x=>x!==opt.v):[...p,opt.v])} style={{ background:sel?'rgba(255,130,16,0.18)':'rgba(255,255,255,0.06)', border:`1.5px solid ${sel?'var(--orange)':'rgba(255,255,255,0.12)'}`, borderRadius:'var(--r-md)', padding:'16px 10px', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:8, transition:'all 0.15s' }}>
+                        <button key={opt.v} onClick={()=>setQuizAccom(p=>p.includes(opt.v)?p.filter(x=>x!==opt.v):[...p,opt.v])} style={{ background:sel?'rgba(255,130,16,0.10)':'rgba(0,68,123,0.04)', border:`1.5px solid ${sel?'var(--orange)':'rgba(0,68,123,0.12)'}`, borderRadius:'var(--r-md)', padding:'16px 10px', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:8, transition:'all 0.15s' }}>
                           <span style={{ fontSize:26 }}>{opt.e}</span>
-                          <span style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:12, color:sel?'var(--orange-light)':'rgba(255,255,255,0.75)', lineHeight:1.3, textAlign:'center' }}>{opt.l}</span>
+                          <span style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:12, color:sel?'var(--orange-light)':'var(--navy)', lineHeight:1.3, textAlign:'center' }}>{opt.l}</span>
                         </button>
                       );
                     })}
                   </div>
                   <div style={{ display:'flex', justifyContent:'space-between' }}>
-                    <button onClick={()=>setQuizStep(0)} style={{ background:'none', border:'none', color:'rgba(255,255,255,0.4)', fontFamily:'var(--font-head)', fontSize:13, cursor:'pointer' }}>← Back</button>
-                    <button onClick={()=>setQuizStep(2)} disabled={quizAccom.length===0} style={{ background:quizAccom.length>0?'var(--orange)':'rgba(255,255,255,0.15)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, padding:'14px 32px', borderRadius:'var(--r-pill)', border:'none', cursor:quizAccom.length>0?'pointer':'not-allowed' }}>Continue →</button>
+                    <button onClick={()=>setQuizStep(0)} style={{ background:'none', border:'none', color:'var(--gray-dark)', fontFamily:'var(--font-head)', fontSize:13, cursor:'pointer' }}>← Back</button>
+                    <button onClick={()=>setQuizStep(2)} disabled={quizAccom.length===0} style={{ background:quizAccom.length>0?'var(--orange)':'rgba(0,68,123,0.10)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, padding:'14px 32px', borderRadius:'var(--r-pill)', border:'none', cursor:quizAccom.length>0?'pointer':'not-allowed' }}>Continue →</button>
                   </div>
                 </div>
               )}
@@ -1017,8 +1016,8 @@ Traveller Profile:
               {/* Step 2: Habits */}
               {quizStep === 2 && (
                 <div style={{ textAlign:'left' }}>
-                  <h3 style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:22, color:'#fff', marginBottom:8, textAlign:'center' }}>How do you travel?</h3>
-                  <p style={{ fontFamily:'var(--font-body)', fontSize:14, color:'rgba(255,255,255,0.50)', marginBottom:28, textAlign:'center' }}>One answer per question.</p>
+                  <h3 style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:22, color:'var(--navy)', marginBottom:8, textAlign:'center' }}>How do you travel?</h3>
+                  <p style={{ fontFamily:'var(--font-body)', fontSize:14, color:'var(--gray-dark)', marginBottom:28, textAlign:'center' }}>One answer per question.</p>
                   {HABIT_QUESTIONS.map(hq => (
                     <div key={hq.key} style={{ marginBottom:24 }}>
                       <p style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:12, color:'var(--orange-light)', letterSpacing:1.5, textTransform:'uppercase', marginBottom:12 }}>{hq.label}</p>
@@ -1026,9 +1025,9 @@ Traveller Profile:
                         {hq.opts.map(opt => {
                           const sel = quizHabits[hq.key] === opt.v;
                           return (
-                            <button key={opt.v} onClick={()=>setQuizHabits(p=>({...p,[hq.key]:opt.v}))} style={{ background:sel?'rgba(255,130,16,0.18)':'rgba(255,255,255,0.06)', border:`1.5px solid ${sel?'var(--orange)':'rgba(255,255,255,0.12)'}`, borderRadius:10, padding:'10px 16px', cursor:'pointer', transition:'all 0.15s', display:'flex', alignItems:'center', gap:8 }}>
+                            <button key={opt.v} onClick={()=>setQuizHabits(p=>({...p,[hq.key]:opt.v}))} style={{ background:sel?'rgba(255,130,16,0.10)':'rgba(0,68,123,0.04)', border:`1.5px solid ${sel?'var(--orange)':'rgba(0,68,123,0.12)'}`, borderRadius:10, padding:'10px 16px', cursor:'pointer', transition:'all 0.15s', display:'flex', alignItems:'center', gap:8 }}>
                               <span style={{ fontSize:18 }}>{opt.e}</span>
-                              <span style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:13, color:sel?'var(--orange-light)':'rgba(255,255,255,0.75)' }}>{opt.l}</span>
+                              <span style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:13, color:sel?'var(--orange-light)':'var(--navy)' }}>{opt.l}</span>
                             </button>
                           );
                         })}
@@ -1036,8 +1035,8 @@ Traveller Profile:
                     </div>
                   ))}
                   <div style={{ display:'flex', justifyContent:'space-between', marginTop:8 }}>
-                    <button onClick={()=>setQuizStep(1)} style={{ background:'none', border:'none', color:'rgba(255,255,255,0.4)', fontFamily:'var(--font-head)', fontSize:13, cursor:'pointer' }}>← Back</button>
-                    <button onClick={()=>setQuizStep(3)} disabled={Object.keys(quizHabits).length<HABIT_QUESTIONS.length} style={{ background:Object.keys(quizHabits).length>=HABIT_QUESTIONS.length?'var(--orange)':'rgba(255,255,255,0.15)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, padding:'14px 32px', borderRadius:'var(--r-pill)', border:'none', cursor:Object.keys(quizHabits).length>=HABIT_QUESTIONS.length?'pointer':'not-allowed' }}>Continue →</button>
+                    <button onClick={()=>setQuizStep(1)} style={{ background:'none', border:'none', color:'var(--gray-dark)', fontFamily:'var(--font-head)', fontSize:13, cursor:'pointer' }}>← Back</button>
+                    <button onClick={()=>setQuizStep(3)} disabled={Object.keys(quizHabits).length<HABIT_QUESTIONS.length} style={{ background:Object.keys(quizHabits).length>=HABIT_QUESTIONS.length?'var(--orange)':'rgba(0,68,123,0.10)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, padding:'14px 32px', borderRadius:'var(--r-pill)', border:'none', cursor:Object.keys(quizHabits).length>=HABIT_QUESTIONS.length?'pointer':'not-allowed' }}>Continue →</button>
                   </div>
                 </div>
               )}
@@ -1045,22 +1044,22 @@ Traveller Profile:
               {/* Step 3: Dining */}
               {quizStep === 3 && (
                 <div>
-                  <h3 style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:22, color:'#fff', marginBottom:8 }}>What dining experiences do you love?</h3>
-                  <p style={{ fontFamily:'var(--font-body)', fontSize:14, color:'rgba(255,255,255,0.50)', marginBottom:28 }}>Select all that apply.</p>
+                  <h3 style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:22, color:'var(--navy)', marginBottom:8 }}>What dining experiences do you love?</h3>
+                  <p style={{ fontFamily:'var(--font-body)', fontSize:14, color:'var(--gray-dark)', marginBottom:28 }}>Select all that apply.</p>
                   <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10, marginBottom:24 }}>
                     {DINING_OPTIONS.map(opt => {
                       const sel = quizDining.includes(opt.v);
                       return (
-                        <button key={opt.v} onClick={()=>setQuizDining(p=>p.includes(opt.v)?p.filter(x=>x!==opt.v):[...p,opt.v])} style={{ background:sel?'rgba(255,130,16,0.18)':'rgba(255,255,255,0.06)', border:`1.5px solid ${sel?'var(--orange)':'rgba(255,255,255,0.12)'}`, borderRadius:'var(--r-md)', padding:'14px 8px', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:6, transition:'all 0.15s' }}>
+                        <button key={opt.v} onClick={()=>setQuizDining(p=>p.includes(opt.v)?p.filter(x=>x!==opt.v):[...p,opt.v])} style={{ background:sel?'rgba(255,130,16,0.10)':'rgba(0,68,123,0.04)', border:`1.5px solid ${sel?'var(--orange)':'rgba(0,68,123,0.12)'}`, borderRadius:'var(--r-md)', padding:'14px 8px', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:6, transition:'all 0.15s' }}>
                           <span style={{ fontSize:24 }}>{opt.e}</span>
-                          <span style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:11, color:sel?'var(--orange-light)':'rgba(255,255,255,0.70)', lineHeight:1.3, textAlign:'center' }}>{opt.l}</span>
+                          <span style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:11, color:sel?'var(--orange-light)':'var(--navy)', lineHeight:1.3, textAlign:'center' }}>{opt.l}</span>
                         </button>
                       );
                     })}
                   </div>
                   <div style={{ display:'flex', justifyContent:'space-between' }}>
-                    <button onClick={()=>setQuizStep(2)} style={{ background:'none', border:'none', color:'rgba(255,255,255,0.4)', fontFamily:'var(--font-head)', fontSize:13, cursor:'pointer' }}>← Back</button>
-                    <button onClick={()=>setQuizStep(4)} disabled={quizDining.length===0} style={{ background:quizDining.length>0?'var(--orange)':'rgba(255,255,255,0.15)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, padding:'14px 32px', borderRadius:'var(--r-pill)', border:'none', cursor:quizDining.length>0?'pointer':'not-allowed' }}>Continue →</button>
+                    <button onClick={()=>setQuizStep(2)} style={{ background:'none', border:'none', color:'var(--gray-dark)', fontFamily:'var(--font-head)', fontSize:13, cursor:'pointer' }}>← Back</button>
+                    <button onClick={()=>setQuizStep(4)} disabled={quizDining.length===0} style={{ background:quizDining.length>0?'var(--orange)':'rgba(0,68,123,0.10)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, padding:'14px 32px', borderRadius:'var(--r-pill)', border:'none', cursor:quizDining.length>0?'pointer':'not-allowed' }}>Continue →</button>
                   </div>
                 </div>
               )}
@@ -1068,22 +1067,22 @@ Traveller Profile:
               {/* Step 4: Interests */}
               {quizStep === 4 && (
                 <div>
-                  <h3 style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:22, color:'#fff', marginBottom:8 }}>What are your favourite travel activities?</h3>
-                  <p style={{ fontFamily:'var(--font-body)', fontSize:14, color:'rgba(255,255,255,0.50)', marginBottom:28 }}>Select all that apply.</p>
+                  <h3 style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:22, color:'var(--navy)', marginBottom:8 }}>What are your favourite travel activities?</h3>
+                  <p style={{ fontFamily:'var(--font-body)', fontSize:14, color:'var(--gray-dark)', marginBottom:28 }}>Select all that apply.</p>
                   <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10, marginBottom:24 }}>
                     {INTEREST_OPTIONS.map(opt => {
                       const sel = quizInterests.includes(opt.v);
                       return (
-                        <button key={opt.v} onClick={()=>setQuizInterests(p=>p.includes(opt.v)?p.filter(x=>x!==opt.v):[...p,opt.v])} style={{ background:sel?'rgba(255,130,16,0.18)':'rgba(255,255,255,0.06)', border:`1.5px solid ${sel?'var(--orange)':'rgba(255,255,255,0.12)'}`, borderRadius:'var(--r-md)', padding:'14px 8px', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:6, transition:'all 0.15s' }}>
+                        <button key={opt.v} onClick={()=>setQuizInterests(p=>p.includes(opt.v)?p.filter(x=>x!==opt.v):[...p,opt.v])} style={{ background:sel?'rgba(255,130,16,0.10)':'rgba(0,68,123,0.04)', border:`1.5px solid ${sel?'var(--orange)':'rgba(0,68,123,0.12)'}`, borderRadius:'var(--r-md)', padding:'14px 8px', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:6, transition:'all 0.15s' }}>
                           <span style={{ fontSize:24 }}>{opt.e}</span>
-                          <span style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:11, color:sel?'var(--orange-light)':'rgba(255,255,255,0.70)', lineHeight:1.3, textAlign:'center' }}>{opt.l}</span>
+                          <span style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:11, color:sel?'var(--orange-light)':'var(--navy)', lineHeight:1.3, textAlign:'center' }}>{opt.l}</span>
                         </button>
                       );
                     })}
                   </div>
                   <div style={{ display:'flex', justifyContent:'space-between' }}>
-                    <button onClick={()=>setQuizStep(3)} style={{ background:'none', border:'none', color:'rgba(255,255,255,0.4)', fontFamily:'var(--font-head)', fontSize:13, cursor:'pointer' }}>← Back</button>
-                    <button onClick={finishQuiz} disabled={quizInterests.length===0} style={{ background:quizInterests.length>0?'var(--orange)':'rgba(255,255,255,0.15)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, padding:'14px 32px', borderRadius:'var(--r-pill)', border:'none', cursor:quizInterests.length>0?'pointer':'not-allowed' }}>
+                    <button onClick={()=>setQuizStep(3)} style={{ background:'none', border:'none', color:'var(--gray-dark)', fontFamily:'var(--font-head)', fontSize:13, cursor:'pointer' }}>← Back</button>
+                    <button onClick={finishQuiz} disabled={quizInterests.length===0} style={{ background:quizInterests.length>0?'var(--orange)':'rgba(0,68,123,0.10)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, padding:'14px 32px', borderRadius:'var(--r-pill)', border:'none', cursor:quizInterests.length>0?'pointer':'not-allowed' }}>
                       Reveal my persona ✨
                     </button>
                   </div>
@@ -1095,9 +1094,9 @@ Traveller Profile:
       </section>
 
       {/* ───── FINAL CTA ───── */}
-      <section style={{ background:'#00447B', padding:'96px 24px' }}>
+      <section style={{ background:'#fff', padding:'96px 24px', borderTop:'1px solid rgba(0,68,123,0.08)' }}>
         <div style={{ maxWidth:640, margin:'0 auto', textAlign:'center' }}>
-          <h2 style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:40, color:'#fff', marginBottom:36, lineHeight:1.2 }}>
+          <h2 style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:40, color:'var(--navy)', marginBottom:36, lineHeight:1.2 }}>
             Ready to plan your perfect trip?
           </h2>
           <button
