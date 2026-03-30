@@ -4,6 +4,7 @@ import Link from 'next/link';
 
 export default function HomePage() {
   const navRef = useRef<HTMLElement>(null);
+  const carouselRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -185,11 +186,19 @@ export default function HomePage() {
         @media(max-width:540px){
           .hero-title{font-size:36px;letter-spacing:-1px}
           .features-grid{grid-template-columns:1fr}
-          .ideas-grid{grid-template-columns:1fr}
           .persona-cards{flex-direction:column;align-items:center}
-          .footer-grid{grid-template-columns:1fr}
-          .footer-bottom{flex-direction:column;gap:12px;text-align:center}
         }
+        /* CAROUSEL */
+        .ideas-carousel-wrap{position:relative;margin-top:52px}
+        .ideas-carousel{display:flex;gap:20px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;padding-bottom:12px;-ms-overflow-style:none;scrollbar-width:none}
+        .ideas-carousel::-webkit-scrollbar{display:none}
+        .ideas-carousel .idea-card{min-width:280px;flex-shrink:0;scroll-snap-align:start}
+        .carousel-btn{position:absolute;top:50%;transform:translateY(-60%);width:40px;height:40px;border-radius:50%;background:white;border:1.5px solid rgba(0,68,123,0.15);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,0.1);transition:all 0.2s}
+        .carousel-btn:hover{background:var(--orange);border-color:var(--orange)}
+        .carousel-btn:hover svg{stroke:white}
+        .carousel-btn.prev{left:-20px}
+        .carousel-btn.next{right:-20px}
+        @media(max-width:900px){.carousel-btn{display:none}}
       `}</style>
 
       {/* NAVBAR */}
@@ -432,50 +441,47 @@ export default function HomePage() {
 
       {/* TRIP IDEAS */}
       <section className="section trip-ideas" id="trip-ideas">
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end',marginBottom:52}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end',marginBottom:0}}>
           <div>
             <div className="section-label">Inspiration</div>
             <h2 className="section-title" style={{marginBottom:0}}>Trip ideas to get you started</h2>
           </div>
           <Link href="/trip-ideas" style={{fontFamily:"'Lato',sans-serif",fontSize:14,fontWeight:700,color:'var(--orange)',textDecoration:'none'}}>See all ideas &rarr;</Link>
         </div>
-        <div className="ideas-grid">
-          <div className="idea-card">
-            <div className="idea-img" style={{backgroundImage:"url('https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=600&q=80')",backgroundSize:'cover',backgroundPosition:'center'}}>
-              <div className="idea-img-bg"><span className="idea-tag">Culture</span></div>
-            </div>
-            <div className="idea-body">
-              <h3>Tokyo, Japan</h3>
-              <div className="days">7 days</div>
-              <div className="idea-tags">
-                <span className="tag">Food</span><span className="tag">Markets</span><span className="tag">Art</span><span className="tag">History</span>
-              </div>
-            </div>
+        <div className="ideas-carousel-wrap">
+          <button className="carousel-btn prev" onClick={()=>carouselRef.current?.scrollBy({left:-320,behavior:'smooth'})}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00447B" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6" /></svg>
+          </button>
+          <div className="ideas-carousel" ref={carouselRef}>
+            {[
+              {img:'photo-1540959733332-eab4deabeeaf',tag:'Culture',name:'Tokyo, Japan',days:'7 days',tags:['Food','Markets','Art']},
+              {img:'photo-1548707309-dcebeab9ea9b',tag:'Trending',name:'Lisbon, Portugal',days:'5 days',tags:['History','Food','Sunsets']},
+              {img:'photo-1537996194471-e657df975ab4',tag:'Budget pick',name:'Bali, Indonesia',days:'10 days',tags:['Nature','Temples','Relax']},
+              {img:'photo-1570077188670-e3a8d69ac5ff',tag:'Romance',name:'Santorini, Greece',days:'6 days',tags:['Beaches','Views','Wine']},
+              {img:'photo-1508193638397-1c4234db14d8',tag:'Adventure',name:'Banff, Canada',days:'7 days',tags:['Hiking','Mountains','Nature']},
+              {img:'photo-1539020140153-e479b8c22e70',tag:'Culture',name:'Marrakech, Morocco',days:'5 days',tags:['Souks','History','Food']},
+              {img:'photo-1514282401047-d79a71a590e8',tag:'Luxury',name:'Maldives',days:'8 days',tags:['Beach','Resort','Water']},
+              {img:'photo-1496442226666-8d4d0e62e6e9',tag:'City',name:'New York City, USA',days:'6 days',tags:['Culture','Food','Nightlife']},
+              {img:'photo-1501854140801-50d01698950b',tag:'Adventure',name:'Patagonia, Argentina',days:'10 days',tags:['Trekking','Nature','Wildlife']},
+              {img:'photo-1493976040374-85c8e12f0c0e',tag:'Cultural',name:'Kyoto, Japan',days:'5 days',tags:['Temples','Gardens','History']},
+            ].map(item => (
+              <Link key={item.name} href={`/start?destination=${encodeURIComponent(item.name)}`} className="idea-card" style={{textDecoration:'none',color:'inherit'}}>
+                <div className="idea-img" style={{backgroundImage:`url('https://images.unsplash.com/${item.img}?w=600&q=80')`,backgroundSize:'cover',backgroundPosition:'center'}}>
+                  <div className="idea-img-bg"><span className="idea-tag">{item.tag}</span></div>
+                </div>
+                <div className="idea-body">
+                  <h3>{item.name}</h3>
+                  <div className="days">{item.days}</div>
+                  <div className="idea-tags">
+                    {item.tags.map(t => <span key={t} className="tag">{t}</span>)}
+                  </div>
+                </div>
+              </Link>
+            ))}
           </div>
-          <div className="idea-card">
-            <div className="idea-img" style={{backgroundImage:"url('https://images.unsplash.com/photo-1548707309-dcebeab9ea9b?w=600&q=80')",backgroundSize:'cover',backgroundPosition:'center'}}>
-              <div className="idea-img-bg"><span className="idea-tag">Trending</span></div>
-            </div>
-            <div className="idea-body">
-              <h3>Lisbon, Portugal</h3>
-              <div className="days">5 days</div>
-              <div className="idea-tags">
-                <span className="tag">History</span><span className="tag">Food</span><span className="tag">Sunsets</span>
-              </div>
-            </div>
-          </div>
-          <div className="idea-card">
-            <div className="idea-img" style={{backgroundImage:"url('https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&q=80')",backgroundSize:'cover',backgroundPosition:'center'}}>
-              <div className="idea-img-bg"><span className="idea-tag">Budget pick</span></div>
-            </div>
-            <div className="idea-body">
-              <h3>Bali, Indonesia</h3>
-              <div className="days">10 days</div>
-              <div className="idea-tags">
-                <span className="tag">Nature</span><span className="tag">Temples</span><span className="tag">Relax</span>
-              </div>
-            </div>
-          </div>
+          <button className="carousel-btn next" onClick={()=>carouselRef.current?.scrollBy({left:320,behavior:'smooth'})}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00447B" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6" /></svg>
+          </button>
         </div>
       </section>
 
@@ -502,7 +508,7 @@ export default function HomePage() {
             <div className="p-name">The Photographer</div>
           </div>
           <div className="persona-card">
-            <svg width="18" height="18" viewBox="0 0 18 18" style={{flexShrink:0}}><circle cx="9" cy="9" r="9" fill="var(--navy)" /></svg>
+            <svg width="18" height="18" viewBox="0 0 18 18" style={{flexShrink:0}}><circle cx="9" cy="9" r="9" fill="var(--orange)" /></svg>
             <div className="p-name">The Culture Seeker</div>
           </div>
         </div>
@@ -516,42 +522,6 @@ export default function HomePage() {
         <Link href="/start" className="btn-cta-white">Let&apos;s Go &rarr;</Link>
       </section>
 
-      {/* FOOTER */}
-      <footer>
-        <div className="footer-grid">
-          <div className="footer-brand">
-            <img src="/luna_letsgo_bigger_3.PNG" alt="Luna Let's Go" />
-            <p>AI-powered travel planning that feels human. Built for travellers who want something more personal.</p>
-          </div>
-          <div className="footer-col">
-            <h4>About Us</h4>
-            <Link href="/about">Our Story</Link>
-            <Link href="/about#team">The Team</Link>
-            <Link href="/blog">Blog</Link>
-          </div>
-          <div className="footer-col">
-            <h4>Quick Links</h4>
-            <Link href="/start">Plan a Trip</Link>
-            <Link href="/trip-ideas">Trip Ideas</Link>
-            <Link href="/quiz">Travel Quiz</Link>
-            <Link href="/deals">Deals</Link>
-          </div>
-          <div className="footer-col">
-            <h4>Legal</h4>
-            <Link href="/privacy-policy">Privacy Policy</Link>
-            <Link href="/terms-of-service">Terms of Service</Link>
-            <a href="mailto:hello@lunaletsgo.com">Contact Us</a>
-          </div>
-        </div>
-        <div className="footer-bottom">
-          <p>&copy; 2026 Luna Let&apos;s Go. All rights reserved. lunaletsgo.com</p>
-          <div className="social-links">
-            <a href="#">Instagram</a>
-            <a href="#">TikTok</a>
-            <a href="#">Facebook</a>
-          </div>
-        </div>
-      </footer>
     </>
   );
 }

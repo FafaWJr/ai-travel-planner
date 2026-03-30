@@ -34,11 +34,12 @@ export default function Footer() {
           <div>
             <p className="footer-heading">Quick Links</p>
             <nav className="footer-links-grid">
-              <Link href="/#planner" className="footer-link">Plan a Trip</Link>
-              <Link href="/blog"     className="footer-link">Blog</Link>
-              <Link href="/deals"    className="footer-link">Deals</Link>
-              <Link href="/my-trips" className="footer-link">My Trips</Link>
-              <Link href="/about"    className="footer-link">About Us</Link>
+              <Link href="/start"       className="footer-link">Plan a Trip</Link>
+              <Link href="/trip-ideas"  className="footer-link">Trip Ideas</Link>
+              <Link href="/quiz"        className="footer-link">Travel Quiz</Link>
+              <Link href="/blog"        className="footer-link">Blog</Link>
+              <Link href="/deals"       className="footer-link">Deals</Link>
+              <Link href="/about"       className="footer-link">About Us</Link>
             </nav>
           </div>
 
@@ -46,8 +47,8 @@ export default function Footer() {
           <div>
             <p className="footer-heading">Legal</p>
             <nav style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <Link href="/privacy-policy" className="footer-link">Privacy Policy</Link>
-              <Link href="/terms"   className="footer-link">Terms of Service</Link>
+              <Link href="/privacy-policy"    className="footer-link">Privacy Policy</Link>
+              <Link href="/terms-of-service"  className="footer-link">Terms of Service</Link>
             </nav>
           </div>
 
