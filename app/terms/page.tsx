@@ -1,8 +1,18 @@
 import type { Metadata } from 'next'
 
+const BASE_URL = 'https://www.lunaletsgo.com';
+
 export const metadata: Metadata = {
   title: 'Terms of Service | Luna Let\'s Go',
-  description: 'Read the terms and conditions that govern your use of the Luna Let\'s Go travel planning platform.',
+  description: "Read the Terms of Service for Luna Let's Go — the AI travel planner. Understand your rights, responsibilities, and how our platform works before using the service.",
+  alternates: { canonical: `${BASE_URL}/terms` },
+  robots: { index: true, follow: true },
+  openGraph: {
+    title: "Terms of Service | Luna Let's Go",
+    description: "The terms and conditions governing use of the Luna Let's Go AI travel planning platform.",
+    url: `${BASE_URL}/terms`,
+    type: 'website',
+  },
 }
 
 export default function TermsOfServicePage() {

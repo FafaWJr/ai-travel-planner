@@ -1,8 +1,18 @@
 import type { Metadata } from 'next'
 
+const BASE_URL = 'https://www.lunaletsgo.com';
+
 export const metadata: Metadata = {
   title: 'Privacy Policy | Luna Let\'s Go',
-  description: 'Learn how Luna Let\'s Go collects, uses, and protects your personal information.',
+  description: "Read Luna Let's Go's Privacy Policy to understand how we collect, use, store, and protect your personal data when you use our AI travel planning platform.",
+  alternates: { canonical: `${BASE_URL}/privacy-policy` },
+  robots: { index: true, follow: true },
+  openGraph: {
+    title: "Privacy Policy | Luna Let's Go",
+    description: "How Luna Let's Go handles your personal data — transparent, secure, and GDPR-aligned.",
+    url: `${BASE_URL}/privacy-policy`,
+    type: 'website',
+  },
 }
 
 export default function PrivacyPolicyPage() {
