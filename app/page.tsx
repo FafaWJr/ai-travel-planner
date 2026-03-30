@@ -1,991 +1,557 @@
 'use client';
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import NavBar from '@/components/NavBar';
-import {
-  Globe, CloudSun, CalendarDays, Building2, Car, DollarSign,
-  Info, MessageCircle, FileDown, GripVertical, CirclePlus,
-  RefreshCw, Bookmark, Wand2, PenLine, Zap, Sliders, Calendar,
-} from 'lucide-react';
-
-/* ── Brand Icon components (flat, 2-colour: #FF8210 + #00447B) ── */
-const IconCompass = () => (
-  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-    <circle cx="16" cy="16" r="14" stroke="#00447B" strokeWidth="2"/>
-    <polygon points="16,6 19,16 16,14 13,16" fill="#FF8210"/>
-    <polygon points="16,26 13,16 16,18 19,16" fill="#00447B"/>
-  </svg>
-);
-const IconBolt = () => (
-  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-    <rect width="32" height="32" rx="8" fill="#F4F7FB"/>
-    <path d="M18 4L8 18h8l-2 10 14-16h-8l2-8z" fill="#FF8210"/>
-  </svg>
-);
-const IconMap = () => (
-  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-    <rect width="32" height="32" rx="8" fill="#F4F7FB"/>
-    <path d="M4 6l8 4 8-4 8 4v20l-8-4-8 4-8-4V6z" fill="#00447B" opacity=".15"/>
-    <path d="M12 10l8-4v20l-8 4V10z" fill="#00447B"/>
-    <path d="M4 6l8 4v20L4 26V6z" fill="#679AC1"/>
-    <path d="M20 6l8 4v20l-8-4V6z" fill="#FF8210" opacity=".7"/>
-  </svg>
-);
-const IconStar = () => (
-  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-    <rect width="32" height="32" rx="8" fill="#F4F7FB"/>
-    <path d="M16 4l3 8h8l-6.5 5 2.5 8L16 20l-7 5 2.5-8L5 12h8z" fill="#FF8210"/>
-  </svg>
-);
-const IconChat = () => (
-  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-    <rect width="32" height="32" rx="8" fill="#F4F7FB"/>
-    <rect x="4" y="6" width="24" height="16" rx="4" fill="#00447B"/>
-    <path d="M10 28l4-6h8l4 6H10z" fill="#00447B"/>
-    <rect x="9" y="11" width="14" height="2" rx="1" fill="#FF8210"/>
-    <rect x="9" y="15" width="10" height="2" rx="1" fill="white" opacity=".6"/>
-  </svg>
-);
-const IconShield = () => (
-  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-    <rect width="32" height="32" rx="8" fill="#F4F7FB"/>
-    <path d="M16 4l10 4v8c0 6-4 10-10 12C10 26 6 22 6 16V8l10-4z" fill="#00447B" opacity=".15"/>
-    <path d="M16 4l10 4v8c0 6-4 10-10 12C10 26 6 22 6 16V8l10-4z" stroke="#00447B" strokeWidth="1.5"/>
-    <path d="M11 16l3 3 7-7" stroke="#FF8210" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-/* ── Data ── */
-const HERO_IMAGES = [
-  { url:'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=1800&q=90', label:'The world is waiting.' },
-  { url:'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1800&q=90', label:'Mountains call.' },
-  { url:'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1800&q=90', label:'Beach escapes await.' },
-  { url:'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=1800&q=90', label:'Cities never sleep.' },
-  { url:'https://images.unsplash.com/photo-1418985991508-e47386d96a71?auto=format&fit=crop&w=1800&q=90', label:'Snow & adventure.' },
-  { url:'https://images.unsplash.com/photo-1509316785289-025f5b846b35?auto=format&fit=crop&w=1800&q=90', label:'Desert wonders.' },
-];
-
-const QUICK_IDEAS = [
-  { icon:'🏖️', label:'Beach escape',   query:'A relaxing 7-day beach escape' },
-  { icon:'🗺️', label:'Road trip',       query:'An epic road trip adventure' },
-  { icon:'🏔️', label:'Mountain trek',   query:'A mountain trekking adventure' },
-  { icon:'🏛️', label:'Culture tour',    query:'A cultural and history tour' },
-  { icon:'💑', label:'Romantic',        query:'A romantic couple getaway' },
-  { icon:'👨‍👩‍👧', label:'Family fun',  query:'A fun family vacation' },
-];
-
-/* ── Quiz data ── */
-const VIBE_SPECTRUMS = [
-  { key:'energy',  leftIcon:'⛰️', left:'Pure Adventure',    right:'Total Relaxation',  rightIcon:'🌴', labels:['Pure Adventure','Adventurous','Balanced','Relaxed','Pure Relaxation'] },
-  { key:'setting', leftIcon:'🌿', left:'Outdoors & Nature',  right:'Cities & Culture',  rightIcon:'🏛️', labels:['Pure Outdoors','Outdoorsy','Mix of both','Culture-leaning','Pure Culture'] },
-  { key:'crowd',   leftIcon:'📸', left:'Famous Highlights',  right:'Hidden Local Gems', rightIcon:'🗺️', labels:['Iconic hotspots','Popular spots','Mix of both','Off-beaten-path','Hidden gems'] },
-  { key:'coast',   leftIcon:'🏔️', left:'Mountains & Inland', right:'Beaches & Coast',   rightIcon:'🏖️', labels:['Deep inland','Mountain-based','Mix of both','Coastal vibes','Full beach mode'] },
-];
-
-const ACCOM_OPTIONS = [
-  {v:'luxury',e:'🏰',l:'Luxury Hotel'},{v:'boutique',e:'🏡',l:'Boutique Hotel'},
-  {v:'resort',e:'🌴',l:'Resort'},{v:'bnb',e:'☕',l:'B&B / Guesthouse'},
-  {v:'hostel',e:'🎒',l:'Hostel'},{v:'apartment',e:'🏠',l:'Apartment / Airbnb'},
-  {v:'camping',e:'⛺',l:'Camping & Glamping'},{v:'motel',e:'🛣️',l:'Motel'},
-  {v:'allinclusive',e:'🍹',l:'All-Inclusive'},
-];
-
-const HABIT_QUESTIONS = [
-  { key:'spend', label:'Spending style', opts:[
-    {e:'🎒',l:'Shoestring',v:'shoestring'},{e:'💰',l:'Budget-conscious',v:'budget'},
-    {e:'🏨',l:'Comfortable',v:'comfortable'},{e:'✨',l:'Splurge often',v:'splurge'},
-    {e:'💎',l:'No limits',v:'unlimited'},
-  ]},
-  { key:'pace', label:'Time of day', opts:[
-    {e:'🌅',l:'Early bird',v:'early'},{e:'☀️',l:'Daytime explorer',v:'day'},
-    {e:'🌆',l:'Afternoon starter',v:'afternoon'},{e:'🌙',l:'Night owl',v:'night'},
-  ]},
-  { key:'social', label:'Travel company', opts:[
-    {e:'🧍',l:'Solo & independent',v:'solo'},
-    {e:'💑',l:'Couple',v:'couple'},
-    {e:'🤝',l:'Mix of both',v:'mixed'},{e:'🎉',l:'Group & social',v:'social'},
-  ]},
-];
-
-const DINING_OPTIONS = [
-  {v:'finedining',e:'🍽️',l:'Fine Dining'},{v:'streetfood',e:'🌮',l:'Street Food'},
-  {v:'cafes',e:'☕',l:'Cafes & Bistros'},{v:'family',e:'👨‍👩‍👧',l:'Family Restaurants'},
-  {v:'veganveg',e:'🥗',l:'Vegetarian / Vegan'},{v:'ethnic',e:'🌍',l:'Ethnic & World Cuisine'},
-  {v:'halal',e:'🌙',l:'Halal'},{v:'fastfood',e:'🍔',l:'Fast Food'},
-  {v:'pub',e:'🍺',l:'Pub & Tavern'},{v:'bakery',e:'🥐',l:'Bakeries & Patisseries'},
-  {v:'markets',e:'🛒',l:'Food Markets'},{v:'farmtable',e:'🌾',l:'Farm-to-Table'},
-];
-
-const INTEREST_OPTIONS = [
-  {v:'beach',e:'🏖️',l:'Beach & Swimming'},{v:'hiking',e:'🥾',l:'Hiking & Trekking'},
-  {v:'watersports',e:'🏄',l:'Water Sports'},{v:'cycling',e:'🚴',l:'Cycling'},
-  {v:'photography',e:'📸',l:'Photography'},{v:'wellness',e:'🧘',l:'Wellness & Spa'},
-  {v:'history',e:'🏛️',l:'Historical Tours'},{v:'nightlife',e:'🎉',l:'Nightlife & Bars'},
-  {v:'wildlife',e:'🦁',l:'Wildlife & Nature'},{v:'shows',e:'🎭',l:'Shows & Performances'},
-  {v:'shopping',e:'🛍️',l:'Shopping'},{v:'architecture',e:'🏰',l:'Architecture'},
-  {v:'cooking',e:'👨‍🍳',l:'Cooking Classes'},{v:'wine',e:'🍷',l:'Wine & Spirits'},
-  {v:'markets',e:'🏪',l:'Local Markets'},{v:'sports',e:'⚽',l:'Sports & Activities'},
-];
-
-const PERSONA_DESTINATIONS: Record<string, Array<{name:string; country:string; desc:string; query:string}>> = {
-  'The Wild Explorer':       [{name:'Patagonia',     country:'Argentina & Chile', desc:'Glaciers, granite peaks and raw Andean wilderness with virtually no crowds.',   query:'Patagonia'},{name:'Faroe Islands',  country:'Denmark',           desc:'Dramatic sea cliffs, waterfalls and mist-shrouded volcanic seascapes.',       query:'Faroe Islands'},{name:'Kyrgyzstan',     country:'Central Asia',       desc:'Untouched mountain valleys, nomadic yurt camps and silk-road culture.',      query:'Kyrgyzstan'}],
-  'The Thrill Seeker':       [{name:'Queenstown',    country:'New Zealand',        desc:'The adventure capital of the world — bungee, skydive, raft, all in one week.',query:'Queenstown New Zealand'},{name:'Interlaken',     country:'Switzerland',        desc:'Alpine adventure hub ringed by lakes, glaciers and extreme sports.',         query:'Interlaken Switzerland'},{name:'Moab',          country:'Utah, USA',          desc:'Red-rock canyon country built for climbing, mountain biking and off-road.',  query:'Moab Utah'}],
-  'The Cultural Adventurer': [{name:'Tbilisi',        country:'Georgia',            desc:'Ancient cave monasteries, Soviet street art and world-class natural wine.',   query:'Tbilisi'},{name:'Oaxaca',         country:'Mexico',             desc:'Rich indigenous heritage, ancient ruins and a world-renowned food scene.',   query:'Oaxaca'},{name:'Luang Prabang',  country:'Laos',               desc:'Golden temples, saffron-robed monks at dawn and Mekong river sunsets.',      query:'Luang Prabang'}],
-  'The Expedition Traveller':[{name:'Machu Picchu',   country:'Peru',               desc:'Iconic Inca citadel perched high in the cloud-covered Andes mountains.',     query:'Machu Picchu'},{name:'Angkor Wat',     country:'Cambodia',           desc:"The world's largest religious monument, deep in the jungle.",               query:'Angkor Wat'},{name:'Cappadocia',     country:'Turkey',             desc:'Hot-air balloons at sunrise over fairy-chimney rock formations.',            query:'Cappadocia'}],
-  'The Mindful Wanderer':    [{name:'Azores',         country:'Portugal',           desc:'Volcanic island paradise with thermal pools, whale watching and wild coasts.',query:'Azores'},{name:'Chiang Mai',     country:'Thailand',           desc:'Jungle temples, elephant sanctuaries, wellness retreats and farm cuisine.',  query:'Chiang Mai'},{name:'Sintra',         country:'Portugal',           desc:'Fairy-tale palaces, misty forests and clifftop castles near Lisbon.',       query:'Sintra'}],
-  'The Beach Lover':         [{name:'Maldives',       country:'Indian Ocean',       desc:'Overwater bungalows, crystal-clear lagoons and pristine coral reefs.',        query:'Maldives'},{name:'Bali',           country:'Indonesia',          desc:'Lush rice paddies, surf-ready beaches and vibrant sunset beach clubs.',      query:'Bali'},{name:'Seychelles',     country:'East Africa',        desc:'Granite-boulder beaches, turquoise bays and tropical marine paradise.',      query:'Seychelles'}],
-  'The Cultural Connoisseur':[{name:'Havana',         country:'Cuba',               desc:"1950s cars, salsa rhythms, crumbling colonial grandeur and street art.",     query:'Havana'},{name:'Bologna',        country:'Italy',              desc:"Italy's food capital with medieval arcades, markets and student energy.",    query:'Bologna'},{name:'Fez',            country:'Morocco',            desc:"The world's oldest living medieval city, full of hidden souks and craft.",   query:'Fez'}],
-  'The Cultured Traveller':  [{name:'Paris',          country:'France',             desc:'The city of art, gastronomy, fashion and unmatched cultural grandeur.',       query:'Paris'},{name:'Florence',       country:'Italy',              desc:'Renaissance art, leather markets, extraordinary trattorias and wine bars.',  query:'Florence'},{name:'Kyoto',          country:'Japan',              desc:'Ancient temples, geisha districts and immaculate seasonal gardens.',          query:'Kyoto'}],
-  'The All-Rounder':         [{name:'Barcelona',      country:'Spain',              desc:'Gaudí architecture, tapas bars, beach days and world-class nightlife.',       query:'Barcelona'},{name:'Lisbon',         country:'Portugal',           desc:'Colourful trams, riverside restaurants and Atlantic surf beaches nearby.',   query:'Lisbon'},{name:'Cape Town',      country:'South Africa',       desc:'Mountain hikes, wine valleys, penguins and pristine ocean beaches.',         query:'Cape Town'}],
-};
-
-const BEACH_ALTERNATIVES: Record<string,{name:string;country:string;desc:string;query:string}> = {
-  'The Wild Explorer':       {name:'Fernando de Noronha', country:'Brazil',         desc:'Remote volcanic archipelago with crystal-clear reefs and zero mass tourism.',     query:'Fernando de Noronha'},
-  'The Thrill Seeker':       {name:'Nazaré',              country:'Portugal',       desc:'Home of the biggest surfable waves on earth — a pilgrimage for the bold.',        query:'Nazaré Portugal'},
-  'The Cultural Adventurer': {name:'Zanzibar',            country:'Tanzania',       desc:'Spice-scented islands with a rich Swahili culture and white-sand beaches.',        query:'Zanzibar'},
-  'The Expedition Traveller':{name:'Galápagos Islands',   country:'Ecuador',        desc:'Volcanic islands with unique wildlife, pristine reefs and raw natural wonder.',    query:'Galápagos Islands'},
-  'The Mindful Wanderer':    {name:'Koh Lanta',           country:'Thailand',       desc:'Quiet long-beach island with mangroves, yoga retreats and true slow living.',      query:'Koh Lanta Thailand'},
-  'The Cultural Connoisseur':{name:'Essaouira',           country:'Morocco',        desc:'Windswept blue-and-white port city with a medina, surf and fresh seafood.',        query:'Essaouira Morocco'},
-  'The Cultured Traveller':  {name:'Amalfi Coast',        country:'Italy',          desc:'Dramatic cliffside villages, lemons and sapphire Mediterranean water.',            query:'Amalfi Coast'},
-  'The All-Rounder':         {name:'Bali',                country:'Indonesia',      desc:'Lush rice paddies, surf-ready beaches, temples and vibrant beach clubs.',          query:'Bali'},
-  'The Beach Lover':         {name:'Turks & Caicos',      country:'Caribbean',      desc:'Some of the world\'s most pristine beaches with zero development in sight.',       query:'Turks and Caicos'},
-};
-
-function generateQuizQuestions(personaName:string, interests:string[], dining:string[], habits:Record<string,string>): string[] {
-  const base: Record<string,string[]> = {
-    'The Wild Explorer': [
-      'Which national parks or wilderness areas offer the best multi-day trekking for independent travellers?',
-      'Are there off-grid eco-lodges that feel truly remote yet are still safely reachable?',
-      'What are the least-visited safari destinations that still offer incredible wildlife encounters?',
-      'Can you suggest a route where I can hike from village to village without a tour group?',
-      'Which destinations have the best conditions for wild camping, and what permits do I need?',
-    ],
-    'The Thrill Seeker': [
-      'Which destinations pack the most adventure activities into a single trip?',
-      'Where can I combine white-water rafting, bungee jumping, and mountain biking in one week?',
-      'Are there lesser-known adventure spots that rival Queenstown or Interlaken but with fewer crowds?',
-      'Can you recommend a guided multi-activity expedition for someone wanting a serious physical challenge?',
-      'What safety certifications should I check for adventure operators in developing countries?',
-    ],
-    'The Cultural Adventurer': [
-      'Which destinations combine a thriving contemporary art scene with deep historical heritage?',
-      'Can you suggest cities where I can attend local festivals not listed in mainstream guidebooks?',
-      'Are there heritage towns with historically restored guesthouses rather than modern hotels?',
-      'What are the best ways to connect with local artisans or cultural practitioners during a trip?',
-      'Which regions offer deep cultural immersion through homestays or community-based tourism?',
-    ],
-    'The Expedition Traveller': [
-      'What iconic bucket-list sites are actually worth the hype, and what\'s the best way to visit them?',
-      'Can you plan an active sightseeing route where I hike or cycle to landmarks instead of driving?',
-      'Which UNESCO Heritage Sites can be combined efficiently in a two-week itinerary?',
-      'Are there lesser-known viewpoints to famous landmarks that most tourists miss?',
-      'What\'s the best time to visit major highlights while avoiding peak-season crowds?',
-    ],
-    'The Mindful Wanderer': [
-      'Which coastal destinations offer peaceful villages with excellent independent hiking and cycling?',
-      'Can you recommend a slow-travel itinerary where I spend 4–5 nights in each place rather than rushing?',
-      'Are there wellness-focused destinations where yoga retreats sit alongside natural landscapes and culture?',
-      'What are the quietest, most restorative beach destinations that still have interesting local life?',
-      'Can you suggest a trip that balances solo exploration with optional guided experiences when I want company?',
-    ],
-    'The Beach Lover': [
-      'Which beach destinations offer the best combination of beautiful water, local atmosphere, and good food?',
-      'Can you recommend islands where I can island-hop easily without expensive flights between stops?',
-      'Are there all-inclusive resorts that also give good access to local culture and authentic dining?',
-      'What are the best snorkelling or diving spots suitable for beginners at a beach destination?',
-      'Which beach towns come alive at night with a great food scene but without being too rowdy?',
-    ],
-    'The Cultural Connoisseur': [
-      'Which cities have the richest neighbourhood-level culture — local markets, street art, and independent cafes?',
-      'Can you suggest a trip that includes a cooking class, a food market tour, and a local home dinner experience?',
-      'Are there lesser-known cultural capitals that feel authentic and uncrowded?',
-      'What are the best ways to find local music, theatre, or performance events during a city visit?',
-      'Can you recommend areas in a city where local life continues relatively undisturbed by tourism?',
-    ],
-    'The Cultured Traveller': [
-      'Which cities offer the best combination of world-class museums, fine dining, and boutique accommodation?',
-      'Can you plan a cultural city break with iconic galleries, acclaimed restaurants, and a bit of architecture?',
-      'Are there food and wine regions where I can combine vineyard visits with strong cultural sightseeing?',
-      'What are the most impressive performing arts venues worth planning a trip around?',
-      'Which cities have the best private guided museum or heritage tours for a small group?',
-    ],
-    'The All-Rounder': [
-      'Can you suggest a destination that works well for both beach days and cultural sightseeing in the same trip?',
-      'Which cities act as great bases for day trips to nature, coast, and historic towns all within easy reach?',
-      'Are there flexible itineraries that mix budget street food days with one or two special dining experiences?',
-      'What destinations let me shift between being active (hiking, cycling) and relaxed (cafes, beaches) day by day?',
-      'Can you recommend a trip where I can be spontaneous — not every activity pre-booked — and still have a great time?',
-    ],
-  };
-  const questions = [...(base[personaName] || base['The All-Rounder'])].slice(0,5);
-  if (interests.includes('nightlife')) questions[4] = 'Which destinations have the most vibrant nightlife scenes that stay lively well past midnight?';
-  if (dining.includes('streetfood') || dining.includes('markets')) questions[3] = 'What are the best destinations for street food and local market dining that go beyond the usual tourist haunts?';
-  if (interests.includes('photography')) questions[4] = 'What are the most photogenic destinations and the best times of day to shoot the iconic locations?';
-  return questions;
-}
-
-function computePersona(
-  vibes: Record<string,number>, accom: string[],
-  habits: Record<string,string>, dining: string[], interests: string[],
-) {
-  const energy = vibes.energy ?? 2;
-  const setting = vibes.setting ?? 2;
-  const crowd = vibes.crowd ?? 2;
-  const adv=energy<=1, rel=energy>=3, out=setting<=1, cul=setting>=3, hid=crowd>=3, pop=crowd<=1;
-
-  type P = { name:string; icon:string; tagline:string; desc:string; tripStyles:string[] };
-  let p: P;
-  if      (adv&&out&&hid) p={name:'The Wild Explorer',       icon:'🌿',tagline:'Off the beaten path, close to nature',            desc:"You thrive on raw landscapes and remote places most travellers never find. Tourist crowds aren't your scene — give you a trail map and an adventure with no tour group in sight.",                         tripStyles:['Eco-tourism','Trekking','Wildlife Safari','Camping']};
-  else if (adv&&out&&pop) p={name:'The Thrill Seeker',        icon:'⛰️',tagline:'Living for the rush',                            desc:"Adrenaline is your travel currency. Whether it's bungee jumping, white-water rafting, or scaling a via ferrata, you want every day to push your limits and leave you buzzing.",                  tripStyles:['Adventure Sports','Extreme Activities','Group Tours','Road Trip']};
-  else if (adv&&cul&&hid) p={name:'The Cultural Adventurer',  icon:'🗺️',tagline:'Curious, bold, and deeply engaged',              desc:"History books aren't enough — you want to live the story. You seek out off-map heritage sites, local festivals, and hidden corners of ancient cities that most tourists walk straight past.", tripStyles:['Cultural Immersion','Heritage Travel','Slow Travel','Photography']};
-  else if (adv&&cul&&pop) p={name:'The Expedition Traveller', icon:'🧭',tagline:'Iconic destinations, adventurous approach',       desc:"Bucket-list icons appeal to you, but on your own terms — climbing Machu Picchu at sunrise, cycling through Angkor Wat, or hiking the Cinque Terre rather than bussing it.",              tripStyles:['Bucket List','Active Sightseeing','Photography','City Break']};
-  else if (rel&&out&&hid) p={name:'The Mindful Wanderer',     icon:'🌊',tagline:'Slow travel, deep connections',                  desc:"You travel to breathe. Untouched coastal paths, quiet fishing villages, and mornings with nothing planned but coffee and a view — these are the moments you'll still be talking about in 20 years.", tripStyles:['Wellness Retreat','Slow Travel','Eco-tourism','Coastal Escape']};
-  else if (rel&&out&&pop) p={name:'The Beach Lover',          icon:'🏖️',tagline:'Sun, sea, and pure relaxation',                  desc:"You know exactly what a great holiday looks like: a sunlounger, warm water, and a cocktail. Maybe a snorkel. Definitely no alarm clocks. You've perfected the art of doing very little, very well.", tripStyles:['Beach Resort','Island Hopping','All-Inclusive','Snorkelling & Diving']};
-  else if (rel&&cul&&hid) p={name:'The Cultural Connoisseur', icon:'🎭',tagline:'Deep immersion in local life',                   desc:"You travel at the speed of curiosity. Hidden art exhibitions, restaurants the locals love, and learning a few words of the language before you arrive — that's your kind of trip.",              tripStyles:['Cultural Immersion','City Break','Culinary Tour','Local Experiences']};
-  else if (rel&&cul&&pop) p={name:'The Cultured Traveller',   icon:'🏛️',tagline:'Museums, wine, and memorable meals',            desc:"World-class museums, acclaimed restaurants, a comfortable hotel — your ideal trip blends culture with the finer things. You'll queue for the Louvre, but only after a proper croissant.",           tripStyles:['City Break','Culinary Tour','Luxury Travel','Heritage Sites']};
-  else                    p={name:'The All-Rounder',          icon:'🌍',tagline:'Balanced, curious, and up for anything',         desc:"You refuse to be put in a box. Some days you want a beach, others a museum. Budget street food one night, a special dinner the next. This flexibility is your superpower — you thrive everywhere.", tripStyles:['Mixed Itinerary','City & Beach Combo','Flexible Travel','Cultural Highlights']};
-
-  const budgetMap: Record<string,string> = { shoestring:'budget',budget:'budget',comfortable:'comfort',splurge:'premium',unlimited:'luxury' };
-  const budget = budgetMap[habits.spend] || 'midrange';
-  const styleMap: Record<string,string> = { beach:'beach',hiking:'adventure',wildlife:'nature',wellness:'wellness',history:'cultural',photography:'photography',nightlife:'nightlife',shopping:'shopping',cooking:'food',wine:'food',watersports:'adventure',cycling:'adventure',sports:'adventure',shows:'cultural',architecture:'cultural',markets:'cultural' };
-  const styles = [...new Set(interests.slice(0,8).map(i=>styleMap[i]).filter(Boolean))];
-
-  const traits: string[] = [];
-  if (energy<=1) traits.push('Adventurous'); else if (energy>=3) traits.push('Laid-back'); else traits.push('Balanced');
-  if (setting<=1) traits.push('Nature lover'); else if (setting>=3) traits.push('Culture seeker'); else traits.push('City & nature mix');
-  if (crowd>=3) traits.push('Off the beaten path'); else if (crowd<=1) traits.push('Classic highlights'); else traits.push('Best of both worlds');
-  if (habits.pace==='night') traits.push('Night owl'); else if (habits.pace==='early') traits.push('Early riser');
-  if (habits.social==='social') traits.push('Group & social'); else if (habits.social==='solo') traits.push('Independent traveller');
-  if (accom.includes('luxury')||accom.includes('boutique')) traits.push('Boutique stays');
-  if (accom.includes('hostel')||accom.includes('camping')) traits.push('Budget-smart');
-  if (dining.includes('streetfood')||dining.includes('markets')) traits.push('Street food fan');
-  if (dining.includes('finedining')||dining.includes('farmtable')) traits.push('Foodie');
-
-  const coast = vibes.coast ?? 2; // 0=inland … 4=beach
-  const questions = generateQuizQuestions(p.name, interests, dining, habits);
-  let destinations = [...(PERSONA_DESTINATIONS[p.name] || PERSONA_DESTINATIONS['The All-Rounder'])];
-  // If user leans coastal (coast >= 3), inject a beach-specific destination
-  if (coast >= 3 && !['The Beach Lover'].includes(p.name)) {
-    const beachAlt = BEACH_ALTERNATIVES[p.name];
-    if (beachAlt) destinations = [beachAlt, destinations[0], destinations[1]];
-  } else if (coast >= 3 && p.name === 'The Beach Lover') {
-    // Already beach-focused — add extra beach gem
-    const extra = BEACH_ALTERNATIVES['The Beach Lover'];
-    if (extra) destinations = [...destinations.slice(0,2), extra];
-  }
-  return { ...p, budget, styles, questions, traits, destinations };
-}
-
-const ALL_TRIP_IDEAS = [
-  { title:'10 Days in Japan', sub:'Tokyo to Kyoto', img:'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=600&q=80', tags:['Culture','Food'], dur:'10 days', bud:'Mid-range', q:'Plan a 10-day trip in Japan from Tokyo to Kyoto focusing on culture and food' },
-  { title:'Greek Island Hopping', sub:'Santorini, Mykonos & Rhodes', img:'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=600&q=80', tags:['Romance','Beach'], dur:'14 days', bud:'Premium', q:'Plan a 14-day Greek island hopping trip' },
-  { title:'Patagonia Adventure', sub:'Argentina & Chile', img:'https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&w=600&q=80', tags:['Adventure','Hiking'], dur:'12 days', bud:'Mid-range', q:'Plan a 12-day Patagonia adventure covering Argentina and Chile' },
-  { title:'Morocco Highlights', sub:'Marrakech to Sahara', img:'https://images.unsplash.com/photo-1489493512598-d08130f49bea?auto=format&fit=crop&w=600&q=80', tags:['Culture','Desert'], dur:'8 days', bud:'Budget', q:'Plan an 8-day Morocco trip from Marrakech to the Sahara' },
-  { title:'Bali Wellness Retreat', sub:'Ubud & Seminyak', img:'https://images.unsplash.com/photo-1552733407-5d5c46c3bb3b?auto=format&fit=crop&w=600&q=80', tags:['Wellness','Beach'], dur:'10 days', bud:'Mid-range', q:'Plan a 10-day Bali wellness retreat in Ubud and Seminyak' },
-  { title:'Amalfi Coast Drive', sub:'Naples to Positano', img:'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=600&q=80', tags:['Scenic','Food'], dur:'7 days', bud:'Premium', q:'Plan a 7-day Amalfi Coast road trip from Naples to Positano' },
-  { title:'Iceland Ring Road', sub:'Reykjavik & Beyond', img:'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?auto=format&fit=crop&w=600&q=80', tags:['Adventure','Nature'], dur:'10 days', bud:'Mid-range', q:'Plan a 10-day Iceland ring road trip from Reykjavik' },
-  { title:'Safari in Kenya', sub:'Masai Mara & Amboseli', img:'https://images.unsplash.com/photo-1523805009345-7448845a9e53?auto=format&fit=crop&w=600&q=80', tags:['Wildlife','Safari'], dur:'9 days', bud:'Premium', q:'Plan a 9-day safari in Kenya covering Masai Mara and Amboseli' },
-  { title:'Peru & Machu Picchu', sub:'Lima, Cusco & Inca Trail', img:'https://images.unsplash.com/photo-1526392060635-9d6019884377?auto=format&fit=crop&w=600&q=80', tags:['History','Hiking'], dur:'12 days', bud:'Mid-range', q:'Plan a 12-day Peru trip including Lima, Cusco and Machu Picchu' },
-  { title:'New Zealand South Island', sub:'Queenstown to Fiordland', img:'https://images.unsplash.com/photo-1507699622108-4be3abd695ad?auto=format&fit=crop&w=600&q=80', tags:['Adventure','Scenic'], dur:'14 days', bud:'Mid-range', q:'Plan a 14-day New Zealand South Island road trip from Queenstown to Fiordland' },
-  { title:'Thailand Island Tour', sub:'Bangkok, Chiang Mai & Koh Samui', img:'https://images.unsplash.com/photo-1506665531195-3566af2b4dfa?auto=format&fit=crop&w=600&q=80', tags:['Beach','Culture'], dur:'14 days', bud:'Budget', q:'Plan a 14-day Thailand trip covering Bangkok, Chiang Mai and Koh Samui' },
-  { title:'Portugal Road Trip', sub:'Lisbon, Porto & Algarve', img:'https://images.unsplash.com/photo-1513735492246-483525079686?auto=format&fit=crop&w=600&q=80', tags:['Culture','Food'], dur:'10 days', bud:'Budget', q:'Plan a 10-day Portugal road trip from Lisbon to Porto and the Algarve' },
-  { title:'Maldives Overwater Escape', sub:'North & South Malé Atolls', img:'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=600&q=80', tags:['Beach','Luxury'], dur:'7 days', bud:'Luxury', q:'Plan a 7-day luxury Maldives trip with overwater bungalow and snorkelling' },
-  { title:'Vietnam Street Food Trail', sub:'Hanoi, Hội An & Saigon', img:'https://images.unsplash.com/photo-1528360983277-13d401cdc186?auto=format&fit=crop&w=600&q=80', tags:['Food','Culture'], dur:'12 days', bud:'Budget', q:'Plan a 12-day Vietnam street food and culture trip from Hanoi to Ho Chi Minh City' },
-  { title:'Swiss Alps Winter', sub:'Zermatt, Interlaken & St Moritz', img:'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=600&q=80', tags:['Winter','Ski'], dur:'8 days', bud:'Premium', q:'Plan an 8-day Swiss Alps winter trip covering Zermatt, Interlaken and St Moritz' },
-  { title:'Costa Rica Wildlife', sub:'Arenal, Manuel Antonio & Tortuguero', img:'https://images.unsplash.com/photo-1518259102261-b40117eabbc9?auto=format&fit=crop&w=600&q=80', tags:['Wildlife','Adventure'], dur:'10 days', bud:'Mid-range', q:'Plan a 10-day Costa Rica wildlife and adventure trip' },
-  { title:'India Golden Triangle', sub:'Delhi, Agra & Jaipur', img:'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=600&q=80', tags:['Culture','History'], dur:'8 days', bud:'Budget', q:'Plan an 8-day India Golden Triangle trip covering Delhi, Agra and Jaipur' },
-  { title:'Romantic Paris Getaway', sub:'Paris & Versailles', img:'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=600&q=80', tags:['Romance','Culture'], dur:'5 days', bud:'Premium', q:'Plan a 5-day romantic Paris trip including Versailles day trip' },
-  { title:'Tanzania Safari & Zanzibar', sub:'Serengeti, Ngorongoro & Zanzibar', img:'https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=600&q=80', tags:['Safari','Beach'], dur:'12 days', bud:'Premium', q:'Plan a 12-day Tanzania safari in the Serengeti and Ngorongoro followed by Zanzibar beach' },
-  { title:'Spain Food & Culture', sub:'Madrid, Seville & Barcelona', img:'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?auto=format&fit=crop&w=600&q=80', tags:['Food','Culture'], dur:'10 days', bud:'Mid-range', q:'Plan a 10-day Spain road trip covering Madrid, Seville and Barcelona with food focus' },
-];
-
-const PLAN_FEATURES = [
-  { icon:<Globe color="#FF8210" size={26} strokeWidth={1.8}/>, title:'Destination Overview', desc:'What makes it special and must-see highlights' },
-  { icon:<CloudSun color="#00447B" size={26} strokeWidth={1.8}/>, title:'Weather & Season', desc:'Real forecasts or climate averages for your dates' },
-  { icon:<CalendarDays color="#FF8210" size={26} strokeWidth={1.8}/>, title:'Day-by-Day Itinerary', desc:'Morning, afternoon and evening activities' },
-  { icon:<Building2 color="#00447B" size={26} strokeWidth={1.8}/>, title:'Accommodation Picks', desc:'Curated stays matching your budget and style' },
-  { icon:<Car color="#FF8210" size={26} strokeWidth={1.8}/>, title:'Getting Around', desc:'Transport tips, passes and estimated costs' },
-  { icon:<DollarSign color="#00447B" size={26} strokeWidth={1.8}/>, title:'Budget Breakdown', desc:'Estimated costs per category with totals' },
-  { icon:<Info color="#FF8210" size={26} strokeWidth={1.8}/>, title:'Practical Tips', desc:'Visas, safety, culture, food and local apps' },
-  { icon:<MessageCircle color="#00447B" size={26} strokeWidth={1.8}/>, title:'AI Chat Refinement', desc:'Ask follow-up questions or tweak any detail' },
-  { icon:<FileDown color="#FF8210" size={26} strokeWidth={1.8}/>, title:'Export to PDF', desc:'Download your full plan, ready to travel' },
-];
-
-const CONTROL_FEATURES = [
-  { icon:<GripVertical color="#FF8210" size={26} strokeWidth={1.8}/>, title:'Drag & drop activities', desc:'Reorder your days exactly how you want' },
-  { icon:<CirclePlus color="#00447B" size={26} strokeWidth={1.8}/>, title:'Add or remove anything', desc:'Every suggestion is optional, nothing is locked in' },
-  { icon:<RefreshCw color="#FF8210" size={26} strokeWidth={1.8}/>, title:'Switch hotels & dates', desc:'Change stays, adjust timing, update your budget' },
-  { icon:<Bookmark color="#00447B" size={26} strokeWidth={1.8}/>, title:'Save & come back', desc:'Your plan is always there when you return' },
-  { icon:<FileDown color="#FF8210" size={26} strokeWidth={1.8}/>, title:'Export to PDF', desc:'Download a clean, print-ready version of your trip' },
-  { icon:<Wand2 color="#00447B" size={26} strokeWidth={1.8}/>, title:'Refine with AI', desc:'Ask Luna to adjust any detail at any time' },
-];
+import { useEffect, useRef } from 'react';
+import Link from 'next/link';
 
 export default function HomePage() {
-  const router = useRouter();
-  const [quizStep,       setQuizStep]       = useState(0);
-  const [showQuiz,       setShowQuiz]       = useState(false);
-  const [quizDone,       setQuizDone]       = useState(false);
-  const [quizVibes,      setQuizVibes]      = useState<Record<string,number>>({energy:2,setting:2,crowd:2,coast:2});
-  const [quizAccom,      setQuizAccom]      = useState<string[]>([]);
-  const [quizHabits,     setQuizHabits]     = useState<Record<string,string>>({});
-  const [quizDining,     setQuizDining]     = useState<string[]>([]);
-  const [quizInterests,  setQuizInterests]  = useState<string[]>([]);
-  const [quizPersona,    setQuizPersona]    = useState<ReturnType<typeof computePersona>|null>(null);
-  const [destPhotos,     setDestPhotos]     = useState<Record<string,string|null>>({});
-  const [aiDestinations, setAiDestinations] = useState<Array<{name:string;country:string;desc:string;query:string}>|null>(null);
-  const [aiDestsLoading, setAiDestsLoading] = useState(false);
-  const [heroImgIdx, setHeroImgIdx] = useState(0);
-  const [tripIdeas] = useState(() => [...ALL_TRIP_IDEAS].sort(()=>Math.random()-0.5));
-  const carouselRef = useRef<HTMLDivElement>(null);
-  const carouselIdxRef = useRef(0);
-
-  const go = (q: string) => {
-    if (!q.trim()) return;
-    router.push(`/plan?prompt=${encodeURIComponent(q)}`);
-  };
-
-  const scrollTo = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior:'smooth' });
-  };
+  const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    const t = setInterval(() => setHeroImgIdx(i => (i+1) % HERO_IMAGES.length), 10000);
-    return () => clearInterval(t);
+    const handleScroll = () => {
+      if (navRef.current) {
+        navRef.current.style.boxShadow =
+          window.scrollY > 10 ? '0 2px 16px rgba(0,68,123,0.08)' : 'none';
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
-    const el = carouselRef.current;
-    if (!el) return;
-    const CARD_W = 320 + 20; // card width + gap
-    const t = setInterval(() => {
-      const maxIdx = tripIdeas.length - 1;
-      carouselIdxRef.current = carouselIdxRef.current >= maxIdx ? 0 : carouselIdxRef.current + 1;
-      if (carouselIdxRef.current === 0) {
-        el.scrollTo({ left: 0, behavior: 'smooth' });
-      } else {
-        el.scrollBy({ left: CARD_W, behavior: 'smooth' });
-      }
-    }, 4000);
-    return () => clearInterval(t);
-  }, [tripIdeas.length]);
-
-  const fetchAiDestinations = async (persona: ReturnType<typeof computePersona>) => {
-    setAiDestsLoading(true);
-    setAiDestinations(null);
-    const vibeLabels = VIBE_SPECTRUMS.map(sp => `${sp.left}↔${sp.right}: ${sp.labels[quizVibes[sp.key] ?? 2]}`).join('; ');
-    const accomNames = quizAccom.map(a => ACCOM_OPTIONS.find(o=>o.v===a)?.l||a).join(', ') || 'flexible';
-    const diningNames = quizDining.map(d => DINING_OPTIONS.find(o=>o.v===d)?.l||d).join(', ') || 'varied';
-    const interestNames = quizInterests.map(i => INTEREST_OPTIONS.find(o=>o.v===i)?.l||i).join(', ') || 'varied';
-    const budgetLabel: Record<string,string> = {shoestring:'Shoestring',budget:'Budget-conscious',comfortable:'Comfortable',splurge:'Splurge often',unlimited:'No limits'};
-    const paceLabel: Record<string,string> = {early:'Early bird',day:'Daytime explorer',afternoon:'Afternoon starter',night:'Night owl'};
-    const socialLabel: Record<string,string> = {solo:'Solo & independent',couple:'Couple',mixed:'Mix of both',social:'Group & social'};
-    const prompt = `You are a world-class travel expert. Suggest exactly 3 travel destinations that are a perfect match for this traveller. Make them diverse — ideally different continents or regions. Be creative and think beyond the obvious.
-
-Return ONLY a valid JSON array with no other text, no markdown, no code blocks — just raw JSON:
-[{"name":"City or Place","country":"Country or Region","desc":"One vivid sentence about why this place suits this exact traveller.","query":"Wikipedia article title for this place"}]
-
-Traveller Profile:
-- Persona: ${persona.name} — ${persona.tagline}
-- Vibe dials: ${vibeLabels}
-- Accommodation style: ${accomNames}
-- Budget: ${budgetLabel[quizHabits.spend] || quizHabits.spend || 'comfortable'}
-- Daily pace: ${paceLabel[quizHabits.pace] || quizHabits.pace || 'flexible'}
-- Travel company: ${socialLabel[quizHabits.social] || quizHabits.social || 'flexible'}
-- Dining preferences: ${diningNames}
-- Interests: ${interestNames}`;
-    try {
-      const res = await fetch('/api/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ prompt }) });
-      const data = await res.json();
-      if (data.plan) {
-        const match = data.plan.match(/\[[\s\S]*?\]/);
-        if (match) {
-          const dests = JSON.parse(match[0]);
-          if (Array.isArray(dests) && dests.length > 0) { setAiDestinations(dests); return; }
-        }
-      }
-    } catch { /* fall through */ }
-    finally { setAiDestsLoading(false); }
-    setAiDestinations(persona.destinations); // static fallback
-  };
-
-  const finishQuiz = () => {
-    const persona = computePersona(quizVibes, quizAccom, quizHabits, quizDining, quizInterests);
-    setQuizPersona(persona);
-    setQuizDone(true);
-    fetchAiDestinations(persona);
-  };
-
-  const resetQuiz = () => {
-    setQuizStep(0); setShowQuiz(false); setQuizDone(false);
-    setQuizVibes({energy:2,setting:2,crowd:2,coast:2}); setQuizAccom([]);
-    setQuizHabits({}); setQuizDining([]); setQuizInterests([]); setQuizPersona(null);
-    setDestPhotos({}); setAiDestinations(null); setAiDestsLoading(false);
-  };
-
-  // Fetch Wikipedia photos whenever AI destinations resolve
-  useEffect(() => {
-    if (!aiDestinations) return;
-    setDestPhotos({});
-    aiDestinations.forEach(async (d) => {
-      try {
-        const res = await fetch(`/api/place-photo?q=${encodeURIComponent(d.query)}`);
-        const data = await res.json();
-        setDestPhotos(prev => ({ ...prev, [d.name]: data.url ?? null }));
-      } catch { setDestPhotos(prev => ({ ...prev, [d.name]: null })); }
-    });
-  }, [aiDestinations]); // eslint-disable-line
-
-  /* ── Shared styles ── */
-  const S = {
-    section: { padding:'96px 0' } as React.CSSProperties,
-    label:   { fontFamily:'var(--font-head)', fontWeight:600, fontSize:13, letterSpacing:2, textTransform:'uppercase' as const, color:'var(--orange)', marginBottom:12 },
-    h2:      { fontFamily:'var(--font-head)', fontWeight:500, fontSize:'var(--fs-h2)', color:'#000', lineHeight:1.3, marginBottom:16 } as React.CSSProperties,
-    chip: (active=false): React.CSSProperties => ({
-      display:'inline-flex', alignItems:'center', gap:6,
-      background: active ? 'rgba(255,130,16,0.1)' : '#F4F7FB',
-      border:`1.5px solid ${active ? 'var(--orange)' : 'transparent'}`,
-      color: active ? 'var(--orange)' : '#000',
-      fontFamily:'var(--font-head)', fontWeight:500, fontSize:14,
-      padding:'8px 16px', borderRadius:'var(--r-pill)', cursor:'pointer',
-      transition:'all 0.18s',
-    }),
-  };
-
   return (
-    <div style={{ fontFamily:'var(--font-body)', color:'#000', background:'#fff', overflowX:'hidden' }}>
-
-      {/* ───── NAV ───── */}
-      <NavBar />
-
-      {/* ───── HERO ───── */}
-      <section id="planner" style={{ position:'relative', minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', overflow:'visible', padding:'80px 24px' }}>
-        {/* Photo — rotates every 10s */}
-        {HERO_IMAGES.map((img,i) => (
-          <div key={img.url} style={{ position:'absolute', inset:0, backgroundImage:`url(${img.url})`, backgroundSize:'cover', backgroundPosition:'center 40%', transition:'opacity 1.5s ease', opacity:i===heroImgIdx?1:0 }} />
-        ))}
-        {/* Overlay */}
-        <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg, rgba(0,40,90,0.80) 0%, rgba(0,68,123,0.65) 50%, rgba(0,20,60,0.82) 100%)' }} />
-
-        <div style={{ position:'relative', zIndex:2, textAlign:'center', maxWidth:960, width:'100%' }}>
-
-          {/* Badge */}
-          <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(255,255,255,0.12)', backdropFilter:'blur(12px)', border:'1px solid rgba(255,255,255,0.22)', borderRadius:'var(--r-pill)', padding:'6px 18px', marginBottom:24, animation:'fadeIn 0.6s ease both' }}>
-            <span style={{ width:7, height:7, borderRadius:'50%', background:'#4ADE80', flexShrink:0 }} />
-            <span style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:13, color:'rgba(255,255,255,0.92)' }}>AI-powered · Free · No account required</span>
-          </div>
-
-          {/* H1 */}
-          <h1 style={{ color:'#fff', marginBottom:14, animation:'fadeUp 0.65s 0.1s ease both' }}>
-            Plan your trip<br/>
-            <span style={{ color:'var(--orange-light)' }}>in 30 seconds.</span>
-          </h1>
-
-          <p style={{ fontFamily:'var(--font-body)', fontWeight:400, fontSize:17, color:'rgba(255,255,255,0.70)', marginBottom:40, animation:'fadeUp 0.65s 0.2s ease both' }}>
-            Tell us where you want to go — we&apos;ll handle the rest.
-          </p>
-
-          {/* CTA */}
-          <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:20, animation:'fadeUp 0.65s 0.3s ease both' }}>
-            <button
-              onClick={()=>router.push('/start')}
-              style={{ display:'inline-flex', alignItems:'center', gap:10, background:'#FF8210', color:'#fff', fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:18, padding:'16px 44px', borderRadius:100, border:'none', cursor:'pointer', boxShadow:'0 8px 32px rgba(255,130,16,0.40)', transition:'background 0.18s', letterSpacing:0.3 }}
-              onMouseEnter={e=>(e.currentTarget as HTMLButtonElement).style.background='#e5730e'}
-              onMouseLeave={e=>(e.currentTarget as HTMLButtonElement).style.background='#FF8210'}
-            >
-              Let&apos;s Go →
-            </button>
-            <button
-              onClick={()=>scrollTo('how-it-works')}
-              style={{ background:'#00447B', border:'none', cursor:'pointer', fontFamily:"'Inter',sans-serif", fontWeight:600, fontSize:15, color:'#fff', letterSpacing:0.2, padding:'12px 28px', borderRadius:100 }}
-            >
-              See how it works ↓
-            </button>
-          </div>
-
-        </div>
-
-        {/* Luna 3 — desktop only, bottom of viewport */}
-        <img
-          src="/luna_3.png"
-          alt="Luna — AI travel assistant"
-          className="luna2-avatar"
-          style={{
-            position:'absolute', right:'calc(50% - 510px)',
-            bottom:0, top:'auto',
-            width:235, height:'auto', objectFit:'contain',
-            pointerEvents:'none', zIndex:3,
-          }}
-        />
-      </section>
-
-      {/* ───── STATS BAR ───── */}
-      <section style={{ background:'var(--navy)', padding:'0' }}>
-        <div style={{ maxWidth:960, margin:'0 auto', padding:'0 32px', display:'flex', justifyContent:'center', flexWrap:'wrap' }}>
-          {[['30s','Plan generated'],['7','Plan sections'],['12','Trip styles'],['100%','Personalised']].map(([v,l],i,arr)=>(
-            <div key={l} style={{ flex:'1 1 140px', textAlign:'center', padding:'28px 32px', borderRight: i<arr.length-1?'1px solid rgba(255,255,255,0.12)':'none' }}>
-              <div style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:32, color:'var(--orange-light)' }}>{v}</div>
-              <div style={{ fontFamily:'var(--font-body)', fontSize:14, color:'rgba(255,255,255,0.55)', marginTop:4 }}>{l}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-
-      {/* ───── HOW IT WORKS + EVERYTHING IN EVERY PLAN ───── */}
-      <section id="how-it-works" style={{ ...S.section, background:'var(--bg-section)' }}>
-        <div className="container">
-          {/* How It Works */}
-          <div style={{ textAlign:'center', marginBottom:80 }}>
-            <p style={S.label}>Simple Process</p>
-            <h2 style={{ ...S.h2, textAlign:'center', marginBottom:56 }}>How it works</h2>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:40 }}>
-              {[
-                { n:'01', icon:<PenLine color="#FF8210" size={28} strokeWidth={1.8}/>, t:'Tell us your dream trip', d:'Destination, travel style, dates, group and budget — all in one natural sentence or our smart form.' },
-                { n:'02', icon:<Zap color="#FF8210" size={28} strokeWidth={1.8}/>, t:'AI crafts your plan', d:'Your personalised itinerary is generated in under 30 seconds with 7 detailed sections tailored to you.' },
-                { n:'03', icon:<Sliders color="#FF8210" size={28} strokeWidth={1.8}/>, t:'Explore & refine', d:'Chat with AI to adjust any detail. Add activities, change hotels, tweak the budget — all in real time, for free.' },
-              ].map(s=>(
-                <div key={s.n} style={{ textAlign:'center' }}>
-                  <div style={{ width:72, height:72, borderRadius:20, background:'#fff', border:'1.5px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px', boxShadow:'var(--shadow-card)' }}>{s.icon}</div>
-                  <p style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:13, color:'var(--gray-light)', letterSpacing:2, marginBottom:10 }}>{s.n}</p>
-                  <h3 style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:'var(--fs-h3)', color:'#000', marginBottom:10 }}>{s.t}</h3>
-                  <p style={{ fontFamily:'var(--font-body)', fontSize:16, color:'var(--gray-dark)', lineHeight:1.65 }}>{s.d}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Divider */}
-          <div style={{ borderTop:'2px solid rgba(0,68,123,0.08)', marginBottom:80 }} />
-
-          {/* Everything in Every Plan */}
-          <div style={{ textAlign:'center', marginBottom:52 }}>
-            <p style={S.label}>Full Coverage</p>
-            <h2 style={{ ...S.h2, textAlign:'center' }}>Everything in every plan</h2>
-          </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(300px,1fr))', gap:20 }}>
-            {PLAN_FEATURES.map(f=>(
-              <div key={f.title} style={{ background:'#fff', borderRadius:'var(--r-md)', padding:'24px 22px', display:'flex', gap:16, alignItems:'flex-start', border:'1px solid rgba(0,68,123,0.08)', boxShadow:'var(--shadow-card)' }}>
-                <div style={{ flexShrink:0, width:44, height:44, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(255,130,16,0.08)', borderRadius:12 }}>{f.icon}</div>
-                <div>
-                  <h3 style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:'var(--fs-h3)', color:'#000', marginBottom:6 }}>{f.title}</h3>
-                  <p style={{ fontFamily:'var(--font-body)', fontSize:15, color:'var(--gray-dark)', lineHeight:1.6 }}>{f.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ───── YOUR TRIP, YOUR WAY ───── */}
-      <section style={{ padding:'96px 0', background:'#fff' }}>
-        <div className="container">
-          <div style={{ textAlign:'center', marginBottom:56 }}>
-            <p style={S.label}>Full Control</p>
-            <h2 style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:'var(--fs-h2)', color:'#000', lineHeight:1.3, marginBottom:16, textAlign:'center' }}>Your trip. Fully yours.</h2>
-            <p style={{ fontFamily:"'Inter',sans-serif", color:'#6C6D6F', fontSize:17, maxWidth:580, margin:'0 auto', lineHeight:1.65 }}>
-              This isn&apos;t just another AI planner. Luna works with you, every step towards your perfect trip.
-            </p>
-          </div>
-          <div className="control-grid" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:24 }}>
-            {CONTROL_FEATURES.map(f=>(
-              <div key={f.title} style={{ background:'var(--bg-section)', borderRadius:'var(--r-md)', padding:'28px 24px', border:'1px solid rgba(0,68,123,0.06)' }}>
-                <div style={{ width:48, height:48, display:'flex', alignItems:'center', justifyContent:'center', background:'#fff', borderRadius:14, border:'1px solid rgba(0,68,123,0.08)', marginBottom:18, boxShadow:'0 2px 8px rgba(0,0,0,0.06)' }}>{f.icon}</div>
-                <h3 style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:17, color:'#000', marginBottom:8 }}>{f.title}</h3>
-                <p style={{ fontFamily:'var(--font-body)', fontSize:15, color:'var(--gray-dark)', lineHeight:1.6 }}>{f.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ───── TRIP IDEAS ───── */}
-      <section id="trip-ideas" style={{ ...S.section, background:'#fff', overflow:'hidden' }}>
-        <div className="container" style={{ paddingBottom:0 }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', marginBottom:40, flexWrap:'wrap', gap:16 }}>
-            <div>
-              <p style={S.label}>Curated Itineraries</p>
-              <h2 style={S.h2}>Ready-made trip ideas.</h2>
-            </div>
-            <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-              <a href="/plan" target="_blank" rel="noopener noreferrer" style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:15, color:'var(--navy)', borderBottom:'2px solid var(--navy)', paddingBottom:2, textDecoration:'none' }}>Create a custom trip →</a>
-              <div style={{ display:'flex', gap:8 }}>
-                <button
-                  aria-label="Previous"
-                  onClick={()=>{
-                    const el=carouselRef.current; if(!el) return;
-                    const CARD_W=320+20;
-                    carouselIdxRef.current=Math.max(0,carouselIdxRef.current-1);
-                    el.scrollBy({left:-CARD_W,behavior:'smooth'});
-                  }}
-                  style={{ width:40,height:40,borderRadius:'50%',border:'1.5px solid var(--border)',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,color:'var(--navy)',transition:'all 0.18s' }}
-                >‹</button>
-                <button
-                  aria-label="Next"
-                  onClick={()=>{
-                    const el=carouselRef.current; if(!el) return;
-                    const CARD_W=320+20; const maxIdx=tripIdeas.length-1;
-                    if(carouselIdxRef.current>=maxIdx){carouselIdxRef.current=0;el.scrollTo({left:0,behavior:'smooth'});}
-                    else{carouselIdxRef.current+=1;el.scrollBy({left:CARD_W,behavior:'smooth'});}
-                  }}
-                  style={{ width:40,height:40,borderRadius:'50%',border:'1.5px solid var(--border)',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,color:'var(--navy)',transition:'all 0.18s' }}
-                >›</button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div
-          ref={carouselRef}
-          className="carousel-scroll"
-          style={{ display:'flex', gap:20, overflowX:'auto', scrollSnapType:'x mandatory', paddingLeft:32, paddingRight:32, paddingBottom:24, cursor:'grab' }}
-        >
-          {tripIdeas.map(t=>(
-            <div
-              key={t.title}
-              onClick={()=>go(t.q)}
-              style={{ flexShrink:0, width:320, scrollSnapAlign:'start', background:'#fff', borderRadius:'var(--r-lg)', overflow:'hidden', cursor:'pointer', border:'1px solid var(--border)', boxShadow:'var(--shadow-card)', transition:'transform 0.2s, box-shadow 0.2s' }}
-              onMouseEnter={e=>{(e.currentTarget as HTMLDivElement).style.transform='translateY(-4px)';(e.currentTarget as HTMLDivElement).style.boxShadow='0 12px 36px rgba(0,0,0,0.12)';}}
-              onMouseLeave={e=>{(e.currentTarget as HTMLDivElement).style.transform='translateY(0)';(e.currentTarget as HTMLDivElement).style.boxShadow='var(--shadow-card)';}}
-            >
-              <div style={{ position:'relative', height:200, overflow:'hidden' }}>
-                <img src={t.img} alt={t.title} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
-                <div style={{ position:'absolute', top:12, left:12, display:'flex', gap:6, flexWrap:'wrap' }}>
-                  {t.tags.map(tag=>(
-                    <span key={tag} style={{ background:'rgba(0,0,0,0.5)', backdropFilter:'blur(6px)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:600, fontSize:11, padding:'3px 10px', borderRadius:'var(--r-pill)', textTransform:'uppercase', letterSpacing:0.4 }}>{tag}</span>
-                  ))}
-                </div>
-              </div>
-              <div style={{ padding:'18px 20px 20px' }}>
-                <h3 style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:'var(--fs-h3)', color:'#000', marginBottom:4 }}>{t.title}</h3>
-                <p style={{ fontFamily:'var(--font-body)', color:'var(--gray-dark)', fontSize:14, marginBottom:14 }}>{t.sub}</p>
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                  <div style={{ display:'flex', gap:14 }}>
-                    <span style={{ fontFamily:'var(--font-body)', color:'var(--gray-dark)', fontSize:13, display:'flex', alignItems:'center', gap:4 }}><Calendar size={13} color="#6C6D6F" strokeWidth={2}/> {t.dur}</span>
-                    <span style={{ fontFamily:'var(--font-body)', color:'var(--gray-dark)', fontSize:13, display:'flex', alignItems:'center', gap:4 }}><DollarSign size={13} color="#6C6D6F" strokeWidth={2}/> {t.bud}</span>
-                  </div>
-                  <span style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:13, color:'var(--orange)' }}>Plan this ↗</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-
-      {/* ───── QUIZ ───── */}
-      <section id="quiz" style={{ ...S.section, background:'var(--bg-section)', position:'relative', overflow:'hidden' }}>
-        <div className="container" style={{ maxWidth:820, textAlign:'center', position:'relative', zIndex:1 }}>
-          <p style={S.label}>Not Sure Where to Go?</p>
-          <h2 style={{ ...S.h2, fontSize:32, marginBottom:12 }}>Discover your traveller persona</h2>
-          <p style={{ fontFamily:'var(--font-body)', fontSize:17, color:'var(--gray-dark)', marginBottom:48 }}>
-            5 quick questions. We&apos;ll define your travel style, suggest destinations, and pre-fill your planner.
-          </p>
-
-          {!showQuiz && !quizDone ? (
-            <button onClick={()=>setShowQuiz(true)} style={{ background:'var(--orange)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:16, padding:'18px 44px', borderRadius:'var(--r-pill)', border:'none', cursor:'pointer', boxShadow:'0 8px 32px rgba(255,130,16,0.40)', letterSpacing:0.3 }}>
-              Find my travel persona
-            </button>
-
-          ) : quizDone && quizPersona ? (
-            /* ── PERSONA RESULTS ── */
-            <div style={{ background:'#fff', border:'1px solid rgba(0,68,123,0.12)', borderRadius:'var(--r-lg)', padding:'40px', textAlign:'left' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:20, marginBottom:24, flexWrap:'wrap' }}>
-                <div style={{ fontSize:56, lineHeight:1, flexShrink:0 }}>{quizPersona.icon}</div>
-                <div>
-                  <p style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:11, color:'var(--orange-light)', letterSpacing:2, textTransform:'uppercase', marginBottom:6 }}>Your Traveller Persona</p>
-                  <h3 style={{ fontFamily:'var(--font-head)', fontWeight:800, fontSize:30, color:'var(--navy)', lineHeight:1.1, marginBottom:4 }}>{quizPersona.name}</h3>
-                  <p style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:15, color:'var(--gray-dark)' }}>{quizPersona.tagline}</p>
-                </div>
-              </div>
-              <p style={{ fontFamily:'var(--font-body)', fontSize:16, color:'#333', lineHeight:1.75, marginBottom:28, borderLeft:'3px solid var(--orange)', paddingLeft:18 }}>{quizPersona.desc}</p>
-              <div style={{ marginBottom:24 }}>
-                <p style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:11, color:'var(--orange-light)', letterSpacing:2, textTransform:'uppercase', marginBottom:12 }}>Your Travel Profile</p>
-                <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
-                  {quizPersona.traits.map((t:string) => (
-                    <span key={t} style={{ background:'rgba(0,68,123,0.07)', border:'1px solid rgba(0,68,123,0.18)', borderRadius:'var(--r-pill)', padding:'5px 14px', color:'var(--navy)', fontFamily:'var(--font-head)', fontWeight:500, fontSize:13 }}>{t}</span>
-                  ))}
-                </div>
-              </div>
-              <div style={{ marginBottom:28 }}>
-                <p style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:11, color:'var(--orange-light)', letterSpacing:2, textTransform:'uppercase', marginBottom:12 }}>Suggested Trip Styles</p>
-                <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
-                  {quizPersona.tripStyles.map((s:string) => (
-                    <span key={s} style={{ background:'rgba(255,130,16,0.15)', border:'1px solid rgba(255,130,16,0.30)', borderRadius:'var(--r-pill)', padding:'5px 14px', color:'var(--orange-light)', fontFamily:'var(--font-head)', fontWeight:600, fontSize:13 }}>{s}</span>
-                  ))}
-                </div>
-              </div>
-              {/* AI-suggested destinations */}
-              <div style={{ marginBottom:32 }}>
-                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
-                  <p style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:11, color:'var(--orange-light)', letterSpacing:2, textTransform:'uppercase', margin:0 }}>Destinations for you</p>
-                  {aiDestsLoading && <span style={{ fontFamily:'var(--font-body)', fontSize:12, color:'var(--gray-dark)', display:'flex', alignItems:'center', gap:6 }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ animation:'spin 0.9s linear infinite', flexShrink:0 }}><circle cx="12" cy="12" r="10" stroke="rgba(0,68,123,0.15)" strokeWidth="3"/><path d="M12 2a10 10 0 0 1 10 10" stroke="#FF8210" strokeWidth="3" strokeLinecap="round"/></svg>
-                    AI is picking destinations…
-                  </span>}
-                </div>
-                {aiDestsLoading && !aiDestinations ? (
-                  <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }}>
-                    {[0,1,2].map(i => (
-                      <div key={i} style={{ borderRadius:'var(--r-md)', overflow:'hidden', background:'#f5f7fa', border:'1px solid rgba(0,68,123,0.08)' }}>
-                        <div style={{ height:130, background:'rgba(0,68,123,0.05)', animation:'shimmer 1.6s ease-in-out infinite' }} />
-                        <div style={{ padding:'12px 14px' }}>
-                          <div style={{ height:13, background:'rgba(0,68,123,0.08)', borderRadius:4, marginBottom:8, width:'70%' }} />
-                          <div style={{ height:10, background:'rgba(0,68,123,0.05)', borderRadius:4, marginBottom:6, width:'45%' }} />
-                          <div style={{ height:10, background:'rgba(0,68,123,0.04)', borderRadius:4 }} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }}>
-                    {(aiDestinations ?? []).map((d) => {
-                      const photo = destPhotos[d.name];
-                      return (
-                        <div key={d.name} onClick={()=>go(`Plan a trip to ${d.name}, ${d.country}`)}
-                          style={{ cursor:'pointer', borderRadius:'var(--r-md)', overflow:'hidden', background:'#fff', border:'1px solid rgba(0,68,123,0.10)', transition:'all 0.2s', boxShadow:'0 1px 4px rgba(0,0,0,0.05)' }}
-                          onMouseEnter={e=>{(e.currentTarget as HTMLDivElement).style.border='1px solid rgba(255,130,16,0.45)';(e.currentTarget as HTMLDivElement).style.transform='translateY(-3px)';}}
-                          onMouseLeave={e=>{(e.currentTarget as HTMLDivElement).style.border='1px solid rgba(0,68,123,0.10)';(e.currentTarget as HTMLDivElement).style.transform='translateY(0)';}}>
-                          <div style={{ height:130, overflow:'hidden', background:'rgba(0,68,123,0.04)', position:'relative', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                            {photo
-                              ? <img src={photo} alt={d.name} style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
-                              : <span style={{ fontSize:32, opacity:0.25 }}>📍</span>
-                            }
-                            <div style={{ position:'absolute', inset:0, background:'linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 55%)' }} />
-                            <div style={{ position:'absolute', bottom:8, right:10, fontFamily:'var(--font-head)', fontWeight:600, fontSize:11, color:'rgba(255,255,255,0.7)' }}>Plan this →</div>
-                          </div>
-                          <div style={{ padding:'12px 14px 14px' }}>
-                            <div style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, color:'var(--navy)', marginBottom:2 }}>{d.name}</div>
-                            <div style={{ fontFamily:'var(--font-body)', fontSize:11, color:'var(--orange-light)', marginBottom:6 }}>{d.country}</div>
-                            <div style={{ fontFamily:'var(--font-body)', fontSize:12, color:'#555', lineHeight:1.55 }}>{d.desc}</div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              <div style={{ marginBottom:32 }}>
-                <p style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:11, color:'var(--orange-light)', letterSpacing:2, textTransform:'uppercase', marginBottom:14 }}>You might want to ask</p>
-                <ul style={{ listStyle:'none', padding:0, margin:0, display:'flex', flexDirection:'column', gap:10 }}>
-                  {quizPersona.questions.map((q:string, i:number) => (
-                    <li key={i} style={{ display:'flex', gap:12, alignItems:'flex-start', background:'rgba(0,68,123,0.04)', border:'1px solid rgba(0,68,123,0.08)', borderRadius:12, padding:'12px 16px' }}>
-                      <span style={{ color:'var(--orange)', fontFamily:'var(--font-head)', fontWeight:700, fontSize:16, flexShrink:0, lineHeight:1.4 }}>→</span>
-                      <span style={{ fontFamily:'var(--font-body)', fontSize:14, color:'#444', lineHeight:1.65 }}>{q}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
-                <button onClick={()=>router.push('/plan')} style={{ background:'var(--orange)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, padding:'14px 32px', borderRadius:'var(--r-pill)', border:'none', cursor:'pointer', boxShadow:'0 6px 20px rgba(255,130,16,0.35)' }}>
-                  Plan my trip →
-                </button>
-                <button onClick={resetQuiz} style={{ background:'rgba(0,68,123,0.07)', color:'var(--navy)', fontFamily:'var(--font-head)', fontWeight:500, fontSize:15, padding:'14px 24px', borderRadius:'var(--r-pill)', border:'1px solid rgba(0,68,123,0.20)', cursor:'pointer' }}>
-                  ↺ Retake quiz
-                </button>
-              </div>
-            </div>
-
-          ) : (
-            /* ── QUIZ IN PROGRESS ── */
-            <div style={{ background:'#fff', border:'1px solid rgba(0,68,123,0.12)', borderRadius:'var(--r-lg)', padding:'40px 36px' }}>
-              {/* Progress */}
-              <div style={{ display:'flex', gap:8, marginBottom:6 }}>
-                {['Vibe','Stay','Habits','Dining','Interests'].map((label,i) => (
-                  <div key={i} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
-                    <div style={{ width:'100%', height:4, borderRadius:100, background:i<quizStep?'var(--orange)':i===quizStep?'var(--orange-light)':'rgba(0,68,123,0.12)', transition:'background 0.3s' }} />
-                    <span style={{ fontFamily:'var(--font-head)', fontSize:10, color:i<=quizStep?'var(--orange-light)':'rgba(0,68,123,0.30)', letterSpacing:0.5, textTransform:'uppercase' as const }}>{label}</span>
-                  </div>
-                ))}
-              </div>
-              <p style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:11, color:'var(--gray-dark)', letterSpacing:1.5, textTransform:'uppercase', marginBottom:28, marginTop:16 }}>Step {quizStep+1} of 5</p>
-
-              {/* Step 0: Vibe sliders */}
-              {quizStep === 0 && (
-                <div style={{ textAlign:'left' }}>
-                  <h3 style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:22, color:'var(--navy)', marginBottom:8, textAlign:'center' }}>What is your ideal travel vibe?</h3>
-                  <p style={{ fontFamily:'var(--font-body)', fontSize:14, color:'var(--gray-dark)', marginBottom:36, textAlign:'center' }}>Drag each slider to find your sweet spot — there are no wrong answers.</p>
-                  {VIBE_SPECTRUMS.map(sp => {
-                    const val = quizVibes[sp.key] ?? 2;
-                    const pct = val * 25;
-                    const currentLabel = sp.labels[val];
-                    return (
-                      <div key={sp.key} style={{ marginBottom:32 }}>
-                        <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
-                          <span style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:12, color:'var(--gray-dark)' }}>{sp.leftIcon} {sp.left}</span>
-                          <span style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:12, color:'var(--orange-light)', background:'rgba(255,130,16,0.12)', border:'1px solid rgba(255,130,16,0.25)', borderRadius:'var(--r-pill)', padding:'2px 10px' }}>{currentLabel}</span>
-                          <span style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:12, color:'var(--gray-dark)' }}>{sp.right} {sp.rightIcon}</span>
-                        </div>
-                        <input
-                          type="range" min={0} max={4} step={1} value={val}
-                          onChange={e => setQuizVibes(prev => ({...prev, [sp.key]: Number(e.target.value)}))}
-                          className="quiz-slider"
-                          style={{ '--fill': `${pct}%` } as React.CSSProperties}
-                        />
-                      </div>
-                    );
-                  })}
-                  <div style={{ display:'flex', justifyContent:'flex-end', marginTop:8 }}>
-                    <button onClick={()=>setQuizStep(1)} style={{ background:'var(--orange)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, padding:'14px 32px', borderRadius:'var(--r-pill)', border:'none', cursor:'pointer' }}>Continue →</button>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 1: Accommodation */}
-              {quizStep === 1 && (
-                <div>
-                  <h3 style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:22, color:'var(--navy)', marginBottom:8 }}>How do you like to stay?</h3>
-                  <p style={{ fontFamily:'var(--font-body)', fontSize:14, color:'var(--gray-dark)', marginBottom:28 }}>Select all that appeal to you.</p>
-                  <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10, marginBottom:24 }}>
-                    {ACCOM_OPTIONS.map(opt => {
-                      const sel = quizAccom.includes(opt.v);
-                      return (
-                        <button key={opt.v} onClick={()=>setQuizAccom(p=>p.includes(opt.v)?p.filter(x=>x!==opt.v):[...p,opt.v])} style={{ background:sel?'rgba(255,130,16,0.10)':'rgba(0,68,123,0.04)', border:`1.5px solid ${sel?'var(--orange)':'rgba(0,68,123,0.12)'}`, borderRadius:'var(--r-md)', padding:'16px 10px', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:8, transition:'all 0.15s' }}>
-                          <span style={{ fontSize:26 }}>{opt.e}</span>
-                          <span style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:12, color:sel?'var(--orange-light)':'var(--navy)', lineHeight:1.3, textAlign:'center' }}>{opt.l}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <div style={{ display:'flex', justifyContent:'space-between' }}>
-                    <button onClick={()=>setQuizStep(0)} style={{ background:'none', border:'none', color:'var(--gray-dark)', fontFamily:'var(--font-head)', fontSize:13, cursor:'pointer' }}>← Back</button>
-                    <button onClick={()=>setQuizStep(2)} disabled={quizAccom.length===0} style={{ background:quizAccom.length>0?'var(--orange)':'rgba(0,68,123,0.10)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, padding:'14px 32px', borderRadius:'var(--r-pill)', border:'none', cursor:quizAccom.length>0?'pointer':'not-allowed' }}>Continue →</button>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 2: Habits */}
-              {quizStep === 2 && (
-                <div style={{ textAlign:'left' }}>
-                  <h3 style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:22, color:'var(--navy)', marginBottom:8, textAlign:'center' }}>How do you travel?</h3>
-                  <p style={{ fontFamily:'var(--font-body)', fontSize:14, color:'var(--gray-dark)', marginBottom:28, textAlign:'center' }}>One answer per question.</p>
-                  {HABIT_QUESTIONS.map(hq => (
-                    <div key={hq.key} style={{ marginBottom:24 }}>
-                      <p style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:12, color:'var(--orange-light)', letterSpacing:1.5, textTransform:'uppercase', marginBottom:12 }}>{hq.label}</p>
-                      <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
-                        {hq.opts.map(opt => {
-                          const sel = quizHabits[hq.key] === opt.v;
-                          return (
-                            <button key={opt.v} onClick={()=>setQuizHabits(p=>({...p,[hq.key]:opt.v}))} style={{ background:sel?'rgba(255,130,16,0.10)':'rgba(0,68,123,0.04)', border:`1.5px solid ${sel?'var(--orange)':'rgba(0,68,123,0.12)'}`, borderRadius:10, padding:'10px 16px', cursor:'pointer', transition:'all 0.15s', display:'flex', alignItems:'center', gap:8 }}>
-                              <span style={{ fontSize:18 }}>{opt.e}</span>
-                              <span style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:13, color:sel?'var(--orange-light)':'var(--navy)' }}>{opt.l}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                  <div style={{ display:'flex', justifyContent:'space-between', marginTop:8 }}>
-                    <button onClick={()=>setQuizStep(1)} style={{ background:'none', border:'none', color:'var(--gray-dark)', fontFamily:'var(--font-head)', fontSize:13, cursor:'pointer' }}>← Back</button>
-                    <button onClick={()=>setQuizStep(3)} disabled={Object.keys(quizHabits).length<HABIT_QUESTIONS.length} style={{ background:Object.keys(quizHabits).length>=HABIT_QUESTIONS.length?'var(--orange)':'rgba(0,68,123,0.10)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, padding:'14px 32px', borderRadius:'var(--r-pill)', border:'none', cursor:Object.keys(quizHabits).length>=HABIT_QUESTIONS.length?'pointer':'not-allowed' }}>Continue →</button>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 3: Dining */}
-              {quizStep === 3 && (
-                <div>
-                  <h3 style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:22, color:'var(--navy)', marginBottom:8 }}>What dining experiences do you love?</h3>
-                  <p style={{ fontFamily:'var(--font-body)', fontSize:14, color:'var(--gray-dark)', marginBottom:28 }}>Select all that apply.</p>
-                  <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10, marginBottom:24 }}>
-                    {DINING_OPTIONS.map(opt => {
-                      const sel = quizDining.includes(opt.v);
-                      return (
-                        <button key={opt.v} onClick={()=>setQuizDining(p=>p.includes(opt.v)?p.filter(x=>x!==opt.v):[...p,opt.v])} style={{ background:sel?'rgba(255,130,16,0.10)':'rgba(0,68,123,0.04)', border:`1.5px solid ${sel?'var(--orange)':'rgba(0,68,123,0.12)'}`, borderRadius:'var(--r-md)', padding:'14px 8px', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:6, transition:'all 0.15s' }}>
-                          <span style={{ fontSize:24 }}>{opt.e}</span>
-                          <span style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:11, color:sel?'var(--orange-light)':'var(--navy)', lineHeight:1.3, textAlign:'center' }}>{opt.l}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <div style={{ display:'flex', justifyContent:'space-between' }}>
-                    <button onClick={()=>setQuizStep(2)} style={{ background:'none', border:'none', color:'var(--gray-dark)', fontFamily:'var(--font-head)', fontSize:13, cursor:'pointer' }}>← Back</button>
-                    <button onClick={()=>setQuizStep(4)} disabled={quizDining.length===0} style={{ background:quizDining.length>0?'var(--orange)':'rgba(0,68,123,0.10)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, padding:'14px 32px', borderRadius:'var(--r-pill)', border:'none', cursor:quizDining.length>0?'pointer':'not-allowed' }}>Continue →</button>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 4: Interests */}
-              {quizStep === 4 && (
-                <div>
-                  <h3 style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:22, color:'var(--navy)', marginBottom:8 }}>What are your favourite travel activities?</h3>
-                  <p style={{ fontFamily:'var(--font-body)', fontSize:14, color:'var(--gray-dark)', marginBottom:28 }}>Select all that apply.</p>
-                  <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10, marginBottom:24 }}>
-                    {INTEREST_OPTIONS.map(opt => {
-                      const sel = quizInterests.includes(opt.v);
-                      return (
-                        <button key={opt.v} onClick={()=>setQuizInterests(p=>p.includes(opt.v)?p.filter(x=>x!==opt.v):[...p,opt.v])} style={{ background:sel?'rgba(255,130,16,0.10)':'rgba(0,68,123,0.04)', border:`1.5px solid ${sel?'var(--orange)':'rgba(0,68,123,0.12)'}`, borderRadius:'var(--r-md)', padding:'14px 8px', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:6, transition:'all 0.15s' }}>
-                          <span style={{ fontSize:24 }}>{opt.e}</span>
-                          <span style={{ fontFamily:'var(--font-head)', fontWeight:500, fontSize:11, color:sel?'var(--orange-light)':'var(--navy)', lineHeight:1.3, textAlign:'center' }}>{opt.l}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <div style={{ display:'flex', justifyContent:'space-between' }}>
-                    <button onClick={()=>setQuizStep(3)} style={{ background:'none', border:'none', color:'var(--gray-dark)', fontFamily:'var(--font-head)', fontSize:13, cursor:'pointer' }}>← Back</button>
-                    <button onClick={finishQuiz} disabled={quizInterests.length===0} style={{ background:quizInterests.length>0?'var(--orange)':'rgba(0,68,123,0.10)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, padding:'14px 32px', borderRadius:'var(--r-pill)', border:'none', cursor:quizInterests.length>0?'pointer':'not-allowed' }}>
-                      Reveal my persona ✨
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* ───── FINAL CTA ───── */}
-      <section style={{ background:'#fff', padding:'96px 24px', borderTop:'1px solid rgba(0,68,123,0.08)' }}>
-        <div style={{ maxWidth:640, margin:'0 auto', textAlign:'center' }}>
-          <h2 style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:40, color:'var(--navy)', marginBottom:36, lineHeight:1.2 }}>
-            Ready to plan your perfect trip?
-          </h2>
-          <button
-            onClick={()=>router.push('/start')}
-            style={{ display:'inline-flex', alignItems:'center', gap:10, background:'#FF8210', color:'#fff', fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:18, padding:'16px 44px', borderRadius:100, border:'none', cursor:'pointer', boxShadow:'0 8px 32px rgba(255,130,16,0.40)', letterSpacing:0.3, transition:'background 0.18s' }}
-            onMouseEnter={e=>(e.currentTarget as HTMLButtonElement).style.background='#e5730e'}
-            onMouseLeave={e=>(e.currentTarget as HTMLButtonElement).style.background='#FF8210'}
-          >
-            Let&apos;s Go →
-          </button>
-        </div>
-      </section>
-
-
+    <>
       <style>{`
-        @keyframes fadeUp { from { opacity:0; transform:translateY(28px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
-        button:hover { opacity:0.88; }
-        .container { max-width:1200px; margin:0 auto; padding:0 32px; }
-        .quiz-slider { -webkit-appearance:none; appearance:none; width:100%; height:8px; border-radius:100px; outline:none; cursor:pointer; background:linear-gradient(to right, #FF8210 var(--fill,50%), rgba(255,255,255,0.15) var(--fill,50%)); }
-        .quiz-slider::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:26px; height:26px; border-radius:50%; background:#FF8210; cursor:pointer; box-shadow:0 0 0 5px rgba(255,130,16,0.25), 0 2px 8px rgba(0,0,0,0.3); transition:box-shadow 0.15s; }
-        .quiz-slider::-webkit-slider-thumb:hover { box-shadow:0 0 0 8px rgba(255,130,16,0.30), 0 2px 8px rgba(0,0,0,0.3); }
-        .quiz-slider::-moz-range-thumb { width:26px; height:26px; border-radius:50%; background:#FF8210; cursor:pointer; border:none; box-shadow:0 0 0 5px rgba(255,130,16,0.25); }
-        .quiz-slider::-moz-range-progress { background:#FF8210; height:8px; border-radius:100px; }
-        @keyframes shimmer { 0%,100% { opacity:0.5; } 50% { opacity:1; } }
-        .carousel-scroll { -ms-overflow-style:none; scrollbar-width:none; }
-        .carousel-scroll::-webkit-scrollbar { display:none; }
-        .carousel-scroll:active { cursor:grabbing; }
-        @media (max-width: 768px) {
-          .hero-layout { flex-direction: column !important; align-items: center !important; }
-          .hero-maya-col { width: 100% !important; flex-direction: row !important; align-items: flex-end !important; gap: 16px; }
-          .hero-maya-col img { max-width: 140px !important; margin-top: 0 !important; }
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{
+          --orange:#FF8210;
+          --navy:#00447B;
+          --orange-light:#FFBD59;
+          --navy-mid:#679AC1;
+          --gray-dark:#6C6D6F;
+          --gray-light:#C0C0C0;
+          --bg-soft:#F7F5F2;
+          --bg-navy-tint:#EEF4FB;
         }
-        @media (max-width: 400px) {
-          .step-label { font-size: 9px !important; }
-          .step-header { padding: 12px 14px !important; }
+        html{scroll-behavior:smooth}
+        body{font-family:'Lato',sans-serif;font-weight:400;color:#333;overflow-x:hidden}
+        h1,h2,h3,h4{font-family:'Poppins',sans-serif;font-weight:500}
+        /* NAVBAR */
+        nav{position:sticky;top:0;z-index:100;background:white;border-bottom:0.5px solid rgba(0,68,123,0.08);padding:0 60px}
+        .nav-inner{display:flex;align-items:center;justify-content:space-between;height:68px}
+        .nav-logo img{height:50px;width:auto;display:block}
+        .nav-links{display:flex;gap:28px;align-items:center}
+        .nav-links a{font-family:'Lato',sans-serif;font-size:14px;color:var(--gray-dark);text-decoration:none;font-weight:400;transition:color .2s}
+        .nav-links a:hover{color:var(--orange)}
+        .nav-links a.active{color:var(--navy);font-weight:700;border-bottom:2px solid var(--orange);padding-bottom:2px}
+        .nav-actions{display:flex;gap:10px;align-items:center}
+        .btn-login{background:transparent;color:var(--navy);border:1.5px solid var(--navy);border-radius:22px;padding:8px 20px;font-family:'Lato',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-block}
+        .btn-login:hover{background:var(--navy);color:white}
+        .btn-plan{background:var(--orange);color:white;border:1.5px solid var(--orange);border-radius:22px;padding:8px 20px;font-family:'Lato',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-block}
+        .btn-plan:hover{background:#e06e00;border-color:#e06e00}
+        /* HERO */
+        @keyframes heroFade{0%,28%{opacity:1}33%,95%{opacity:0}100%{opacity:1}}
+        @keyframes kenburns{0%{transform:scale(1) translate(0,0)}100%{transform:scale(1.08) translate(-1%,-1%)}}
+        .hero{padding:110px 60px 80px;text-align:center;position:relative;overflow:hidden;min-height:92vh;display:flex;flex-direction:column;align-items:center;justify-content:center}
+        .hero-bg{position:absolute;inset:0;background-size:cover;background-position:center;animation:heroFade 24s infinite,kenburns 24s ease-in-out infinite alternate}
+        .hero-bg:nth-child(2){animation-delay:6s}
+        .hero-bg:nth-child(3){animation-delay:12s}
+        .hero-bg:nth-child(4){animation-delay:18s}
+        .hero-overlay{position:absolute;inset:0;background:rgba(0,20,50,0.58);z-index:1}
+        .hero-content{position:relative;z-index:2}
+        .hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,189,89,0.15);border:1px solid rgba(255,189,89,0.4);border-radius:22px;padding:6px 18px;margin-bottom:36px}
+        .hero-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--orange);flex-shrink:0}
+        .hero-badge span{color:var(--orange-light);font-size:13px;font-weight:700;font-family:'Lato',sans-serif}
+        .hero-title{font-size:78px;font-weight:500;line-height:0.95;letter-spacing:-2px;margin-bottom:0}
+        .hero-title .navy{color:white}
+        .hero-title .orange{color:var(--orange);font-style:italic}
+        .hero-sub{font-family:'Lato',sans-serif;font-size:18px;font-weight:300;color:rgba(255,255,255,0.82);line-height:1.7;max-width:520px;margin:28px auto 36px}
+        .hero-pills{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:40px}
+        .hero-pill{border-radius:22px;padding:10px 20px}
+        .hero-pill.blue{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2)}
+        .hero-pill.orange{background:rgba(255,130,16,0.2);border:1px solid rgba(255,130,16,0.4)}
+        .hero-pill .pill-title{font-family:'Poppins',sans-serif;font-size:13px;font-weight:500;color:white}
+        .hero-pill.orange .pill-title{color:var(--orange-light)}
+        .hero-pill .pill-sub{font-family:'Lato',sans-serif;font-size:11px;color:rgba(255,255,255,0.55);margin-top:1px}
+        .hero-pill.orange .pill-sub{color:rgba(255,189,89,0.85)}
+        .btn-letsgo{background:var(--orange);color:white;border:none;border-radius:50px;padding:18px 56px;font-family:'Poppins',sans-serif;font-size:18px;font-weight:500;cursor:pointer;letter-spacing:0.02em;display:inline-block;text-decoration:none;transition:background .2s;margin-bottom:48px}
+        .btn-letsgo:hover{background:#e06e00}
+        .see-more{color:rgba(255,255,255,0.4);font-family:'Lato',sans-serif;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px}
+        .see-more-arrow{color:rgba(255,255,255,0.4);font-size:22px;line-height:1}
+        /* SECTION COMMON */
+        .section{padding:80px 60px}
+        .section-label{font-family:'Lato',sans-serif;font-size:12px;font-weight:700;color:var(--orange);letter-spacing:0.12em;text-transform:uppercase;border-bottom:2px solid var(--orange);display:inline-block;padding-bottom:3px;margin-bottom:16px}
+        .section-title{font-size:40px;font-weight:500;color:var(--navy);margin-bottom:12px;letter-spacing:-0.5px}
+        .section-sub{font-family:'Lato',sans-serif;font-size:17px;font-weight:300;color:var(--gray-dark);line-height:1.65;max-width:560px}
+        .section-sub.centered{margin:0 auto}
+        /* HOW IT WORKS */
+        .how{background:var(--bg-soft);text-align:center}
+        .how .section-title,.how .section-label,.how .section-sub{text-align:center}
+        .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;margin-top:52px}
+        .step-card{background:white;border-radius:16px;padding:36px 28px;border:0.5px solid rgba(0,68,123,0.08);text-align:left}
+        .step-num{width:36px;height:36px;border-radius:50%;background:var(--orange);color:white;font-family:'Poppins',sans-serif;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-bottom:20px}
+        .step-card h3{font-size:20px;font-weight:500;color:var(--navy);margin-bottom:10px}
+        .step-card p{font-family:'Lato',sans-serif;font-size:15px;font-weight:300;color:var(--gray-dark);line-height:1.65}
+        /* FEATURES */
+        .features{background:white}
+        .features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:52px}
+        .feat-card{background:var(--bg-soft);border-radius:14px;padding:28px 24px;border:0.5px solid rgba(0,68,123,0.06)}
+        .feat-icon{width:44px;height:44px;margin-bottom:14px}
+        .feat-card h3{font-size:18px;font-weight:500;color:var(--navy);margin-bottom:8px}
+        .feat-card p{font-family:'Lato',sans-serif;font-size:14px;font-weight:300;color:var(--gray-dark);line-height:1.6}
+        /* YOUR WAY */
+        .yourway{background:var(--bg-navy-tint)}
+        .yourway-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;margin-top:40px}
+        .yourway-points{display:flex;flex-direction:column;gap:20px;margin-top:12px}
+        .yw-point{display:flex;gap:14px;align-items:flex-start}
+        .yw-dot{width:10px;height:10px;border-radius:50%;background:var(--orange);flex-shrink:0;margin-top:6px}
+        .yw-point h4{font-size:16px;font-weight:500;color:var(--navy);margin-bottom:4px}
+        .yw-point p{font-family:'Lato',sans-serif;font-size:14px;font-weight:300;color:var(--gray-dark);line-height:1.6}
+        .yourway-visual{background:white;border-radius:16px;padding:32px;border:0.5px solid rgba(0,68,123,0.1)}
+        .chat-bubble{background:var(--bg-navy-tint);border-radius:12px 12px 12px 2px;padding:14px 18px;margin-bottom:10px;font-family:'Lato',sans-serif;font-size:14px;color:var(--navy);font-weight:400;max-width:90%;line-height:1.5}
+        .chat-bubble.luna{background:var(--navy);color:white;border-radius:12px 12px 2px 12px;margin-left:auto}
+        .chat-label{font-family:'Lato',sans-serif;font-size:11px;color:var(--gray-light);margin-bottom:6px;font-weight:400}
+        .chat-label.luna{text-align:right}
+        /* MEET LUNA */
+        .meet-luna{background:var(--navy);padding:80px 60px}
+        .meet-luna-inner{display:grid;grid-template-columns:380px 1fr;gap:60px;align-items:center;max-width:1100px;margin:0 auto}
+        .luna-avatar-wrap{display:flex;justify-content:center}
+        .luna-avatar-wrap img{height:440px;width:auto;mix-blend-mode:screen;filter:brightness(1.05)}
+        .luna-copy .section-label{color:var(--orange-light);border-color:var(--orange-light)}
+        .luna-copy .section-title{color:white;font-size:44px;line-height:1.1}
+        .luna-copy .section-sub{color:rgba(255,255,255,0.65);max-width:100%}
+        .luna-features{display:flex;flex-direction:column;gap:14px;margin-top:28px}
+        .luna-feat{display:flex;gap:12px;align-items:flex-start}
+        .luna-feat-check{width:20px;height:20px;border-radius:50%;background:var(--orange);flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px}
+        .luna-feat-check::after{content:'';width:6px;height:10px;border-right:2px solid white;border-bottom:2px solid white;transform:rotate(45deg) translate(-1px,-1px)}
+        .luna-feat p{font-family:'Lato',sans-serif;font-size:15px;font-weight:300;color:rgba(255,255,255,0.75);line-height:1.55}
+        .luna-feat strong{color:white;font-weight:700}
+        .btn-letsgo-white{background:var(--orange);color:white;border:none;border-radius:50px;padding:16px 44px;font-family:'Poppins',sans-serif;font-size:16px;font-weight:500;cursor:pointer;display:inline-block;text-decoration:none;margin-top:32px;transition:background .2s}
+        .btn-letsgo-white:hover{background:#e06e00}
+        /* TRIP IDEAS */
+        .trip-ideas{background:white}
+        .ideas-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:52px}
+        .idea-card{border-radius:16px;overflow:hidden;border:0.5px solid rgba(0,68,123,0.1)}
+        .idea-img{height:200px;background:var(--bg-navy-tint);position:relative;overflow:hidden}
+        .idea-img-bg{position:absolute;inset:0;display:flex;align-items:flex-end;padding:16px}
+        .idea-tag{display:inline-block;background:var(--orange);color:white;font-family:'Lato',sans-serif;font-size:11px;font-weight:700;padding:4px 12px;border-radius:10px}
+        .idea-body{padding:20px}
+        .idea-body h3{font-size:20px;font-weight:500;color:var(--navy);margin-bottom:4px}
+        .idea-body .days{font-family:'Lato',sans-serif;font-size:13px;color:var(--gray-dark);font-weight:300;margin-bottom:10px}
+        .idea-tags{display:flex;gap:6px;flex-wrap:wrap}
+        .tag{background:#EEF4FB;color:var(--navy);font-family:'Lato',sans-serif;font-size:11px;font-weight:400;padding:4px 10px;border-radius:8px}
+        /* PERSONA */
+        .persona{background:#FFF8F0;text-align:center;padding:80px 60px}
+        .persona-cards{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:40px 0}
+        .persona-card{background:white;border-radius:12px;padding:18px 28px;border:1.5px solid rgba(0,68,123,0.15);min-width:140px;text-align:center;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:10px}
+        .persona-card:hover{border-color:var(--orange);background:var(--orange);transform:translateY(-2px)}
+        .persona-card .p-name{font-family:'Poppins',sans-serif;font-size:14px;font-weight:500;color:var(--navy);transition:color .2s}
+        .persona-card:hover .p-name{color:white}
+        /* FINAL CTA */
+        .final-cta{background:var(--orange);padding:80px 60px;text-align:center}
+        .final-cta h2{font-size:52px;font-weight:500;color:white;margin-bottom:16px;letter-spacing:-1px}
+        .final-cta p{font-family:'Lato',sans-serif;font-size:18px;font-weight:300;color:rgba(255,255,255,0.85);margin-bottom:40px}
+        .btn-cta-white{background:white;color:var(--orange);border:none;border-radius:50px;padding:18px 52px;font-family:'Poppins',sans-serif;font-size:18px;font-weight:500;cursor:pointer;text-decoration:none;display:inline-block;transition:all .2s}
+        .btn-cta-white:hover{background:#FFF5EC}
+        /* FOOTER */
+        footer{background:var(--navy);padding:60px 60px 32px;color:rgba(255,255,255,0.65)}
+        .footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:48px}
+        .footer-brand img{height:38px;margin-bottom:16px}
+        .footer-brand p{font-family:'Lato',sans-serif;font-size:14px;font-weight:300;line-height:1.65;color:rgba(255,255,255,0.5);max-width:260px}
+        .footer-col h4{font-family:'Poppins',sans-serif;font-size:14px;font-weight:500;color:white;margin-bottom:16px}
+        .footer-col a{display:block;font-family:'Lato',sans-serif;font-size:14px;font-weight:300;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:9px;transition:color .2s}
+        .footer-col a:hover{color:var(--orange-light)}
+        .footer-bottom{border-top:0.5px solid rgba(255,255,255,0.1);padding-top:24px;display:flex;justify-content:space-between;align-items:center}
+        .footer-bottom p{font-family:'Lato',sans-serif;font-size:13px;font-weight:300;color:rgba(255,255,255,0.35)}
+        .social-links{display:flex;gap:14px}
+        .social-links a{color:rgba(255,255,255,0.35);text-decoration:none;font-family:'Lato',sans-serif;font-size:13px;transition:color .2s}
+        .social-links a:hover{color:var(--orange-light)}
+        /* RESPONSIVE */
+        @media(max-width:900px){
+          nav{padding:0 24px}
+          .nav-links{display:none}
+          .hero{padding:80px 24px 60px}
+          .hero-title{font-size:48px}
+          .section{padding:60px 24px}
+          .steps{grid-template-columns:1fr}
+          .features-grid{grid-template-columns:1fr 1fr}
+          .yourway-grid{grid-template-columns:1fr;gap:32px}
+          .meet-luna{padding:60px 24px}
+          .meet-luna-inner{grid-template-columns:1fr;gap:32px}
+          .luna-avatar-wrap img{height:280px}
+          .ideas-grid{grid-template-columns:1fr 1fr}
+          .final-cta{padding:60px 24px}
+          .final-cta h2{font-size:36px}
+          footer{padding:48px 24px 24px}
+          .footer-grid{grid-template-columns:1fr 1fr;gap:28px}
         }
-        .luna2-avatar { display: none; }
-        @media (min-width: 1024px) {
-          .luna2-avatar { display: block; }
-        }
-        @media (max-width: 900px) {
-          .control-grid { grid-template-columns: repeat(2,1fr) !important; }
-        }
-        @media (max-width: 560px) {
-          .control-grid { grid-template-columns: 1fr !important; }
+        @media(max-width:540px){
+          .hero-title{font-size:36px;letter-spacing:-1px}
+          .features-grid{grid-template-columns:1fr}
+          .ideas-grid{grid-template-columns:1fr}
+          .persona-cards{flex-direction:column;align-items:center}
+          .footer-grid{grid-template-columns:1fr}
+          .footer-bottom{flex-direction:column;gap:12px;text-align:center}
         }
       `}</style>
-    </div>
+
+      {/* NAVBAR */}
+      <nav ref={navRef}>
+        <div className="nav-inner">
+          <div className="nav-logo">
+            <Link href="/"><img src="/luna_letsgo_bigger_3.PNG" alt="Luna Let's Go" /></Link>
+          </div>
+          <div className="nav-links">
+            <a href="#trip-ideas" className="active">Trip Ideas</a>
+            <a href="#quiz">Quiz</a>
+            <Link href="/blog">Blog</Link>
+            <Link href="/deals">Deals</Link>
+          </div>
+          <div className="nav-actions">
+            <Link href="/auth" className="btn-login">Login</Link>
+            <Link href="/start" className="btn-plan">Plan a Trip</Link>
+          </div>
+        </div>
+      </nav>
+
+      {/* HERO */}
+      <section className="hero" id="hero">
+        <div className="hero-bg" style={{backgroundImage:"url('https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=1600&q=80')"}}></div>
+        <div className="hero-bg" style={{backgroundImage:"url('https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=1600&q=80')"}}></div>
+        <div className="hero-bg" style={{backgroundImage:"url('https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=1600&q=80')"}}></div>
+        <div className="hero-bg" style={{backgroundImage:"url('https://images.unsplash.com/photo-1495567720989-cebdbdd97913?w=1600&q=80')"}}></div>
+        <div className="hero-overlay"></div>
+        <div className="hero-content">
+          <div className="hero-badge">
+            <div className="hero-badge-dot"></div>
+            <span>The smarter way to travel</span>
+          </div>
+          <h1 className="hero-title">
+            <span className="navy">Your trip.<br /></span>
+            <span className="orange">Your rules.</span><br />
+            <span className="navy">Your way.</span>
+          </h1>
+          <p className="hero-sub">Not just another AI planner. Luna works with you, every step towards your perfect trip.</p>
+          <div className="hero-pills">
+            <div className="hero-pill blue">
+              <div className="pill-title">30 seconds</div>
+              <div className="pill-sub">to a full itinerary</div>
+            </div>
+            <div className="hero-pill orange">
+              <div className="pill-title">100% personal</div>
+              <div className="pill-sub">built for your tastes</div>
+            </div>
+            <div className="hero-pill blue">
+              <div className="pill-title">Chat with Luna</div>
+              <div className="pill-sub">refine as you go</div>
+            </div>
+            <div className="hero-pill blue">
+              <div className="pill-title">Always free</div>
+              <div className="pill-sub">no account needed</div>
+            </div>
+          </div>
+          <Link href="/start" className="btn-letsgo">Let&apos;s Go &rarr;</Link>
+          <div>
+            <div className="see-more">See more</div>
+            <div className="see-more-arrow">↓</div>
+          </div>
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section className="section how" id="how-it-works">
+        <div className="section-label">How it works</div>
+        <h2 className="section-title">As easy as 1, 2, 3</h2>
+        <p className="section-sub centered">Tell us where you want to go. Luna handles everything else, in seconds.</p>
+        <div className="steps">
+          <div className="step-card">
+            <div className="step-num">1</div>
+            <h3>Tell Luna where you want to go</h3>
+            <p>Type your destination, travel dates, and who you are travelling with. That is all it takes to get started.</p>
+          </div>
+          <div className="step-card">
+            <div className="step-num">2</div>
+            <h3>Get a full personalised plan</h3>
+            <p>Luna builds your complete itinerary with activities, stays, budget breakdown, weather tips, and local transport options.</p>
+          </div>
+          <div className="step-card">
+            <div className="step-num">3</div>
+            <h3>Refine, save, and go</h3>
+            <p>Chat with Luna to tweak anything. Swap days, add ideas, change your style. Save your trip and head out with confidence.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* EVERYTHING IN EVERY PLAN */}
+      <section className="section features" id="features">
+        <div className="section-label">What you get</div>
+        <h2 className="section-title">Everything in every plan</h2>
+        <p className="section-sub">Every trip Luna builds comes fully loaded. No upgrades, no paywalls, no surprises.</p>
+        <div className="features-grid">
+          <div className="feat-card">
+            <svg className="feat-icon" viewBox="0 0 44 44" fill="none">
+              <rect width="44" height="44" rx="10" fill="#EEF4FB" />
+              <rect x="12" y="10" width="20" height="24" rx="3" stroke="#00447B" strokeWidth="1.5" />
+              <line x1="16" y1="16" x2="28" y2="16" stroke="#FF8210" strokeWidth="1.5" strokeLinecap="round" />
+              <line x1="16" y1="20" x2="28" y2="20" stroke="#00447B" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.4" />
+              <line x1="16" y1="24" x2="22" y2="24" stroke="#00447B" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.4" />
+            </svg>
+            <h3>Day-by-day itinerary</h3>
+            <p>A full schedule with timings, activity descriptions, insider tips, and local recommendations tailored to your style.</p>
+          </div>
+          <div className="feat-card">
+            <svg className="feat-icon" viewBox="0 0 44 44" fill="none">
+              <rect width="44" height="44" rx="10" fill="#FFF5EC" />
+              <rect x="10" y="16" width="24" height="16" rx="3" stroke="#FF8210" strokeWidth="1.5" />
+              <path d="M15 16v-3a7 7 0 0 1 14 0v3" stroke="#FF8210" strokeWidth="1.5" strokeLinecap="round" />
+              <circle cx="22" cy="24" r="2" fill="#FF8210" />
+            </svg>
+            <h3>Hotel suggestions</h3>
+            <p>Curated stay options matched to your budget and location preferences, near the activities in your plan.</p>
+          </div>
+          <div className="feat-card">
+            <svg className="feat-icon" viewBox="0 0 44 44" fill="none">
+              <rect width="44" height="44" rx="10" fill="#EEF4FB" />
+              <circle cx="22" cy="20" r="8" stroke="#00447B" strokeWidth="1.5" />
+              <path d="M18 20c0-2.2 1.8-4 4-4" stroke="#FF8210" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M22 32v2" stroke="#00447B" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.4" />
+              <path d="M14 22l-2 2" stroke="#00447B" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.4" />
+              <path d="M30 22l2 2" stroke="#00447B" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.4" />
+            </svg>
+            <h3>Weather and seasons</h3>
+            <p>Know what to expect and what to pack. Luna factors in seasonal weather and events so there are no unpleasant surprises.</p>
+          </div>
+          <div className="feat-card">
+            <svg className="feat-icon" viewBox="0 0 44 44" fill="none">
+              <rect width="44" height="44" rx="10" fill="#FFF5EC" />
+              <circle cx="14" cy="30" r="3" stroke="#FF8210" strokeWidth="1.5" />
+              <circle cx="30" cy="30" r="3" stroke="#FF8210" strokeWidth="1.5" />
+              <path d="M8 28h4v-6h16v6h4" stroke="#FF8210" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M12 22v-4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v4" stroke="#FF8210" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+            <h3>Getting around</h3>
+            <p>Transport options for every leg of your trip, from airport transfers to local taxis, trains, and everything in between.</p>
+          </div>
+          <div className="feat-card">
+            <svg className="feat-icon" viewBox="0 0 44 44" fill="none">
+              <rect width="44" height="44" rx="10" fill="#EEF4FB" />
+              <rect x="12" y="14" width="20" height="16" rx="3" stroke="#00447B" strokeWidth="1.5" />
+              <line x1="17" y1="22" x2="17" y2="26" stroke="#FF8210" strokeWidth="2" strokeLinecap="round" />
+              <line x1="22" y1="19" x2="22" y2="26" stroke="#FF8210" strokeWidth="2" strokeLinecap="round" />
+              <line x1="27" y1="20" x2="27" y2="26" stroke="#FF8210" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            <h3>Budget breakdown</h3>
+            <p>A clear cost estimate across accommodation, food, activities, and transport. Know what you will spend before you go.</p>
+          </div>
+          <div className="feat-card">
+            <svg className="feat-icon" viewBox="0 0 44 44" fill="none">
+              <rect width="44" height="44" rx="10" fill="#FFF5EC" />
+              <path d="M14 28a10 10 0 1 1 16 0" stroke="#FF8210" strokeWidth="1.5" strokeLinecap="round" />
+              <circle cx="22" cy="22" r="3" fill="#FF8210" />
+              <line x1="22" y1="28" x2="22" y2="32" stroke="#FF8210" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+            <h3>Chat with Luna</h3>
+            <p>Ask Luna anything about your trip. Adjust days, add activities, get local advice. She is always one message away.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* YOUR TRIP YOUR WAY */}
+      <section className="section yourway" id="your-way">
+        <div className="yourway-grid">
+          <div>
+            <div className="section-label">Personal by design</div>
+            <h2 className="section-title">Travel made personal, your way</h2>
+            <p className="section-sub">Generic itineraries are for everyone. Yours should be for you. Luna learns what you love and builds every trip around it.</p>
+            <div className="yourway-points">
+              <div className="yw-point">
+                <div className="yw-dot"></div>
+                <div>
+                  <h4>Your interests, front and centre</h4>
+                  <p>From street food tours to mountain hikes, Luna surfaces only what genuinely excites you.</p>
+                </div>
+              </div>
+              <div className="yw-point">
+                <div className="yw-dot"></div>
+                <div>
+                  <h4>Your pace, not someone else&apos;s</h4>
+                  <p>Prefer slow mornings and long lunches? Or pack in every hour? Luna adapts to how you like to travel.</p>
+                </div>
+              </div>
+              <div className="yw-point">
+                <div className="yw-dot"></div>
+                <div>
+                  <h4>Your budget, respected</h4>
+                  <p>Set your range and Luna works within it, no upsells, no surprises.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="yourway-visual">
+            <div className="chat-label">You</div>
+            <div className="chat-bubble">I want 7 days in Japan. I love food and local markets but hate tourist traps.</div>
+            <div className="chat-label luna" style={{marginTop:16}}>Luna</div>
+            <div className="chat-bubble luna">Perfect. I&apos;ll build your Tokyo itinerary around Tsukiji outer market, hidden izakayas in Shimokitazawa, and a day trip to Nikko. No tourist traps, promise.</div>
+            <div className="chat-label" style={{marginTop:16}}>You</div>
+            <div className="chat-bubble">Can you make day 3 more relaxed? Maybe a morning at an onsen?</div>
+            <div className="chat-label luna" style={{marginTop:16}}>Luna</div>
+            <div className="chat-bubble luna">Done. I&apos;ve swapped day 3 to include a morning at Oedo-Onsen Monogatari and a gentle afternoon at Yanaka, one of Tokyo&apos;s most charming old neighbourhoods.</div>
+          </div>
+        </div>
+      </section>
+
+      {/* MEET LUNA */}
+      <section className="meet-luna" id="meet-luna">
+        <div className="meet-luna-inner">
+          <div className="luna-avatar-wrap">
+            <img src="/luna_extracted_1.jpeg" alt="Luna, your AI travel companion" />
+          </div>
+          <div className="luna-copy">
+            <div className="section-label">Meet Luna</div>
+            <h2 className="section-title">This isn&apos;t just another AI planner.</h2>
+            <p className="section-sub">Luna works with you, every step towards your perfect trip. She remembers your preferences, adapts your plan, and speaks to you, not at you.</p>
+            <div className="luna-features">
+              <div className="luna-feat">
+                <div className="luna-feat-check"></div>
+                <p><strong>Fully contextual.</strong> Every suggestion Luna makes is based on your complete trip, not a generic template.</p>
+              </div>
+              <div className="luna-feat">
+                <div className="luna-feat-check"></div>
+                <p><strong>Conversational.</strong> Chat naturally. Change your mind. Luna keeps up without losing context.</p>
+              </div>
+              <div className="luna-feat">
+                <div className="luna-feat-check"></div>
+                <p><strong>End-to-end.</strong> From itinerary to budget to stays and transport, Luna covers every detail in one plan.</p>
+              </div>
+              <div className="luna-feat">
+                <div className="luna-feat-check"></div>
+                <p><strong>Always free.</strong> No subscriptions, no paywalls. Luna is yours from the very first message.</p>
+              </div>
+            </div>
+            <Link href="/start" className="btn-letsgo-white">Plan with Luna &rarr;</Link>
+          </div>
+        </div>
+      </section>
+
+      {/* TRIP IDEAS */}
+      <section className="section trip-ideas" id="trip-ideas">
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end',marginBottom:52}}>
+          <div>
+            <div className="section-label">Inspiration</div>
+            <h2 className="section-title" style={{marginBottom:0}}>Trip ideas to get you started</h2>
+          </div>
+          <Link href="/trip-ideas" style={{fontFamily:"'Lato',sans-serif",fontSize:14,fontWeight:700,color:'var(--orange)',textDecoration:'none'}}>See all ideas &rarr;</Link>
+        </div>
+        <div className="ideas-grid">
+          <div className="idea-card">
+            <div className="idea-img" style={{backgroundImage:"url('https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=600&q=80')",backgroundSize:'cover',backgroundPosition:'center'}}>
+              <div className="idea-img-bg"><span className="idea-tag">Culture</span></div>
+            </div>
+            <div className="idea-body">
+              <h3>Tokyo, Japan</h3>
+              <div className="days">7 days</div>
+              <div className="idea-tags">
+                <span className="tag">Food</span><span className="tag">Markets</span><span className="tag">Art</span><span className="tag">History</span>
+              </div>
+            </div>
+          </div>
+          <div className="idea-card">
+            <div className="idea-img" style={{backgroundImage:"url('https://images.unsplash.com/photo-1548707309-dcebeab9ea9b?w=600&q=80')",backgroundSize:'cover',backgroundPosition:'center'}}>
+              <div className="idea-img-bg"><span className="idea-tag">Trending</span></div>
+            </div>
+            <div className="idea-body">
+              <h3>Lisbon, Portugal</h3>
+              <div className="days">5 days</div>
+              <div className="idea-tags">
+                <span className="tag">History</span><span className="tag">Food</span><span className="tag">Sunsets</span>
+              </div>
+            </div>
+          </div>
+          <div className="idea-card">
+            <div className="idea-img" style={{backgroundImage:"url('https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&q=80')",backgroundSize:'cover',backgroundPosition:'center'}}>
+              <div className="idea-img-bg"><span className="idea-tag">Budget pick</span></div>
+            </div>
+            <div className="idea-body">
+              <h3>Bali, Indonesia</h3>
+              <div className="days">10 days</div>
+              <div className="idea-tags">
+                <span className="tag">Nature</span><span className="tag">Temples</span><span className="tag">Relax</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* TRAVELLER PERSONA */}
+      <section className="section persona" id="quiz">
+        <div className="section-label">Find your travel style</div>
+        <h2 className="section-title">What kind of traveller are you?</h2>
+        <p className="section-sub centered" style={{margin:'0 auto 8px'}}>Take the 2-minute quiz and let Luna build trips matched exactly to your personality.</p>
+        <div className="persona-cards">
+          <div className="persona-card">
+            <svg width="18" height="18" viewBox="0 0 18 18" style={{flexShrink:0}}><circle cx="9" cy="9" r="9" fill="var(--orange)" /></svg>
+            <div className="p-name">The Explorer</div>
+          </div>
+          <div className="persona-card">
+            <svg width="18" height="18" viewBox="0 0 18 18" style={{flexShrink:0}}><circle cx="9" cy="9" r="9" fill="var(--navy)" /></svg>
+            <div className="p-name">The Foodie</div>
+          </div>
+          <div className="persona-card">
+            <svg width="18" height="18" viewBox="0 0 18 18" style={{flexShrink:0}}><circle cx="9" cy="9" r="9" fill="var(--orange)" /></svg>
+            <div className="p-name">The Relaxer</div>
+          </div>
+          <div className="persona-card">
+            <svg width="18" height="18" viewBox="0 0 18 18" style={{flexShrink:0}}><circle cx="9" cy="9" r="9" fill="var(--navy)" /></svg>
+            <div className="p-name">The Photographer</div>
+          </div>
+          <div className="persona-card">
+            <svg width="18" height="18" viewBox="0 0 18 18" style={{flexShrink:0}}><circle cx="9" cy="9" r="9" fill="var(--navy)" /></svg>
+            <div className="p-name">The Culture Seeker</div>
+          </div>
+        </div>
+        <Link href="/quiz" style={{display:'inline-block',background:'var(--orange)',color:'white',borderRadius:50,padding:'16px 44px',fontFamily:"'Poppins',sans-serif",fontSize:16,fontWeight:500,textDecoration:'none',marginTop:8}}>Take the quiz &rarr;</Link>
+      </section>
+
+      {/* FINAL CTA */}
+      <section className="final-cta" id="cta">
+        <h2>Your next adventure starts here.</h2>
+        <p>Free, personal, and built around you. No account required to get started.</p>
+        <Link href="/start" className="btn-cta-white">Let&apos;s Go &rarr;</Link>
+      </section>
+
+      {/* FOOTER */}
+      <footer>
+        <div className="footer-grid">
+          <div className="footer-brand">
+            <img src="/luna_letsgo_bigger_3.PNG" alt="Luna Let's Go" />
+            <p>AI-powered travel planning that feels human. Built for travellers who want something more personal.</p>
+          </div>
+          <div className="footer-col">
+            <h4>About Us</h4>
+            <Link href="/about">Our Story</Link>
+            <Link href="/about#team">The Team</Link>
+            <Link href="/blog">Blog</Link>
+          </div>
+          <div className="footer-col">
+            <h4>Quick Links</h4>
+            <Link href="/start">Plan a Trip</Link>
+            <Link href="/trip-ideas">Trip Ideas</Link>
+            <Link href="/quiz">Travel Quiz</Link>
+            <Link href="/deals">Deals</Link>
+          </div>
+          <div className="footer-col">
+            <h4>Legal</h4>
+            <Link href="/privacy-policy">Privacy Policy</Link>
+            <Link href="/terms-of-service">Terms of Service</Link>
+            <a href="mailto:hello@lunaletsgo.com">Contact Us</a>
+          </div>
+        </div>
+        <div className="footer-bottom">
+          <p>&copy; 2026 Luna Let&apos;s Go. All rights reserved. lunaletsgo.com</p>
+          <div className="social-links">
+            <a href="#">Instagram</a>
+            <a href="#">TikTok</a>
+            <a href="#">Facebook</a>
+          </div>
+        </div>
+      </footer>
+    </>
   );
 }
-
