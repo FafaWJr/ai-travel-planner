@@ -9,14 +9,14 @@ export default function Footer() {
     }}>
 
       {/* ── Main content ──────────────────────────────────────────────── */}
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '64px 24px 48px' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 24px 28px' }}>
 
         {/* Brand logo */}
         <div className="footer-brand">
           <img
             src="/luna_letsgo_bigger_3.PNG"
             alt="Luna Let's Go"
-            style={{ height: 56, width: 'auto' }}
+            style={{ height: 104, width: 'auto' }}
           />
         </div>
 
@@ -115,12 +115,12 @@ export default function Footer() {
       {/* ── Styles ────────────────────────────────────────────────────── */}
       <style>{`
         .footer-brand {
-          margin-bottom: 48px;
+          margin-bottom: 28px;
           text-align: left;
         }
         .footer-about-cta {
           text-align: center;
-          margin-bottom: 48px;
+          margin-bottom: 28px;
         }
         .footer-about-btn {
           display: inline-block;
@@ -188,7 +188,7 @@ export default function Footer() {
         .footer-bar {
           max-width: 1200px;
           margin: 0 auto;
-          padding: 20px 24px;
+          padding: 14px 24px;
           display: flex;
           align-items: center;
           justify-content: space-between;
