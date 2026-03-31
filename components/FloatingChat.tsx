@@ -11,6 +11,24 @@ interface Msg {
   isWelcome?: boolean;
 }
 
+export interface TripUpdate {
+  type: 'stays' | 'itinerary' | 'budget';
+  action: 'add' | 'update' | 'remove';
+  data: {
+    hotelName?: string;
+    checkInDay?: number;
+    checkOutDay?: number;
+    city?: string;
+    stars?: number;
+    neighborhood?: string;
+    priceRange?: string;
+    amenities?: string[];
+    activity?: string;
+    day?: number;
+    slot?: string;
+  };
+}
+
 interface Props {
   plan: string;
   destination?: string;
@@ -18,6 +36,7 @@ interface Props {
   currentActivities?: string;
   onAddToItinerary: (text: string, dayNum: number, slot: TimeSlot) => void;
   onPlanUpdate?: (updatedPlan: string) => void;
+  onTripUpdate?: (update: TripUpdate) => void;
   isGuest?: boolean;
   onGateRequired?: () => void;
 }
@@ -53,6 +72,20 @@ function extractJsonBlock(text: string): { json: Record<string, unknown> | null;
   } catch (err) {
     console.error('[Luna] JSON parse error:', err);
     return { json: null, cleanText };
+  }
+}
+
+/* Extract %%TRIP_UPDATE%% block from Luna's response */
+function parseTripUpdate(text: string): { update: TripUpdate | null; cleanText: string } {
+  const match = text.match(/%%TRIP_UPDATE%%\s*([\s\S]*?)\s*%%END_TRIP_UPDATE%%/);
+  if (!match) return { update: null, cleanText: text };
+  const cleanText = text.replace(/%%TRIP_UPDATE%%[\s\S]*?%%END_TRIP_UPDATE%%/g, '').replace(/\n{3,}/g, '\n\n').trim();
+  try {
+    const update = JSON.parse(match[1].trim()) as TripUpdate;
+    return { update, cleanText };
+  } catch (err) {
+    console.error('[Luna] TripUpdate parse error:', err);
+    return { update: null, cleanText };
   }
 }
 
@@ -106,7 +139,7 @@ function buildWelcome(firstName: string | null, destination: string | null): str
   return `${nameGreeting} I'm Luna, your personal travel agent here at Luna Let's Go! ${destinationLine} Need to add a hotel, swap an activity, or just want my honest take on what's worth it and what to skip? Just ask, I'm here for all of it. Let's make this trip absolutely unforgettable!`;
 }
 
-export default function FloatingChat({ plan, destination, hotelContext, currentActivities, onAddToItinerary, onPlanUpdate, isGuest = false, onGateRequired }: Props) {
+export default function FloatingChat({ plan, destination, hotelContext, currentActivities, onAddToItinerary, onPlanUpdate, onTripUpdate, isGuest = false, onGateRequired }: Props) {
   const [open, setOpen] = useState(true);
   const [msgs, setMsgs] = useState<Msg[]>([
     { role: 'assistant', content: buildWelcome(null, destination ?? null), isWelcome: true },
@@ -173,18 +206,25 @@ export default function FloatingChat({ plan, destination, hotelContext, currentA
       });
       const raw = await collectSSE(res);
 
-      // Detect JSON plan update in response
-      const { json, cleanText } = extractJsonBlock(raw);
-      let displayContent = cleanText || raw;
+      // Step 1: Extract structured trip update block (hotel/activity/budget changes)
+      const { update: tripUpdate, cleanText: afterTripUpdate } = parseTripUpdate(raw);
+
+      // Step 2: Extract JSON plan block (full plan markdown update)
+      const { json, cleanText } = extractJsonBlock(afterTripUpdate);
+      let displayContent = cleanText || afterTripUpdate;
       let planUpdated = false;
 
+      // Apply structured trip update (hotel additions etc.) - real data write
+      if (tripUpdate && onTripUpdate) {
+        onTripUpdate(tripUpdate);
+        planUpdated = true;
+      }
+
+      // Apply full plan markdown update if present
       if (json) {
         const updatedPlan = (json.plan ?? json.tripContext ?? json.content) as string | undefined;
         if (updatedPlan && typeof updatedPlan === 'string' && onPlanUpdate) {
           onPlanUpdate(updatedPlan);
-          planUpdated = true;
-        } else if (json) {
-          // JSON found but no recognisable plan field - still flag as updated
           planUpdated = true;
         }
       }

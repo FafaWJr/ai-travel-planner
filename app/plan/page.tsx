@@ -2,9 +2,9 @@
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import EditableItinerary, { type ItineraryHandle, type Day } from '@/components/EditableItinerary';
-import FloatingChat from '@/components/FloatingChat';
+import FloatingChat, { type TripUpdate } from '@/components/FloatingChat';
 import Toast from '@/components/Toast';
-import StayTab, { type AcceptedHotel } from '@/components/StayTab';
+import StayTab, { type AcceptedHotel, type Hotel, type LocationSegment } from '@/components/StayTab';
 import BudgetTab from '@/components/BudgetTab';
 import NavBar from '@/components/NavBar';
 import GateOverlay from '@/components/GateOverlay';
@@ -983,6 +983,62 @@ function PlanContent() {
               setPlan(updatedPlan);
               setItineraryVersion(v => v + 1);
               markDirty();
+            }}
+            onTripUpdate={(update: TripUpdate) => {
+              if (update.type === 'stays') {
+                const d = update.data;
+                if (!d.hotelName) return;
+
+                // Derive actual dates from day numbers + trip start date
+                const startMatch = prompt.match(/from (\d{4}-\d{2}-\d{2})/);
+                const endMatch = prompt.match(/to (\d{4}-\d{2}-\d{2})/);
+                const tripStart = startMatch ? new Date(startMatch[1] + 'T12:00:00') : null;
+                const tripEnd = endMatch ? new Date(endMatch[1] + 'T12:00:00') : null;
+                const totalDays = tripStart && tripEnd
+                  ? Math.round((tripEnd.getTime() - tripStart.getTime()) / 86400000) + 1
+                  : null;
+
+                const dayToDate = (dayNum: number): string => {
+                  if (!tripStart) return `Day ${dayNum}`;
+                  const d = new Date(tripStart);
+                  d.setDate(d.getDate() + dayNum - 1);
+                  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                };
+
+                const checkInDay = d.checkInDay ?? 1;
+                const checkOutDay = d.checkOutDay ?? (totalDays ?? checkInDay + 1);
+
+                if (update.action === 'add' || update.action === 'update') {
+                  const hotel: Hotel = {
+                    id: `luna-${Date.now()}`,
+                    name: d.hotelName,
+                    stars: d.stars ?? 3,
+                    description: '',
+                    priceRange: d.priceRange ?? '',
+                    neighborhood: d.neighborhood ?? d.city ?? '',
+                    amenities: d.amenities ?? [],
+                    googleMapsQuery: `${d.hotelName} ${d.city ?? ''}`.trim(),
+                  };
+                  const segment: LocationSegment = {
+                    location: d.city ?? '',
+                    label: d.city ? `${d.city} stay` : 'Stay',
+                    checkIn: dayToDate(checkInDay),
+                    checkOut: dayToDate(checkOutDay),
+                    dayRange: [checkInDay, checkOutDay],
+                    hotels: [hotel],
+                  };
+                  setAcceptedHotels(prev => [
+                    ...prev.filter(h => h.hotel.name.toLowerCase() !== d.hotelName!.toLowerCase()),
+                    { hotel, segment },
+                  ]);
+                  setToast(`${d.hotelName} added to your stays`);
+                  markDirty();
+                } else if (update.action === 'remove') {
+                  setAcceptedHotels(prev => prev.filter(h => h.hotel.name.toLowerCase() !== d.hotelName!.toLowerCase()));
+                  setToast(`${d.hotelName} removed from your stays`);
+                  markDirty();
+                }
+              }
             }}
             isGuest={!user}
             onGateRequired={() => openGate('Luna AI chat')}
