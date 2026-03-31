@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
+import { syncUserToBrevo } from '@/lib/brevo';
 
 export default function ReturningPage() {
   const router = useRouter();
@@ -18,6 +19,21 @@ export default function ReturningPage() {
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       const { data: { session } } = await supabase.auth.getSession();
+
+      // Sync new Google OAuth users to Brevo
+      if (session?.user) {
+        const createdAt = new Date(session.user.created_at).getTime();
+        const isNewUser = Date.now() - createdAt < 60_000;
+        if (isNewUser) {
+          const meta = session.user.user_metadata;
+          syncUserToBrevo({
+            email: session.user.email ?? '',
+            firstName: meta?.given_name ?? meta?.full_name?.split(' ')[0] ?? '',
+            lastName: meta?.family_name ?? meta?.full_name?.split(' ').slice(1).join(' ') ?? '',
+            source: 'google_oauth',
+          });
+        }
+      }
 
       // Read the intended destination from localStorage (try all known keys)
       const destination =
