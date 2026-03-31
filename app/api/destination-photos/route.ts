@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 
-// Generic travel landscape fallbacks - always available, no API key needed
+// Generic scenic travel fallbacks - used only if everything else fails
 const FALLBACK_PHOTOS = [
   'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1200&q=80',
   'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1200&q=80',
@@ -9,89 +9,85 @@ const FALLBACK_PHOTOS = [
   'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1200&q=80',
 ];
 
-// Filenames containing these terms are almost never travel photos
-const EXCLUDED_FILENAME_TERMS = /flag|coat.of.arm|emblem|seal|\.svg|coa_|arms_of|logo|icon|symbol|stamp|portrait|bust|military|war|battle|bomb|napalm|napalm|soldier|army|navy|communist|party.congress|rally|protest|politic|propaganda|election|weapon|gun|tank|artillery|massacre|execution|president|premier|minister|inauguration|signing|handshake|meeting|summit|conference|satellite|locator|location|map|route|diagram|plan_of|layout|schematic/i;
+// Filename fragments that identify non-travel content
+const EXCLUDED = /flag|coat.of.arm|emblem|seal|coa_|arms_of|logo|icon|symbol|stamp|portrait|bust|military|war|battle|bomb|napalm|soldier|army|navy|communist|party.congress|rally|protest|politic|propaganda|election|weapon|gun|tank|artillery|massacre|execution|president|premier|minister|inauguration|signing|handshake|meeting|summit|conference|satellite|locator|location|map_of|map\.svg|route|diagram|plan_of|layout|schematic|chart|graph|wikivoyage|wv_banner|banner_|relief_map|blank_map|geograph_of/i;
+
+function isGoodTravelPhoto(info: { url: string; width: number; height: number; mime: string }): boolean {
+  // Accept JPEG and PNG (both can be excellent travel photos)
+  if (info.mime !== 'image/jpeg' && info.mime !== 'image/png') return false;
+  // Minimum size - needs to be big enough to look good in the UI
+  if (!info.width || !info.height) return false;
+  if (info.width < 800) return false;
+  // Must be landscape orientation (wider than it is tall)
+  if (info.width < info.height * 1.2) return false;
+  // Filter out non-travel content by filename
+  if (EXCLUDED.test(info.url)) return false;
+  return true;
+}
 
 /**
- * Strategy 1: Teleport API - curated travel city photos, no API key needed.
- * Covers ~260 major urban areas worldwide.
+ * Strategy 1: Wikipedia article HERO image.
+ * The lead image on Wikipedia's article is always the most iconic representation
+ * of the destination: Vietnam → Ha Long Bay, Barcelona → Sagrada Família, etc.
  */
-async function fetchTeleportPhotos(cityName: string): Promise<string[]> {
+async function fetchWikipediaHeroImage(query: string): Promise<string | null> {
   try {
-    const searchRes = await fetch(
-      `https://api.teleport.org/api/cities/?search=${encodeURIComponent(cityName)}&embed=city%3Asearch-results%2Fcity%3Aitem%2Fcity%3Aurban_area`,
-      { signal: AbortSignal.timeout(5000), next: { revalidate: 86400 } }
+    const res = await fetch(
+      `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`,
+      { signal: AbortSignal.timeout(5000), next: { revalidate: 86400 }, headers: { 'User-Agent': 'AITravelPlanner/1.0' } }
     );
-    if (!searchRes.ok) return [];
-    const searchData = await searchRes.json();
-
-    const results: any[] = searchData?._embedded?.['city:search-results'] ?? [];
-    if (!results.length) return [];
-
-    // Walk the embedded HAL links to find an urban area slug
-    let slug: string | null = null;
-    for (const result of results.slice(0, 3)) {
-      const ua = result?._embedded?.['city:item']?._embedded?.['city:urban_area'];
-      if (ua?.slug) { slug = ua.slug; break; }
-    }
-    if (!slug) return [];
-
-    const photosRes = await fetch(
-      `https://api.teleport.org/api/urban_areas/slug:${slug}/images/`,
-      { signal: AbortSignal.timeout(5000), next: { revalidate: 86400 } }
-    );
-    if (!photosRes.ok) return [];
-    const photosData = await photosRes.json();
-
-    const photos: string[] = [];
-    for (const p of photosData?.photos ?? []) {
-      const url = p?.image?.web || p?.image?.mobile;
-      if (url && typeof url === 'string') photos.push(url);
-    }
-    return photos;
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data.type?.includes('not_found')) return null;
+    const url: string | null = data.originalimage?.source ?? data.thumbnail?.source ?? null;
+    if (!url) return null;
+    // Make sure the hero image itself isn't a flag or emblem
+    if (EXCLUDED.test(url)) return null;
+    return url;
   } catch {
-    return [];
+    return null;
   }
 }
 
 /**
- * Strategy 2: Wikimedia Commons *text search* for travel/landmark photos.
- * Uses the search API (not article images) so results are query-targeted.
- * Aggressively filters filenames to exclude flags, maps, political imagery.
+ * Strategy 2: Wikimedia Commons scenic search.
+ * Searches with landscape/nature/scenery-focused terms so results show
+ * what makes the destination visually exciting - not city admin buildings.
+ * Runs multiple queries to fill up to 5 slots with diverse scenic photos.
  */
-async function fetchCommonsSearchPhotos(cityName: string): Promise<string[]> {
+async function fetchScenicPhotos(cityName: string, needed: number): Promise<string[]> {
+  // Queries ordered from most scenic to most general
   const queries = [
-    `${cityName} landmark`,
-    `${cityName} tourism`,
-    `${cityName} skyline`,
-    `${cityName} aerial view`,
+    `${cityName} landscape`,
+    `${cityName} nature scenery`,
+    `${cityName} panorama`,
+    `${cityName} travel`,
+    `${cityName} beach coast`,
+    `${cityName} mountains`,
+    `${cityName} old town`,
   ];
 
   const photos: string[] = [];
 
   for (const query of queries) {
-    if (photos.length >= 5) break;
+    if (photos.length >= needed) break;
     try {
       const res = await fetch(
-        `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrnamespace=6&prop=imageinfo&iiprop=url|dimensions|mime&gsrlimit=25&format=json&origin=*`,
-        { signal: AbortSignal.timeout(6000), next: { revalidate: 86400 }, headers: { 'User-Agent': 'AITravelPlanner/1.0' } }
+        `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrnamespace=6&prop=imageinfo&iiprop=url|dimensions|mime&gsrlimit=30&format=json&origin=*`,
+        { signal: AbortSignal.timeout(7000), next: { revalidate: 86400 }, headers: { 'User-Agent': 'AITravelPlanner/1.0' } }
       );
       if (!res.ok) continue;
       const data = await res.json();
-      const pages = data?.query?.pages ?? {};
+      const pages = Object.values(data?.query?.pages ?? {}) as any[];
 
-      for (const page of Object.values(pages) as any[]) {
-        if (photos.length >= 5) break;
+      // Sort by descending width so we prefer the highest-quality photos first
+      pages.sort((a, b) => (b.imageinfo?.[0]?.width ?? 0) - (a.imageinfo?.[0]?.width ?? 0));
+
+      for (const page of pages) {
+        if (photos.length >= needed) break;
         const info = page.imageinfo?.[0];
         if (!info?.url) continue;
-        // JPEG only - eliminates SVG flags, diagrams, icons
-        if (info.mime !== 'image/jpeg') continue;
-        // Require true landscape orientation
-        if (!info.width || !info.height) continue;
-        if (info.width < 1000) continue;
-        if (info.width < info.height * 1.4) continue;
-        // Filter by filename
-        if (EXCLUDED_FILENAME_TERMS.test(info.url)) continue;
+        if (!isGoodTravelPhoto(info)) continue;
         if (!photos.includes(info.url)) photos.push(info.url);
       }
     } catch {
@@ -108,31 +104,41 @@ export async function GET(request: NextRequest) {
     return Response.json({ photos: FALLBACK_PHOTOS.slice(0, 3), source: 'fallback' });
   }
 
-  // Use only the primary city name: "Da Nang, Vietnam" -> "Da Nang"
+  // Extract primary destination name: "Da Nang, Vietnam" → "Da Nang", "Vietnam" → "Vietnam"
   const cityName = rawCity.split(',')[0].trim();
   console.log(`[destination-photos] raw="${rawCity}" cityName="${cityName}"`);
 
-  // Strategy 1: Teleport curated travel photos
-  let photos = await fetchTeleportPhotos(cityName);
-  console.log(`[destination-photos] teleport returned ${photos.length} for "${cityName}"`);
+  const photos: string[] = [];
 
-  // Strategy 2: Wikimedia Commons search with strict travel filtering
-  if (photos.length < 3) {
-    const commons = await fetchCommonsSearchPhotos(cityName);
-    console.log(`[destination-photos] commons search returned ${commons.length} for "${cityName}"`);
-    // Merge: Teleport photos first, then fill with Commons
-    for (const url of commons) {
-      if (photos.length >= 5) break;
+  // Step 1: Wikipedia hero image - the single most iconic shot of the destination
+  const hero = await fetchWikipediaHeroImage(cityName);
+  if (hero) {
+    photos.push(hero);
+    console.log(`[destination-photos] hero image found for "${cityName}"`);
+  } else {
+    console.log(`[destination-photos] no hero image for "${cityName}"`);
+  }
+
+  // Step 2: Fill remaining slots with scenic landscape/nature photos from Commons
+  const scenic = await fetchScenicPhotos(cityName, 5 - photos.length);
+  console.log(`[destination-photos] scenic search returned ${scenic.length} for "${cityName}"`);
+  for (const url of scenic) {
+    if (!photos.includes(url)) photos.push(url);
+  }
+
+  // Step 3: If still short (rare), try the full destination string as a fallback query
+  if (photos.length < 3 && rawCity !== cityName) {
+    const extra = await fetchScenicPhotos(rawCity.trim(), 3 - photos.length);
+    for (const url of extra) {
       if (!photos.includes(url)) photos.push(url);
     }
   }
 
   if (photos.length > 0) {
     console.log(`[destination-photos] returning ${photos.length} photos for "${cityName}"`);
-    return Response.json({ photos: photos.slice(0, 5), source: photos.length > 0 ? 'travel' : 'fallback' });
+    return Response.json({ photos: photos.slice(0, 5), source: 'scenic' });
   }
 
-  // Strategy 3: Generic travel fallback - always succeeds
   console.log(`[destination-photos] all strategies failed for "${cityName}", using fallback`);
   return Response.json({ photos: FALLBACK_PHOTOS.slice(0, 3), source: 'fallback' });
 }
