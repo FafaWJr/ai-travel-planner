@@ -102,8 +102,8 @@ export default function HomePage() {
         /* MEET LUNA */
         .meet-luna{background:var(--navy);padding:80px 60px}
         .meet-luna-inner{display:grid;grid-template-columns:380px 1fr;gap:60px;align-items:center;max-width:1100px;margin:0 auto}
-        .luna-avatar-wrap{display:flex;justify-content:center}
-        .luna-avatar-wrap img{height:440px;width:auto;mix-blend-mode:screen;filter:brightness(1.05)}
+        .luna-avatar-wrap{display:flex;justify-content:flex-end;align-items:flex-end}
+        .luna-avatar-wrap img{height:480px;width:auto;mix-blend-mode:screen;display:block}
         .luna-copy .section-label{color:var(--orange-light);border-color:var(--orange-light)}
         .luna-copy .section-title{color:white;font-size:44px;line-height:1.1}
         .luna-copy .section-sub{color:rgba(255,255,255,0.65);max-width:100%}
