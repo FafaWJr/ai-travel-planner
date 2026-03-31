@@ -958,6 +958,7 @@ function PlanContent() {
 
           <FloatingChat
             plan={plan}
+            destination={prompt.replace(/^plan a (trip to |)?/i,'').replace(/\b(from \d{4}-\d{2}-\d{2}.*)$/i,'').trim().split(' ').slice(0,5).join(' ')}
             hotelContext={acceptedHotels.length > 0
               ? acceptedHotels.map(({ hotel, segment }) =>
                   `The user has confirmed their stay at ${hotel.name} (${hotel.stars}★, ${hotel.neighborhood}) for ${segment.label}. Price: ${hotel.priceRange}. Amenities: ${hotel.amenities.join(', ')}.`
@@ -969,6 +970,11 @@ function PlanContent() {
               setActiveSection('itinerary');
               itineraryRef.current?.addActivity(text, dayNum, slot, true);
               setToast(`Activity added to Day ${dayNum}`);
+            }}
+            onPlanUpdate={(updatedPlan) => {
+              setPlan(updatedPlan);
+              setItineraryVersion(v => v + 1);
+              markDirty();
             }}
             isGuest={!user}
             onGateRequired={() => openGate('Luna AI chat')}

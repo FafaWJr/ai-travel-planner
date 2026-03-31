@@ -3,17 +3,19 @@ import React, { useState, useRef, useEffect } from 'react';
 
 type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'night';
 
-
 interface Msg {
   role: 'user' | 'assistant';
   content: string;
+  planUpdated?: boolean;
 }
 
 interface Props {
   plan: string;
+  destination?: string;
   hotelContext?: string;
   currentActivities?: string;
   onAddToItinerary: (text: string, dayNum: number, slot: TimeSlot) => void;
+  onPlanUpdate?: (updatedPlan: string) => void;
   isGuest?: boolean;
   onGateRequired?: () => void;
 }
@@ -38,9 +40,22 @@ async function collectSSE(res: Response): Promise<string> {
   return result;
 }
 
+/* Extract and parse a ```json block from Luna's response */
+function extractJsonBlock(text: string): { json: Record<string, unknown> | null; cleanText: string } {
+  const match = text.match(/```json\s*([\s\S]*?)```/);
+  if (!match) return { json: null, cleanText: text };
+  const cleanText = text.replace(/```json\s*[\s\S]*?```/g, '').replace(/\n{3,}/g, '\n\n').trim();
+  try {
+    const json = JSON.parse(match[1].trim()) as Record<string, unknown>;
+    return { json, cleanText };
+  } catch (err) {
+    console.error('[Luna] JSON parse error:', err);
+    return { json: null, cleanText };
+  }
+}
+
 interface Addable { text: string; dayNum: number; slot: TimeSlot }
 
-/* Parse [[ADD: title | day: N | slot: X]] markers from AI response */
 function parseAddables(text: string): Addable[] {
   const results: Addable[] = [];
   for (const m of text.matchAll(/\[\[ADD:\s*([^|]+)\|\s*day:\s*(\d+)\s*\|\s*slot:\s*(morning|afternoon|evening|night)\s*\]\]/gi)) {
@@ -49,20 +64,17 @@ function parseAddables(text: string): Addable[] {
   return results;
 }
 
-/* Render inline markdown: **bold** */
 function renderInline(text: string): React.ReactNode {
   const parts = text.split(/\*\*([^*]+)\*\*/g);
   return parts.map((part, i) => i % 2 === 1 ? <strong key={i}>{part}</strong> : part);
 }
 
-/* Render assistant message as proper paragraphs, stripping [[ADD:]] markers */
 function renderContent(text: string): React.ReactNode {
   const clean = text.replace(/\[\[ADD:[^\]]*\]\]/g, '').replace(/\n{3,}/g, '\n\n').trim();
   const paragraphs = clean.split(/\n\n+/);
   return paragraphs.map((para, pi) => {
     const trimmed = para.trim();
     if (!trimmed) return null;
-    // Handle bullet lists inside paragraphs
     if (/^[-*•]\s/.test(trimmed)) {
       const items = trimmed.split('\n').filter(l => l.trim());
       return (
@@ -84,17 +96,34 @@ function renderContent(text: string): React.ReactNode {
   });
 }
 
-export default function FloatingChat({ plan, hotelContext, currentActivities, onAddToItinerary, isGuest = false, onGateRequired }: Props) {
+function buildWelcome(destination?: string): string {
+  if (destination) {
+    return `Hey there! I'm Luna, your travel agent for this trip to ${destination}! I've already taken a look at your itinerary and I'm SO excited for you. Want to add a hotel, swap an activity, or just want my honest take? I'm here for all of it. Let's make this perfect!`;
+  }
+  return `Hey there! I'm Luna, your travel agent for this trip! I've already taken a look at your itinerary and I'm SO excited for you. Got questions? Want to swap something out, add a hotel, or just want my honest take on what's worth it and what to skip? I'm here for all of it. Let's make this trip unforgettable!`;
+}
+
+export default function FloatingChat({ plan, destination, hotelContext, currentActivities, onAddToItinerary, onPlanUpdate, isGuest = false, onGateRequired }: Props) {
   const [open, setOpen] = useState(true);
   const [msgs, setMsgs] = useState<Msg[]>([
-    { role: 'assistant', content: "Hi! I'm Luna. How can I help customize your trip?" },
+    { role: 'assistant', content: buildWelcome(destination) },
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  // Per-message: which addable index is being confirmed (or null = all done for that msg)
   const [confirmedAdds, setConfirmedAdds] = useState<Record<number, Set<number>>>({});
   const endRef   = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Update welcome message when destination becomes available
+  useEffect(() => {
+    if (!destination) return;
+    setMsgs(prev => {
+      if (prev.length === 1 && prev[0].role === 'assistant') {
+        return [{ role: 'assistant', content: buildWelcome(destination) }];
+      }
+      return prev;
+    });
+  }, [destination]); // eslint-disable-line
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [msgs, loading]);
 
@@ -117,12 +146,29 @@ export default function FloatingChat({ plan, hotelContext, currentActivities, on
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: next,
+          messages: next.map(m => ({ role: m.role, content: m.content })),
           tripContext: ctx,
         }),
       });
-      const reply = await collectSSE(res);
-      setMsgs(prev => [...prev, { role: 'assistant', content: reply || 'No response received.' }]);
+      const raw = await collectSSE(res);
+
+      // Detect JSON plan update in response
+      const { json, cleanText } = extractJsonBlock(raw);
+      let displayContent = cleanText || raw;
+      let planUpdated = false;
+
+      if (json) {
+        const updatedPlan = (json.plan ?? json.tripContext ?? json.content) as string | undefined;
+        if (updatedPlan && typeof updatedPlan === 'string' && onPlanUpdate) {
+          onPlanUpdate(updatedPlan);
+          planUpdated = true;
+        } else if (json) {
+          // JSON found but no recognisable plan field - still flag as updated
+          planUpdated = true;
+        }
+      }
+
+      setMsgs(prev => [...prev, { role: 'assistant', content: displayContent || 'No response received.', planUpdated }]);
     } catch {
       setMsgs(prev => [...prev, { role: 'assistant', content: 'Sorry, something went wrong. Please try again.' }]);
     } finally {
@@ -140,55 +186,75 @@ export default function FloatingChat({ plan, hotelContext, currentActivities, on
   };
 
   return (
-    <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 9000, width: 320, fontFamily: "'Inter',sans-serif" }}>
+    <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 9000, width: 340, fontFamily: "'Inter',sans-serif" }}>
       <div style={{ background: '#fff', borderRadius: 18, overflow: 'hidden', boxShadow: '0 8px 40px rgba(0,0,0,0.16)', border: '1px solid rgba(0,68,123,0.10)', display: 'flex', flexDirection: 'column' }}>
 
-        {/* ── Header ── */}
+        {/* Header */}
         <div
           onClick={() => setOpen(v => !v)}
           style={{ background: 'linear-gradient(135deg,#00447B,#005FAD)', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', userSelect: 'none', flexShrink: 0 }}
         >
-          <img
-            src="/luna_2.png"
-            alt="Luna"
-            style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover', objectPosition: 'top', border: '2px solid rgba(255,255,255,0.35)', flexShrink: 0, background: '#fff' }}
-          />
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <img
+              src="/luna_2.png"
+              alt="Luna"
+              style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', objectPosition: 'top', border: '2px solid rgba(255,255,255,0.35)', display: 'block', background: '#fff' }}
+              onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+            />
+            <span style={{ position: 'absolute', bottom: 1, right: 1, width: 10, height: 10, borderRadius: '50%', background: '#22c55e', border: '2px solid #00447B' }} />
+          </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 13, color: '#fff', margin: 0 }}>Luna</p>
-            <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: 'rgba(255,255,255,0.65)', margin: 0 }}>AI Travel Assistant</p>
+            <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 14, color: '#fff', margin: 0 }}>Luna</p>
+            <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: 'rgba(255,255,255,0.65)', margin: 0 }}>AI Travel Assistant</p>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ADE80', flexShrink: 0 }} />
-            <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 18, display: 'inline-block', transition: 'transform 0.2s', transform: open ? 'rotate(0deg)' : 'rotate(180deg)' }}>▾</span>
-          </div>
+          <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 18, display: 'inline-block', transition: 'transform 0.2s', transform: open ? 'rotate(0deg)' : 'rotate(180deg)' }}>▾</span>
         </div>
 
-        {/* ── Body ── */}
+        {/* Body */}
         {open && (
           <>
             {/* Messages */}
-            <div style={{ overflowY: 'auto', padding: '12px 12px 8px', display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 340, minHeight: 160 }}>
+            <div style={{ overflowY: 'auto', padding: '12px 12px 8px', display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 360, minHeight: 160 }}>
               {msgs.map((m, i) => {
                 const addables = m.role === 'assistant' && i > 0 ? parseAddables(m.content) : [];
                 const confirmed = confirmedAdds[i] ?? new Set<number>();
                 return (
                   <div key={i}>
                     {/* Bubble */}
-                    <div style={{ display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start' }}>
+                    <div style={{ display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start', alignItems: 'flex-end', gap: 6 }}>
+                      {m.role === 'assistant' && (
+                        <img
+                          src="/luna_2.png"
+                          alt=""
+                          style={{ width: 24, height: 24, borderRadius: '50%', objectFit: 'cover', objectPosition: 'top', flexShrink: 0, marginBottom: 2, background: '#00447B' }}
+                          onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                        />
+                      )}
                       <div style={{
-                        background: m.role === 'user' ? '#FF8210' : '#F2F5FA',
+                        background: m.role === 'user' ? '#00447B' : '#F0F6FC',
                         color: m.role === 'user' ? '#fff' : '#1a1a1a',
-                        borderRadius: m.role === 'user' ? '14px 14px 4px 14px' : '4px 14px 14px 14px',
-                        padding: '10px 13px', fontSize: 13, maxWidth: '92%',
+                        borderRadius: m.role === 'user' ? '12px 0 12px 12px' : '0 12px 12px 12px',
+                        borderLeft: m.role === 'assistant' ? '3px solid #FF8210' : 'none',
+                        padding: '10px 13px', fontSize: 13, maxWidth: '88%',
                         fontFamily: "'Inter',sans-serif",
                       }}>
                         {m.role === 'user' ? m.content : renderContent(m.content)}
                       </div>
                     </div>
 
-                    {/* Add-to-itinerary chips — one per detected [[ADD:]] marker */}
+                    {/* Plan updated badge */}
+                    {m.planUpdated && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 5, marginLeft: 32, padding: '4px 10px', background: 'rgba(255,130,16,0.08)', border: '1px solid rgba(255,130,16,0.25)', borderRadius: 100, width: 'fit-content' }}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FF8210" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        <span style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 11, color: '#FF8210' }}>Plan updated!</span>
+                      </div>
+                    )}
+
+                    {/* Add-to-itinerary chips */}
                     {addables.length > 0 && (
-                      <div style={{ paddingLeft: 4, paddingTop: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <div style={{ paddingLeft: 32, paddingTop: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
                         {addables.map((addable, ai) =>
                           confirmed.has(ai) ? (
                             <span key={ai} style={{ fontSize: 11, color: '#16A34A', fontFamily: "'Inter',sans-serif" }}>
@@ -214,12 +280,20 @@ export default function FloatingChat({ plan, hotelContext, currentActivities, on
                 );
               })}
 
-              {/* Loading dots */}
+              {/* Typing indicator */}
               {loading && (
-                <div style={{ display: 'flex', gap: 4, padding: '6px 10px' }}>
-                  {[0, 1, 2].map(i => (
-                    <span key={i} style={{ width: 7, height: 7, borderRadius: '50%', background: 'rgba(0,68,123,0.25)', display: 'inline-block', animation: `bounce 1.2s ${i * 0.2}s infinite` }} />
-                  ))}
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6 }}>
+                  <img
+                    src="/luna_2.png"
+                    alt=""
+                    style={{ width: 24, height: 24, borderRadius: '50%', objectFit: 'cover', objectPosition: 'top', flexShrink: 0, marginBottom: 2, background: '#00447B' }}
+                    onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                  />
+                  <div style={{ background: '#F0F6FC', borderLeft: '3px solid #FF8210', borderRadius: '0 12px 12px 12px', padding: '12px 16px', display: 'flex', gap: 5, alignItems: 'center' }}>
+                    {[0, 1, 2].map(i => (
+                      <span key={i} style={{ width: 8, height: 8, borderRadius: '50%', background: '#FF8210', display: 'inline-block', animation: `lunaTyping 1.2s ${i * 0.15}s infinite ease-in-out` }} />
+                    ))}
+                  </div>
                 </div>
               )}
               <div ref={endRef} />
@@ -244,7 +318,7 @@ export default function FloatingChat({ plan, hotelContext, currentActivities, on
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && send()}
-                placeholder="Ask Luna anything..."
+                placeholder="Ask Luna anything about your trip..."
                 style={{ flex: 1, background: '#F4F7FB', border: '1.5px solid rgba(0,68,123,0.12)', borderRadius: 10, padding: '8px 12px', fontSize: 13, color: '#000', outline: 'none', fontFamily: "'Inter',sans-serif" }}
                 onFocus={e => (e.target.style.borderColor = '#00447B')}
                 onBlur={e => (e.target.style.borderColor = 'rgba(0,68,123,0.12)')}
@@ -264,7 +338,10 @@ export default function FloatingChat({ plan, hotelContext, currentActivities, on
       </div>
 
       <style>{`
-        @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+        @keyframes lunaTyping {
+          0%, 100% { transform: translateY(0); opacity: 0.6; }
+          50% { transform: translateY(-5px); opacity: 1; }
+        }
       `}</style>
     </div>
   );
