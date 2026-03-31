@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import Script from 'next/script';
 import { AuthProvider } from '@/context/AuthContext';
 import Footer from '@/components/Footer';
 import FooterWrapper from '@/components/FooterWrapper';
@@ -252,10 +253,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaOrg) }}
         />
+        {/* Google Analytics */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-YZV7GHDQ0T"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">{`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-YZV7GHDQ0T');
+        `}</Script>
       </head>
       <body>
         <AnalyticsScripts
-          gaId={process.env.GA_MEASUREMENT_ID}
           metaId={process.env.META_PIXEL_ID}
           twitterId={process.env.TWITTER_PIXEL_ID}
           tiktokId={process.env.TIKTOK_PIXEL_ID}
