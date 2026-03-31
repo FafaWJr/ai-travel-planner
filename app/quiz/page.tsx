@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import NavBar from '@/components/NavBar';
+import { trackQuizStarted, trackQuizCompleted, trackDestinationSelected } from '@/lib/analytics';
 
 /* ── Quiz data ── */
 const VIBE_SPECTRUMS = [
@@ -262,6 +263,7 @@ Traveller Profile:
     const persona = computePersona(quizVibes, quizAccom, quizHabits, quizDining, quizInterests);
     setQuizPersona(persona);
     setQuizDone(true);
+    trackQuizCompleted(persona.name);
     fetchAiDestinations(persona);
   };
 
@@ -271,6 +273,8 @@ Traveller Profile:
     setQuizHabits({}); setQuizDining([]); setQuizInterests([]); setQuizPersona(null);
     setDestPhotos({}); setAiDestinations(null); setAiDestsLoading(false);
   };
+
+  useEffect(() => { trackQuizStarted(); }, []);
 
   useEffect(() => {
     if (!aiDestinations) return;
@@ -538,7 +542,7 @@ Traveller Profile:
               </div>
 
               <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
-                <button onClick={()=>router.push('/start')} style={{ background:'var(--orange)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, padding:'14px 32px', borderRadius:'var(--r-pill)', border:'none', cursor:'pointer', boxShadow:'0 6px 20px rgba(255,130,16,0.35)' }}>
+                <button onClick={()=>{ trackDestinationSelected(quizPersona?.name ?? 'quiz_result', 'quiz'); router.push('/start'); }} style={{ background:'var(--orange)', color:'#fff', fontFamily:'var(--font-head)', fontWeight:700, fontSize:15, padding:'14px 32px', borderRadius:'var(--r-pill)', border:'none', cursor:'pointer', boxShadow:'0 6px 20px rgba(255,130,16,0.35)' }}>
                   ✈ Plan my trip →
                 </button>
                 <button onClick={resetQuiz} style={{ background:'rgba(255,255,255,0.10)', color:'rgba(255,255,255,0.8)', fontFamily:'var(--font-head)', fontWeight:500, fontSize:15, padding:'14px 24px', borderRadius:'var(--r-pill)', border:'1px solid rgba(255,255,255,0.20)', cursor:'pointer' }}>

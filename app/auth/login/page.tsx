@@ -4,6 +4,7 @@ import { useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { trackLoginCompleted } from '@/lib/analytics'
 
 // Key used to persist the post-auth destination across the OAuth redirect
 const POST_AUTH_REDIRECT_KEY = 'post_auth_redirect'
@@ -38,11 +39,12 @@ function LoginForm() {
     }
 
     if (!data.session) {
-      setError('Login failed — please check your email and password.')
+      setError('Login failed. Please check your email and password.')
       setLoading(false)
       return
     }
 
+    trackLoginCompleted('email');
     // Hard reload so AuthProvider picks up the new session
     window.location.href = next
   }
@@ -72,6 +74,8 @@ function LoginForm() {
     if (oauthError) {
       setError(oauthError.message)
       setLoading(false)
+    } else {
+      trackLoginCompleted('google');
     }
     // If no error, the browser will navigate to Google — no more JS runs here
   }

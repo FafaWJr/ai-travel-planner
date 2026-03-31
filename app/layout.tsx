@@ -3,6 +3,8 @@ import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import Footer from '@/components/Footer';
 import FooterWrapper from '@/components/FooterWrapper';
+import AnalyticsScripts from '@/components/AnalyticsScripts';
+import RouteTracker from '@/components/RouteTracker';
 
 const BASE_URL = 'https://www.lunaletsgo.com';
 
@@ -252,7 +254,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
+        <AnalyticsScripts
+          gaId={process.env.GA_MEASUREMENT_ID}
+          metaId={process.env.META_PIXEL_ID}
+          twitterId={process.env.TWITTER_PIXEL_ID}
+          tiktokId={process.env.TIKTOK_PIXEL_ID}
+        />
         <AuthProvider>
+          <RouteTracker />
           {children}
           <FooterWrapper>
             <Footer />

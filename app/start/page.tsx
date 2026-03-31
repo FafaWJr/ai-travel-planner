@@ -1,13 +1,20 @@
 'use client';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import NavBar from '@/components/NavBar';
 import HeroStepForm from '@/components/HeroStepForm';
+import { trackCTAClick, trackTripPlanStarted } from '@/lib/analytics';
 
 export default function StartPage() {
   const router = useRouter();
 
+  useEffect(() => {
+    trackCTAClick('plan_a_trip', 'start_page');
+  }, []);
+
   const go = (q: string) => {
     if (!q.trim()) return;
+    trackTripPlanStarted(q.split(',')[0].trim());
     router.push(`/plan?prompt=${encodeURIComponent(q)}`);
   };
 

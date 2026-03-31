@@ -10,6 +10,7 @@ import NavBar from '@/components/NavBar';
 import GateOverlay from '@/components/GateOverlay';
 import { useAuth } from '@/context/AuthContext';
 import { createClient } from '@/lib/supabase/client';
+import { trackTripPlanGenerated, trackChatMessageSent } from '@/lib/analytics';
 
 type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'night';
 const SLOTS_LIST: { key: TimeSlot; label: string; icon: string }[] = [
@@ -546,6 +547,7 @@ function PlanContent() {
       const data = await res.json();
       setPlan(data.plan || data.content || '');
       const dest = p.split(' ').slice(4,8).join(' ');
+      trackTripPlanGenerated(dest);
       try {
         const pr = await fetch(`/api/destination-photos?city=${encodeURIComponent(dest)}`);
         if (pr.ok) { const pd = await pr.json(); setPhotos(pd.photos||[]); }

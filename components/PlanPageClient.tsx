@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { trackChatMessageSent } from '@/lib/analytics';
 import type { TripFormData, WeatherData } from '@/types';
 import { TripPlanResult } from './TripPlanResult';
 import { ChatBox } from './ChatBox';
@@ -50,6 +51,7 @@ export function PlanPageClient() {
 
   const openChat = () => {
     setChatOpen(true);
+    trackChatMessageSent('plan');
     // Give the DOM a tick to render the chat, then scroll to it
     setTimeout(() => {
       chatRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });

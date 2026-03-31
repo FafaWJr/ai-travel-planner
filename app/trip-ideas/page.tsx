@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import NavBar from '@/components/NavBar';
+import { trackDestinationSelected } from '@/lib/analytics';
 
 const CATEGORIES = ['All','Beach','Mountains','City','Culture','Adventure','Family','Romance','Nature','Party'];
 
@@ -130,6 +131,7 @@ export default function TripIdeasPage() {
                   style={{ display:'block', textAlign:'center', background:'#FF8210', color:'white', fontFamily:"'Poppins',sans-serif", fontSize:13, fontWeight:600, padding:'10px 0', borderRadius:50, textDecoration:'none', transition:'background 0.2s' }}
                   onMouseEnter={e=>(e.currentTarget.style.background='#e06e00')}
                   onMouseLeave={e=>(e.currentTarget.style.background='#FF8210')}
+                  onClick={() => trackDestinationSelected(dest.name, dest.category)}
                 >
                   Plan this trip →
                 </Link>

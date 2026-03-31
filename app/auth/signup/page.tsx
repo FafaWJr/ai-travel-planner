@@ -4,6 +4,7 @@ import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { trackSignUpCompleted } from '@/lib/analytics';
 
 /* ── Google "G" SVG logo ──────────────────────────────────── */
 function GoogleIcon() {
@@ -36,6 +37,7 @@ function SignupForm() {
   /* ── Google OAuth ── */
   const handleGoogle = async () => {
     setError('');
+    trackSignUpCompleted('google');
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
@@ -63,7 +65,8 @@ function SignupForm() {
 
     if (error) { setError(error.message); return; }
 
-    // Supabase sends a confirmation email — show success message instead of redirecting
+    trackSignUpCompleted('email');
+    // Supabase sends a confirmation email. Show success message instead of redirecting.
     setSuccess('Almost there! Check your inbox and click the confirmation link to activate your account.');
   };
 
