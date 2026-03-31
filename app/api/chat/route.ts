@@ -7,7 +7,7 @@ export const maxDuration = 60;
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { messages, tripContext } = body as { messages: ChatMessage[]; tripContext: string };
+    const { messages, tripContext, userName } = body as { messages: ChatMessage[]; tripContext: string; userName?: string };
 
     if (!messages || !Array.isArray(messages)) {
       return new Response(
@@ -96,7 +96,14 @@ WHAT YOU NEVER DO:
 ---
 
 YOUR GOAL:
-Make every traveller feel like they have a brilliant, well-travelled friend planning their trip with them. Every response should leave them more excited about their journey than before. No compromises, no regrets.`;
+Make every traveller feel like they have a brilliant, well-travelled friend planning their trip with them. Every response should leave them more excited about their journey than before. No compromises, no regrets.
+
+---
+
+${userName
+  ? `THE USER'S NAME: ${userName}. Use their first name naturally in conversation when it feels right. Not on every message, just occasionally to keep it personal and warm.`
+  : `You do not have the user's name. Use friendly generic greetings.`
+}`;
 
     let stream: ReadableStream<Uint8Array>;
     try {

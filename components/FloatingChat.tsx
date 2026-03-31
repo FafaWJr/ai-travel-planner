@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
+import { createBrowserClient } from '@supabase/ssr';
 
 type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'night';
 
@@ -7,6 +8,7 @@ interface Msg {
   role: 'user' | 'assistant';
   content: string;
   planUpdated?: boolean;
+  isWelcome?: boolean;
 }
 
 interface Props {
@@ -96,34 +98,52 @@ function renderContent(text: string): React.ReactNode {
   });
 }
 
-function buildWelcome(destination?: string): string {
-  if (destination) {
-    return `Hey there! I'm Luna, your travel agent for this trip to ${destination}! I've already taken a look at your itinerary and I'm SO excited for you. Want to add a hotel, swap an activity, or just want my honest take? I'm here for all of it. Let's make this perfect!`;
-  }
-  return `Hey there! I'm Luna, your travel agent for this trip! I've already taken a look at your itinerary and I'm SO excited for you. Got questions? Want to swap something out, add a hotel, or just want my honest take on what's worth it and what to skip? I'm here for all of it. Let's make this trip unforgettable!`;
+function buildWelcome(firstName: string | null, destination: string | null): string {
+  const nameGreeting = firstName ? `Hey ${firstName}!` : `Hey there!`;
+  const destinationLine = destination
+    ? `I've already had a look at your trip to ${destination} and I'm seriously excited for you.`
+    : `I've already had a look at your itinerary and I'm seriously excited for you.`;
+  return `${nameGreeting} I'm Luna, your personal travel agent here at Luna Let's Go! ${destinationLine} Need to add a hotel, swap an activity, or just want my honest take on what's worth it and what to skip? Just ask, I'm here for all of it. Let's make this trip absolutely unforgettable!`;
 }
 
 export default function FloatingChat({ plan, destination, hotelContext, currentActivities, onAddToItinerary, onPlanUpdate, isGuest = false, onGateRequired }: Props) {
   const [open, setOpen] = useState(true);
   const [msgs, setMsgs] = useState<Msg[]>([
-    { role: 'assistant', content: buildWelcome(destination) },
+    { role: 'assistant', content: buildWelcome(null, destination ?? null), isWelcome: true },
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [confirmedAdds, setConfirmedAdds] = useState<Record<number, Set<number>>>({});
+  const [firstName, setFirstName] = useState<string | null>(null);
+  const [sessionLoaded, setSessionLoaded] = useState(false);
   const endRef   = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Update welcome message when destination becomes available
+  // Fetch user's first name from Supabase session on mount
   useEffect(() => {
-    if (!destination) return;
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const user = session?.user;
+      const fullName = user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? null;
+      const first = fullName ? (fullName as string).split(' ')[0] : null;
+      setFirstName(first);
+      setSessionLoaded(true);
+    });
+  }, []); // eslint-disable-line
+
+  // Update welcome message when session or destination changes
+  useEffect(() => {
+    if (!sessionLoaded) return;
     setMsgs(prev => {
-      if (prev.length === 1 && prev[0].role === 'assistant') {
-        return [{ role: 'assistant', content: buildWelcome(destination) }];
+      if (prev.length === 1 && prev[0].isWelcome) {
+        return [{ role: 'assistant', content: buildWelcome(firstName, destination ?? null), isWelcome: true }];
       }
       return prev;
     });
-  }, [destination]); // eslint-disable-line
+  }, [sessionLoaded, firstName, destination]); // eslint-disable-line
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [msgs, loading]);
 
@@ -146,8 +166,9 @@ export default function FloatingChat({ plan, destination, hotelContext, currentA
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: next.map(m => ({ role: m.role, content: m.content })),
+          messages: next.filter(m => !m.isWelcome).map(m => ({ role: m.role, content: m.content })),
           tripContext: ctx,
+          userName: firstName ?? undefined,
         }),
       });
       const raw = await collectSSE(res);
