@@ -1,5 +1,6 @@
 'use client';
 import type { AcceptedHotel } from './StayTab';
+import { bookingComLink } from '@/lib/affiliate';
 
 type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'night';
 type Status = 'pending' | 'accepted' | 'declined';
@@ -89,7 +90,7 @@ function openPrintWindow(days: FinalDay[], destination: string, acceptedHotels: 
         <div class="hotel-dates">Check-in: ${segment.checkIn || '—'} &nbsp;→&nbsp; Check-out: ${segment.checkOut || '—'}</div>
         <div class="hotel-desc">${hotel.description}</div>
         <div class="hotel-amenities">${hotel.amenities.map(a => `<span class="amenity">${a}</span>`).join('')}</div>
-        <div class="hotel-note">Recommended by Luna Let's Go</div>
+        <a href="${bookingComLink(`${hotel.name}, ${segment.location}`)}" target="_blank" rel="noopener noreferrer sponsored" class="hotel-book-btn">Book on Booking.com ↗</a>
       </div>
     `).join('')}
   ` : '';
@@ -334,6 +335,18 @@ function openPrintWindow(days: FinalDay[], destination: string, acceptedHotels: 
       font-size: 11px;
       color: #9CA3AF;
       font-style: italic;
+    }
+    .hotel-book-btn {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 7px 16px;
+      background: #003580;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 6px;
+      text-decoration: none;
     }
 
     @page { margin: 16mm; size: A4 portrait; }

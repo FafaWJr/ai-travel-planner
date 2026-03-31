@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import type { TripFormData } from '@/types';
+import { BOOKING_AFFILIATE_ID, BOOKING_MID } from '@/lib/affiliate';
 
 interface BookingCTAsProps {
   destination: string;
@@ -34,16 +35,15 @@ const PARTNERS: PartnerLink[] = [
     textColor: 'text-blue-600 dark:text-blue-400',
     ctaLabel: 'Find Accommodation',
     buildUrl: (dest, form) => {
-      const base = 'https://www.booking.com/searchresults.html';
-      const params = new URLSearchParams({
+      const bookingUrl = `https://www.booking.com/searchresults.html?${new URLSearchParams({
         ss: dest,
         checkin: form.startDate,
         checkout: form.endDate,
         group_adults: String(form.adults),
         no_rooms: '1',
-        // TODO: Add your Booking.com affiliate ID: &aid=YOUR_AID
-      });
-      return `${base}?${params}`;
+        aid: BOOKING_AFFILIATE_ID,
+      })}`;
+      return `http://www.awin1.com/awclick.php?mid=${BOOKING_MID}&id=${BOOKING_AFFILIATE_ID}&p=${encodeURIComponent(bookingUrl)}`;
     },
     affiliateNote: 'booking.com/affiliate-program',
     showFor: ['budget', 'mid-range', 'premium'],
