@@ -30,11 +30,6 @@ export default function StartPage() {
         alignItems: 'center',
       }}>
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <img
-            src="/luna_letsgo_bigger_3.PNG"
-            alt="Luna Let's Go"
-            style={{ height: 56, width: 'auto', marginBottom: 24 }}
-          />
           <h1 style={{
             fontFamily: "'Poppins', sans-serif",
             fontWeight: 700,

@@ -100,7 +100,7 @@ function NavInner() {
             </Link>
           )}
 
-          <Link href="/#planner" onClick={e => { const el = document.getElementById('planner'); if (el) { e.preventDefault(); el.scrollIntoView({ behavior: 'smooth' }) } }} style={{ marginLeft: 8, background: 'var(--navy)', color: '#fff', fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 14, padding: '10px 22px', borderRadius: 'var(--r-pill)', textDecoration: 'none' }}>
+          <Link href="/plan" target="_blank" rel="noopener noreferrer" style={{ marginLeft: 8, background: 'var(--navy)', color: '#fff', fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 14, padding: '10px 22px', borderRadius: 'var(--r-pill)', textDecoration: 'none' }}>
             Plan a Trip
           </Link>
 
@@ -254,7 +254,7 @@ function NavInner() {
         </nav>
 
         <div style={{ padding: '16px 20px', borderTop: '1px solid var(--border)' }}>
-          <Link href="/#planner" onClick={e => { setDrawerOpen(false); const el = document.getElementById('planner'); if (el) { e.preventDefault(); el.scrollIntoView({ behavior: 'smooth' }) } }} style={{ display: 'block', textAlign: 'center', background: 'var(--navy)', color: '#fff', fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 14, padding: '12px', borderRadius: 'var(--r-pill)', textDecoration: 'none' }}>
+          <Link href="/plan" target="_blank" rel="noopener noreferrer" onClick={() => setDrawerOpen(false)} style={{ display: 'block', textAlign: 'center', background: 'var(--navy)', color: '#fff', fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 14, padding: '12px', borderRadius: 'var(--r-pill)', textDecoration: 'none' }}>
             Plan a Trip
           </Link>
         </div>
