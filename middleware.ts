@@ -34,13 +34,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all paths except:
-     * - _next/static  (Next.js static assets)
-     * - _next/image   (Next.js image optimisation)
-     * - favicon.ico
-     * - Public file extensions (images, fonts, etc.)
-     */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|api/|auth/callback|auth/returning|auth/login|auth/signup|auth/forgot-password|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?)$).*)',
   ],
 };

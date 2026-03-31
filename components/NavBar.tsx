@@ -32,8 +32,21 @@ function NavInner() {
   const supabase = createClient()
   const [menuOpen, setMenuOpen] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [travelPersona, setTravelPersona] = useState<string | null>(null)
   const menuDesktopRef = useRef<HTMLDivElement>(null)
   const menuMobileRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!user) { setTravelPersona(null); return; }
+    supabase
+      .from('travel_personas')
+      .select('persona_type')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => { setTravelPersona(data?.persona_type ?? null); });
+  }, [user]); // eslint-disable-line
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -116,6 +129,19 @@ function NavInner() {
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--navy)" strokeWidth="2" strokeLinecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
                       My Trips
                     </Link>
+                    {/* Travel persona */}
+                    <div style={{ padding: '8px 16px' }}>
+                      {travelPersona ? (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,130,16,0.08)', border: '1px solid rgba(255,130,16,0.2)', borderRadius: 8, padding: '6px 10px' }}>
+                          <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: '#FF8210', fontWeight: 600 }}>🧭 {travelPersona}</span>
+                          <Link href="/quiz" onClick={() => setMenuOpen(false)} style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'rgba(255,130,16,0.7)', textDecoration: 'none', marginLeft: 8 }}>Retake</Link>
+                        </div>
+                      ) : (
+                        <Link href="/quiz" onClick={() => setMenuOpen(false)} style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: 13, color: '#FF8210', textDecoration: 'none', padding: '3px 0' }} onMouseEnter={e => (e.currentTarget.style.opacity = '0.75')} onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
+                          ✨ Discover your travel style
+                        </Link>
+                      )}
+                    </div>
                     <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
                     <button onClick={handleSignOut} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px', fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--gray-dark)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }} onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-section)')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>

@@ -38,9 +38,14 @@ function SignupForm() {
   const handleGoogle = async () => {
     setError('');
     trackSignUpCompleted('google');
+    // Save destination before leaving — OAuth strips query params from redirectTo
+    try { localStorage.setItem('luna_redirect_after_login', next); } catch {}
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: { access_type: 'offline', prompt: 'consent' },
+      },
     });
     if (error) setError(error.message);
   };

@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { trackLoginCompleted } from '@/lib/analytics'
 
 // Key used to persist the post-auth destination across the OAuth redirect
-const POST_AUTH_REDIRECT_KEY = 'post_auth_redirect'
+const POST_AUTH_REDIRECT_KEY = 'luna_redirect_after_login'
 
 function LoginForm() {
   const searchParams = useSearchParams()

@@ -1,7 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import NavBar from '@/components/NavBar';
+import { createClient } from '@/lib/supabase/client';
 import { trackQuizStarted, trackQuizCompleted, trackDestinationSelected } from '@/lib/analytics';
 
 /* ── Quiz data ── */
@@ -204,8 +206,10 @@ function computePersona(
   return { ...p, budget, styles, questions, traits, destinations };
 }
 
-export default function QuizPage() {
+function QuizPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const supabase = createClient();
   const [quizStep,      setQuizStep]      = useState(0);
   const [quizDone,      setQuizDone]      = useState(false);
   const [quizVibes,     setQuizVibes]     = useState<Record<string,number>>({energy:2,setting:2,crowd:2,coast:2});
@@ -220,28 +224,71 @@ export default function QuizPage() {
 
   const go = (q: string) => router.push(`/plan?prompt=${encodeURIComponent(q)}`);
 
-  const fetchAiDestinations = async (persona: ReturnType<typeof computePersona>) => {
+  // Resume quiz from localStorage after login redirect
+  useEffect(() => {
+    if (searchParams.get('resume') !== 'true') return;
+    try {
+      const saved = localStorage.getItem('luna_pending_quiz');
+      if (!saved) return;
+      const { vibes, accom, habits, dining, interests } = JSON.parse(saved);
+      if (vibes) setQuizVibes(vibes);
+      if (accom) setQuizAccom(accom);
+      if (habits) setQuizHabits(habits);
+      if (dining) setQuizDining(dining);
+      if (interests) setQuizInterests(interests);
+      localStorage.removeItem('luna_pending_quiz');
+      // Auto-finish on next tick after state settles
+      setTimeout(() => {
+        const persona = computePersona(vibes ?? {energy:2,setting:2,crowd:2,coast:2}, accom ?? [], habits ?? {}, dining ?? [], interests ?? []);
+        setQuizPersona(persona);
+        setQuizDone(true);
+        trackQuizCompleted(persona.name);
+        savePersonaToDb(persona.name);
+        fetchAiDestinationsWithArgs(persona, vibes ?? {energy:2,setting:2,crowd:2,coast:2}, accom ?? [], habits ?? {}, dining ?? [], interests ?? []);
+      }, 100);
+    } catch { /* ignore */ }
+  }, []); // eslint-disable-line
+
+  const savePersonaToDb = async (personaName: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    // Delete existing persona rows for this user, then insert fresh
+    await supabase.from('travel_personas').delete().eq('user_id', user.id);
+    await supabase.from('travel_personas').insert({
+      user_id: user.id,
+      persona_type: personaName,
+    });
+  };
+
+  const fetchAiDestinationsWithArgs = async (
+    persona: ReturnType<typeof computePersona>,
+    vibes: Record<string,number>,
+    accom: string[],
+    habits: Record<string,string>,
+    dining: string[],
+    interests: string[],
+  ) => {
     setAiDestsLoading(true);
     setAiDestinations(null);
-    const vibeLabels = VIBE_SPECTRUMS.map(sp => `${sp.left}↔${sp.right}: ${sp.labels[quizVibes[sp.key] ?? 2]}`).join('; ');
-    const accomNames = quizAccom.map(a => ACCOM_OPTIONS.find(o=>o.v===a)?.l||a).join(', ') || 'flexible';
-    const diningNames = quizDining.map(d => DINING_OPTIONS.find(o=>o.v===d)?.l||d).join(', ') || 'varied';
-    const interestNames = quizInterests.map(i => INTEREST_OPTIONS.find(o=>o.v===i)?.l||i).join(', ') || 'varied';
+    const vibeLabels = VIBE_SPECTRUMS.map(sp => `${sp.left}↔${sp.right}: ${sp.labels[vibes[sp.key] ?? 2]}`).join('; ');
+    const accomNames = accom.map(a => ACCOM_OPTIONS.find(o=>o.v===a)?.l||a).join(', ') || 'flexible';
+    const diningNames = dining.map(d => DINING_OPTIONS.find(o=>o.v===d)?.l||d).join(', ') || 'varied';
+    const interestNames = interests.map(i => INTEREST_OPTIONS.find(o=>o.v===i)?.l||i).join(', ') || 'varied';
     const budgetLabel: Record<string,string> = {shoestring:'Shoestring',budget:'Budget-conscious',comfortable:'Comfortable',splurge:'Splurge often',unlimited:'No limits'};
     const paceLabel: Record<string,string> = {early:'Early bird',day:'Daytime explorer',afternoon:'Afternoon starter',night:'Night owl'};
     const socialLabel: Record<string,string> = {solo:'Solo & independent',couple:'Couple',mixed:'Mix of both',social:'Group & social'};
-    const prompt = `You are a world-class travel expert. Suggest exactly 3 travel destinations that are a perfect match for this traveller. Make them diverse — ideally different continents or regions. Be creative and think beyond the obvious.
+    const prompt = `You are a world-class travel expert. Suggest exactly 3 travel destinations that are a perfect match for this traveller. Make them diverse, ideally different continents or regions. Be creative and think beyond the obvious.
 
-Return ONLY a valid JSON array with no other text, no markdown, no code blocks — just raw JSON:
+Return ONLY a valid JSON array with no other text, no markdown, no code blocks, just raw JSON:
 [{"name":"City or Place","country":"Country or Region","desc":"One vivid sentence about why this place suits this exact traveller.","query":"Wikipedia article title for this place"}]
 
 Traveller Profile:
-- Persona: ${persona.name} — ${persona.tagline}
+- Persona: ${persona.name}, ${persona.tagline}
 - Vibe dials: ${vibeLabels}
 - Accommodation style: ${accomNames}
-- Budget: ${budgetLabel[quizHabits.spend] || quizHabits.spend || 'comfortable'}
-- Daily pace: ${paceLabel[quizHabits.pace] || quizHabits.pace || 'flexible'}
-- Travel company: ${socialLabel[quizHabits.social] || quizHabits.social || 'flexible'}
+- Budget: ${budgetLabel[habits.spend] || habits.spend || 'comfortable'}
+- Daily pace: ${paceLabel[habits.pace] || habits.pace || 'flexible'}
+- Travel company: ${socialLabel[habits.social] || habits.social || 'flexible'}
 - Dining preferences: ${diningNames}
 - Interests: ${interestNames}`;
     try {
@@ -259,11 +306,29 @@ Traveller Profile:
     setAiDestinations(persona.destinations);
   };
 
-  const finishQuiz = () => {
+  const fetchAiDestinations = (persona: ReturnType<typeof computePersona>) =>
+    fetchAiDestinationsWithArgs(persona, quizVibes, quizAccom, quizHabits, quizDining, quizInterests);
+
+  const finishQuiz = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      // Save quiz answers so they survive the login redirect
+      try {
+        localStorage.setItem('luna_pending_quiz', JSON.stringify({
+          vibes: quizVibes, accom: quizAccom, habits: quizHabits,
+          dining: quizDining, interests: quizInterests,
+        }));
+        localStorage.setItem('luna_redirect_after_login', '/quiz?resume=true');
+      } catch {}
+      router.push('/auth/login?next=' + encodeURIComponent('/quiz?resume=true'));
+      return;
+    }
+
     const persona = computePersona(quizVibes, quizAccom, quizHabits, quizDining, quizInterests);
     setQuizPersona(persona);
     setQuizDone(true);
     trackQuizCompleted(persona.name);
+    savePersonaToDb(persona.name);
     fetchAiDestinations(persona);
   };
 
@@ -566,5 +631,13 @@ Traveller Profile:
         }
       `}</style>
     </div>
+  );
+}
+
+export default function QuizPage() {
+  return (
+    <Suspense fallback={null}>
+      <QuizPageInner />
+    </Suspense>
   );
 }
