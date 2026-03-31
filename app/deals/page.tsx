@@ -3,18 +3,66 @@ import NavBar from '@/components/NavBar';
 import { bookingComLink } from '@/lib/affiliate';
 
 const POPULAR_DESTINATIONS = [
-  { name: 'Bali, Indonesia',     emoji: '🌴', tag: 'Beach & Nature' },
-  { name: 'Tokyo, Japan',        emoji: '🗼', tag: 'Culture & Food' },
-  { name: 'Paris, France',       emoji: '🗺️', tag: 'Romance' },
-  { name: 'New York, USA',       emoji: '🏙️', tag: 'City Break' },
-  { name: 'Santorini, Greece',   emoji: '🏝️', tag: 'Islands' },
-  { name: 'Bangkok, Thailand',   emoji: '🐘', tag: 'Adventure' },
-  { name: 'Barcelona, Spain',    emoji: '🎨', tag: 'Culture' },
-  { name: 'Maldives',            emoji: '🐠', tag: 'Luxury' },
-  { name: 'Lisbon, Portugal',    emoji: '🚋', tag: 'Trending' },
-  { name: 'Sydney, Australia',   emoji: '🦘', tag: 'City & Nature' },
-  { name: 'Dubai, UAE',          emoji: '✨', tag: 'Luxury' },
-  { name: 'Cancun, Mexico',      emoji: '🌺', tag: 'Beach' },
+  {
+    name: 'Bali, Indonesia',
+    photo: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&q=80',
+    tag: 'Beach & Nature',
+  },
+  {
+    name: 'Tokyo, Japan',
+    photo: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=600&q=80',
+    tag: 'Culture & Food',
+  },
+  {
+    name: 'Paris, France',
+    photo: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=600&q=80',
+    tag: 'Romance',
+  },
+  {
+    name: 'New York, USA',
+    photo: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=600&q=80',
+    tag: 'City Break',
+  },
+  {
+    name: 'Santorini, Greece',
+    photo: 'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=600&q=80',
+    tag: 'Islands',
+  },
+  {
+    name: 'Bangkok, Thailand',
+    photo: 'https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=600&q=80',
+    tag: 'Adventure',
+  },
+  {
+    name: 'Barcelona, Spain',
+    photo: 'https://images.unsplash.com/photo-1523531294919-4bcd7c65e216?w=600&q=80',
+    tag: 'Culture',
+  },
+  {
+    name: 'Maldives',
+    photo: 'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=600&q=80',
+    tag: 'Luxury',
+  },
+  {
+    name: 'Lisbon, Portugal',
+    photo: 'https://images.unsplash.com/photo-1555881400-74d7acaacd8b?w=600&q=80',
+    tag: 'Trending',
+  },
+  {
+    name: 'Sydney, Australia',
+    photo: 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=600&q=80',
+    tag: 'City & Nature',
+  },
+  {
+    name: 'Dubai, UAE',
+    photo: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=600&q=80',
+    tag: 'Luxury',
+  },
+  {
+    name: 'Cancun, Mexico',
+    photo: 'https://images.unsplash.com/photo-1552074284-5e88ef1aef18?w=600&q=80',
+    tag: 'Beach',
+  },
 ];
 
 export default function DealsPage() {
@@ -80,14 +128,14 @@ export default function DealsPage() {
           gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
           gap: 20,
         }}>
-          {POPULAR_DESTINATIONS.map(({ name, emoji, tag }) => (
+          {POPULAR_DESTINATIONS.map(({ name, photo, tag }) => (
             <a
               key={name}
               href={bookingComLink(name)}
               target="_blank"
               rel="noopener noreferrer"
               style={{
-                background: 'white', borderRadius: 16, padding: '24px 20px',
+                background: 'white', borderRadius: 16, overflow: 'hidden',
                 border: '1px solid rgba(0,68,123,0.1)', textDecoration: 'none',
                 display: 'block', transition: 'transform 0.2s, box-shadow 0.2s',
               }}
@@ -100,19 +148,33 @@ export default function DealsPage() {
                 e.currentTarget.style.boxShadow = 'none';
               }}
             >
-              <div style={{ fontSize: 36, marginBottom: 10 }}>{emoji}</div>
-              <p style={{
-                fontFamily: "'Poppins', sans-serif", fontSize: 16, fontWeight: 600,
-                color: '#00447B', margin: '0 0 4px',
+              {/* Photo header */}
+              <div style={{
+                height: 140,
+                backgroundImage: `url(${photo})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                position: 'relative',
               }}>
-                {name}
-              </p>
-              <p style={{
-                fontFamily: "'Lato', sans-serif", fontSize: 12, color: '#FF8210',
-                fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', margin: 0,
-              }}>
-                {tag}
-              </p>
+                <span style={{
+                  position: 'absolute', top: 10, left: 10,
+                  background: 'rgba(255,130,16,0.92)', color: 'white',
+                  fontFamily: "'Lato', sans-serif", fontSize: 10, fontWeight: 700,
+                  textTransform: 'uppercase', letterSpacing: '0.06em',
+                  padding: '3px 8px', borderRadius: 20,
+                }}>
+                  {tag}
+                </span>
+              </div>
+              {/* Card body */}
+              <div style={{ padding: '16px 20px 20px' }}>
+                <p style={{
+                  fontFamily: "'Poppins', sans-serif", fontSize: 16, fontWeight: 600,
+                  color: '#00447B', margin: 0,
+                }}>
+                  {name}
+                </p>
+              </div>
             </a>
           ))}
         </div>
