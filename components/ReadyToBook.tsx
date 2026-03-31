@@ -70,7 +70,7 @@ export default function ReadyToBook({ destination }: ReadyToBookProps) {
       <div style={{ padding: '20px', backgroundColor: '#fff' }}>
 
         {/* Top row: 3 cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+        <div className="rtb-top-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
           {partners.slice(0, 3).map((p) => (
             <div key={p.name} style={{ border: '1px solid #e5e7eb', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: '#fff' }}>
               <span style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: p.color }}>
@@ -91,7 +91,7 @@ export default function ReadyToBook({ destination }: ReadyToBookProps) {
         </div>
 
         {/* Bottom row: 2 cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginTop: '12px' }}>
+        <div className="rtb-bottom-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginTop: '12px' }}>
           {partners.slice(3).map((p) => (
             <div key={p.name} style={{ border: '1px solid #e5e7eb', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: '#fff' }}>
               <span style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: p.color }}>
@@ -117,6 +117,16 @@ export default function ReadyToBook({ destination }: ReadyToBookProps) {
         </p>
 
       </div>
+
+      <style>{`
+        @media (max-width: 640px) {
+          .rtb-top-grid    { grid-template-columns: 1fr !important; }
+          .rtb-bottom-grid { grid-template-columns: 1fr !important; }
+        }
+        @media (min-width: 641px) and (max-width: 860px) {
+          .rtb-top-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+      `}</style>
     </div>
   );
 }

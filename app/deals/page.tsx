@@ -188,8 +188,10 @@ export default function DealsPage() {
       </div>
 
       <style>{`
-        @media (max-width: 600px) {
+        @media (max-width: 640px) {
           div[style*="gridTemplateColumns"] { grid-template-columns: 1fr 1fr !important; }
+          div[style*="padding: '64px 40px'"],
+          div[style*="padding: '100px 40px 80px'"] { padding-left: 20px !important; padding-right: 20px !important; padding-top: 60px !important; padding-bottom: 48px !important; }
         }
         @media (max-width: 380px) {
           div[style*="gridTemplateColumns"] { grid-template-columns: 1fr !important; }

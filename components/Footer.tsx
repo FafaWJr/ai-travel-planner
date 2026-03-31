@@ -135,9 +135,9 @@ export default function Footer() {
         @media (max-width: 1000px) {
           .luna-footer-main { grid-template-columns: 1fr 1fr !important; gap: 36px !important; }
         }
-        @media (max-width: 540px) {
-          .luna-footer-main { grid-template-columns: 1fr !important; gap: 28px !important; }
-          .luna-footer-bar  { flex-direction: column !important; text-align: center !important; }
+        @media (max-width: 640px) {
+          .luna-footer-main { grid-template-columns: 1fr !important; gap: 28px !important; padding: 40px 20px 32px !important; }
+          .luna-footer-bar  { flex-direction: column !important; text-align: center !important; padding: 14px 20px !important; }
         }
       `}</style>
     </footer>

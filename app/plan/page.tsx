@@ -636,7 +636,7 @@ function PlanContent() {
               <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:22, color:'#00447B', marginBottom:8 }}>Crafting your perfect trip...</p>
               <p style={{ fontFamily:"'Inter',sans-serif", color:'#6C6D6F', fontSize:15 }}>This usually takes about 30 seconds</p>
             </div>
-            <div style={{ display:'flex', gap:8 }}>
+            <div className="plan-loading-steps" style={{ display:'flex', gap:8 }}>
               {['Researching destination','Building itinerary','Adding local tips'].map((s,i) => (
                 <div key={s} style={{ background:'#fff', border:'1px solid rgba(0,68,123,0.10)', borderRadius:100, padding:'6px 14px', fontFamily:"'Inter',sans-serif", fontSize:12, color:'#6C6D6F', animation:`fadeIn 0.5s ${i*0.3}s both` }}>{s}...</div>
               ))}
@@ -660,14 +660,14 @@ function PlanContent() {
         {/* ── Plan ── */}
         {!loading && !error && plan && (
           <>
-          <div style={{ maxWidth:900, margin:'0 auto', padding:'32px 24px' }}>
+          <div className="plan-wrapper" style={{ maxWidth:900, margin:'0 auto', padding:'32px 24px' }}>
 
             {/* Left column */}
             <div style={{ minWidth:0 }}>
 
               {/* Photo strip */}
               {photos.length > 0 && (
-                <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr 1fr', gap:6, borderRadius:16, overflow:'hidden', marginBottom:24, height:240 }}>
+                <div className="plan-photo-strip" style={{ display:'grid', gridTemplateColumns:'2fr 1fr 1fr', gap:6, borderRadius:16, overflow:'hidden', marginBottom:24, height:240 }}>
                   {photos.slice(0,3).map((url,i) => (
                     <img key={i} src={url} alt="" loading="lazy" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
                   ))}
@@ -740,7 +740,7 @@ function PlanContent() {
         })()}
 
               {/* Section tabs — folder-tab style */}
-              <div style={{ display:'flex', overflowX:'auto', marginBottom:0, borderBottom:'2px solid rgba(0,68,123,0.10)' }}>
+              <div className="plan-tabs" style={{ display:'flex', overflowX:'auto', marginBottom:0, borderBottom:'2px solid rgba(0,68,123,0.10)' }}>
                 {SECTIONS.map(s => {
                   const active = activeSection === s.id;
                   return (
@@ -823,7 +823,7 @@ function PlanContent() {
                 />
               </div>
               {activeSection !== 'itinerary' && activeSection !== 'accommodation' && activeSection !== 'budget' && (
-                <div style={{ background:'#fff', borderRadius:'0 0 16px 16px', padding:'32px 36px', boxShadow:'0 2px 20px rgba(0,68,123,0.07)', border:'1px solid rgba(0,68,123,0.08)', borderTop:'none' }}>
+                <div className="plan-section" style={{ background:'#fff', borderRadius:'0 0 16px 16px', padding:'32px 36px', boxShadow:'0 2px 20px rgba(0,68,123,0.07)', border:'1px solid rgba(0,68,123,0.08)', borderTop:'none' }}>
                   <div
                     onMouseOver={handlePlaceMouseOver}
                     onMouseLeave={handlePlaneMouseLeave}
@@ -1005,6 +1005,23 @@ function PlanContent() {
         @media print {
           nav, .no-print { display:none !important; }
           body { background:#fff; }
+        }
+        @media (max-width: 640px) {
+          /* Plan page wrapper */
+          .plan-wrapper { padding: 16px 12px !important; }
+          /* Photo strip: collapse to single image */
+          .plan-photo-strip { grid-template-columns: 1fr !important; height: 180px !important; }
+          .plan-photo-strip img:not(:first-child) { display: none !important; }
+          /* Section tabs: allow horizontal scroll */
+          .plan-tabs { overflow-x: auto !important; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+          .plan-tabs button { white-space: nowrap; }
+          /* Section content padding */
+          .plan-section { padding: 20px 16px !important; }
+          /* Loading steps: stack vertically */
+          .plan-loading-steps { flex-direction: column !important; align-items: center !important; }
+          /* Destination header */
+          .plan-dest-header { flex-direction: column !important; gap: 12px !important; }
+          .plan-dest-actions { flex-wrap: wrap !important; }
         }
       `}</style>
     </div>

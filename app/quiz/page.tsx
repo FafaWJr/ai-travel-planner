@@ -357,7 +357,7 @@ Traveller Profile:
     <div style={{ fontFamily:'var(--font-body)', color:'#000', background:'#fff' }}>
       <NavBar />
 
-      <section style={{ background:'var(--navy)', minHeight:'calc(100vh - 68px)', padding:'80px 24px', position:'relative', overflow:'hidden' }}>
+      <section className="quiz-section" style={{ background:'var(--navy)', minHeight:'calc(100vh - 68px)', padding:'80px 24px', position:'relative', overflow:'hidden' }}>
         <div style={{ position:'absolute', inset:0, backgroundImage:'radial-gradient(circle at 20% 50%, rgba(103,154,193,0.15) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255,130,16,0.10) 0%, transparent 40%)', pointerEvents:'none' }} />
         <div style={{ maxWidth:820, margin:'0 auto', textAlign:'center', position:'relative', zIndex:1 }}>
           <p style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:13, letterSpacing:2, textTransform:'uppercase', color:'var(--orange-light)', marginBottom:12 }}>Not Sure Where to Go?</p>
@@ -367,7 +367,7 @@ Traveller Profile:
           </p>
 
           {!quizDone ? (
-            <div style={{ background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:'var(--r-lg)', padding:'40px 36px', textAlign:'left' }}>
+            <div className="quiz-card" style={{ background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:'var(--r-lg)', padding:'40px 36px', textAlign:'left' }}>
               {/* Progress */}
               <div style={{ display:'flex', gap:8, marginBottom:6 }}>
                 {['Vibe','Stay','Habits','Dining','Interests'].map((label,i) => (
@@ -415,7 +415,7 @@ Traveller Profile:
                 <div>
                   <h3 style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:22, color:'#fff', marginBottom:8 }}>How do you like to stay?</h3>
                   <p style={{ fontFamily:'var(--font-body)', fontSize:14, color:'rgba(255,255,255,0.50)', marginBottom:28 }}>Select all that appeal to you.</p>
-                  <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10, marginBottom:24 }}>
+                  <div className="quiz-accom-grid" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10, marginBottom:24 }}>
                     {ACCOM_OPTIONS.map(opt => {
                       const sel = quizAccom.includes(opt.v);
                       return (
@@ -466,7 +466,7 @@ Traveller Profile:
                 <div>
                   <h3 style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:22, color:'#fff', marginBottom:8 }}>What dining experiences do you love?</h3>
                   <p style={{ fontFamily:'var(--font-body)', fontSize:14, color:'rgba(255,255,255,0.50)', marginBottom:28 }}>Select all that apply.</p>
-                  <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10, marginBottom:24 }}>
+                  <div className="quiz-dining-grid" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10, marginBottom:24 }}>
                     {DINING_OPTIONS.map(opt => {
                       const sel = quizDining.includes(opt.v);
                       return (
@@ -489,7 +489,7 @@ Traveller Profile:
                 <div>
                   <h3 style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:22, color:'#fff', marginBottom:8 }}>What are your favourite travel activities?</h3>
                   <p style={{ fontFamily:'var(--font-body)', fontSize:14, color:'rgba(255,255,255,0.50)', marginBottom:28 }}>Select all that apply.</p>
-                  <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10, marginBottom:24 }}>
+                  <div className="quiz-interest-grid" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10, marginBottom:24 }}>
                     {INTEREST_OPTIONS.map(opt => {
                       const sel = quizInterests.includes(opt.v);
                       return (
@@ -553,7 +553,7 @@ Traveller Profile:
                   )}
                 </div>
                 {aiDestsLoading && !aiDestinations ? (
-                  <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }}>
+                  <div className="quiz-dest-grid" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }}>
                     {[0,1,2].map(i => (
                       <div key={i} style={{ borderRadius:'var(--r-md)', overflow:'hidden', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)' }}>
                         <div style={{ height:130, background:'rgba(255,255,255,0.06)', animation:'shimmer 1.6s ease-in-out infinite' }} />
@@ -566,7 +566,7 @@ Traveller Profile:
                     ))}
                   </div>
                 ) : (
-                  <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }}>
+                  <div className="quiz-dest-grid" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }}>
                     {(aiDestinations ?? []).map((d) => {
                       const photo = destPhotos[d.name];
                       return (
@@ -626,8 +626,23 @@ Traveller Profile:
         .quiz-slider::-moz-range-thumb { width:26px; height:26px; border-radius:50%; background:#FF8210; cursor:pointer; border:none; box-shadow:0 0 0 5px rgba(255,130,16,0.25); }
         .quiz-slider::-moz-range-progress { background:#FF8210; height:8px; border-radius:100px; }
         @keyframes shimmer { 0%,100% { opacity:0.5; } 50% { opacity:1; } }
-        @media (max-width: 600px) {
+        @media (max-width: 640px) {
           .quiz-slider { height:6px; }
+          /* Quiz card padding */
+          .quiz-card { padding: 24px 16px !important; }
+          /* Accommodation: 3-col -> 2-col */
+          .quiz-accom-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          /* Dining/Interests: 4-col -> 2-col */
+          .quiz-dining-grid, .quiz-interest-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          /* Destinations: 3-col -> 1-col */
+          .quiz-dest-grid { grid-template-columns: 1fr !important; }
+          /* Persona result section */
+          .quiz-section { padding: 80px 16px !important; }
+          /* Habits buttons wrap nicely already */
+        }
+        @media (max-width: 380px) {
+          .quiz-accom-grid  { grid-template-columns: 1fr !important; }
+          .quiz-dining-grid, .quiz-interest-grid { grid-template-columns: repeat(2, 1fr) !important; }
         }
       `}</style>
     </div>
