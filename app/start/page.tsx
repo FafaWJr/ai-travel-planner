@@ -24,7 +24,7 @@ export default function StartPage() {
       <main style={{
         minHeight: '100vh',
         background: 'var(--bg-section)',
-        padding: '60px 24px 80px',
+        padding: '100px 24px 80px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
