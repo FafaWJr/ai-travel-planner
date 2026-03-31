@@ -343,6 +343,7 @@ function PlanContent() {
   const [error,        setError]        = useState('');
   const [activeSection,setActiveSection] = useState('overview');
   const [photos,       setPhotos]       = useState<string[]>([]);
+  const [isLoadingPhotos, setIsLoadingPhotos] = useState(false);
   const [extraIdeas,      setExtraIdeas]      = useState('');
   const [extraIdeasLoading, setExtraIdeasLoading] = useState(false);
   const [showExtraIdeas,  setShowExtraIdeas]  = useState(false);
@@ -580,12 +581,14 @@ function PlanContent() {
       if (!res.ok) throw new Error('Failed');
       const data = await res.json();
       setPlan(data.plan || data.content || '');
-      const dest = p.split(' ').slice(4,8).join(' ');
+      const dest = p.replace(/^plan a (trip to |)?/i,'').replace(/\b(from \d{4}-\d{2}-\d{2}.*)/i,'').trim().split(' ').slice(0,5).join(' ');
       trackTripPlanGenerated(dest);
+      setIsLoadingPhotos(true);
       try {
         const pr = await fetch(`/api/destination-photos?city=${encodeURIComponent(dest)}`);
         if (pr.ok) { const pd = await pr.json(); setPhotos(pd.photos||[]); }
       } catch {}
+      finally { setIsLoadingPhotos(false); }
     } catch { setError('Failed to generate your travel plan. Please try again.'); }
     finally  { setLoading(false); }
   };
@@ -699,11 +702,16 @@ function PlanContent() {
             <div style={{ minWidth:0 }}>
 
               {/* Photo strip */}
-              {photos.length > 0 && (
+              {(isLoadingPhotos || photos.length > 0) && (
                 <div className="plan-photo-strip" style={{ display:'grid', gridTemplateColumns:'2fr 1fr 1fr', gap:6, borderRadius:16, overflow:'hidden', marginBottom:24, height:240 }}>
-                  {photos.slice(0,3).map((url,i) => (
-                    <img key={i} src={url} alt="" loading="lazy" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
-                  ))}
+                  {isLoadingPhotos
+                    ? [0,1,2].map(i => (
+                        <div key={i} style={{ width:'100%', height:'100%', background: i === 0 ? 'linear-gradient(135deg,#00447B 0%,#679AC1 100%)' : 'linear-gradient(135deg,#679AC1 0%,#A8C8E8 100%)', animation:'photoPulse 1.5s ease-in-out infinite', animationDelay:`${i * 0.2}s` }} />
+                      ))
+                    : photos.slice(0,3).map((url,i) => (
+                        <img key={i} src={url} alt="" loading="lazy" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+                      ))
+                  }
                 </div>
               )}
 
@@ -1038,6 +1046,7 @@ function PlanContent() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500&display=swap');
         @keyframes spin       { to { transform: rotate(360deg); } }
+        @keyframes photoPulse { 0%,100% { opacity:1; } 50% { opacity:0.55; } }
         @keyframes fadeIn     { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
         @keyframes bounce     { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-5px); } }
         @keyframes popupFadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
