@@ -8,6 +8,7 @@ import StayTab, { type AcceptedHotel } from '@/components/StayTab';
 import BudgetTab from '@/components/BudgetTab';
 import NavBar from '@/components/NavBar';
 import GateOverlay from '@/components/GateOverlay';
+import ReadyToBook from '@/components/ReadyToBook';
 import { useAuth } from '@/context/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import { trackTripPlanGenerated, trackChatMessageSent } from '@/lib/analytics';
@@ -913,55 +914,7 @@ function PlanContent() {
               {/* ── Affiliate booking links ── */}
               {(() => {
                 const dest = prompt.replace(/^plan a (trip to |)?/i,'').replace(/\b(from \d{4}-\d{2}-\d{2}.*)$/i,'').trim().split(' ').slice(0,4).join(' ');
-                const isBudget = /budget/i.test(prompt);
-                const isLuxury = /luxury|premium/i.test(prompt);
-                const partners = [
-                  { id:'booking', name:'Booking.com', emoji:'🏨', tagline:'Hotels & Apartments', desc:'Compare 1M+ properties. Free cancellation on most.', color:'#EFF6FF', accent:'#2563EB', url:`https://www.booking.com/searchresults.html?ss=${encodeURIComponent(dest)}&lang=en-gb`, cta:'Find Accommodation' },
-                  { id:'gyg', name:'GetYourGuide', emoji:'🎭', tagline:'Tours & Experiences', desc:'Top-rated tours and activities led by local experts.', color:'#FFF7ED', accent:'#EA580C', url:`https://www.getyourguide.com/s/?q=${encodeURIComponent(dest)}`, cta:'Discover Activities' },
-                  { id:'airbnb', name:'Airbnb', emoji:'🏠', tagline:'Unique Stays', desc:'Find homes, apartments and authentic local experiences.', color:'#FFF1F2', accent:'#E11D48', url:`https://www.airbnb.com/s/${encodeURIComponent(dest)}/homes`, cta:'Browse Unique Stays' },
-                  ...(!isLuxury ? [{ id:'hostelworld', name:'Hostelworld', emoji:'🎒', tagline:'Budget Stays', desc:'Best hostels worldwide — meet fellow travellers.', color:'#F5F3FF', accent:'#7C3AED', url:`https://www.hostelworld.com/st/hostels/${encodeURIComponent(dest)}`, cta:'Find Budget Stays' }] : []),
-                  { id:'viator', name:'Viator', emoji:'🌟', tagline:'Guided Experiences', desc:'Premium tours, skip-the-line tickets, private guides.', color:'#F0FDF4', accent:'#16A34A', url:`https://www.viator.com/searchResults/all?text=${encodeURIComponent(dest)}`, cta:'Browse Experiences' },
-                  { id:'rentalcars', name:'Rentalcars.com', emoji:'🚗', tagline:'Car Rental', desc:'Compare all major providers. Best price guarantee.', color:'#F0F9FF', accent:'#0284C7', url:`https://www.rentalcars.com/en/?country=${encodeURIComponent(dest)}`, cta:'Compare Car Rentals' },
-                ];
-                return (
-                  <div style={{ marginTop:32, borderRadius:16, overflow:'hidden', border:'1.5px solid rgba(0,68,123,0.12)' }}>
-                    {/* Header */}
-                    <div style={{ background:'linear-gradient(135deg, #00447B 0%, #005FAD 100%)', padding:'20px 24px' }}>
-                      <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:4 }}>
-                        <span style={{ fontSize:22 }}>✈️</span>
-                        <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:17, color:'#fff' }}>Ready to Book?</p>
-                      </div>
-                      <p style={{ fontFamily:"'Inter',sans-serif", fontSize:13, color:'rgba(255,255,255,0.65)' }}>
-                        Best deals for <strong style={{ color:'#fff' }}>{dest}</strong> — handpicked partners for your trip.
-                      </p>
-                    </div>
-                    {/* Cards */}
-                    <div style={{ background:'#F8FAFC', padding:'20px', display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))', gap:12 }}>
-                      {partners.map(p => (
-                        <a key={p.id} href={p.url} target="_blank" rel="noopener noreferrer sponsored"
-                          style={{ background:'#fff', border:'1.5px solid rgba(0,68,123,0.10)', borderRadius:12, padding:'16px', textDecoration:'none', display:'flex', flexDirection:'column', gap:8, transition:'box-shadow 0.18s, border-color 0.18s' }}
-                          onMouseEnter={e=>{(e.currentTarget as HTMLAnchorElement).style.boxShadow='0 4px 20px rgba(0,68,123,0.12)';(e.currentTarget as HTMLAnchorElement).style.borderColor='rgba(0,68,123,0.25)';}}
-                          onMouseLeave={e=>{(e.currentTarget as HTMLAnchorElement).style.boxShadow='none';(e.currentTarget as HTMLAnchorElement).style.borderColor='rgba(0,68,123,0.10)';}}
-                        >
-                          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                            <div style={{ width:36, height:36, borderRadius:10, background:p.color, display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, flexShrink:0 }}>{p.emoji}</div>
-                            <div>
-                              <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:12, color:p.accent, textTransform:'uppercase', letterSpacing:0.4, marginBottom:1 }}>{p.tagline}</p>
-                              <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:13, color:'#000' }}>{p.name}</p>
-                            </div>
-                          </div>
-                          <p style={{ fontFamily:"'Inter',sans-serif", fontSize:12, color:'#6C6D6F', lineHeight:1.55, flex:1 }}>{p.desc}</p>
-                          <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:12, color:p.accent }}>
-                            {p.cta} →
-                          </p>
-                        </a>
-                      ))}
-                    </div>
-                    <p style={{ fontFamily:"'Inter',sans-serif", fontSize:11, color:'#9CA3AF', textAlign:'center', padding:'10px 20px 14px', background:'#F8FAFC' }}>
-                      We may earn a small commission when you book through these links — at no extra cost to you.
-                    </p>
-                  </div>
-                );
+                return <ReadyToBook destination={dest} />;
               })()}
 
             </div>
