@@ -1,75 +1,80 @@
-'use client';
+'use client'
+export const dynamic = 'force-dynamic'
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { createBrowserClient } from '@supabase/ssr';
-import { syncUserToBrevo } from '@/lib/brevo';
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { createBrowserClient } from '@supabase/ssr'
+import { syncUserToBrevo } from '@/lib/brevo'
 
 export default function ReturningPage() {
-  const router = useRouter();
+  const router = useRouter()
 
   useEffect(() => {
     const supabase = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
+    )
 
     const handleRedirect = async () => {
-      // Wait briefly for Supabase to process any hash fragment tokens
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // Read destination before any async work
+      const destination =
+        localStorage.getItem('luna_redirect_after_login') ||
+        localStorage.getItem('post_auth_redirect') ||
+        localStorage.getItem('redirectAfterLogin') ||
+        '/'
 
-      const { data: { session } } = await supabase.auth.getSession();
+      // Clean up all possible keys
+      localStorage.removeItem('luna_redirect_after_login')
+      localStorage.removeItem('post_auth_redirect')
+      localStorage.removeItem('redirectAfterLogin')
 
-      // Sync new Google OAuth users to Brevo
-      if (session?.user) {
-        const createdAt = new Date(session.user.created_at).getTime();
-        const isNewUser = Date.now() - createdAt < 60_000;
+      // First attempt — cookies should already be set by the callback route
+      const { data: { session } } = await supabase.auth.getSession()
+
+      if (session) {
+        // Sync new Google OAuth users to Brevo
+        const createdAt = new Date(session.user.created_at).getTime()
+        const isNewUser = Date.now() - createdAt < 60_000
         if (isNewUser) {
-          const meta = session.user.user_metadata;
+          const meta = session.user.user_metadata
           syncUserToBrevo({
             email: session.user.email ?? '',
             firstName: meta?.given_name ?? meta?.full_name?.split(' ')[0] ?? '',
             lastName: meta?.family_name ?? meta?.full_name?.split(' ').slice(1).join(' ') ?? '',
             source: 'google_oauth',
-          });
+          })
         }
+        router.replace(destination)
+        return
       }
 
-      // Read the intended destination from localStorage (try all known keys)
-      const destination =
-        localStorage.getItem('luna_redirect_after_login') ||
-        localStorage.getItem('post_auth_redirect') ||
-        localStorage.getItem('redirectAfterLogin') ||
-        '/';
+      // Retry after 1.5s — hash-fragment tokens may need a moment
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      const { data: { session: retrySession } } = await supabase.auth.getSession()
 
-      // Clean up all possible keys
-      localStorage.removeItem('luna_redirect_after_login');
-      localStorage.removeItem('post_auth_redirect');
-      localStorage.removeItem('redirectAfterLogin');
+      if (retrySession) {
+        router.replace(destination)
+        return
+      }
 
-      if (session) {
-        router.replace(destination);
-      } else {
-        // Session not yet available — listen for auth state change
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          (event, newSession) => {
-            if (newSession) {
-              subscription.unsubscribe();
-              router.replace(destination);
-            }
+      // Last resort: listen for auth state change, fallback to login after 5s
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        (event, newSession) => {
+          if (newSession) {
+            subscription.unsubscribe()
+            router.replace(destination)
           }
-        );
+        }
+      )
 
-        // Fallback: if no session after 5 seconds, go to login
-        setTimeout(() => {
-          subscription.unsubscribe();
-          router.replace('/auth/login');
-        }, 5000);
-      }
-    };
+      setTimeout(() => {
+        subscription.unsubscribe()
+        router.replace('/auth/login?error=session_not_found')
+      }, 5000)
+    }
 
-    handleRedirect();
-  }, [router]);
+    handleRedirect()
+  }, [router])
 
   return (
     <div style={{
@@ -89,5 +94,5 @@ export default function ReturningPage() {
       }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
-  );
+  )
 }
