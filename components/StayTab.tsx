@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { ItineraryHandle } from '@/components/EditableItinerary';
+import { bookingComLink } from '@/lib/affiliate';
 
 type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'night';
 
@@ -135,12 +136,13 @@ function PhotoGallery({ photos, name }: { photos: string[] | null | '__loading__
 
 /* ─── Hotel card ─────────────────────────────────────────────── */
 function HotelCard({
-  hotel, isConfirmed, onChoose, photos,
+  hotel, isConfirmed, onChoose, photos, destination,
 }: {
   hotel: Hotel;
   isConfirmed: boolean;
   onChoose: () => void;
   photos: string[] | null | '__loading__';
+  destination: string;
 }) {
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hotel.googleMapsQuery)}`;
 
@@ -194,18 +196,44 @@ function HotelCard({
             >Choose This Stay</button>
           )}
         </div>
+        {/* Booking.com affiliate button */}
+        <a
+          href={bookingComLink(hotel.neighborhood ? `${hotel.name}, ${destination}` : destination)}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={e => e.stopPropagation()}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 7,
+            marginTop: 12, padding: '9px 18px',
+            background: '#003580', color: 'white',
+            borderRadius: 8, width: '100%', justifyContent: 'center',
+            fontFamily: "'Lato', sans-serif", fontSize: 13, fontWeight: 700,
+            textDecoration: 'none', transition: 'background 0.2s',
+            boxSizing: 'border-box',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.background = '#00224f')}
+          onMouseLeave={e => (e.currentTarget.style.background = '#003580')}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+            <polyline points="15 3 21 3 21 9"/>
+            <line x1="10" y1="14" x2="21" y2="3"/>
+          </svg>
+          Book on Booking.com
+        </a>
       </div>
     </div>
   );
 }
 
 /* ─── Hotel carousel ─────────────────────────────────────────── */
-function HotelCarousel({ hotels, segment, segConfirmed, chooseHotel, photoCache }: {
+function HotelCarousel({ hotels, segment, segConfirmed, chooseHotel, photoCache, destination }: {
   hotels: Hotel[];
   segment: LocationSegment;
   segConfirmed: AcceptedHotel | undefined;
   chooseHotel: (hotel: Hotel, segment: LocationSegment) => void;
   photoCache: Record<string, string[] | null | '__loading__'>;
+  destination: string;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const scroll = (dir: -1 | 1) => trackRef.current?.scrollBy({ left: dir * 316, behavior: 'smooth' });
@@ -238,6 +266,7 @@ function HotelCarousel({ hotels, segment, segConfirmed, chooseHotel, photoCache 
               isConfirmed={segConfirmed?.hotel.id === hotel.id}
               onChoose={() => chooseHotel(hotel, segment)}
               photos={photoCache[hotel.id] ?? '__loading__'}
+              destination={destination}
             />
           </div>
         ))}
@@ -470,6 +499,35 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
         )}
       </div>
 
+      {/* ── Booking.com affiliate banner ── */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        background: 'linear-gradient(135deg, #003580 0%, #0071c2 100%)',
+        borderRadius: 12, padding: '16px 20px', marginBottom: 20, gap: 16, flexWrap: 'wrap',
+      }}>
+        <div>
+          <p style={{ color: 'white', fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 15, margin: '0 0 2px' }}>
+            Ready to book your stay?
+          </p>
+          <p style={{ color: 'rgba(255,255,255,0.75)', fontFamily: "'Lato', sans-serif", fontSize: 13, fontWeight: 300, margin: 0 }}>
+            Search thousands of hotels on Booking.com. Best price guarantee.
+          </p>
+        </div>
+        <a
+          href={bookingComLink(destination)}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            background: '#FFB700', color: '#003580', borderRadius: 8,
+            padding: '10px 20px', fontFamily: "'Poppins', sans-serif",
+            fontSize: 13, fontWeight: 700, textDecoration: 'none',
+            whiteSpace: 'nowrap', flexShrink: 0,
+          }}
+        >
+          Search Hotels →
+        </a>
+      </div>
+
       {/* ── Loading state ── */}
       {loading && (
         <div style={{ background: '#fff', borderRadius: 16, padding: '48px 24px', textAlign: 'center', border: '1.5px solid rgba(0,68,123,0.08)' }}>
@@ -528,6 +586,7 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
               segConfirmed={segConfirmed}
               chooseHotel={chooseHotel}
               photoCache={photoCache}
+              destination={segment.location || destination}
             />
           </div>
         );
