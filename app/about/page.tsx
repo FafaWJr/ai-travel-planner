@@ -6,23 +6,23 @@ import Link from 'next/link'
 const PHOTOS = [
   {
     src: '/about/photo-1.jpg',
-    caption: 'Lost (on purpose) at Shibuya Crossing — Tokyo, Japan',
+    caption: 'Lost (on purpose) at Shibuya Crossing, Tokyo, Japan',
   },
   {
     src: '/about/photo-2.jpg',
-    caption: 'The Sphere lit up at night — Las Vegas, Nevada',
+    caption: 'The Sphere lit up at night, Las Vegas, Nevada',
   },
   {
     src: '/about/photo-3.jpg',
-    caption: 'The iconic welcome sign — Las Vegas, Nevada',
+    caption: 'The iconic welcome sign, Las Vegas, Nevada',
   },
   {
     src: '/about/photo-4.jpg',
-    caption: 'Foam party madness at Coco Bongo — Cancún, Mexico',
+    caption: 'Foam party madness at Coco Bongo, Cancún, Mexico',
   },
   {
     src: '/about/photo-5.jpg',
-    caption: 'Super Nintendo World — Universal Studios Japan',
+    caption: 'Super Nintendo World, Universal Studios Japan',
   },
 ]
 
@@ -141,7 +141,7 @@ export default function AboutPage() {
             fontFamily: 'var(--font-body)', fontSize: 18, lineHeight: 1.8,
             color: 'rgba(255,255,255,0.72)', maxWidth: 560, margin: '0 auto',
           }}>
-            Luna Let&apos;s Go started with a simple frustration and a shared dream — to make every trip as good as the one you imagined.
+            Luna Let&apos;s Go started with a simple frustration and a shared dream: to make every trip as good as the one you imagined.
           </p>
         </div>
       </section>
@@ -206,11 +206,11 @@ export default function AboutPage() {
 
           <div style={{ maxWidth: 720 }}>
             <p style={{ fontFamily: 'var(--font-body)', fontSize: 17, lineHeight: 1.9, color: '#333', marginBottom: 24 }}>
-              We are Wilson and Fatima, a couple bound by one shared obsession: travel. We are the kind of people who, the moment one trip ends, are already dreaming about the next one. We have jumped on flights at short notice, navigated countries without speaking a word of the language, and chased sunrises in places we could barely point to on a map. From the chaos of Shibuya Crossing in Tokyo to foam parties in Cancún, from the neon glow of Las Vegas to the magic of Super Nintendo World in Japan — every trip has given us something we never could have planned for. And that is exactly the point.
+              We are Wilson and Fatima, a couple bound by one shared obsession: travel. We are the kind of people who, the moment one trip ends, are already dreaming about the next one. We have jumped on flights at short notice, navigated countries without speaking a word of the language, and chased sunrises in places we could barely point to on a map. From the chaos of Shibuya Crossing in Tokyo to foam parties in Cancún, from the neon glow of Las Vegas to the magic of Super Nintendo World in Japan. Every trip has given us something we never could have planned for. And that is exactly the point.
             </p>
 
             <p style={{ fontFamily: 'var(--font-body)', fontSize: 17, lineHeight: 1.9, color: '#333', marginBottom: 24 }}>
-              But the planning? That part never felt as exciting as the trip itself. We found ourselves spending hours — sometimes days — sifting through generic blog posts, tourist trap recommendations and conflicting reviews, trying to piece together an itinerary that actually matched who we are and what we genuinely wanted to do. We did not want the highlights reel that everyone gets. We wanted <em>our</em> kind of trip.
+              But the planning? That part never felt as exciting as the trip itself. We found ourselves spending hours, sometimes days, sifting through generic blog posts, tourist trap recommendations and conflicting reviews, trying to piece together an itinerary that actually matched who we are and what we genuinely wanted to do. We did not want the highlights reel that everyone gets. We wanted <em>our</em> kind of trip.
             </p>
 
             <div style={{
@@ -224,11 +224,11 @@ export default function AboutPage() {
             </div>
 
             <p style={{ fontFamily: 'var(--font-body)', fontSize: 17, lineHeight: 1.9, color: '#333', marginBottom: 24 }}>
-              That is exactly what Luna Let&apos;s Go was born to solve. We built a platform that truly listens to you — your travel style, your group, your budget, your passions — and builds a genuinely personalised trip in seconds. Not a template. Not a copy and paste. A plan made for you.
+              That is exactly what Luna Let&apos;s Go was born to solve. We built a platform that truly listens to you, your travel style, your group, your budget, your passions, and builds a genuinely personalised trip in seconds. Not a template. Not a copy and paste. A plan made for you.
             </p>
 
             <p style={{ fontFamily: 'var(--font-body)', fontSize: 17, lineHeight: 1.9, color: '#333', marginBottom: 0 }}>
-              Yes, the plans are AI-generated, and we are proud of it. But everything we built around that intelligence — the personalisation engine, the refinement tools, Luna the travel assistant — was crafted with real intention and care. We are always improving it, always listening, always asking how we can make this feel even more like yours. Our goal has never changed. We want to give every traveller the chance to have the trip of their life.
+              Yes, the plans are AI-generated, and we are proud of it. But everything we built around that intelligence, the personalisation engine, the refinement tools, Luna the travel assistant, was crafted with real intention and care. We are always improving it, always listening, always asking how we can make this feel even more like yours. Our goal has never changed. We want to give every traveller the chance to have the trip of their life.
             </p>
           </div>
         </div>
@@ -242,7 +242,7 @@ export default function AboutPage() {
             Our mission is simple.
           </h2>
           <p style={{ fontFamily: 'var(--font-body)', fontSize: 18, lineHeight: 1.85, color: 'rgba(255,255,255,0.78)', margin: '0 auto', maxWidth: 620 }}>
-            Give every person planning a trip the opportunity to have the <strong style={{ color: '#FFBD59' }}>best planner in the world</strong> — one shaped completely around their personal desires, travel style, and idea of a perfect trip. No compromises, no regrets.
+            Give every person planning a trip the opportunity to have the <strong style={{ color: '#FFBD59' }}>best planner in the world</strong>, one shaped completely around their personal desires, travel style, and idea of a perfect trip. No compromises, no regrets.
           </p>
         </div>
       </section>
