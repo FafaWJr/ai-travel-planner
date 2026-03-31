@@ -100,7 +100,7 @@ function NavInner() {
             </Link>
           )}
 
-          <Link href="/plan" target="_blank" rel="noopener noreferrer" style={{ marginLeft: 8, background: 'var(--navy)', color: '#fff', fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 14, padding: '10px 22px', borderRadius: 'var(--r-pill)', textDecoration: 'none' }}>
+          <Link href="/start" style={{ marginLeft: 8, background: 'var(--navy)', color: '#fff', fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 14, padding: '10px 22px', borderRadius: 'var(--r-pill)', textDecoration: 'none' }}>
             Plan a Trip
           </Link>
 
@@ -254,7 +254,7 @@ function NavInner() {
         </nav>
 
         <div style={{ padding: '16px 20px', borderTop: '1px solid var(--border)' }}>
-          <Link href="/plan" target="_blank" rel="noopener noreferrer" onClick={() => setDrawerOpen(false)} style={{ display: 'block', textAlign: 'center', background: 'var(--navy)', color: '#fff', fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 14, padding: '12px', borderRadius: 'var(--r-pill)', textDecoration: 'none' }}>
+          <Link href="/start" onClick={() => setDrawerOpen(false)} style={{ display: 'block', textAlign: 'center', background: 'var(--navy)', color: '#fff', fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 14, padding: '12px', borderRadius: 'var(--r-pill)', textDecoration: 'none' }}>
             Plan a Trip
           </Link>
         </div>

@@ -404,7 +404,7 @@ export default function HomePage() {
       <section className="meet-luna" id="meet-luna">
         <div className="meet-luna-inner">
           <div className="luna-avatar-wrap">
-            <img src="/luna5.png" alt="Luna, your AI travel companion" />
+            <img src="/luna_BLUE.png" alt="Luna, your AI travel companion" />
           </div>
           <div className="luna-copy">
             <div className="section-label">Meet Luna</div>
