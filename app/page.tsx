@@ -1,10 +1,31 @@
 'use client';
-import { useRef } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import NavBar from '@/components/NavBar';
 
 export default function HomePage() {
   const carouselRef = useRef<HTMLDivElement>(null);
+  const autoPlayRef = useRef<NodeJS.Timeout | null>(null);
+
+  const stopAutoPlay = useCallback(() => {
+    if (autoPlayRef.current) { clearInterval(autoPlayRef.current); autoPlayRef.current = null; }
+  }, []);
+
+  const startAutoPlay = useCallback(() => {
+    stopAutoPlay();
+    autoPlayRef.current = setInterval(() => {
+      const el = carouselRef.current;
+      if (!el) return;
+      const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 4;
+      if (atEnd) { el.scrollTo({ left: 0, behavior: 'smooth' }); }
+      else { el.scrollBy({ left: 320, behavior: 'smooth' }); }
+    }, 3500);
+  }, [stopAutoPlay]);
+
+  useEffect(() => {
+    startAutoPlay();
+    return () => stopAutoPlay();
+  }, [startAutoPlay, stopAutoPlay]);
 
   return (
     <>
@@ -421,8 +442,8 @@ export default function HomePage() {
           </div>
           <Link href="/trip-ideas" style={{fontFamily:"'Lato',sans-serif",fontSize:14,fontWeight:700,color:'var(--orange)',textDecoration:'none'}}>See all ideas &rarr;</Link>
         </div>
-        <div className="ideas-carousel-wrap">
-          <button className="carousel-btn prev" onClick={()=>carouselRef.current?.scrollBy({left:-320,behavior:'smooth'})}>
+        <div className="ideas-carousel-wrap" onMouseEnter={stopAutoPlay} onMouseLeave={startAutoPlay}>
+          <button className="carousel-btn prev" onClick={()=>{ carouselRef.current?.scrollBy({left:-320,behavior:'smooth'}); startAutoPlay(); }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00447B" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6" /></svg>
           </button>
           <div className="ideas-carousel" ref={carouselRef}>
@@ -452,7 +473,7 @@ export default function HomePage() {
               </Link>
             ))}
           </div>
-          <button className="carousel-btn next" onClick={()=>carouselRef.current?.scrollBy({left:320,behavior:'smooth'})}>
+          <button className="carousel-btn next" onClick={()=>{ carouselRef.current?.scrollBy({left:320,behavior:'smooth'}); startAutoPlay(); }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00447B" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6" /></svg>
           </button>
         </div>
