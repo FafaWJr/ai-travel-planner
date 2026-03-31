@@ -1,21 +1,10 @@
 'use client';
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import Link from 'next/link';
+import NavBar from '@/components/NavBar';
 
 export default function HomePage() {
-  const navRef = useRef<HTMLElement>(null);
   const carouselRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (navRef.current) {
-        navRef.current.style.boxShadow =
-          window.scrollY > 10 ? '0 2px 16px rgba(0,68,123,0.08)' : 'none';
-      }
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   return (
     <>
@@ -202,23 +191,7 @@ export default function HomePage() {
       `}</style>
 
       {/* NAVBAR */}
-      <nav ref={navRef}>
-        <div className="nav-inner">
-          <div className="nav-logo">
-            <Link href="/"><img src="/luna_letsgo_bigger_3.PNG" alt="Luna Let's Go" /></Link>
-          </div>
-          <div className="nav-links">
-            <a href="#trip-ideas" className="active">Trip Ideas</a>
-            <a href="#quiz">Quiz</a>
-            <Link href="/blog">Blog</Link>
-            <Link href="/deals">Deals</Link>
-          </div>
-          <div className="nav-actions">
-            <Link href="/auth" className="btn-login">Login</Link>
-            <Link href="/start" className="btn-plan">Plan a Trip</Link>
-          </div>
-        </div>
-      </nav>
+      <NavBar />
 
       {/* HERO */}
       <section className="hero" id="hero">
