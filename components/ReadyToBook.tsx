@@ -54,7 +54,7 @@ const partners = [
 
 export default function ReadyToBook({ destination }: ReadyToBookProps) {
   return (
-    <div style={{ border: '1px solid #e5e7eb', borderRadius: '16px', overflow: 'hidden', fontFamily: 'Inter, sans-serif', maxWidth: '860px', margin: '0 auto' }}>
+    <div style={{ border: '1px solid #e5e7eb', borderRadius: '16px', overflow: 'hidden', fontFamily: 'Inter, sans-serif', maxWidth: '860px', margin: '32px auto 0' }}>
 
       {/* Header */}
       <div style={{ backgroundColor: '#00447B', padding: '18px 24px' }}>
