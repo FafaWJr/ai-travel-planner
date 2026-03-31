@@ -515,7 +515,7 @@ export default function HomePage() {
         <Link href="/quiz" style={{display:'inline-block',background:'var(--orange)',color:'white',borderRadius:50,padding:'16px 44px',fontFamily:"'Poppins',sans-serif",fontSize:16,fontWeight:500,textDecoration:'none',marginTop:8}}>Take the quiz &rarr;</Link>
       </section>
 
-      {/* FAQ — GEO optimised: conversational Q&A for AI citation */}
+      {/* FAQ, GEO optimised: conversational Q&A for AI citation */}
       <section id="faq" style={{ background: '#F8FBFF', padding: '80px 24px' }}>
         <div style={{ maxWidth: 800, margin: '0 auto' }}>
           <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: 12, fontWeight: 700, color: '#FF8210', letterSpacing: '0.12em', textTransform: 'uppercase', borderBottom: '2px solid #FF8210', display: 'inline-block', paddingBottom: 3, marginBottom: 16 }}>FAQ</p>
@@ -526,27 +526,27 @@ export default function HomePage() {
             {[
               {
                 q: 'What is Luna Let\'s Go?',
-                a: "Luna Let's Go is a free AI travel planner that creates personalised, day-by-day trip itineraries in under 30 seconds. You tell Luna your destination, travel dates, group size, budget, and travel style — and the AI builds a complete, detailed plan including activities, accommodation suggestions, getting around, budget estimates, and local tips.",
+                a: "Luna Let's Go is a free AI travel planner that creates personalised, day-by-day trip itineraries in under 30 seconds. You tell Luna your destination, travel dates, group size, budget, and travel style, and the AI builds a complete, detailed plan including activities, accommodation suggestions, getting around, budget estimates, and local tips.",
               },
               {
                 q: 'How does the AI travel planner work?',
-                a: "Enter your trip details — destination, travel dates, number of travellers, budget level, and preferred travel styles (beach, adventure, culture, family, romance, etc.). Luna's AI analyses your preferences and generates a complete personalised itinerary with a day-by-day schedule, hotel recommendations, transport tips, a budget breakdown, and practical advice for your destination.",
+                a: "Enter your trip details: destination, travel dates, number of travellers, budget level, and preferred travel styles (beach, adventure, culture, family, romance, etc.). Luna's AI analyses your preferences and generates a complete personalised itinerary with a day-by-day schedule, hotel recommendations, transport tips, a budget breakdown, and practical advice for your destination.",
               },
               {
                 q: 'Is Luna Let\'s Go free to use?',
-                a: "Yes — Luna Let's Go is completely free. You can generate a full personalised travel itinerary at no cost, with no account required to get started.",
+                a: "Yes. Luna Let's Go is completely free. You can generate a full personalised travel itinerary at no cost, with no account required to get started.",
               },
               {
                 q: 'What types of trips can Luna plan?',
-                a: "Luna can plan virtually any type of trip — beach holidays, city breaks, mountain adventures, cultural tours, family holidays, romantic getaways, solo travel, group trips, wellness retreats, and more. It supports all budget levels from budget-friendly to premium luxury.",
+                a: "Luna can plan virtually any type of trip: beach holidays, city breaks, mountain adventures, cultural tours, family holidays, romantic getaways, solo travel, group trips, wellness retreats, and more. It supports all budget levels from budget-friendly to premium luxury.",
               },
               {
                 q: 'Can Luna plan family trips with children?',
-                a: "Absolutely. You can specify the ages of your children, and Luna tailors all activities to be age-appropriate and family-friendly — adjusting the pace, activity types, and accommodation recommendations to suit families travelling with kids.",
+                a: "Absolutely. You can specify the ages of your children, and Luna tailors all activities to be age-appropriate and family-friendly, adjusting the pace, activity types, and accommodation recommendations to suit families travelling with kids.",
               },
               {
                 q: 'How long does it take to generate a travel itinerary?',
-                a: "Luna generates a complete, detailed travel itinerary in under 30 seconds. The plan includes a day-by-day schedule, accommodation options, transport advice, budget breakdown, and local tips — all personalised to your trip.",
+                a: "Luna generates a complete, detailed travel itinerary in under 30 seconds. The plan includes a day-by-day schedule, accommodation options, transport advice, budget breakdown, and local tips, all personalised to your trip.",
               },
             ].map(({ q, a }, i) => (
               <div
