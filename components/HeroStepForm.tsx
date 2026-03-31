@@ -168,12 +168,24 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
 
   const today = new Date().toISOString().split('T')[0];
 
+  const saveFormDraft = () => {
+    try {
+      localStorage.setItem('luna_trip_draft', JSON.stringify({
+        dest, dep, ret, adults, kids, companion, styles, budget, notes,
+        updatedAt: new Date().toISOString(),
+      }));
+    } catch {}
+  };
+
   const goNext = (nextStep: number) => {
     const errs: Record<string,string> = {};
     if (!dest.trim()) errs.dest = 'Please enter your destination.';
     if (!dep) errs.dep = 'Please choose a start date.';
     setErrors(errs);
-    if (Object.keys(errs).length === 0) setStep(nextStep);
+    if (Object.keys(errs).length === 0) {
+      saveFormDraft();
+      setStep(nextStep);
+    }
   };
 
   useEffect(() => {
@@ -360,7 +372,7 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
             </div>
             <div style={{ display:'flex',justifyContent:'space-between',paddingTop:4 }}>
               <button onClick={()=>setStep(0)} style={navBtn(false)}>← Back</button>
-              <button onClick={()=>setStep(2)} style={navBtn()}>Next →</button>
+              <button onClick={()=>{ saveFormDraft(); setStep(2); }} style={navBtn()}>Next →</button>
             </div>
           </div>
         )}

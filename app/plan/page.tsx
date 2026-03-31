@@ -12,6 +12,7 @@ import ReadyToBook from '@/components/ReadyToBook';
 import { useAuth } from '@/context/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import { trackTripPlanGenerated, trackChatMessageSent } from '@/lib/analytics';
+import { generateTripPDF } from '@/lib/generateTripPDF';
 
 type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'night';
 const SLOTS_LIST: { key: TimeSlot; label: string; icon: string }[] = [
@@ -357,6 +358,9 @@ function PlanContent() {
   const [gateFeature, setGateFeature] = useState<string | undefined>(undefined);
   const [saveLoading, setSaveLoading] = useState(false);
   const [savedTripId, setSavedTripId] = useState<string | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
+  const markDirty = () => { if (savedTripId) setIsDirty(true); };
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
   const [initialItineraryDays, setInitialItineraryDays] = useState<Day[] | undefined>(undefined);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -409,12 +413,41 @@ function PlanContent() {
         const json = await res.json();
         if (json.id) setSavedTripId(json.id);
       }
+      setIsDirty(false);
       setToast(savedTripId ? 'Trip updated! ✓' : 'Trip saved! ✓');
     } catch (err) {
       console.error('[saveTrip] error:', err);
       setToast('Could not save trip. Please try again.');
     } finally {
       setSaveLoading(false);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    if (!user) { openGate('Print / Save PDF'); return; }
+    setIsExportingPDF(true);
+    try {
+      const ciM = prompt.match(/from (\d{4}-\d{2}-\d{2})/);
+      const coM = prompt.match(/to (\d{4}-\d{2}-\d{2})/);
+      const dest = prompt.replace(/^plan a (trip to |)?/i,'').replace(/\b(from \d{4}-\d{2}-\d{2}.*)$/i,'').trim().split(' ').slice(0,5).join(' ');
+      const days = itineraryRef.current?.getDaysSnapshot() ?? [];
+      await generateTripPDF({
+        destination: dest,
+        startDate: ciM?.[1],
+        endDate: coM?.[1],
+        itinerary: days.map(d => ({
+          day: d.number,
+          title: d.title,
+          activities: d.activities
+            .filter(a => a.status !== 'declined')
+            .map(a => ({ name: a.text.replace(/\*\*/g, '') })),
+        })),
+      });
+    } catch (err) {
+      console.error('PDF export failed:', err);
+      alert('Could not export PDF. Please try again.');
+    } finally {
+      setIsExportingPDF(false);
     }
   };
 
@@ -718,17 +751,18 @@ function PlanContent() {
                       </div>
                       <div style={{ display:'flex', gap:8, alignItems:'center', flexShrink:0, flexWrap:'wrap' }}>
                   <button
-                    onClick={() => user ? window.print() : openGate('Print / Save PDF')}
-                    style={{ background:'none', border:'1.5px solid rgba(0,68,123,0.20)', color:'#00447B', fontFamily:"'Poppins',sans-serif", fontWeight:500, fontSize:13, padding:'7px 16px', borderRadius:100, cursor:'pointer' }}
+                    onClick={handleExportPDF}
+                    disabled={isExportingPDF}
+                    style={{ background:'none', border:'1.5px solid rgba(0,68,123,0.20)', color:'#00447B', fontFamily:"'Poppins',sans-serif", fontWeight:500, fontSize:13, padding:'7px 16px', borderRadius:100, cursor: isExportingPDF ? 'default' : 'pointer', opacity: isExportingPDF ? 0.7 : 1 }}
                   >
-                    Print / Save PDF
+                    {isExportingPDF ? 'Generating PDF…' : 'Export PDF'}
                   </button>
                   <button
                     onClick={saveTrip}
-                    disabled={saveLoading}
-                    style={{ background: saveLoading ? 'rgba(255,130,16,0.6)' : savedTripId ? '#16A34A' : '#FF8210', color:'#fff', border:'none', fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:13, padding:'8px 20px', borderRadius:100, cursor: saveLoading ? 'default' : 'pointer', transition:'background 0.15s' }}
+                    disabled={saveLoading || (!!savedTripId && !isDirty)}
+                    style={{ background: saveLoading ? 'rgba(255,130,16,0.6)' : (savedTripId && !isDirty) ? '#16A34A' : '#FF8210', color:'#fff', border:'none', fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:13, padding:'8px 20px', borderRadius:100, cursor: (saveLoading || (!!savedTripId && !isDirty)) ? 'default' : 'pointer', transition:'background 0.15s' }}
                   >
-                    {saveLoading ? 'Saving…' : savedTripId ? '✓ Saved' : 'Save trip'}
+                    {saveLoading ? 'Saving…' : (savedTripId && !isDirty) ? '✓ Saved' : savedTripId ? 'Save changes' : 'Save trip'}
                   </button>
                   <button onClick={()=>router.push('/')} style={{ background:'#00447B', color:'#fff', fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:13, padding:'8px 20px', borderRadius:100, cursor:'pointer', border:'none' }}>
                     New trip
@@ -777,7 +811,7 @@ function PlanContent() {
                   tripPrompt={prompt}
                   photos={photos}
                   acceptedHotels={acceptedHotels}
-                  onActivityStatusChange={() => setItineraryVersion(v => v + 1)}
+                  onActivityStatusChange={() => { setItineraryVersion(v => v + 1); markDirty(); }}
                   onPlaceHover={handlePlaceMouseOver}
                   onPlaceLeave={handlePlaneMouseLeave}
                   isGuest={!user}
@@ -808,7 +842,7 @@ function PlanContent() {
                       onRemoveActivitiesMatching={(pattern) => {
                         itineraryRef.current?.removeActivitiesMatching(pattern);
                       }}
-                      onHotelsConfirmed={setAcceptedHotels}
+                      onHotelsConfirmed={(hotels) => { setAcceptedHotels(hotels); markDirty(); }}
                     />
                   </div>
                 );
