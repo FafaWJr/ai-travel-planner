@@ -41,6 +41,7 @@ interface Props {
   onAddToItinerary: (text: string, dayNum: number, slot: TimeSlot) => void;
   onRemoveActivitiesMatching: (pattern: string) => void;
   onHotelsConfirmed: (hotels: AcceptedHotel[]) => void;
+  externalAccepted?: AcceptedHotel[];
 }
 
 /* ─── Quick filter options ───────────────────────────────────── */
@@ -321,7 +322,7 @@ async function fetchHotelPhotosFromAPI(hotelName: string, city: string): Promise
 }
 
 /* ─── Main component ─────────────────────────────────────────── */
-export default function StayTab({ prompt, destination, checkIn, checkOut, budget, itineraryRef, onAddToItinerary, onRemoveActivitiesMatching, onHotelsConfirmed }: Props) {
+export default function StayTab({ prompt, destination, checkIn, checkOut, budget, itineraryRef, onAddToItinerary, onRemoveActivitiesMatching, onHotelsConfirmed, externalAccepted }: Props) {
   const [segments,      setSegments]      = useState<LocationSegment[]>([]);
   const [seenIds,       setSeenIds]       = useState<Set<string>>(new Set());
   const [confirmed,     setConfirmed]     = useState<Record<string, AcceptedHotel>>({});
@@ -335,6 +336,23 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
   const hasFetched = useRef(false);
   const allSeenNamesRef = useRef<string[]>([]);
   const fetchedRef = useRef<Set<string>>(new Set());
+
+  /* ── Sync Luna-added hotels into confirmed state ── */
+  useEffect(() => {
+    if (!externalAccepted || externalAccepted.length === 0) return;
+    setConfirmed(prev => {
+      const updated = { ...prev };
+      for (const ah of externalAccepted) {
+        const key = ah.segment.location || ah.hotel.name;
+        if (!updated[key] || updated[key].hotel.id !== ah.hotel.id) {
+          updated[key] = ah;
+        }
+      }
+      return updated;
+    });
+    // Kick off photo fetches for externally-confirmed hotels
+    fetchPhotos(externalAccepted.map(ah => ah.hotel));
+  }, [externalAccepted]); // eslint-disable-line
 
   /* ── Fetch hotel photos via Google Places API ── */
   const fetchPhotos = useCallback(async (hotels: Hotel[]) => {
@@ -508,6 +526,15 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
           Search Hotels →
         </a>
       </div>
+
+      {/* ── Luna-confirmed hotels (not yet in AI suggestion segments) ── */}
+      {(externalAccepted ?? []).filter(ah =>
+        !segments.some(s => s.location === ah.segment.location)
+      ).map(ah => (
+        <div key={ah.hotel.id} style={{ marginBottom: 20 }}>
+          <ConfirmedSummary hotel={ah.hotel} segment={ah.segment} />
+        </div>
+      ))}
 
       {/* ── Loading state ── */}
       {loading && (

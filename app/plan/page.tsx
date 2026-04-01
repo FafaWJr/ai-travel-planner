@@ -850,6 +850,7 @@ function PlanContent() {
                       onRemoveActivitiesMatching={(pattern) => {
                         itineraryRef.current?.removeActivitiesMatching(pattern);
                       }}
+                      externalAccepted={acceptedHotels}
                       onHotelsConfirmed={(hotels) => { setAcceptedHotels(hotels); markDirty(); }}
                     />
                   </div>
