@@ -309,26 +309,15 @@ function ConfirmedSummary({ hotel, segment }: AcceptedHotel) {
   );
 }
 
-/* ─── Wikipedia photo lookup ─────────────────────────────────── */
-async function wikiPhoto(query: string): Promise<string | null> {
+/* ─── Google Places hotel photo lookup ───────────────────────── */
+async function fetchHotelPhotosFromAPI(hotelName: string, city: string): Promise<string[]> {
   try {
-    const ctrl = new AbortController();
-    const tid = setTimeout(() => ctrl.abort(), 6000);
-    const params = new URLSearchParams({
-      action: 'query', titles: query, prop: 'pageimages',
-      piprop: 'original|thumbnail', pithumbsize: '800',
-      pilimit: '1', redirects: '1', format: 'json', origin: '*',
-    });
-    const r = await fetch(`https://en.wikipedia.org/w/api.php?${params}`, { signal: ctrl.signal });
-    clearTimeout(tid);
-    if (!r.ok) return null;
-    const d = await r.json();
-    const pages = Object.values((d?.query?.pages ?? {})) as any[];
-    if (!pages.length) return null;
-    const page = pages[0];
-    if (page.pageid === -1 || 'missing' in page) return null;
-    return page.original?.source ?? page.thumbnail?.source ?? null;
-  } catch { return null; }
+    const params = new URLSearchParams({ name: hotelName, city });
+    const res = await fetch(`/api/hotel-photos?${params}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data.photos) ? data.photos : [];
+  } catch { return []; }
 }
 
 /* ─── Main component ─────────────────────────────────────────── */
@@ -347,25 +336,17 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
   const allSeenNamesRef = useRef<string[]>([]);
   const fetchedRef = useRef<Set<string>>(new Set());
 
-  /* ── Fetch hotel photos via Wikipedia REST API ── */
+  /* ── Fetch hotel photos via Google Places API ── */
   const fetchPhotos = useCallback(async (hotels: Hotel[]) => {
     const unfetched = hotels.filter(h => !fetchedRef.current.has(h.id));
     if (unfetched.length === 0) return;
     unfetched.forEach(h => fetchedRef.current.add(h.id));
 
-    const cityPhoto = await wikiPhoto(destination);
-
     await Promise.all(unfetched.map(async (hotel) => {
-      const [hotelPhoto, areaPhoto] = await Promise.all([
-        wikiPhoto(hotel.name),
-        wikiPhoto(`${hotel.neighborhood} ${destination}`),
-      ]);
-      const urls = [hotelPhoto, areaPhoto, cityPhoto].filter((u): u is string => !!u);
-      const unique = [...new Set(urls)].slice(0, 3);
-      // Use picsum as guaranteed fallback when Wikipedia returns nothing
+      const photos = await fetchHotelPhotosFromAPI(hotel.name, destination);
       setPhotoCache(prev => ({
         ...prev,
-        [hotel.id]: unique.length > 0 ? unique : [picsumFallback(hotel.id)],
+        [hotel.id]: photos.length > 0 ? photos : [picsumFallback(hotel.id)],
       }));
     }));
   }, [destination]);

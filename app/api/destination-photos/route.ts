@@ -1,179 +1,143 @@
 import { NextRequest } from 'next/server';
 
-// High-quality generic travel fallbacks - used only if all strategies fail
-const FALLBACK_PHOTOS = [
-  'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1200&q=80',
+// Generic travel fallbacks — used only when both APIs fail
+const TRAVEL_FALLBACKS = [
+  'https://images.unsplash.com/photo-1488085061387-422e29b40080?w=1200&q=80',
   'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1200&q=80',
-  'https://images.unsplash.com/photo-1500835556837-99ac94a94552?w=1200&q=80',
   'https://images.unsplash.com/photo-1530521954074-e64f6810b32d?w=1200&q=80',
+  'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1200&q=80',
   'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1200&q=80',
 ];
 
-// Filename/URL fragments that identify non-tourism content
-const EXCLUDED = /flag|coat.of.arm|emblem|seal|coa_|arms_of|logo|icon|symbol|stamp|portrait|bust|military|war|battle|bomb|napalm|soldier|army|navy|communist|rally|protest|politic|propaganda|election|weapon|gun|tank|artillery|massacre|execution|president|premier|minister|inauguration|signing|handshake|meeting|summit|conference|satellite|locator|location|map_of|map\.svg|route_|diagram|plan_of|schematic|chart|graph|wikivoyage|wv_banner|banner_|relief_map|blank_map|geograph_of|topograph|geological|tectonic|administrative|postage_stamp|currency|banknote|coin_|census|statistic|coat_of|heraldry|verwaltung|karte_/i;
-
 /**
- * Extracts a clean, tourism-search-ready city name.
- * Handles "Vietnam, Vietnam" (country-only destination) by appending "tourism"
- * so searches return travel content instead of national symbols.
+ * Resolves a Google Places photo_reference to a direct CDN URL.
+ * Returns null if the API key is missing or the request fails.
  */
-function extractCityForSearch(rawDestination: string): { searchTerm: string; displayCity: string } {
-  const parts = rawDestination.split(',').map(s => s.trim()).filter(Boolean);
-  const city = parts[0] ?? rawDestination.trim();
-  const country = parts[parts.length - 1] ?? city;
-
-  // "Vietnam, Vietnam" or "France, France" - destination is just a country name
-  // Appending "tourism" forces travel results and avoids national flag/emblem results
-  if (parts.length >= 2 && city.toLowerCase() === country.toLowerCase()) {
-    console.log(`[photos] Country-only destination detected: "${city}" - using "${city} tourism"`);
-    return { searchTerm: `${city} tourism`, displayCity: city };
-  }
-
-  return { searchTerm: city, displayCity: city };
-}
-
-/**
- * Tourism-specific search queries in priority order.
- * Never searches bare city name alone - always forces travel/scenic intent.
- */
-function buildTourismQueries(searchTerm: string): string[] {
-  return [
-    `${searchTerm} travel tourism`,
-    `${searchTerm} scenic landscape`,
-    `${searchTerm} tourist attraction`,
-    `${searchTerm} landmark beauty`,
-    `${searchTerm} nature panorama`,
-    `${searchTerm} old town architecture`,
-    `${searchTerm} beach coast`,
-  ];
-}
-
-function isGoodTravelPhoto(info: { url: string; width: number; height: number; mime: string }): boolean {
-  if (info.mime !== 'image/jpeg' && info.mime !== 'image/png') return false;
-  if (!info.width || !info.height) return false;
-  if (info.width < 800) return false;
-  // Must be landscape orientation
-  if (info.width < info.height * 1.2) return false;
-  // Reject non-travel filenames
-  if (EXCLUDED.test(info.url)) return false;
-  return true;
-}
-
-/**
- * Wikipedia article hero image - always the single most iconic shot.
- * Vietnam → Ha Long Bay, Barcelona → Sagrada Família, Paris → Eiffel Tower.
- * Uses the base city name (without "tourism" suffix) for the article lookup.
- */
-async function fetchWikipediaHeroImage(displayCity: string): Promise<string | null> {
+async function resolveGooglePhotoRef(
+  photoRef: string,
+  apiKey: string,
+  maxwidth = 1200,
+): Promise<string | null> {
   try {
-    const res = await fetch(
-      `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(displayCity)}`,
-      { signal: AbortSignal.timeout(5000), next: { revalidate: 86400 }, headers: { 'User-Agent': 'AITravelPlanner/1.0' } }
-    );
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (data.type?.includes('not_found')) return null;
-    const url: string | null = data.originalimage?.source ?? data.thumbnail?.source ?? null;
-    if (!url) return null;
-    if (EXCLUDED.test(url)) {
-      console.log(`[photos] Hero image rejected (EXCLUDED match): ${url.split('/').pop()}`);
-      return null;
-    }
-    // Extra check: reject if URL looks like an SVG-derived PNG (usually flags/emblems)
-    if (/\.svg\.(png|jpg)/i.test(url)) {
-      console.log(`[photos] Hero image rejected (SVG-derived): ${url.split('/').pop()}`);
-      return null;
-    }
-    return url;
+    const url = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=${maxwidth}&photo_reference=${encodeURIComponent(photoRef)}&key=${apiKey}`;
+    const res = await fetch(url, { redirect: 'follow', next: { revalidate: 86400 } });
+    if (!res.ok && res.status !== 302) return null;
+    return res.url || null;
   } catch {
     return null;
   }
 }
 
 /**
- * Wikimedia Commons tourism-focused search.
- * Uses travel/scenic/tourism-appended queries and strict quality + content filters.
+ * Google Places Text Search for tourist attractions in the city.
+ * Returns up to `needed` direct CDN photo URLs.
  */
-async function fetchCommonsPhotos(searchTerm: string, needed: number): Promise<string[]> {
-  const queries = buildTourismQueries(searchTerm);
-  const photos: string[] = [];
+async function fetchGooglePlacesDestinationPhotos(
+  city: string,
+  country: string,
+  needed: number,
+): Promise<string[]> {
+  const GOOGLE_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
+  if (!GOOGLE_API_KEY) return [];
 
-  for (const query of queries) {
-    if (photos.length >= needed) break;
-    try {
-      const res = await fetch(
-        `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrnamespace=6&prop=imageinfo&iiprop=url|dimensions|mime&gsrlimit=30&format=json&origin=*`,
-        { signal: AbortSignal.timeout(7000), next: { revalidate: 86400 }, headers: { 'User-Agent': 'AITravelPlanner/1.0' } }
-      );
-      if (!res.ok) continue;
-      const data = await res.json();
-      const pages = Object.values(data?.query?.pages ?? {}) as any[];
+  try {
+    const query = `${city} tourist attraction landmark`;
+    const searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${GOOGLE_API_KEY}`;
+    const searchRes = await fetch(searchUrl, {
+      signal: AbortSignal.timeout(8000),
+      next: { revalidate: 3600 },
+    });
+    if (!searchRes.ok) return [];
+    const searchData = await searchRes.json();
 
-      // Prefer highest resolution (largest width = best quality)
-      pages.sort((a, b) => (b.imageinfo?.[0]?.width ?? 0) - (a.imageinfo?.[0]?.width ?? 0));
-
-      let addedThisRound = 0;
-      for (const page of pages) {
-        if (photos.length >= needed) break;
-        const info = page.imageinfo?.[0];
-        if (!info?.url) continue;
-        if (!isGoodTravelPhoto(info)) continue;
-        if (!photos.includes(info.url)) {
-          photos.push(info.url);
-          addedThisRound++;
-        }
-      }
-      console.log(`[photos] Query "${query}" → ${addedThisRound} accepted`);
-    } catch {
-      continue;
+    if (!searchData.results || searchData.results.length === 0) {
+      console.log(`[destination-photos] Google Places: no results for "${query}"`);
+      return [];
     }
-  }
 
-  return photos;
+    // Collect photo_references from top places (up to 1 photo per place)
+    const photoRefs: string[] = [];
+    for (const place of searchData.results.slice(0, needed + 3)) {
+      if (photoRefs.length >= needed) break;
+      const ref = place.photos?.[0]?.photo_reference;
+      if (ref) photoRefs.push(ref);
+    }
+
+    // Resolve all refs to CDN URLs in parallel
+    const urls = await Promise.all(
+      photoRefs.map(ref => resolveGooglePhotoRef(ref, GOOGLE_API_KEY, 1200)),
+    );
+    const valid = urls.filter((u): u is string => !!u && u.startsWith('http'));
+    console.log(`[destination-photos] Google Places: ${valid.length} photos for "${city}"`);
+    return valid;
+  } catch (err) {
+    console.error('[destination-photos] Google Places error:', err);
+    return [];
+  }
+}
+
+/**
+ * Pexels travel photo search — used when Google Places returns fewer than needed.
+ */
+async function fetchPexelsDestinationPhotos(city: string, needed: number): Promise<string[]> {
+  const PEXELS_KEY = process.env.PEXELS_API_KEY;
+  if (!PEXELS_KEY) return [];
+
+  try {
+    const query = encodeURIComponent(`${city} travel tourism`);
+    const res = await fetch(
+      `https://api.pexels.com/v1/search?query=${query}&per_page=${needed}&orientation=landscape`,
+      { headers: { Authorization: PEXELS_KEY }, signal: AbortSignal.timeout(6000), next: { revalidate: 3600 } },
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    if (!data.photos || data.photos.length === 0) return [];
+    const urls = data.photos.map((p: { src: { large2x: string } }) => p.src.large2x);
+    console.log(`[destination-photos] Pexels: ${urls.length} photos for "${city}"`);
+    return urls;
+  } catch (err) {
+    console.error('[destination-photos] Pexels error:', err);
+    return [];
+  }
 }
 
 export async function GET(request: NextRequest) {
   const rawCity = request.nextUrl.searchParams.get('city') || '';
   if (!rawCity.trim()) {
-    return Response.json({ photos: FALLBACK_PHOTOS.slice(0, 3), source: 'fallback' });
+    return Response.json({ photos: TRAVEL_FALLBACKS.slice(0, 3), source: 'fallback' });
   }
 
-  const { searchTerm, displayCity } = extractCityForSearch(rawCity);
-  console.log(`[photos] raw="${rawCity}" displayCity="${displayCity}" searchTerm="${searchTerm}"`);
+  const parts = rawCity.split(',').map(s => s.trim()).filter(Boolean);
+  const city = parts[0];
+  const country = parts[parts.length - 1] ?? city;
+
+  console.log(`[destination-photos] city="${city}" country="${country}"`);
 
   const photos: string[] = [];
 
-  // Step 1: Wikipedia hero - the single most iconic shot, using the real city name
-  const hero = await fetchWikipediaHeroImage(displayCity);
-  if (hero) {
-    photos.push(hero);
-    console.log(`[photos] Hero accepted: ${hero.split('/').pop()?.slice(0, 60)}`);
-  } else {
-    console.log(`[photos] No valid hero image for "${displayCity}"`);
-  }
+  // Step 1: Google Places tourist attraction search
+  const googlePhotos = await fetchGooglePlacesDestinationPhotos(city, country, 3);
+  photos.push(...googlePhotos);
 
-  // Step 2: Tourism-targeted Commons search to fill remaining slots
-  const scenic = await fetchCommonsPhotos(searchTerm, 5 - photos.length);
-  console.log(`[photos] Commons returned ${scenic.length} scenic photos`);
-  for (const url of scenic) {
-    if (!photos.includes(url)) photos.push(url);
-  }
-
-  // Step 3: If still not enough, retry with just the bare city name
-  if (photos.length < 3 && searchTerm !== displayCity) {
-    const extra = await fetchCommonsPhotos(displayCity, 3 - photos.length);
-    for (const url of extra) {
+  // Step 2: Pexels to fill remaining slots
+  if (photos.length < 3) {
+    const pexels = await fetchPexelsDestinationPhotos(city, 3 - photos.length);
+    for (const url of pexels) {
       if (!photos.includes(url)) photos.push(url);
     }
   }
 
-  const finalPhotos = photos.slice(0, 5);
-  console.log(`[photos] Final count: ${finalPhotos.length} for "${displayCity}" (source: ${finalPhotos.length > 0 ? 'travel' : 'fallback'})`);
-
-  if (finalPhotos.length === 0) {
-    console.warn(`[photos] WARNING: No valid tourism photos found for "${rawCity}" - using generic fallback`);
-    return Response.json({ photos: FALLBACK_PHOTOS.slice(0, 3), source: 'fallback' });
+  // Step 3: Hardcoded Unsplash travel fallbacks
+  if (photos.length < 3) {
+    for (const url of TRAVEL_FALLBACKS) {
+      if (photos.length >= 3) break;
+      if (!photos.includes(url)) photos.push(url);
+    }
   }
 
-  return Response.json({ photos: finalPhotos, source: 'travel' });
+  const finalPhotos = photos.slice(0, 3);
+  const source = googlePhotos.length > 0 ? 'google-places' : photos.length > 0 ? 'pexels' : 'fallback';
+  console.log(`[destination-photos] Final: ${finalPhotos.length} photos (source: ${source})`);
+
+  return Response.json({ photos: finalPhotos, source });
 }
