@@ -12,7 +12,7 @@ const partners = [
     cta: 'Find Accommodation →',
     color: '#00447B',
     icon: '🏨',
-    href: 'http://www.awin1.com/awclick.php?mid=18118&id=2825924',
+    href: 'https://www.awin1.com/cread.php?awinmid=18118&awinaffid=2825924&campaign=LifecycleOnboarding',
   },
   {
     category: 'Tours & Experiences',

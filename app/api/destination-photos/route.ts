@@ -85,6 +85,8 @@ const GENERIC_FALLBACKS = [
   'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&q=80',
 ];
 
+const NO_CACHE_HEADERS = { 'Cache-Control': 'no-store, no-cache, must-revalidate' };
+
 function getFallbackForDestination(city: string): string[] {
   const cityLower = city.toLowerCase();
   for (const [key, photos] of Object.entries(DESTINATION_FALLBACKS)) {
@@ -99,8 +101,9 @@ async function fetchUnsplashPhotos(city: string): Promise<string[]> {
 
   try {
     const query = encodeURIComponent(`${city} travel tourism`);
+    const randomPage = Math.floor(Math.random() * 5) + 1;
     const res = await fetch(
-      `https://api.unsplash.com/search/photos?query=${query}&per_page=3&orientation=landscape&content_filter=high`,
+      `https://api.unsplash.com/search/photos?query=${query}&per_page=5&page=${randomPage}&orientation=landscape&content_filter=high`,
       { headers: { Authorization: `Client-ID ${accessKey}` }, signal: AbortSignal.timeout(6000) },
     );
     if (!res.ok) {
@@ -109,15 +112,18 @@ async function fetchUnsplashPhotos(city: string): Promise<string[]> {
     }
     const data = await res.json();
     if (!data.results?.length) return [];
-    const results = data.results.slice(0, 3);
+    // Shuffle and pick 3 from the 5 results
+    const shuffled = (data.results as { urls: { full: string }; links?: { download_location?: string } }[])
+      .sort(() => Math.random() - 0.5);
+    const results = shuffled.slice(0, 3);
     // Fire-and-forget download triggers (required by Unsplash API guidelines)
     for (const photo of results) {
       if (photo.links?.download_location) {
         fetch(`${photo.links.download_location}&client_id=${accessKey}`, { method: 'GET' }).catch(() => {});
       }
     }
-    const urls = results.map((p: { urls: { full: string } }) => p.urls.full);
-    console.log(`[destination-photos] Unsplash: ${urls.length} photos for "${city}"`);
+    const urls = results.map((p) => p.urls.full);
+    console.log(`[destination-photos] Unsplash: ${urls.length} photos for "${city}" (page ${randomPage})`);
     return urls;
   } catch (err) {
     console.error('[destination-photos] Unsplash fetch failed:', err);
@@ -130,59 +136,17 @@ async function fetchPexelsPhotos(city: string): Promise<string[]> {
   if (!key) return [];
   try {
     const query = encodeURIComponent(`${city} travel tourism`);
+    const randomPage = Math.floor(Math.random() * 5) + 1;
     const res = await fetch(
-      `https://api.pexels.com/v1/search?query=${query}&per_page=3&orientation=landscape`,
+      `https://api.pexels.com/v1/search?query=${query}&per_page=5&page=${randomPage}&orientation=landscape`,
       { headers: { Authorization: key } },
     );
     if (!res.ok) return [];
     const data = await res.json();
-    return (data.photos || []).slice(0, 3).map(
-      (p: { src: { large2x: string } }) => p.src.large2x,
-    );
+    const shuffled = ((data.photos || []) as { src: { landscape: string } }[])
+      .sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, 3).map((p) => p.src.landscape);
   } catch {
-    return [];
-  }
-}
-
-async function fetchGooglePlacesPhotos(city: string): Promise<string[]> {
-  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
-  if (!apiKey) return [];
-
-  try {
-    const query = encodeURIComponent(`${city} tourist attraction landmark`);
-    const searchRes = await fetch(
-      `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${query}&key=${apiKey}`,
-      { signal: AbortSignal.timeout(8000), next: { revalidate: 3600 } },
-    );
-    if (!searchRes.ok) return [];
-
-    const searchData = await searchRes.json();
-    if (!searchData.results?.length) return [];
-
-    const photoRefs: string[] = [];
-    for (const place of searchData.results.slice(0, 6)) {
-      if (photoRefs.length >= 3) break;
-      const ref = place.photos?.[0]?.photo_reference;
-      if (ref) photoRefs.push(ref);
-    }
-    if (photoRefs.length === 0) return [];
-
-    const photoUrls: string[] = [];
-    for (const ref of photoRefs) {
-      try {
-        const photoRes = await fetch(
-          `https://maps.googleapis.com/maps/api/place/photo?maxwidth=1200&photoreference=${ref}&key=${apiKey}`,
-          { redirect: 'follow', next: { revalidate: 86400 } },
-        );
-        if (photoRes.ok && photoRes.url && !photoRes.url.includes('photoreference')) {
-          photoUrls.push(photoRes.url);
-        }
-      } catch { /* skip */ }
-    }
-    console.log(`[destination-photos] Google Places: ${photoUrls.length} photos for "${city}"`);
-    return photoUrls;
-  } catch (err) {
-    console.error('[destination-photos] Google Places fetch failed:', err);
     return [];
   }
 }
@@ -195,7 +159,7 @@ export async function GET(request: NextRequest) {
     '';
 
   if (!rawCity.trim()) {
-    return NextResponse.json({ photos: GENERIC_FALLBACKS, source: 'fallback' });
+    return NextResponse.json({ photos: GENERIC_FALLBACKS, source: 'fallback' }, { headers: NO_CACHE_HEADERS });
   }
 
   const city = rawCity.split(',')[0].trim();
@@ -204,27 +168,30 @@ export async function GET(request: NextRequest) {
   // Tier 1: Unsplash API
   const unsplashPhotos = await fetchUnsplashPhotos(city);
   if (unsplashPhotos.length >= 3) {
-    return NextResponse.json({ photos: unsplashPhotos.slice(0, 3), source: 'unsplash' });
+    return NextResponse.json(
+      { photos: unsplashPhotos.slice(0, 3), source: 'unsplash' },
+      { headers: NO_CACHE_HEADERS },
+    );
   }
 
   // Tier 2: Pexels
   const pexelsPhotos = await fetchPexelsPhotos(city);
   const afterPexels = [...new Set([...unsplashPhotos, ...pexelsPhotos])];
   if (afterPexels.length >= 3) {
-    return NextResponse.json({ photos: afterPexels.slice(0, 3), source: 'pexels' });
+    return NextResponse.json(
+      { photos: afterPexels.slice(0, 3), source: 'pexels' },
+      { headers: NO_CACHE_HEADERS },
+    );
   }
 
-  // Tier 3: Google Places Photos
-  const googlePhotos = await fetchGooglePlacesPhotos(city);
-  const combined = [...new Set([...afterPexels, ...googlePhotos])];
-  if (combined.length >= 1) {
-    const fallbacks = getFallbackForDestination(city);
-    const final = [...new Set([...combined, ...fallbacks])].slice(0, 3);
-    return NextResponse.json({ photos: final, source: 'google' });
-  }
-
-  // Tier 4: Destination-specific curated fallbacks
+  // Tier 3: Destination-specific curated fallbacks
   const fallbacks = getFallbackForDestination(city);
+  if (afterPexels.length >= 1) {
+    const final = [...new Set([...afterPexels, ...fallbacks])].slice(0, 3);
+    return NextResponse.json({ photos: final, source: 'mixed' }, { headers: NO_CACHE_HEADERS });
+  }
+
+  // Tier 4: Generic fallbacks
   console.log(`[destination-photos] Using destination fallback for "${city}"`);
-  return NextResponse.json({ photos: fallbacks, source: 'fallback' });
+  return NextResponse.json({ photos: fallbacks, source: 'fallback' }, { headers: NO_CACHE_HEADERS });
 }

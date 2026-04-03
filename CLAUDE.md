@@ -265,11 +265,14 @@ Include `Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>` in multi-lin
 | Google Analytics | Tracking | `G-YZV7GHDQ0T` |
 | Vercel | Hosting + CI/CD | GitHub auto-deploy on push |
 
-### Booking.com Affiliate Link
+### Booking.com Affiliate Links
 ```
-http://www.awin1.com/awclick.php?mid=18118&id=2825924
+Accommodations: https://www.awin1.com/cread.php?awinmid=18118&awinaffid=2825924&campaign=LifecycleOnboarding
+Flights:        https://www.awin1.com/cread.php?awinmid=18118&awinaffid=2825924&campaign=LifecycleOnboarding&ued=https%3A%2F%2Fwww.booking.com%2Fflights%2Findex.en-us.html
+Car Rentals:    https://www.awin1.com/cread.php?awinmid=18118&awinaffid=2825924&campaign=LifecycleOnboarding&ued=https%3A%2F%2Fwww.booking.com%2Fcars%2Findex.en-us.html
 ```
-Every hotel name or "Book on Booking.com" CTA must use this link.
+All three are exported from `lib/affiliate.ts` as `BOOKING_AFFILIATE.hotels`, `.flights`, `.cars`.
+Every hotel CTA must use the Accommodations link. Luna's system prompt injects all three so she links correctly for hotels, flights, and car rentals.
 
 ---
 

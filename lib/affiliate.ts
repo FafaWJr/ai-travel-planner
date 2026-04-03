@@ -1,14 +1,19 @@
-export const BOOKING_AFFILIATE_ID = '2825924';
-export const BOOKING_MID = '18118';
+export const BOOKING_AFFILIATE = {
+  hotels: 'https://www.awin1.com/cread.php?awinmid=18118&awinaffid=2825924&campaign=LifecycleOnboarding',
+  flights: 'https://www.awin1.com/cread.php?awinmid=18118&awinaffid=2825924&campaign=LifecycleOnboarding&ued=https%3A%2F%2Fwww.booking.com%2Fflights%2Findex.en-us.html',
+  cars: 'https://www.awin1.com/cread.php?awinmid=18118&awinaffid=2825924&campaign=LifecycleOnboarding&ued=https%3A%2F%2Fwww.booking.com%2Fcars%2Findex.en-us.html',
+};
+
+export const ACTIVITY_AFFILIATE = {
+  goWithGuide: 'https://tidd.ly/4s8kRkI',
+  xcaret: 'https://tidd.ly/4sH1xfw',
+  klook: 'https://affiliate.klook.com/redirect?aid=117089&aff_adid=1248864&k_site=https%3A%2F%2Fwww.klook.com%2F',
+};
 
 /**
- * Returns a Booking.com deep link via AWIN affiliate network.
- * If a destination is passed, it opens Booking.com pre-filtered for that destination.
+ * Returns the Booking.com accommodations affiliate link.
+ * Kept for backwards compatibility with components that call bookingComLink().
  */
-export function bookingComLink(destination?: string): string {
-  const base = `http://www.awin1.com/awclick.php?mid=${BOOKING_MID}&id=${BOOKING_AFFILIATE_ID}`;
-  if (!destination) return base;
-
-  const bookingUrl = `https://www.booking.com/search.html?ss=${encodeURIComponent(destination)}`;
-  return `${base}&p=${encodeURIComponent(bookingUrl)}`;
+export function bookingComLink(_destination?: string): string {
+  return BOOKING_AFFILIATE.hotels;
 }

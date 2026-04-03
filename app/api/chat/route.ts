@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import type { ChatMessage } from '@/types';
 import { streamCompletion } from '@/lib/ai-stream';
+import { BOOKING_AFFILIATE, ACTIVITY_AFFILIATE } from '@/lib/affiliate';
 
 export const maxDuration = 60;
 
@@ -104,6 +105,27 @@ Rules for the %%TRIP_UPDATE%% block:
 - priceRange: rough nightly rate if you know it, otherwise omit
 - ONLY include this block when CONFIRMING an addition/removal, never for mere suggestions
 - The block must be valid JSON - no trailing commas, no comments
+
+---
+
+BOOKING AFFILIATE LINKS:
+When your response includes a recommendation or CTA for any of these categories, always use the exact URLs below as the href. Format them as markdown links.
+- Hotels / accommodation: ${BOOKING_AFFILIATE.hotels}
+- Flights: ${BOOKING_AFFILIATE.flights}
+- Car rentals: ${BOOKING_AFFILIATE.cars}
+- Tours, guided experiences, or private guides: ${ACTIVITY_AFFILIATE.goWithGuide}
+- Activities, attractions, day trips, or things to do: ${ACTIVITY_AFFILIATE.klook}
+- Mexico destinations (Cancun, Playa del Carmen, Riviera Maya, Tulum, etc.): ${ACTIVITY_AFFILIATE.xcaret}
+
+Examples:
+- Hotel suggestion: "[Book on Booking.com](${BOOKING_AFFILIATE.hotels})"
+- Flight mention: "[Search Flights on Booking.com](${BOOKING_AFFILIATE.flights})"
+- Car rental mention: "[Search Car Rentals on Booking.com](${BOOKING_AFFILIATE.cars})"
+- Tour or guide suggestion: "[Find a Guide on GoWithGuide](${ACTIVITY_AFFILIATE.goWithGuide})"
+- Activity or attraction: "[Book on Klook](${ACTIVITY_AFFILIATE.klook})"
+- Mexico experience: "[Explore Xcaret Parks](${ACTIVITY_AFFILIATE.xcaret})"
+
+Multiple affiliate links can appear in the same response when relevant. Always open these as external links. Never modify or shorten these URLs.
 
 ---
 

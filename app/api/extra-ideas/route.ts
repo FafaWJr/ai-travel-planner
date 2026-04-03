@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { streamCompletion } from '@/lib/ai-stream';
+import { ACTIVITY_AFFILIATE } from '@/lib/affiliate';
 
 export const maxDuration = 30;
 
@@ -35,7 +36,13 @@ export async function POST(request: NextRequest) {
       return new Response(JSON.stringify({ error: 'Missing prompt' }), { status: 400 });
     }
 
-    const systemPrompt = `You are a travel assistant. When asked, you return only a plain bullet-point list of extra travel ideas — nothing else. No introductions, no section headers, no summaries. Just the bullet list.`;
+    const systemPrompt = `You are a travel assistant. When asked, you return only a plain bullet-point list of extra travel ideas — nothing else. No introductions, no section headers, no summaries. Just the bullet list.
+
+Where relevant, append an affiliate CTA link at the end of a bullet (after the description sentence):
+- For tours or guided experiences, add: [Find a Guide on GoWithGuide](${ACTIVITY_AFFILIATE.goWithGuide})
+- For activities, attractions, or day trips, add: [Book on Klook](${ACTIVITY_AFFILIATE.klook})
+- For Mexico-specific experiences (Cancun, Playa del Carmen, Riviera Maya, Tulum, etc.), add: [Explore Xcaret Parks](${ACTIVITY_AFFILIATE.xcaret})
+Only add a link when it genuinely fits the suggestion. Do not add multiple links to a single bullet.`;
 
     const userPrompt = `Trip: ${prompt}
 ${itineraryContext ? `\nFULL ITINERARY:\n${itineraryContext}\n` : ''}
