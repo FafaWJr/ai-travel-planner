@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
-import { createBrowserClient } from '@supabase/ssr';
+import { createClient as createSupabaseClient } from '@/lib/supabase/client';
 
 type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'night';
 
@@ -154,10 +154,7 @@ export default function FloatingChat({ plan, destination, hotelContext, currentA
 
   // Fetch user's first name from Supabase session on mount
   useEffect(() => {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
+    const supabase = createSupabaseClient();
     supabase.auth.getSession().then(({ data: { session } }) => {
       const user = session?.user;
       const fullName = user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? null;
