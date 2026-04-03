@@ -125,6 +125,25 @@ async function fetchUnsplashPhotos(city: string): Promise<string[]> {
   }
 }
 
+async function fetchPexelsPhotos(city: string): Promise<string[]> {
+  const key = process.env.PEXELS_ACCESS_KEY;
+  if (!key) return [];
+  try {
+    const query = encodeURIComponent(`${city} travel tourism`);
+    const res = await fetch(
+      `https://api.pexels.com/v1/search?query=${query}&per_page=3&orientation=landscape`,
+      { headers: { Authorization: key } },
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.photos || []).slice(0, 3).map(
+      (p: { src: { large2x: string } }) => p.src.large2x,
+    );
+  } catch {
+    return [];
+  }
+}
+
 async function fetchGooglePlacesPhotos(city: string): Promise<string[]> {
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
   if (!apiKey) return [];
@@ -188,16 +207,23 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ photos: unsplashPhotos.slice(0, 3), source: 'unsplash' });
   }
 
-  // Tier 2: Google Places Photos
+  // Tier 2: Pexels
+  const pexelsPhotos = await fetchPexelsPhotos(city);
+  const afterPexels = [...new Set([...unsplashPhotos, ...pexelsPhotos])];
+  if (afterPexels.length >= 3) {
+    return NextResponse.json({ photos: afterPexels.slice(0, 3), source: 'pexels' });
+  }
+
+  // Tier 3: Google Places Photos
   const googlePhotos = await fetchGooglePlacesPhotos(city);
-  const combined = [...new Set([...unsplashPhotos, ...googlePhotos])];
+  const combined = [...new Set([...afterPexels, ...googlePhotos])];
   if (combined.length >= 1) {
     const fallbacks = getFallbackForDestination(city);
     const final = [...new Set([...combined, ...fallbacks])].slice(0, 3);
-    return NextResponse.json({ photos: final, source: combined.length > 0 ? 'google' : 'fallback' });
+    return NextResponse.json({ photos: final, source: 'google' });
   }
 
-  // Tier 3: Destination-specific curated fallbacks
+  // Tier 4: Destination-specific curated fallbacks
   const fallbacks = getFallbackForDestination(city);
   console.log(`[destination-photos] Using destination fallback for "${city}"`);
   return NextResponse.json({ photos: fallbacks, source: 'fallback' });

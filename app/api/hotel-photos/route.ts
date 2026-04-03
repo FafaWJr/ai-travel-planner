@@ -46,7 +46,29 @@ export async function GET(request: NextRequest) {
     } catch { /* fall through */ }
   }
 
-  // Tier 2: Google Places
+  // Tier 2: Pexels
+  const pexelsKey = process.env.PEXELS_ACCESS_KEY;
+  if (pexelsKey) {
+    try {
+      const query = encodeURIComponent(`${name} hotel exterior`);
+      const res = await fetch(
+        `https://api.pexels.com/v1/search?query=${query}&per_page=3&orientation=landscape`,
+        { headers: { Authorization: pexelsKey } },
+      );
+      if (res.ok) {
+        const data = await res.json();
+        const photos: string[] = (data.photos || [])
+          .slice(0, 3)
+          .map((p: { src: { large2x: string } }) => p.src.large2x);
+        if (photos.length > 0) {
+          console.log(`[hotel-photos] Pexels: ${photos.length} photos for "${name}"`);
+          return Response.json({ photos });
+        }
+      }
+    } catch { /* fall through */ }
+  }
+
+  // Tier 3: Google Places
   const GOOGLE_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
   if (GOOGLE_API_KEY) {
     try {
