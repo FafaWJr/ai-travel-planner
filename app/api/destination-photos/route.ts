@@ -109,11 +109,14 @@ async function fetchUnsplashPhotos(city: string): Promise<string[]> {
     }
     const data = await res.json();
     if (!data.results?.length) return [];
-    const urls = data.results
-      .slice(0, 3)
-      .map((p: { urls: { regular: string } }) =>
-        p.urls.regular.replace(/&w=\d+/, '&w=1200'),
-      );
+    const results = data.results.slice(0, 3);
+    // Fire-and-forget download triggers (required by Unsplash API guidelines)
+    for (const photo of results) {
+      if (photo.links?.download_location) {
+        fetch(`${photo.links.download_location}&client_id=${accessKey}`, { method: 'GET' }).catch(() => {});
+      }
+    }
+    const urls = results.map((p: { urls: { full: string } }) => p.urls.full);
     console.log(`[destination-photos] Unsplash: ${urls.length} photos for "${city}"`);
     return urls;
   } catch (err) {

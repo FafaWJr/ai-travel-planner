@@ -30,9 +30,14 @@ export async function GET(request: NextRequest) {
       );
       if (res.ok) {
         const data = await res.json();
-        const photos: string[] = (data.results ?? [])
-          .slice(0, 3)
-          .map((p: { urls: { regular: string } }) => p.urls.regular);
+        const results = (data.results ?? []).slice(0, 3);
+        // Fire-and-forget download triggers (required by Unsplash API guidelines)
+        for (const photo of results) {
+          if (photo.links?.download_location) {
+            fetch(`${photo.links.download_location}&client_id=${unsplashKey}`, { method: 'GET' }).catch(() => {});
+          }
+        }
+        const photos: string[] = results.map((p: { urls: { full: string } }) => p.urls.full);
         if (photos.length > 0) {
           console.log(`[hotel-photos] Unsplash: ${photos.length} photos for "${name}"`);
           return Response.json({ photos });
