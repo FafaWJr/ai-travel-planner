@@ -2,12 +2,7 @@ import { type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/middleware';
 
 export async function middleware(request: NextRequest) {
-  const { supabase, supabaseResponse } = createClient(request);
-
-  // Refresh session if expired — required for Server Components to have access
-  await supabase.auth.getUser();
-
-  return supabaseResponse;
+  return createClient(request);
 }
 
 export const config = {
