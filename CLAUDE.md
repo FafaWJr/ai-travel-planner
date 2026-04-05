@@ -1,285 +1,303 @@
-# CLAUDE.md — Luna Let's Go
-
-Persistent context for Claude Code. Read this before every task.
-
-## Project Overview
-
-**Luna Let's Go** (lunaletsgo.com) is an AI-powered travel planning platform. Users input a destination, dates, group size, budget, and travel style — Luna (the AI assistant) generates a full personalised itinerary in ~30 seconds. The platform includes hotel suggestions, budget estimates, day-by-day plans, weather data, and a conversational chat with Luna to refine trips.
-
-**Repo:** `FafaWJr/ai-travel-planner` (public)
-**Production:** `www.lunaletsgo.com`
-**Stack:** Next.js 16.1.6 (Turbopack), TypeScript, Supabase, Anthropic AI, Vercel
+# Luna Let's Go - Claude Code Context
+**Last Updated:** 2025-01-10 (Initial Setup)
+**Current Branch:** main
+**Deployment:** https://www.lunaletsgo.com
 
 ---
 
-## Project Structure
+## Critical IDs & Endpoints
 
+**Vercel:**
+- Project ID: `prj_zZ7eJAIUitbJQcY4vYTTEeUxdZnG`
+- Team ID: `team_uFD2kaJDUmZtpI2rSCIMy7kW`
+
+**Supabase:**
+- Project ID: `qhpxejzoxfruuositwzo`
+
+**GitHub:**
+- Repo: `FafaWJr/ai-travel-planner`
+- Branch: `main`
+
+---
+
+## Current File Structure
+
+**Note:** Run `./scripts/update-context.sh` to regenerate this section with live data.
+
+Expected structure:
 ```
-ai-travel-planner/
-├── app/
-│   ├── page.tsx                    # Homepage (landing page, SSR)
-│   ├── layout.tsx                  # Root layout with metadata, fonts, analytics
-│   ├── start/page.tsx              # Trip planning form (destination, dates, group, style)
-│   ├── plan/page.tsx               # Main planner view (itinerary, stays, budget, chat)
-│   ├── my-trips/page.tsx           # Saved trips dashboard (requires auth)
-│   ├── quiz/page.tsx               # Travel persona quiz
-│   ├── trip-ideas/page.tsx         # Curated trip inspiration cards
-│   ├── about/page.tsx              # About page
-│   ├── blog/page.tsx               # Blog (coming soon placeholder)
-│   ├── deals/page.tsx              # Deals (coming soon placeholder)
-│   ├── privacy-policy/page.tsx     # Privacy policy
-│   ├── terms/page.tsx              # Terms of service
-│   ├── auth/
-│   │   ├── login/page.tsx
-│   │   ├── signup/page.tsx
-│   │   ├── callback/route.ts       # OAuth callback (Supabase PKCE flow)
-│   │   ├── returning/page.tsx
-│   │   └── forgot-password/page.tsx
-│   └── api/
-│       ├── generate/route.ts       # Main itinerary generation (Anthropic)
-│       ├── chat/route.ts           # Luna conversational chat (Anthropic)
-│       ├── hotel-suggestions/route.ts  # AI hotel suggestions
-│       ├── hotel-photos/route.ts   # Hotel photo search (Unsplash → Pexels → fallback)
-│       ├── destination-photos/route.ts # Trip header photos (Unsplash → Pexels → fallback)
-│       ├── budget-estimate/route.ts    # AI budget breakdown
-│       ├── extra-ideas/route.ts    # Additional activity suggestions
-│       ├── day-suggestions/route.ts    # AI day-specific suggestions
-│       ├── weather/route.ts        # Destination weather data
-│       ├── exchange-rates/route.ts # Currency conversion
-│       ├── place-photo/route.ts    # Google Places photo proxy
-│       ├── google-place-photo/route.ts # Google Places photo resolver
-│       ├── brevo-sync/route.ts     # Email list sync (Brevo)
-│       └── trips/route.ts          # Trip CRUD operations
-├── robots.txt/route.ts
-├── sitemap.xml/route.ts
-├── components/                     # Shared React components
-│   ├── FloatingChat.tsx            # Luna chat widget
-│   ├── StayTab.tsx                 # Hotel suggestions tab in planner
-│   ├── BookingCTAs.tsx             # Booking.com affiliate CTAs
-│   └── ...
-├── lib/
-│   ├── supabase/
-│   │   ├── client.ts               # Browser Supabase client
-│   │   └── server.ts               # Server Supabase client
-│   ├── affiliate.ts                # Booking.com AWIN affiliate constants
-│   └── ...
-├── proxy.ts                        # Next.js 16 middleware (replaces middleware.ts)
-├── next.config.ts                  # Next.js config (remotePatterns, etc.)
-└── public/
-    ├── luna_letsgo_bigger_3.PNG    # Logo
-    ├── luna_BLUE.png               # Luna character (navy background)
-    ├── LUNA-LOGO.svg               # SVG logo
-    └── favicon.ico
-```
-
-### Build Output (latest deploy)
-
-**Static pages (○):** `/`, `/about`, `/blog`, `/deals`, `/my-trips`, `/plan`, `/start`, `/quiz`, `/trip-ideas`, `/privacy-policy`, `/terms`, `/auth/login`, `/auth/signup`, `/auth/forgot-password`, `/auth/returning`, `/robots.txt`, `/sitemap.xml`
-
-**Dynamic routes (ƒ):** All `/api/*` routes, `/auth`, `/auth/callback`
-
-**Middleware:** `proxy.ts` (Supabase session refresh)
-
----
-
-## Coding Standards
-
-### TypeScript
-- Strict mode enabled
-- Use `interface` for component props, `type` for unions/utility types
-- No `any` unless absolutely necessary (add a comment explaining why)
-- All API routes must have proper error handling with try/catch
-
-### Styling
-- Inline styles preferred over Tailwind when Tailwind has caused misinterpretation in past sessions
-- CSS custom properties defined in root: `--orange: #FF8210`, `--navy: #00447B`, `--orange-light: #FFBD59`, `--navy-mid: #679AC1`, `--gray-dark: #6C6D6F`, `--gray-light: #C0C0C0`
-- Fonts: Poppins (headings/titles), Lato/Inter (body)
-- Icons: Flat Lucide React SVGs using only `#FF8210` and `#00447B` — never emojis, never AI-style icons
-
-### Brand Rules
-- Public-facing name is always **"Luna Let's Go"** — internal design system name "GOTO" must never appear in user-facing UI
-- Luna character image: `luna_BLUE.png` (navy `#00447B` background)
-- Every hotel suggested by Luna must include a Booking.com affiliate link (AWIN link from `lib/affiliate.ts`)
-
-### API Route Patterns
-- Every AI-powered feature receives the full generated itinerary as `tripContext` on every API call — this is the foundational intelligence layer
-- Photo routes use a tiered waterfall: Unsplash (Tier 1) → Pexels (Tier 2) → curated fallbacks → generic fallbacks. Do NOT use Google Places for photo search.
-- Env vars: server-side only keys have no `NEXT_PUBLIC_` prefix (e.g., `BREVO_API_KEY`, `UNSPLASH_ACCESS_KEY`, `PEXELS_ACCESS_KEY`)
-
-### Component Patterns
-- Luna persona: warm, casual, opinionated travel agent. Can and does edit the itinerary. Never says she cannot edit the plan
-- Welcome message in chat is display-only and excluded from API conversation history (saves tokens)
-- Destination photos: append "travel tourism" to Unsplash queries; filter out metadata tagged "flag", "map", "military", "illustration"
-
----
-
-## Environment Variables
-
-### Server-side (no NEXT_PUBLIC_ prefix)
-- `ANTHROPIC_API_KEY` — Claude API for itinerary generation + chat
-- `GOOGLE_PLACES_API_KEY` — Google Places (place-photo proxy only, NOT for photo search)
-- `UNSPLASH_ACCESS_KEY` — Unsplash photo search (Tier 1)
-- `PEXELS_ACCESS_KEY` — Pexels photo fallback (Tier 2)
-- `BREVO_API_KEY` — Email list sync
-- `OPENWEATHERMAP_API_KEY` — Weather data
-
-### Client-side (NEXT_PUBLIC_ prefix)
-- `NEXT_PUBLIC_SUPABASE_URL` — `https://qhpxejzoxfruuositwzo.supabase.co`
-- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` — Supabase publishable key
-
----
-
-## Common Commands
-
-```bash
-# Development
-npm run dev              # Start dev server (Turbopack)
-npm run build            # Production build (validates TypeScript)
-npm run lint             # ESLint check
-
-# Deployment — NEVER deploy from Claude Code directly
-git add .
-git commit -m "fix: description"
-git push origin main     # Triggers Vercel GitHub integration automatically
-
-# Cache management (if needed)
-# Use Vercel dashboard or CLI: vercel cache purge
+app/
+  api/
+    chat/route.ts
+    generate/route.ts
+    hotel-suggestions/route.ts
+    budget-estimate/route.ts
+    extra-ideas/route.ts
+    day-suggestions/route.ts
+    destination-photos/route.ts
+    hotel-photos/route.ts
+    exchange-rates/route.ts
+    place-photo/route.ts
+    weather/route.ts
+    brevo-sync/route.ts
+  auth/
+    callback/route.ts
+    returning/
+  [various page routes]/
+  layout.tsx
+  page.tsx
+lib/
+  supabase/
+  anthropic/
+  brevo.ts
+public/
+  LUNA-LOGO.svg
+  luna_BLUE.png
+proxy.ts (middleware)
 ```
 
 ---
 
-## Testing Instructions
+## Active API Routes
 
-### Before Committing
-1. Run `npm run build` — must succeed with zero TypeScript errors
-2. Verify no regressions in the checklist below
-3. Test any modified API routes with curl
+**Core AI Routes:**
+- `/api/chat` - Luna conversation with trip context
+- `/api/generate` - Initial itinerary generation
+- `/api/hotel-suggestions` - Hotel recommendations with trip context
+- `/api/budget-estimate` - Budget calculation with trip context
+- `/api/extra-ideas` - Additional suggestions with trip context
+- `/api/day-suggestions` - Day-specific recommendations with trip context
 
-### API Route Testing
-```bash
-# Destination photos (should return Unsplash photos)
-curl "https://www.lunaletsgo.com/api/destination-photos?destination=Tokyo%2C%20Japan"
+**Data Routes:**
+- `/api/destination-photos` - Destination photos (Unsplash → Pexels)
+- `/api/hotel-photos` - Hotel-specific photos (Unsplash → Pexels)
+- `/api/exchange-rates` - Currency conversion
+- `/api/place-photo` - Single place photo lookup
+- `/api/weather` - Weather data
 
-# Hotel photos (should return unique photos per hotel, NOT a generic fallback)
-curl "https://www.lunaletsgo.com/api/hotel-photos?name=Hilton&destination=Tokyo"
+**Integration Routes:**
+- `/api/brevo-sync` - Email marketing list sync
 
-# Chat
-curl -X POST "https://www.lunaletsgo.com/api/chat" \
-  -H "Content-Type: application/json" \
-  -d '{"messages":[{"role":"user","content":"Hello Luna"}],"tripContext":"..."}'
-```
-
-### Regression Checklist
-After any change, verify these are intact:
-- [ ] Homepage loads: hero carousel, all sections, footer with legal links
-- [ ] `/start` form → `/plan` with generated itinerary
-- [ ] Trip header photo grid: 3 photos (1 large left + 2 stacked right)
-- [ ] Hotel cards: name, stars, neighborhood, description, amenities, price, "Choose This Stay", "Book on Booking.com" affiliate button
-- [ ] "Ready to book your stay?" banner with Booking.com link
-- [ ] Luna chat: opens, sends, receives, does not send welcome message to API
-- [ ] Auth: Google OAuth login → redirect back to pre-login page
-- [ ] Saved trips load from `/my-trips`
-- [ ] Footer: Privacy Policy + Terms of Service links present
-- [ ] No emojis in UI (Lucide icons only)
-- [ ] Brand name: "Luna Let's Go" everywhere (never "GOTO")
+**Auth Routes:**
+- `/auth/callback` - OAuth callback handler
+- `/auth/returning` - Returning user landing (MUST be dynamic)
 
 ---
 
-## Dev Workflow Rules
+## Recent Changes (Last 10 Commits)
 
-### Prompt Delivery Model
-All implementation is delivered as structured Claude Code prompts in `.md` files. Wilson commits and pushes manually. Never make direct code edits to the repo from Claude Code.
+**Note:** Run `./scripts/update-context.sh` to regenerate this section.
 
-### Standing Constraints (apply to EVERY task)
-- **Do not change colors, backgrounds, or layout** unless explicitly scoped
-- **Do not touch `proxy.ts`** unless the task involves auth/middleware
-- **Do not modify `next.config.ts` remotePatterns** unless adding a new image host
-- **Preserve the response shape** of all API routes (`{ photos: string[] }`, etc.)
-- **Do not add Google Places to photo search pipelines** — Unsplash is Tier 1, Pexels is Tier 2
-
-### Regression Vigilance
-Fixes frequently introduce regressions. Every prompt must explicitly list what must NOT change. Common regressions:
-- Footer losing legal links
-- Emojis reappearing in UI
-- Booking.com affiliate links disappearing from hotel cards
-- Luna welcome message being sent to API (wastes tokens)
-- Auth redirect breaking after OAuth callback
-- Hotel photos returning same generic fallback for every hotel
-
-### Commit Messages
-Use conventional commits:
-```
-fix: description of what was fixed
-feat: description of new feature
-```
-Include `Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>` in multi-line commits.
-
-### Deployment Flow
-1. Claude Code generates prompt as `.md` file
-2. Wilson runs prompt in Claude Code on local repo
-3. `git push origin main` triggers Vercel auto-deploy
-4. Check Vercel dashboard for build status
-5. If build fails — check build logs via `get_deployment_build_logs`
-
-### Debugging Tools
-- **Vercel runtime logs:** Filter by route path or full-text search. Log prefixes: `[destination-photos]`, `[hotel-photos]`, `[chat]`
-- **Supabase auth logs:** `get_logs` with service `auth` — cross-reference with Vercel logs by timestamp
-- **`x-matched-path` header:** Most reliable indicator of middleware interception
-- **Live API testing:** `web_fetch_vercel_url` on production URLs to verify route output
+Recent major changes:
+- Luna planner sync via `%%TRIP_UPDATE%%` JSON payloads
+- Photo pipeline fix (Unsplash Tier 1 → Pexels Tier 2, removed Google Places)
+- Hotel photos route rewrite (no more hardcoded generic images)
+- Auth fix using `@supabase/ssr` (deprecated auth-helpers removed)
+- Luna character image update to `luna_BLUE.png`
 
 ---
 
-## Database (Supabase)
+## Database Schema (Supabase Tables)
 
-**Project ID:** `qhpxejzoxfruuositwzo`
-
-### Tables (public schema)
-| Table | Purpose |
-|-------|---------|
-| `profiles` | Auto-created on signup (id, full_name, email, avatar_url) |
-| `saved_trips` | User itineraries (destination, is_favorite, start_date, end_date, trip_data JSONB, title) |
-| `user_preferences` | Travel preferences |
-| `travel_personas` | Quiz results |
-| `trip_history` | Historical trip data |
-
-### Key Patterns
-- `saved_trips.trip_data` is JSONB containing the full itinerary, hotel selections, photos, and all planner state
-- Auth uses `@supabase/ssr` (NOT deprecated `@supabase/auth-helpers-nextjs`)
-- OAuth callback uses PKCE flow with async `cookies()` in `/auth/callback/route.ts`
-- Post-login redirect: `localStorage` key `luna_redirect_after_login`
-- Supabase migrations execute immediately in production (no deployment needed)
+Current tables in production:
+- `profiles` - User profile data
+- `saved_trips` - User's saved itineraries
+  - Columns: `id`, `user_id`, `destination`, `title`, `is_favorite`, `start_date`, `end_date`, `trip_data` (JSONB), `created_at`, `updated_at`
+  - `trip_data` contains full itinerary structure with frozen photos
+- `travel_personas` - User travel preferences and styles
+- `trip_history` - Past trip records
+- `user_preferences` - User settings
 
 ---
 
-## Integrations
+## Immutable Conventions (READ CONVENTIONS.md)
 
-| Service | Purpose | Key |
-|---------|---------|-----|
-| Anthropic | AI generation + Luna chat | `ANTHROPIC_API_KEY` |
-| Supabase | Auth + database | `NEXT_PUBLIC_SUPABASE_URL` + publishable key |
-| Unsplash | Photos Tier 1 | `UNSPLASH_ACCESS_KEY` |
-| Pexels | Photos Tier 2 (fallback) | `PEXELS_ACCESS_KEY` |
-| Google Places | Place-photo proxy only | `GOOGLE_PLACES_API_KEY` |
-| Booking.com | Hotel affiliate (AWIN) | Hardcoded in `lib/affiliate.ts` |
-| Brevo | Email sync (List ID 17) | `BREVO_API_KEY` |
-| Google Analytics | Tracking | `G-YZV7GHDQ0T` |
-| Vercel | Hosting + CI/CD | GitHub auto-deploy on push |
-
-### Booking.com Affiliate Links
-```
-Accommodations: https://www.awin1.com/cread.php?awinmid=18118&awinaffid=2825924&campaign=LifecycleOnboarding
-Flights:        https://www.awin1.com/cread.php?awinmid=18118&awinaffid=2825924&campaign=LifecycleOnboarding&ued=https%3A%2F%2Fwww.booking.com%2Fflights%2Findex.en-us.html
-Car Rentals:    https://www.awin1.com/cread.php?awinmid=18118&awinaffid=2825924&campaign=LifecycleOnboarding&ued=https%3A%2F%2Fwww.booking.com%2Fcars%2Findex.en-us.html
-```
-All three are exported from `lib/affiliate.ts` as `BOOKING_AFFILIATE.hotels`, `.flights`, `.cars`.
-Every hotel CTA must use the Accommodations link. Luna's system prompt injects all three so she links correctly for hotels, flights, and car rentals.
+These NEVER change:
+- **Middleware file:** `proxy.ts` (NOT middleware.ts - Next.js 16 requirement)
+- **Brand colors:** #FF8210 (orange), #00447B (navy), #FFBD59 (orange-light), #679AC1 (navy-mid)
+- **Fonts:** Poppins (headings), Inter Regular (body)
+- **Logo:** `LUNA-LOGO.svg`, Character: `luna_BLUE.png`
+- **NO EMOJIS** in UI - use Lucide React SVGs only in brand colors
+- **Auth:** `@supabase/ssr` (NOT @supabase/auth-helpers-nextjs)
+- **localStorage key:** `luna_redirect_after_login`
+- **Public brand name:** "Luna Let's Go" (internal "GOTO" NEVER in UI)
 
 ---
 
-## Vercel / GitHub References
+## Critical Patterns
 
-- **Vercel Project ID:** `prj_zZ7eJAIUitbJQcY4vYTTEeUxdZnG`
-- **Vercel Team ID:** `team_uFD2kaJDUmZtpI2rSCIMy7kW`
-- **GitHub Repo:** `FafaWJr/ai-travel-planner`
-- **Production Domain:** `www.lunaletsgo.com`
-- **Bundler:** Turbopack
+### Luna AI Integration
+- **ALL AI features receive full itinerary as `tripContext`**
+- Luna edits via structured `%%TRIP_UPDATE%%` JSON payloads appended to responses
+- Frontend parses these markers and updates shared planner state
+- Hotel check-in defaults to Day 1 unless user specifies otherwise
+- **NEVER say:** "I am not able to directly edit your plan"
+
+### Photo Pipeline (Tier System)
+- **Tier 1:** Unsplash (deterministic - randomize via `page` param 1-5 + shuffle)
+- **Tier 2:** Pexels (use `p.src.landscape` NOT `p.src.large2x`)
+- **Google Places:** REMOVED from pipeline entirely
+- **Saved trips:** Photos stored in JSONB freeze at save time, re-fetch on load
+- **Cache headers:** `Cache-Control: no-store` on photo API routes
+- **Hotel photos:** `/api/hotel-photos/route.ts` returns actual hotel photos, NOT generic images
+
+### Affiliate Links (Embed Throughout)
+**Booking.com (AWIN):**
+- Hotels: `https://www.awin1.com/cread.php?awinmid=18118&awinaffid=2825924&campaign=LifecycleOnboarding`
+- Flights: [base] + `&ued=https%3A%2F%2Fwww.booking.com%2Fflights%2Findex.en-us.html`
+- Cars: [base] + `&ued=https%3A%2F%2Fwww.booking.com%2Fcars%2Findex.en-us.html`
+
+**Tours & Experiences:**
+- GoWithGuide: `https://tidd.ly/4s8kRkI`
+- Xcaret: `https://tidd.ly/4sH1xfw`
+- Klook: `https://affiliate.klook.com/redirect?aid=117089&aff_adid=1248864&k_site=https%3A%2F%2Fwww.klook.com%2F`
+
+Use in hotel suggestions, Luna chat, Deals page, and anywhere flights/car rentals/tours are mentioned.
+
+---
+
+## Pre-Session Discovery Checklist
+
+Before coding in Claude Code, ALWAYS:
+
+1. **Fetch latest deployment state:**
+   ```
+   Vercel:list_deployments with project_id prj_zZ7eJAIUitbJQcY4vYTTEeUxdZnG
+   Get latest deployment ID → Vercel:get_deployment_build_logs
+   ```
+
+2. **Verify file locations:**
+   ```bash
+   find app -name "page.tsx" | grep [route-name]
+   find app/api -name "route.ts" | grep [api-name]
+   ```
+
+3. **Check recent commits:**
+   ```bash
+   git log -10 --oneline
+   ```
+
+4. **Read core files:**
+   - `/CONVENTIONS.md` (immutable rules)
+   - `/SETUP-PROMPT.md` (session setup guide)
+   - `/app/layout.tsx` (app structure)
+   - `/lib/supabase/` (auth patterns)
+
+**NEVER assume file locations. ALWAYS verify first.**
+
+---
+
+## Post-Work Checklist
+
+After Claude Code finishes changes:
+
+- [ ] Review all changes: `git diff`
+- [ ] Test locally if needed: `npm run dev`
+- [ ] Update this context: `./scripts/update-context.sh`
+- [ ] Review context changes: `git diff CLAUDE.md`
+- [ ] Commit everything: `git add -A && git commit -m "feat: [description] + context update"`
+- [ ] **ONLY THEN push:** `git push origin main` (triggers Vercel deploy)
+
+**NEVER let Claude Code push automatically.**
+
+---
+
+## Known Active Issues & Current Work
+
+**Recently Fixed:**
+- ✅ Luna sync bug (fixed via `%%TRIP_UPDATE%%` JSON payloads)
+- ✅ Photo pipeline (Unsplash → Pexels, removed Google Places)
+- ✅ Auth static rendering (fixed /auth/returning with dynamic rendering)
+- ✅ Luna character image (updated to luna_BLUE.png with preload in <head>)
+- ✅ Hotel photos route (rewrote to return actual hotel photos, not generic)
+
+**Current Work (In Progress):**
+- Brevo email integration (list ID 17, /api/brevo-sync/route.ts, lib/brevo.ts)
+  - Server-side only: `BREVO_API_KEY` (no NEXT_PUBLIC_ prefix)
+  - Triggers: email signup + new Google OAuth users (created_at within 60 seconds)
+- Blog page (currently "Coming Soon" placeholder)
+- Deals page (needs real Unsplash photos, feature GoWithGuide/Xcaret/Klook)
+- `/trip-ideas` page (30+ destinations with category filters - scoped but not confirmed)
+- PDF export (branded itinerary using jsPDF + html2canvas)
+  - Must include Luna Let's Go logo
+  - "Crafted by Luna Let's Go" attribution
+  - Brand colors: #FF8210, #00447B
+  - Typography: Poppins/Inter
+  - Footer with website URL on every page
+
+**Known Regression Patterns:**
+- Footer legal links sometimes removed during fixes (always test full page)
+- Static pages break auth (all auth routes must be dynamic)
+- Photo determinism requires randomization (page param + shuffle)
+
+---
+
+## Tech Stack
+
+- **Framework:** Next.js 16.1.6 (App Router)
+- **Language:** TypeScript
+- **Database:** Supabase (auth + PostgreSQL)
+- **AI:** Anthropic Claude API
+- **Deployment:** Vercel (GitHub integration - automatic on push to main)
+- **Analytics:** Google Analytics (G-YZV7GHDQ0T, Stream ID 14283055688)
+
+---
+
+## Discovery Tools (Vercel MCP)
+
+### Most Useful for Diagnosis:
+1. **`Vercel:web_fetch_vercel_url`** on live site
+   - Best for diagnosing API behavior and rendered HTML
+   - Call endpoint twice to reveal caching vs determinism
+
+2. **`Vercel:get_deployment_build_logs`**
+   - After `Vercel:list_deployments` to get latest ID
+   - Most reliable for full route structure
+
+3. **`Vercel:get_runtime_logs`**
+   - Useful but messages frequently truncate
+   - Use broad query terms
+
+### Supabase MCP:
+- **`Supabase:get_logs`** with `service=api` or `service=auth`
+  - REST calls and OAuth event data
+- **`Supabase:apply_migration`**
+  - Executes immediately in production (no deployment needed)
+
+---
+
+## Key Learnings & Principles
+
+### Full Context on Every AI Call
+Every AI-powered feature (hotel suggestions, budget estimator, extra ideas, day suggestions, Luna chat) MUST receive the full generated itinerary as `tripContext`. This is the core intelligence layer:
+- Hotels suggested near activity areas
+- Budget only includes accepted items
+- No duplicate suggestions
+- Luna can reference the specific trip
+
+### Photo Determinism & Freshness
+- Unsplash search is deterministic - identical queries always return same results
+- Randomization requires varying `page` parameter (1-5) and shuffling results
+- Saved trip photos stored in `saved_trips.trip_data` JSONB freeze when saved
+- Re-fetching on load required for freshness
+
+### Auth & OAuth
+- Static pages break auth - `/auth/returning` was pre-rendered static, causing session drops post-OAuth
+- Dynamic rendering required for all auth-adjacent routes
+- Supabase OAuth strips query params - use localStorage to persist redirect destination
+- localStorage key: `luna_redirect_after_login`
+
+### UI Philosophy
+- Emoji-free UI - emojis look "too AI built"
+- Replace all with flat Lucide React SVGs in brand colors (#FF8210, #00447B)
+
+### Workflow Pattern
+Wilson identifies issues (often via live screenshots) → Claude diagnoses using Vercel/Supabase tools → Claude generates structured implementation prompt as `.md` file → Wilson runs through Claude Code against local repo → Review → `git push origin main` triggers Vercel's GitHub integration
+
+**Never deploy directly from Claude Code or Vercel CLI.**
+
+---
+
+**For detailed conventions, see CONVENTIONS.md**
+**For session setup, see SETUP-PROMPT.md**
+**For context regeneration, run: ./scripts/update-context.sh**
