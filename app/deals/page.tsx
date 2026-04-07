@@ -162,6 +162,96 @@ export default function DealsPage() {
               </a>
             </div>
           ))}
+
+          {/* Europcar AU/NZ */}
+          <div style={{
+            background: '#fff',
+            borderRadius: 16,
+            border: '1px solid rgba(0,68,123,0.1)',
+            padding: '28px 24px 24px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 12,
+          }}>
+            <div style={{
+              width: 44,
+              height: 44,
+              borderRadius: 10,
+              background: 'rgba(255,130,16,0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <Car size={22} color="#FF8210" strokeWidth={1.8} aria-hidden="true" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <p style={{
+                fontFamily: "'Poppins', sans-serif",
+                fontSize: 17,
+                fontWeight: 700,
+                color: '#00447B',
+                margin: '0 0 2px',
+              }}>Europcar</p>
+              <p style={{
+                fontFamily: "'Inter', sans-serif",
+                fontSize: 11,
+                fontWeight: 600,
+                color: '#FF8210',
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                margin: '0 0 10px',
+              }}>Car Rentals - AU &amp; NZ</p>
+              <p style={{
+                fontFamily: "'Inter', sans-serif",
+                fontSize: 13,
+                color: '#6C6D6F',
+                lineHeight: 1.6,
+                margin: 0,
+              }}>
+                Rent a car with ease across Australia and New Zealand. Great rates, flexible pick-up locations.
+              </p>
+            </div>
+            {/* Awin affiliate image tag - required for tracking */}
+            <a
+              rel="sponsored"
+              href="https://www.awin1.com/cread.php?s=4703163&v=10777&q=567194&r=2825924"
+              target="_blank"
+              style={{ display: 'block', lineHeight: 0 }}
+            >
+              <img
+                src="https://www.awin1.com/cshow.php?s=4703163&v=10777&q=567194&r=2825924"
+                border={0}
+                alt="Europcar car rental deals"
+                style={{
+                  width: '100%',
+                  height: 'auto',
+                  borderRadius: 8,
+                  display: 'block',
+                }}
+              />
+            </a>
+            <a
+              href="https://www.awin1.com/cread.php?s=4703163&v=10777&q=567194&r=2825924"
+              target="_blank"
+              rel="sponsored noopener noreferrer"
+              style={{
+                display: 'inline-block',
+                background: '#FF8210',
+                color: '#fff',
+                fontFamily: "'Poppins', sans-serif",
+                fontSize: 13,
+                fontWeight: 600,
+                textDecoration: 'none',
+                padding: '10px 20px',
+                borderRadius: 50,
+                textAlign: 'center',
+                marginTop: 4,
+              }}
+            >
+              View Car Deals &rarr;
+            </a>
+          </div>
         </div>
       </div>
 
