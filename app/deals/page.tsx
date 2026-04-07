@@ -221,7 +221,6 @@ export default function DealsPage() {
             >
               <img
                 src="https://www.awin1.com/cshow.php?s=4703163&v=10777&q=567194&r=2825924"
-                border={0}
                 alt="Europcar car rental deals"
                 style={{
                   width: '100%',
