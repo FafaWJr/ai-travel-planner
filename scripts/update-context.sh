@@ -4,9 +4,9 @@
 # Updates CLAUDE.md with current project state
 # Run this manually after approving changes, BEFORE git push
 
-echo "📝 Regenerating CLAUDE.md with current project state..."
+echo "Regenerating CLAUDE.md with current project state..."
 
-cat > CLAUDE.md << 'EOF'
+cat > CLAUDE.md << EOF
 # Luna Let's Go - Claude Code Context
 **Last Updated:** $(date +"%Y-%m-%d %H:%M:%S")
 **Current Branch:** $(git branch --show-current)
@@ -18,23 +18,15 @@ cat > CLAUDE.md << 'EOF'
 ## Critical IDs & Endpoints
 
 **Vercel:**
-- Project ID: `prj_zZ7eJAIUitbJQcY4vYTTEeUxdZnG`
-- Team ID: `team_uFD2kaJDUmZtpI2rSCIMy7kW`
+- Project ID: \`prj_zZ7eJAIUitbJQcY4vYTTEeUxdZnG\`
+- Team ID: \`team_uFD2kaJDUmZtpI2rSCIMy7kW\`
 
 **Supabase:**
-- Project ID: `qhpxejzoxfruuositwzo`
+- Project ID: \`qhpxejzoxfruuositwzo\`
 
 **GitHub:**
-- Repo: `FafaWJr/ai-travel-planner`
-- Branch: `main`
-
----
-
-## Current File Structure
-
-\`\`\`
-$(tree -I 'node_modules|.next|.git|.vercel|dist|build' -L 3 --dirsfirst)
-\`\`\`
+- Repo: \`FafaWJr/ai-travel-planner\`
+- Branch: \`main\`
 
 ---
 
@@ -94,16 +86,26 @@ These NEVER change:
 - Hotel check-in defaults to Day 1 unless specified
 
 ### Photo Pipeline
-- Tier 1: Unsplash (deterministic, randomize via \`page\` param 1-5 + shuffle)
+- Tier 1: Unsplash (randomize via \`page\` param 1-5 + shuffle 5 results, pick 3)
 - Tier 2: Pexels (use \`p.src.landscape\` NOT \`p.src.large2x\`)
 - Google Places: REMOVED from pipeline
-- Saved trips: Photos freeze at save time, re-fetch on load
+- Cache-Control: no-store on all photo API responses
+
+### Favicon
+- \`app/favicon.ico\` is the Luna logo (handled by Next.js with content hash)
+- \`public/luna-favicon.ico\` is the static copy served via metadata icons field
+- Metadata \`icons\` field in \`app/layout.tsx\` points to \`/luna-favicon.ico\`
+- \`/favicon.ico\` CDN cache may show old Vercel icon (harmless, expires naturally)
 
 ### Affiliate Links
-- Booking.com hotels: \`awin1.com/cread.php?awinmid=18118&awinaffid=2825924&campaign=LifecycleOnboarding\`
+- Booking.com hotels: \`https://www.awin1.com/cread.php?awinmid=18118&awinaffid=2825924&campaign=LifecycleOnboarding\`
+- Booking.com flights: same base + \`&ued=https%3A%2F%2Fwww.booking.com%2Fflights%2Findex.en-us.html\`
+- Booking.com cars: same base + \`&ued=https%3A%2F%2Fwww.booking.com%2Fcars%2Findex.en-us.html\`
 - GoWithGuide tours: \`https://tidd.ly/4s8kRkI\`
 - Xcaret experiences: \`https://tidd.ly/4sH1xfw\`
 - Klook activities: \`https://affiliate.klook.com/redirect?aid=117089&aff_adid=1248864&k_site=https%3A%2F%2Fwww.klook.com%2F\`
+- Europcar AU/NZ: \`https://www.awin1.com/cread.php?s=4703163&v=10777&q=567194&r=2825924\`
+- All exported from \`lib/affiliate.ts\` as \`BOOKING_AFFILIATE\` and \`ACTIVITY_AFFILIATE\`
 
 ---
 
@@ -114,7 +116,7 @@ Before coding in Claude Code, ALWAYS:
 1. **Fetch latest deployment state:**
    \`\`\`
    Vercel:list_deployments with project_id prj_zZ7eJAIUitbJQcY4vYTTEeUxdZnG
-   Get latest deployment ID → Vercel:get_deployment_build_logs
+   Get latest deployment ID -> Vercel:get_deployment_build_logs
    \`\`\`
 
 2. **Verify file locations:**
@@ -154,43 +156,42 @@ After Claude Code finishes changes:
 
 ## Known Active Issues
 
-(Update this section manually when new recurring issues are discovered)
-
 **Recently Fixed:**
-- ✅ Luna sync bug (fixed via %%TRIP_UPDATE%% JSON payloads)
-- ✅ Photo pipeline (Unsplash → Pexels, removed Google Places)
-- ✅ Auth static rendering (fixed /auth/returning with dynamic rendering)
-- ✅ Luna character image (updated to luna_BLUE.png with preload)
+- Luna sync bug (fixed via %%TRIP_UPDATE%% JSON payloads)
+- Photo pipeline (Unsplash -> Pexels, removed Google Places, added randomization)
+- Auth static rendering (fixed /auth/returning with dynamic rendering)
+- Luna character image (updated to luna_BLUE.png with preload)
+- Affiliate links updated to new AWIN cread.php URLs
+- Deals page rebuilt with partner cards (Booking.com, Klook, GoWithGuide, Xcaret, Europcar)
+- Favicon: browser tab now shows Luna logo via /luna-favicon.ico
 
 **Current Work:**
 - Brevo email integration (list ID 17, /api/brevo-sync/route.ts)
 - Blog page (coming soon placeholder)
-- Deals page (needs real Unsplash photos, affiliate partners)
 - PDF export (jsPDF + html2canvas, branded itinerary)
 
 ---
 
 ## Tech Stack
 
-- **Framework:** Next.js 16.1.6 (App Router)
+- **Framework:** Next.js 16.1.6 (App Router, Turbopack)
 - **Language:** TypeScript
 - **Database:** Supabase (auth + PostgreSQL)
 - **AI:** Anthropic Claude API
-- **Deployment:** Vercel (GitHub integration)
+- **Deployment:** Vercel (GitHub integration, auto-deploy on push to main)
 - **Analytics:** Google Analytics (G-YZV7GHDQ0T)
 
 ---
 
 **For detailed conventions, see CONVENTIONS.md**
 **For session setup, see SETUP-PROMPT.md**
-
 EOF
 
-echo "✅ CLAUDE.md regenerated successfully!"
+echo "CLAUDE.md regenerated successfully!"
 echo ""
-echo "📋 Next steps:"
+echo "Next steps:"
 echo "   1. Review changes: git diff CLAUDE.md"
 echo "   2. Commit with your changes: git add -A && git commit -m '...'"
 echo "   3. Push when ready: git push origin main"
 echo ""
-echo "⚠️  This script does NOT deploy. You control when to push."
+echo "Warning: This script does NOT deploy. You control when to push."
