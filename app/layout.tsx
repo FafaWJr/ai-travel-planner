@@ -89,6 +89,11 @@ export const metadata: Metadata = {
     site: '@lunaletsgo',
   },
 
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/favicon.ico',
+  },
+
   other: {
     verification: '7a9001216eb5ffd9e1939f6ab446f7a3',
     'ai-content-type': 'informational/commercial',
