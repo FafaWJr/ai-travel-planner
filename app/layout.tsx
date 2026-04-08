@@ -90,8 +90,8 @@ export const metadata: Metadata = {
   },
 
   icons: {
-    icon: '/favicon.ico',
-    apple: '/favicon.ico',
+    icon: '/luna-favicon.ico',
+    apple: '/luna-favicon.ico',
   },
 
   other: {
