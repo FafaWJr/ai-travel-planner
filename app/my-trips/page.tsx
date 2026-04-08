@@ -6,6 +6,16 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import NavBar from '@/components/NavBar';
+import { Clock } from 'lucide-react';
+
+function isTripExpired(startDate?: string | null, endDate?: string | null): boolean {
+  const referenceDate = endDate || startDate;
+  if (!referenceDate) return false;
+  const tripDate = new Date(referenceDate);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return tripDate < today;
+}
 
 interface SavedTrip {
   id: string;
@@ -188,9 +198,24 @@ export default function MyTripsPage() {
                 {/* Card body */}
                 <div style={{ padding: '16px 20px 20px' }}>
                   {(trip.start_date || trip.end_date) && (
-                    <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, color: '#6C6D6F', marginBottom: 6 }}>
-                      {fmtDate(trip.start_date)}{trip.start_date && trip.end_date ? ' → ' : ''}{fmtDate(trip.end_date)}
-                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
+                      <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, color: '#6C6D6F', margin: 0 }}>
+                        {fmtDate(trip.start_date)}{trip.start_date && trip.end_date ? ' \u2192 ' : ''}{fmtDate(trip.end_date)}
+                      </p>
+                      {isTripExpired(trip.start_date, trip.end_date) && (
+                        <span style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 4,
+                          backgroundColor: '#f3f4f6', color: '#6C6D6F',
+                          border: '1px solid #C0C0C0', borderRadius: 999,
+                          padding: '2px 10px', fontSize: 11,
+                          fontFamily: 'Inter, sans-serif', fontWeight: 600,
+                          letterSpacing: '0.04em', textTransform: 'uppercase', lineHeight: 1.4,
+                        }}>
+                          <Clock size={11} color="#6C6D6F" />
+                          Expired
+                        </span>
+                      )}
+                    </div>
                   )}
                   <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: '#C0C0C0', marginBottom: 16 }}>
                     Saved {fmtDate(trip.created_at)}
