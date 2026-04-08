@@ -360,6 +360,8 @@ function PlanContent() {
   const [saveLoading, setSaveLoading] = useState(false);
   const [savedTripId, setSavedTripId] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState(false);
+  const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'assistant'; content: string; planUpdated?: boolean; isWelcome?: boolean }[]>([]);
+  const chatSyncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const markDirty = () => { if (savedTripId) setIsDirty(true); };
   const [isExportingPDF, setIsExportingPDF] = useState(false);
   const [initialItineraryDays, setInitialItineraryDays] = useState<Day[] | undefined>(undefined);
@@ -401,14 +403,14 @@ function PlanContent() {
         const res = await fetch('/api/trips', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: savedTripId, title, trip_data }),
+          body: JSON.stringify({ id: savedTripId, title, trip_data, chat_history: chatMessages }),
         });
         if (!res.ok) throw new Error((await res.json()).error || 'Update failed');
       } else {
         const res = await fetch('/api/trips', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title, destination: dest, start_date: sd, end_date: ed, trip_data }),
+          body: JSON.stringify({ title, destination: dest, start_date: sd, end_date: ed, trip_data, chat_history: chatMessages }),
         });
         if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
         const json = await res.json();
@@ -520,6 +522,10 @@ function PlanContent() {
         if (td.itineraryDays && td.itineraryDays.length > 0) {
           setInitialItineraryDays(td.itineraryDays);
         }
+        // Restore chat history if available
+        if (Array.isArray(data.chat_history) && data.chat_history.length > 0) {
+          setChatMessages(data.chat_history as { role: 'user' | 'assistant'; content: string; planUpdated?: boolean; isWelcome?: boolean }[]);
+        }
         setSavedTripId(data.id as string);
       } else {
         setError('Could not load saved trip.');
@@ -573,6 +579,20 @@ function PlanContent() {
     }, 2500);
     return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); };
   }, [itineraryVersion]); // eslint-disable-line
+
+  // Auto-sync chat history when messages change (debounced, only when trip is saved)
+  useEffect(() => {
+    if (!user || !savedTripId || chatMessages.length === 0) return;
+    if (chatSyncTimer.current) clearTimeout(chatSyncTimer.current);
+    chatSyncTimer.current = setTimeout(async () => {
+      await fetch('/api/trips', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: savedTripId, chat_history: chatMessages }),
+      });
+    }, 2000);
+    return () => { if (chatSyncTimer.current) clearTimeout(chatSyncTimer.current); };
+  }, [chatMessages]); // eslint-disable-line
 
   const generatePlan = async (p: string) => {
     setLoading(true); setError('');
@@ -1043,6 +1063,9 @@ function PlanContent() {
             }}
             isGuest={!user}
             onGateRequired={() => openGate('Luna AI chat')}
+            initialMessages={chatMessages.length > 0 ? chatMessages : undefined}
+            savedTripId={savedTripId}
+            onMessagesChange={setChatMessages}
           />
           {gateOpen && <GateOverlay onClose={() => setGateOpen(false)} tripSnapshot={plan ? { plan, photos, acceptedHotels, itineraryDays: itineraryRef.current?.getDaysSnapshot() ?? [], prompt } : undefined} />}
           </>

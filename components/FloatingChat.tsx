@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
 import { createClient as createSupabaseClient } from '@/lib/supabase/client';
+import { CheckCircle } from 'lucide-react';
 
 type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'night';
 
@@ -39,6 +40,9 @@ interface Props {
   onTripUpdate?: (update: TripUpdate) => void;
   isGuest?: boolean;
   onGateRequired?: () => void;
+  initialMessages?: Msg[];
+  savedTripId?: string | null;
+  onMessagesChange?: (messages: Msg[]) => void;
 }
 
 async function collectSSE(res: Response): Promise<string> {
@@ -139,11 +143,13 @@ function buildWelcome(firstName: string | null, destination: string | null): str
   return `${nameGreeting} I'm Luna, your personal travel agent here at Luna Let's Go! ${destinationLine} Need to add a hotel, swap an activity, or just want my honest take on what's worth it and what to skip? Just ask, I'm here for all of it. Let's make this trip absolutely unforgettable!`;
 }
 
-export default function FloatingChat({ plan, destination, hotelContext, currentActivities, onAddToItinerary, onPlanUpdate, onTripUpdate, isGuest = false, onGateRequired }: Props) {
+export default function FloatingChat({ plan, destination, hotelContext, currentActivities, onAddToItinerary, onPlanUpdate, onTripUpdate, isGuest = false, onGateRequired, initialMessages, savedTripId, onMessagesChange }: Props) {
   const [open, setOpen] = useState(true);
-  const [msgs, setMsgs] = useState<Msg[]>([
-    { role: 'assistant', content: buildWelcome(null, destination ?? null), isWelcome: true },
-  ]);
+  const [msgs, setMsgs] = useState<Msg[]>(
+    initialMessages && initialMessages.length > 0
+      ? initialMessages
+      : [{ role: 'assistant', content: buildWelcome(null, destination ?? null), isWelcome: true }]
+  );
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [confirmedAdds, setConfirmedAdds] = useState<Record<number, Set<number>>>({});
@@ -164,7 +170,7 @@ export default function FloatingChat({ plan, destination, hotelContext, currentA
     });
   }, []); // eslint-disable-line
 
-  // Update welcome message when session or destination changes
+  // Update welcome message when session or destination changes (only if no restored history)
   useEffect(() => {
     if (!sessionLoaded) return;
     setMsgs(prev => {
@@ -174,6 +180,14 @@ export default function FloatingChat({ plan, destination, hotelContext, currentA
       return prev;
     });
   }, [sessionLoaded, firstName, destination]); // eslint-disable-line
+
+  // Notify parent whenever msgs change (for chat persistence)
+  useEffect(() => {
+    if (!onMessagesChange) return;
+    // Don't sync if only the welcome message exists
+    if (msgs.length === 1 && msgs[0].isWelcome) return;
+    onMessagesChange(msgs);
+  }, [msgs]); // eslint-disable-line
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [msgs, loading]);
 
@@ -267,6 +281,25 @@ export default function FloatingChat({ plan, destination, hotelContext, currentA
           </div>
           <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 18, display: 'inline-block', transition: 'transform 0.2s', transform: open ? 'rotate(0deg)' : 'rotate(180deg)' }}>▾</span>
         </div>
+
+        {/* Conversation saved indicator */}
+        {open && savedTripId && (
+          <div style={{
+            fontSize: 11,
+            color: '#679AC1',
+            textAlign: 'center',
+            padding: '3px 0 5px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 4,
+            background: 'rgba(103,154,193,0.07)',
+            borderBottom: '1px solid rgba(103,154,193,0.15)',
+          }}>
+            <CheckCircle size={12} color="#679AC1" />
+            Conversation saved with your trip
+          </div>
+        )}
 
         {/* Body */}
         {open && (

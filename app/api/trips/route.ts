@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json()
-  const { title, destination, start_date, end_date, trip_data } = body
+  const { title, destination, start_date, end_date, trip_data, chat_history } = body
 
   // Guarantee the profiles row exists — saved_trips.user_id has FK → profiles.id
   await supabase.from('profiles').upsert(
@@ -77,6 +77,7 @@ export async function POST(request: NextRequest) {
       start_date: start_date ?? null,
       end_date: end_date ?? null,
       trip_data,
+      chat_history: chat_history ?? [],
       is_favorite: false,
     })
     .select('id')
@@ -100,7 +101,7 @@ export async function PATCH(request: NextRequest) {
   }
 
   const body = await request.json()
-  const { id, title, trip_data } = body
+  const { id, title, trip_data, chat_history } = body
 
   if (!id) {
     return NextResponse.json({ error: 'Missing trip id' }, { status: 400 })
@@ -109,6 +110,7 @@ export async function PATCH(request: NextRequest) {
   const updatePayload: Record<string, unknown> = { updated_at: new Date().toISOString() }
   if (title !== undefined) updatePayload.title = title
   if (trip_data !== undefined) updatePayload.trip_data = trip_data
+  if (chat_history !== undefined) updatePayload.chat_history = chat_history
 
   const { error } = await supabase
     .from('saved_trips')
