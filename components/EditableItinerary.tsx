@@ -35,6 +35,7 @@ export interface Activity {
   status: Status;
   slot: TimeSlot;
   manuallyAdded?: boolean;
+  lunaAdded?: boolean;
 }
 interface Suggestion {
   id: string;
@@ -42,14 +43,6 @@ interface Suggestion {
   description: string;
   timing: string;
 }
-export interface HotelEntry {
-  name: string;
-  neighborhood: string;
-  checkIn: string;
-  checkOut: string;
-  bookingUrl: string;
-}
-
 export interface Day {
   number: number;
   title: string;
@@ -186,7 +179,6 @@ interface Props {
   tripPrompt: string;
   photos: string[];
   acceptedHotels?: AcceptedHotel[];
-  lunaHotels?: Record<number, HotelEntry>;
   onActivityStatusChange?: () => void;
   onPlaceHover: (e: React.MouseEvent) => void;
   onPlaceLeave: () => void;
@@ -196,7 +188,7 @@ interface Props {
 }
 
 export interface ItineraryHandle {
-  addActivity: (text: string, dayNum: number, slot: TimeSlot, manuallyAdded?: boolean) => void;
+  addActivity: (text: string, dayNum: number, slot: TimeSlot, manuallyAdded?: boolean, lunaAdded?: boolean) => void;
   removeActivitiesMatching: (pattern: string) => void;
   getDays: () => { number: number; title: string }[];
   getDaysSnapshot: () => Day[];
@@ -205,7 +197,6 @@ export interface ItineraryHandle {
 
 const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableItinerary({
   itineraryMd, destination, tripPrompt, photos, acceptedHotels = [],
-  lunaHotels = {},
   onActivityStatusChange,
   onPlaceHover, onPlaceLeave,
   isGuest = false, onGateRequired,
@@ -242,7 +233,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
 
   /* Expose handle to parent via ref */
   useImperativeHandle(ref, () => ({
-    addActivity(text: string, dayNum: number, slot: TimeSlot, manuallyAdded?: boolean) {
+    addActivity(text: string, dayNum: number, slot: TimeSlot, manuallyAdded?: boolean, lunaAdded?: boolean) {
       setDays(prev => prev.map(d => {
         if (d.number !== dayNum) return d;
         const newActivity: Activity = {
@@ -251,6 +242,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
           status: 'pending',
           slot,
           manuallyAdded,
+          lunaAdded,
         };
         return { ...d, activities: [...d.activities, newActivity], open: true };
       }));
@@ -273,14 +265,6 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
     },
   }));
 
-  /* Open the check-in day whenever a hotel is assigned to it */
-  useEffect(() => {
-    const hotelDayNums = Object.keys(lunaHotels).map(Number);
-    if (hotelDayNums.length === 0) return;
-    setDays(prev => prev.map(d =>
-      hotelDayNums.includes(d.number) && !d.open ? { ...d, open: true } : d
-    ));
-  }, [lunaHotels]); // eslint-disable-line
 
   /* Find activity across all days */
   const findActivity = (id: UniqueIdentifier) =>
@@ -545,50 +529,6 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
                 {/* Time-slot sections */}
                 {day.open && (
                   <div style={{ padding: '14px 14px 16px' }}>
-                    {/* Hotel card (Luna-added via chat) */}
-                    {lunaHotels[day.number] && (() => {
-                      const h = lunaHotels[day.number];
-                      return (
-                        <div style={{
-                          display: 'flex', alignItems: 'center', gap: 12,
-                          padding: '14px 16px', marginBottom: 14,
-                          backgroundColor: '#EFF6FF',
-                          border: '2px solid #00447B',
-                          borderRadius: 10,
-                        }}>
-                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00447B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                            <path d="M3 22V12a9 9 0 0 1 18 0v10"/>
-                            <path d="M3 22h18"/>
-                            <rect x="9" y="13" width="6" height="9"/>
-                            <path d="M9 22v-4h6v4"/>
-                          </svg>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 14, color: '#00447B', margin: '0 0 2px' }}>
-                              {h.name}
-                            </p>
-                            <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: '#6C6D6F', margin: 0 }}>
-                              {h.neighborhood ? `${h.neighborhood} · ` : ''}{h.checkIn} to {h.checkOut}
-                            </p>
-                          </div>
-                          <a
-                            href={h.bookingUrl}
-                            target="_blank"
-                            rel="noopener noreferrer sponsored"
-                            onClick={e => e.stopPropagation()}
-                            style={{
-                              display: 'inline-flex', alignItems: 'center', gap: 5,
-                              padding: '8px 14px', backgroundColor: '#00447B', color: '#ffffff',
-                              borderRadius: 6, textDecoration: 'none', flexShrink: 0,
-                              fontFamily: "'Inter',sans-serif", fontSize: 12, fontWeight: 500,
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                            Book on Booking.com
-                          </a>
-                        </div>
-                      );
-                    })()}
                     {SLOTS.map(({ key, label, icon }) => {
                       const slotActs = day.activities.filter(a => a.slot === key);
                       const containerId = slotId(day.number, key);
@@ -798,13 +738,13 @@ function SortableActivityItem({
           ...style,
           display: 'flex', alignItems: 'flex-start', gap: 6,
           padding: '9px 10px', borderRadius: 10,
-          borderLeft: `3px solid ${act.status === 'accepted' ? '#16A34A' : act.status === 'declined' ? 'rgba(220,38,38,0.3)' : act.manuallyAdded ? '#FF8210' : 'rgba(0,68,123,0.12)'}`,
+          borderLeft: `3px solid ${act.status === 'accepted' ? '#16A34A' : act.status === 'declined' ? 'rgba(220,38,38,0.3)' : (act.manuallyAdded || act.lunaAdded) ? '#FF8210' : 'rgba(0,68,123,0.12)'}`,
           border: isOver ? '2px dashed #00447B' : undefined,
           background: isOver
             ? 'rgba(0,68,123,0.05)'
             : act.status === 'accepted' ? 'rgba(22,163,74,0.04)'
             : act.status === 'declined' ? 'rgba(220,38,38,0.03)'
-            : act.manuallyAdded ? 'rgba(255,130,16,0.04)'
+            : (act.manuallyAdded || act.lunaAdded) ? 'rgba(255,130,16,0.04)'
             : '#F9FAFB',
           opacity: act.status === 'declined' ? (isDragging ? 0.2 : 0.5) : (isDragging ? 0.35 : 1),
           transition: 'background 0.15s, border 0.15s, opacity 0.15s',
@@ -826,6 +766,9 @@ function SortableActivityItem({
           />
           {act.manuallyAdded && (
             <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 10, color: '#FF8210', fontWeight: 600, letterSpacing: 0.3 }}>✦ Added by you</span>
+          )}
+          {act.lunaAdded && (
+            <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 10, color: '#FF8210', fontWeight: 600, letterSpacing: 0.3 }}>✦ Added by Luna</span>
           )}
         </div>
 

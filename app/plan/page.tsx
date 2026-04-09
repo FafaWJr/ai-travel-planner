@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import EditableItinerary, { type ItineraryHandle, type Day, type HotelEntry } from '@/components/EditableItinerary';
+import EditableItinerary, { type ItineraryHandle, type Day } from '@/components/EditableItinerary';
 import { BOOKING_AFFILIATE } from '@/lib/affiliate';
 import FloatingChat, { type TripUpdate } from '@/components/FloatingChat';
 import Toast from '@/components/Toast';
@@ -350,7 +350,6 @@ function PlanContent() {
   const [showExtraIdeas,  setShowExtraIdeas]  = useState(false);
   const [toast,           setToast]           = useState<string | null>(null);
   const [acceptedHotels,  setAcceptedHotels]  = useState<AcceptedHotel[]>([]);
-  const [lunaHotels,      setLunaHotels]      = useState<Record<number, HotelEntry>>({});
   const [seenIdeaNames,   setSeenIdeaNames]   = useState<string[]>([]);
   const [itineraryVersion, setItineraryVersion] = useState(0);
   const itineraryRef = useRef<ItineraryHandle>(null);
@@ -392,7 +391,7 @@ function PlanContent() {
     const numDays = sd && ed ? Math.round((new Date(ed).getTime() - new Date(sd).getTime()) / 86400000) : null;
     const title = `${dest}${numDays ? ` · ${numDays} days` : ''}`;
     const snapshot = itineraryRef.current?.getDaysSnapshot() ?? [];
-    const trip_data = { plan, photos, acceptedHotels, lunaHotels, prompt, itineraryDays: snapshot };
+    const trip_data = { plan, photos, acceptedHotels, prompt, itineraryDays: snapshot };
     return { dest, sd, ed, title, trip_data };
   };
 
@@ -484,12 +483,11 @@ function PlanContent() {
     // Restore guest draft after login
     if (draftStr && user && !plan) {
       try {
-        const draft = JSON.parse(draftStr) as { prompt: string; plan: string; photos: string[]; acceptedHotels: AcceptedHotel[]; lunaHotels?: Record<number, HotelEntry>; itineraryDays: Day[] };
+        const draft = JSON.parse(draftStr) as { prompt: string; plan: string; photos: string[]; acceptedHotels: AcceptedHotel[]; itineraryDays: Day[] };
         setInitialItineraryDays(draft.itineraryDays || []);
         setPlan(draft.plan || '');
         setPhotos(draft.photos || []);
         setAcceptedHotels(draft.acceptedHotels || []);
-        if (draft.lunaHotels) setLunaHotels(draft.lunaHotels);
         setLoading(false);
         localStorage.removeItem('guest_trip_draft');
         saveRestoredDraft(draft);
@@ -518,11 +516,10 @@ function PlanContent() {
     try {
       const { data } = await supabase.from('saved_trips').select('*').eq('id', id).single();
       if (data && data.trip_data) {
-        const td = data.trip_data as { plan?: string; photos?: string[]; acceptedHotels?: AcceptedHotel[]; lunaHotels?: Record<number, HotelEntry>; itineraryDays?: Day[] };
+        const td = data.trip_data as { plan?: string; photos?: string[]; acceptedHotels?: AcceptedHotel[]; itineraryDays?: Day[] };
         setPlan(td.plan || '');
         setPhotos(td.photos || []);
         setAcceptedHotels((td.acceptedHotels as AcceptedHotel[]) || []);
-        if (td.lunaHotels) setLunaHotels(td.lunaHotels);
         if (td.itineraryDays && td.itineraryDays.length > 0) {
           setInitialItineraryDays(td.itineraryDays);
         }
@@ -541,7 +538,7 @@ function PlanContent() {
     }
   };
 
-  const saveRestoredDraft = async (draft: { prompt: string; plan: string; photos: string[]; acceptedHotels: AcceptedHotel[]; lunaHotels?: Record<number, HotelEntry>; itineraryDays: Day[] }) => {
+  const saveRestoredDraft = async (draft: { prompt: string; plan: string; photos: string[]; acceptedHotels: AcceptedHotel[]; itineraryDays: Day[] }) => {
     if (!user) return;
     try {
       const p = draft.prompt;
@@ -557,7 +554,7 @@ function PlanContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title, destination: dest, start_date: sd, end_date: ed,
-          trip_data: { plan: draft.plan, photos: draft.photos, acceptedHotels: draft.acceptedHotels, lunaHotels: draft.lunaHotels ?? {}, prompt: p, itineraryDays: draft.itineraryDays },
+          trip_data: { plan: draft.plan, photos: draft.photos, acceptedHotels: draft.acceptedHotels, prompt: p, itineraryDays: draft.itineraryDays },
         }),
       });
       if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
@@ -844,7 +841,6 @@ function PlanContent() {
                   photos={photos}
                   acceptedHotels={acceptedHotels}
                   onActivityStatusChange={() => { setItineraryVersion(v => v + 1); markDirty(); }}
-                  lunaHotels={lunaHotels}
                   onPlaceHover={handlePlaceMouseOver}
                   onPlaceLeave={handlePlaneMouseLeave}
                   isGuest={!user}
@@ -1057,29 +1053,16 @@ function PlanContent() {
                     ...prev.filter(h => h.hotel.name.toLowerCase() !== d.hotelName!.toLowerCase()),
                     { hotel, segment },
                   ]);
-                  // Add hotel card to Itinerary tab via parent state (prop-based, no ref timing issues)
-                  const hotelEntry: HotelEntry = {
-                    name: d.hotelName,
-                    neighborhood: d.neighborhood ?? d.city ?? '',
-                    checkIn: dayToDate(checkInDay),
-                    checkOut: dayToDate(checkOutDay),
-                    bookingUrl: BOOKING_AFFILIATE.hotels,
-                  };
-                  setLunaHotels(prev => ({ ...prev, [checkInDay]: hotelEntry }));
+                  // Add hotel as a regular activity card in the Itinerary tab
+                  const neighborhood = d.neighborhood ?? d.city ?? '';
+                  const hotelLink = `<a href="${BOOKING_AFFILIATE.hotels}" target="_blank" rel="noopener noreferrer sponsored" style="color:#00447B;font-weight:600;text-decoration:underline">${d.hotelName}</a>`;
+                  const activityText = `Check-in: ${hotelLink}${neighborhood ? ` (${neighborhood})` : ''}`;
+                  itineraryRef.current?.addActivity(activityText, checkInDay, 'morning', false, true);
                   setToast(`${d.hotelName} added to your stays`);
                   markDirty();
                 } else if (update.action === 'remove') {
                   setAcceptedHotels(prev => prev.filter(h => h.hotel.name.toLowerCase() !== d.hotelName!.toLowerCase()));
-                  // Remove hotel card from Itinerary tab
-                  setLunaHotels(prev => {
-                    const updated = { ...prev };
-                    Object.keys(updated).forEach(k => {
-                      if (updated[Number(k)]?.name.toLowerCase() === d.hotelName!.toLowerCase()) {
-                        delete updated[Number(k)];
-                      }
-                    });
-                    return updated;
-                  });
+                  itineraryRef.current?.removeActivitiesMatching(d.hotelName);
                   setToast(`${d.hotelName} removed from your stays`);
                   markDirty();
                 }
