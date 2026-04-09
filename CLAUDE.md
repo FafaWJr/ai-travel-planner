@@ -1,7 +1,7 @@
 # Luna Let's Go - Claude Code Context
-**Last Updated:** 2026-04-09 22:49:22
+**Last Updated:** 2026-04-10 09:05:24
 **Current Branch:** main
-**Last Commit:** 6aef7e9 fix: ensure Luna always emits TRIP_UPDATE block for activity and hotel changes
+**Last Commit:** 40d23bf fix: stack date below Day pill in banner (column layout, bottom-left)
 **Deployment:** https://www.lunaletsgo.com
 
 ---
@@ -68,16 +68,16 @@ app/trip-ideas/page.tsx
 ## Recent Changes (Last 10 Commits)
 
 ```
-6aef7e9 (HEAD -> main, origin/main, origin/HEAD) fix: ensure Luna always emits TRIP_UPDATE block for activity and hotel changes
+40d23bf (HEAD -> main, origin/main, origin/HEAD) fix: stack date below Day pill in banner (column layout, bottom-left)
+7b500bf feat: add date and weekday to itinerary day banners
+142c1c5 chore: fix update-context.sh heredoc variable expansion and update CLAUDE.md
+6aef7e9 fix: ensure Luna always emits TRIP_UPDATE block for activity and hotel changes
 8b54421 feat: Luna adds activities via %%TRIP_UPDATE%% instead of plan regeneration
 218c214 fix: hotel appears as activity card in itinerary + Luna asks which day
 cac16a9 fix: switch hotel-in-itinerary to prop-based rendering
 f46e3ba (origin/preview/luna-hotel-fix, preview/luna-hotel-fix) feat: show Luna-added hotel card in Itinerary tab
 3010e35 feat: add Book on Booking.com button to confirmed stay summary
 7a21769 feat: add Expired badge to past trips on My Trips page
-bbf2e7c fix: exclude .next from tsconfig wildcard to prevent duplicate type declarations
-fb7e56d fix: update-context.sh heredoc variable expansion and remove emojis
-df03d94 feat: save and restore Luna chat history with trips
 ```
 
 ---
@@ -173,7 +173,7 @@ After Claude Code finishes changes:
 
 - [ ] Review all changes: `git diff`
 - [ ] Test locally if needed
-- [ ] Update this context: `./update-context.sh`
+- [ ] Update this context: `./scripts/update-context.sh`
 - [ ] Review context changes: `git diff CLAUDE.md`
 - [ ] Commit everything: `git add -A && git commit -m "feat: [description] + context update"`
 - [ ] **ONLY THEN push:** `git push origin main` (triggers Vercel deploy)
@@ -192,7 +192,6 @@ After Claude Code finishes changes:
 - Affiliate links updated to new AWIN cread.php URLs
 - Deals page rebuilt with partner cards (Booking.com, Klook, GoWithGuide, Xcaret, Europcar)
 - Favicon: browser tab now shows Luna logo via /luna-favicon.ico
-- Luna activity/hotel TRIP_UPDATE emission (mandatory block + dual-delimiter regex)
 
 **Current Work:**
 - Brevo email integration (list ID 17, /api/brevo-sync/route.ts)

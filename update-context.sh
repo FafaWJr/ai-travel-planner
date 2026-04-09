@@ -6,21 +6,11 @@
 
 echo "Regenerating CLAUDE.md with current project state..."
 
-LAST_UPDATED=$(date +"%Y-%m-%d %H:%M:%S")
-CURRENT_BRANCH=$(git branch --show-current)
-LAST_COMMIT=$(git log -1 --oneline)
-API_ROUTES=$(find app/api -name "route.ts" 2>/dev/null | sort || echo "No API routes found in app/api")
-PAGES=$(find app -name "page.tsx" 2>/dev/null | grep -v "node_modules" | sort || echo "No pages found")
-RECENT_COMMITS=$(git log -10 --oneline --decorate)
-
-cat > CLAUDE.md << 'STATIC_EOF'
+cat > CLAUDE.md << EOF
 # Luna Let's Go - Claude Code Context
-STATIC_EOF
-
-cat >> CLAUDE.md << EOF
-**Last Updated:** ${LAST_UPDATED}
-**Current Branch:** ${CURRENT_BRANCH}
-**Last Commit:** ${LAST_COMMIT}
+**Last Updated:** $(date +"%Y-%m-%d %H:%M:%S")
+**Current Branch:** $(git branch --show-current)
+**Last Commit:** $(git log -1 --oneline)
 **Deployment:** https://www.lunaletsgo.com
 
 ---
@@ -43,7 +33,7 @@ cat >> CLAUDE.md << EOF
 ## Active API Routes
 
 \`\`\`
-${API_ROUTES}
+$(find app/api -name "route.ts" 2>/dev/null | sort || echo "No API routes found in app/api")
 \`\`\`
 
 ---
@@ -51,7 +41,7 @@ ${API_ROUTES}
 ## Active Pages
 
 \`\`\`
-${PAGES}
+$(find app -name "page.tsx" 2>/dev/null | grep -v "node_modules" | sort || echo "No pages found")
 \`\`\`
 
 ---
@@ -59,7 +49,7 @@ ${PAGES}
 ## Recent Changes (Last 10 Commits)
 
 \`\`\`
-${RECENT_COMMITS}
+$(git log -10 --oneline --decorate)
 \`\`\`
 
 ---
@@ -155,7 +145,7 @@ After Claude Code finishes changes:
 
 - [ ] Review all changes: \`git diff\`
 - [ ] Test locally if needed
-- [ ] Update this context: \`./update-context.sh\`
+- [ ] Update this context: \`./scripts/update-context.sh\`
 - [ ] Review context changes: \`git diff CLAUDE.md\`
 - [ ] Commit everything: \`git add -A && git commit -m "feat: [description] + context update"\`
 - [ ] **ONLY THEN push:** \`git push origin main\` (triggers Vercel deploy)
@@ -174,7 +164,6 @@ After Claude Code finishes changes:
 - Affiliate links updated to new AWIN cread.php URLs
 - Deals page rebuilt with partner cards (Booking.com, Klook, GoWithGuide, Xcaret, Europcar)
 - Favicon: browser tab now shows Luna logo via /luna-favicon.ico
-- Luna activity/hotel TRIP_UPDATE emission (mandatory block + dual-delimiter regex)
 
 **Current Work:**
 - Brevo email integration (list ID 17, /api/brevo-sync/route.ts)
