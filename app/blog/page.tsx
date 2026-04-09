@@ -1,7 +1,27 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import NavBar from '@/components/NavBar';
+
+function FijiFlag() {
+  return (
+    <svg width="22" height="14" viewBox="0 0 22 14" xmlns="http://www.w3.org/2000/svg" style={{ borderRadius: 2, flexShrink: 0 }}>
+      <rect width="22" height="14" fill="#68BFE5"/>
+      <rect width="11" height="7" fill="#012169"/>
+      <line x1="0" y1="0" x2="11" y2="7" stroke="white" strokeWidth="1.8"/>
+      <line x1="11" y1="0" x2="0" y2="7" stroke="white" strokeWidth="1.8"/>
+      <line x1="0" y1="0" x2="11" y2="7" stroke="#C8102E" strokeWidth="1"/>
+      <line x1="11" y1="0" x2="0" y2="7" stroke="#C8102E" strokeWidth="1"/>
+      <line x1="5.5" y1="0" x2="5.5" y2="7" stroke="white" strokeWidth="2.2"/>
+      <line x1="0" y1="3.5" x2="11" y2="3.5" stroke="white" strokeWidth="2.2"/>
+      <line x1="5.5" y1="0" x2="5.5" y2="7" stroke="#C8102E" strokeWidth="1.2"/>
+      <line x1="0" y1="3.5" x2="11" y2="3.5" stroke="#C8102E" strokeWidth="1.2"/>
+      <rect x="14" y="3" width="5" height="5" rx="1" fill="white" opacity="0.85"/>
+      <rect x="14.5" y="3.5" width="4" height="4" rx="0.5" fill="#012169"/>
+    </svg>
+  );
+}
 
 /* ── Flat SVG illustrations — brand colours only (#FF8210 / #00447B / #679AC1) ── */
 const BlogIllustrations: Record<number, () => React.ReactElement> = {
@@ -132,21 +152,6 @@ export default function BlogPage() {
           }} />
 
           <div style={{ position: 'relative', zIndex: 1, maxWidth: 700, margin: '0 auto' }}>
-            {/* Coming soon badge */}
-            <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-              background: 'rgba(255,130,16,0.15)', border: '1.5px solid rgba(255,130,16,0.40)',
-              borderRadius: 'var(--r-pill)', padding: '6px 18px', marginBottom: 28,
-            }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <rect x="3" y="11" width="18" height="13" rx="2" stroke="#FF8210" strokeWidth="2"/>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#FF8210" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-              <span style={{ fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 12, color: '#FF8210', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                Coming Soon
-              </span>
-            </div>
-
             <h1 style={{
               fontFamily: 'var(--font-head)', fontWeight: 700,
               fontSize: 'clamp(36px, 5vw, 60px)',
@@ -158,7 +163,7 @@ export default function BlogPage() {
               fontFamily: 'var(--font-body)', fontSize: 'clamp(16px, 2vw, 20px)',
               color: 'rgba(255,255,255,0.75)', lineHeight: 1.6, margin: '0 auto',
             }}>
-              Stories, tips &amp; inspiration from around the world
+              Real trips, honest takes, and the kind of advice only a friend who just came back gives you.
             </p>
           </div>
         </section>
@@ -172,10 +177,10 @@ export default function BlogPage() {
               fontFamily: 'var(--font-head)', fontWeight: 700, fontSize: 'clamp(22px, 3vw, 32px)',
               color: 'var(--navy)', marginBottom: 12,
             }}>
-              A preview of what's coming
+              Travel Stories
             </h2>
             <p style={{ fontFamily: 'var(--font-body)', fontSize: 16, color: 'var(--gray-dark)', maxWidth: 520, margin: '0 auto' }}>
-              Real travel stories, destination guides, and expert tips — written by people who actually go there.
+              Real destinations, honest takes, and practical tips from people who actually make the journey.
             </p>
           </div>
 
@@ -186,6 +191,62 @@ export default function BlogPage() {
             gap: 28,
             position: 'relative',
           }}>
+
+            {/* ── Real post: Fiji ── */}
+            <Link href="/blog/fiji-oct-2024" style={{ textDecoration: 'none', color: 'inherit', display: 'block', background: '#fff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 16px rgba(0,68,123,0.08)', transition: 'transform 0.25s ease, box-shadow 0.25s ease' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 10px 32px rgba(0,68,123,0.14)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 16px rgba(0,68,123,0.08)'; }}
+            >
+              {/* Card image */}
+              <div style={{ position: 'relative', width: '100%', height: 220, background: 'linear-gradient(135deg, #00447B 0%, #005fa3 40%, #0096c7 70%, #48cae4 100%)' }}>
+                {/* /public/blog/fiji-oct-2024/Matamanoa_resort_pool.jpeg */}
+                <Image src="/blog/fiji-oct-2024/Matamanoa_resort_pool.jpeg" alt="Matamanoa Island Resort" fill style={{ objectFit: 'cover' }} sizes="380px" />
+                {/* Overlay */}
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.35) 100%)' }} />
+                {/* Tags row */}
+                <div style={{ position: 'absolute', top: 14, left: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ background: '#FF8210', color: '#fff', fontFamily: 'var(--font-head)', fontSize: 11, fontWeight: 700, letterSpacing: '0.8px', textTransform: 'uppercase', padding: '4px 10px', borderRadius: 20 }}>Fiji</span>
+                  <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.18)', borderRadius: 20, padding: '4px 8px', gap: 5, backdropFilter: 'blur(4px)' }}>
+                    <FijiFlag />
+                    <span style={{ fontFamily: 'var(--font-head)', fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.9)' }}>Fiji</span>
+                  </div>
+                </div>
+                {/* Bottom label */}
+                <div style={{ position: 'absolute', bottom: 14, left: 14 }}>
+                  <span style={{ fontFamily: 'var(--font-head)', fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.7)', letterSpacing: '1px', textTransform: 'uppercase' }}>Matamanoa Island · Mamanuca, Fiji</span>
+                </div>
+              </div>
+
+              {/* Card body */}
+              <div style={{ padding: '1.4rem 1.5rem 1.75rem' }}>
+                <div style={{ fontFamily: 'var(--font-head)', fontSize: 12, color: 'var(--gray-dark)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <span>October 2024</span>
+                  <span style={{ color: '#C0C0C0' }}>·</span>
+                  <span>10 min read</span>
+                  <span style={{ color: '#C0C0C0' }}>·</span>
+                  <span>7 nights</span>
+                </div>
+                <h3 style={{ fontFamily: 'var(--font-head)', fontWeight: 700, fontSize: 17, color: 'var(--navy)', marginBottom: 10, lineHeight: 1.4 }}>
+                  Bula! Fiji on a Smart Budget: Islands, Beach Clubs, and a Private Pool
+                </h3>
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--gray-dark)', lineHeight: 1.6, marginBottom: 18 }}>
+                  We split 7 nights between Nadi and Matamanoa Island, did Mala Mala, Cloud 9, and Castaway, then packed our own beer onto the island boat. Here's exactly how we did it.
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #f0f0f0', paddingTop: 14 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--navy)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-head)', fontSize: 11, fontWeight: 700, color: '#fff' }}>WF</div>
+                    <span style={{ fontFamily: 'var(--font-head)', fontSize: 12, fontWeight: 600, color: 'var(--navy)' }}>Wilson &amp; Fatima</span>
+                  </div>
+                  <span style={{ fontFamily: 'var(--font-head)', fontSize: 12, fontWeight: 600, color: '#FF8210', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    Read story
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <path d="M3 7H11M8 4L11 7L8 10" stroke="#FF8210" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </span>
+                </div>
+              </div>
+            </Link>
+
             {PLACEHOLDER_POSTS.map(post => (
               <article key={post.id} style={{
                 background: '#fff',
