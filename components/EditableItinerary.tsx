@@ -2,6 +2,7 @@
 import { useState, useId, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import FinalItineraryModal from './FinalItineraryModal';
 import type { AcceptedHotel } from './StayTab';
+import { Hotel, ExternalLink } from 'lucide-react';
 import {
   DndContext,
   DragOverlay,
@@ -42,6 +43,14 @@ interface Suggestion {
   description: string;
   timing: string;
 }
+export interface HotelEntry {
+  name: string;
+  neighborhood: string;
+  checkIn: string;
+  checkOut: string;
+  bookingUrl: string;
+}
+
 export interface Day {
   number: number;
   title: string;
@@ -50,6 +59,7 @@ export interface Day {
   suggestions: Suggestion[];
   loadingMore: boolean;
   confirmed: boolean;
+  hotel?: HotelEntry;
 }
 
 const SLOTS: { key: TimeSlot; label: string; icon: string }[] = [
@@ -192,6 +202,8 @@ export interface ItineraryHandle {
   getDays: () => { number: number; title: string }[];
   getDaysSnapshot: () => Day[];
   restoreDays: (days: Day[]) => void;
+  setHotelForDay: (dayNum: number, hotel: HotelEntry) => void;
+  removeHotelFromDay: (hotelName: string) => void;
 }
 
 const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableItinerary({
@@ -260,6 +272,17 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
     },
     restoreDays(savedDays: Day[]) {
       setDays(savedDays);
+    },
+    setHotelForDay(dayNum: number, hotel: HotelEntry) {
+      setDays(prev => prev.map(d =>
+        d.number === dayNum ? { ...d, hotel, open: true } : d
+      ));
+    },
+    removeHotelFromDay(hotelName: string) {
+      const lower = hotelName.toLowerCase();
+      setDays(prev => prev.map(d =>
+        d.hotel?.name.toLowerCase() === lower ? { ...d, hotel: undefined } : d
+      ));
     },
   }));
 
@@ -526,6 +549,42 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
                 {/* Time-slot sections */}
                 {day.open && (
                   <div style={{ padding: '14px 14px 16px' }}>
+                    {/* Hotel card (Luna-added) */}
+                    {day.hotel && (
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: 12,
+                        padding: '14px 16px', marginBottom: 14,
+                        backgroundColor: '#EFF6FF',
+                        border: '2px solid #00447B',
+                        borderRadius: 10,
+                      }}>
+                        <Hotel size={22} color="#00447B" style={{ flexShrink: 0 }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 14, color: '#00447B', margin: '0 0 2px' }}>
+                            {day.hotel.name}
+                          </p>
+                          <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: '#6C6D6F', margin: 0 }}>
+                            {day.hotel.neighborhood ? `${day.hotel.neighborhood} · ` : ''}{day.hotel.checkIn} to {day.hotel.checkOut}
+                          </p>
+                        </div>
+                        <a
+                          href={day.hotel.bookingUrl}
+                          target="_blank"
+                          rel="noopener noreferrer sponsored"
+                          onClick={e => e.stopPropagation()}
+                          style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 5,
+                            padding: '8px 14px', backgroundColor: '#00447B', color: '#ffffff',
+                            borderRadius: 6, textDecoration: 'none', flexShrink: 0,
+                            fontFamily: "'Inter',sans-serif", fontSize: 12, fontWeight: 500,
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          <ExternalLink size={12} />
+                          Book on Booking.com
+                        </a>
+                      </div>
+                    )}
                     {SLOTS.map(({ key, label, icon }) => {
                       const slotActs = day.activities.filter(a => a.slot === key);
                       const containerId = slotId(day.number, key);

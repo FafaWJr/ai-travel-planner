@@ -1,7 +1,8 @@
 'use client';
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import EditableItinerary, { type ItineraryHandle, type Day } from '@/components/EditableItinerary';
+import EditableItinerary, { type ItineraryHandle, type Day, type HotelEntry } from '@/components/EditableItinerary';
+import { BOOKING_AFFILIATE } from '@/lib/affiliate';
 import FloatingChat, { type TripUpdate } from '@/components/FloatingChat';
 import Toast from '@/components/Toast';
 import StayTab, { type AcceptedHotel, type Hotel, type LocationSegment } from '@/components/StayTab';
@@ -1052,10 +1053,20 @@ function PlanContent() {
                     ...prev.filter(h => h.hotel.name.toLowerCase() !== d.hotelName!.toLowerCase()),
                     { hotel, segment },
                   ]);
+                  // Also show hotel card in the Itinerary tab on the check-in day
+                  const hotelEntry: HotelEntry = {
+                    name: d.hotelName,
+                    neighborhood: d.neighborhood ?? d.city ?? '',
+                    checkIn: dayToDate(checkInDay),
+                    checkOut: dayToDate(checkOutDay),
+                    bookingUrl: BOOKING_AFFILIATE.hotels,
+                  };
+                  itineraryRef.current?.setHotelForDay(checkInDay, hotelEntry);
                   setToast(`${d.hotelName} added to your stays`);
                   markDirty();
                 } else if (update.action === 'remove') {
                   setAcceptedHotels(prev => prev.filter(h => h.hotel.name.toLowerCase() !== d.hotelName!.toLowerCase()));
+                  itineraryRef.current?.removeHotelFromDay(d.hotelName);
                   setToast(`${d.hotelName} removed from your stays`);
                   markDirty();
                 }
