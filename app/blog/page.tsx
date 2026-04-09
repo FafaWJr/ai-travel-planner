@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import NavBar from '@/components/NavBar';
 
 function FijiFlag() {
@@ -198,6 +199,7 @@ export default function BlogPage() {
             >
               {/* Card image */}
               <div style={{ position: 'relative', width: '100%', height: 220, background: 'linear-gradient(135deg, #00447B 0%, #005fa3 40%, #0096c7 70%, #48cae4 100%)' }}>
+                <Image src="/blog/fiji-oct-2024/Matamanoa%20resort%20pool.jpeg" alt="Matamanoa Island Resort" fill style={{ objectFit: 'cover' }} sizes="380px" />
                 {/* Overlay */}
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.35) 100%)' }} />
                 {/* Tags row */}
