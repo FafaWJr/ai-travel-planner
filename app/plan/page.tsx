@@ -1007,9 +1007,26 @@ function PlanContent() {
               markDirty();
             }}
             onTripUpdate={(update: TripUpdate) => {
+              if (update.type === 'add_activity') {
+                const dayNum = update.day ?? 1;
+                const slot = (update.timeSlot?.toLowerCase() ?? 'afternoon') as TimeSlot;
+                const text = update.activity || update.location || 'Activity';
+                itineraryRef.current?.addActivity(text, dayNum, slot, false, true);
+                setToast(`Added to Day ${dayNum}`);
+                markDirty();
+                return;
+              }
+              if (update.type === 'remove_activity') {
+                const dayNum = update.day ?? 1;
+                const text = update.activity || update.location || '';
+                if (text) itineraryRef.current?.removeActivitiesMatching(text);
+                setToast(`Activity removed from Day ${dayNum}`);
+                markDirty();
+                return;
+              }
               if (update.type === 'stays') {
                 const d = update.data;
-                if (!d.hotelName) return;
+                if (!d?.hotelName) return;
 
                 // Derive actual dates from day numbers + trip start date
                 const startMatch = prompt.match(/from (\d{4}-\d{2}-\d{2})/);

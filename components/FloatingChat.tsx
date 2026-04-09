@@ -13,9 +13,10 @@ interface Msg {
 }
 
 export interface TripUpdate {
-  type: 'stays' | 'itinerary' | 'budget';
-  action: 'add' | 'update' | 'remove';
-  data: {
+  type: 'stays' | 'add_activity' | 'remove_activity' | 'replace_activity' | 'itinerary' | 'budget';
+  action?: 'add' | 'update' | 'remove';
+  // Hotel updates (type === 'stays')
+  data?: {
     hotelName?: string;
     checkInDay?: number;
     checkOutDay?: number;
@@ -24,10 +25,13 @@ export interface TripUpdate {
     neighborhood?: string;
     priceRange?: string;
     amenities?: string[];
-    activity?: string;
-    day?: number;
-    slot?: string;
   };
+  // Activity updates (type === 'add_activity' | 'remove_activity' | 'replace_activity')
+  day?: number;
+  timeSlot?: string;
+  activity?: string;
+  location?: string;
+  activityIndex?: number;
 }
 
 interface Props {
