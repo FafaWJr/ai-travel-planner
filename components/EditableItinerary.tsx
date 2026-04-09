@@ -534,10 +534,12 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
                     : <div style={{ width: '100%', height: 80, background: GRADIENTS[idx % GRADIENTS.length] }} />
                   }
                   <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top,rgba(0,0,0,0.60) 0%,rgba(0,0,0,0.10) 60%,transparent 100%)', display: 'flex', alignItems: 'flex-end', padding: '10px 14px', gap: 8 }}>
-                    <span style={{ background: '#FF8210', color: '#fff', fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 11, padding: '3px 10px', borderRadius: 100, flexShrink: 0 }}>Day {day.number}</span>
-                    {formatDayDate(startDate, idx) && (
-                      <span style={{ fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: 11, color: 'rgba(255,255,255,0.85)', flexShrink: 0, textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>{formatDayDate(startDate, idx)}</span>
-                    )}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', flexShrink: 0 }}>
+                      <span style={{ background: '#FF8210', color: '#fff', fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 11, padding: '3px 10px', borderRadius: 100 }}>Day {day.number}</span>
+                      {formatDayDate(startDate, idx) && (
+                        <span style={{ fontFamily: "'Inter',sans-serif", fontWeight: 600, fontSize: 11, color: '#fff', marginTop: 2, textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>{formatDayDate(startDate, idx)}</span>
+                      )}
+                    </div>
                     <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 14, color: '#fff', flex: 1, margin: 0, textShadow: '0 1px 4px rgba(0,0,0,0.5)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{day.title}</p>
                     {day.confirmed && <span style={{ background: 'rgba(22,163,74,0.80)', color: '#fff', fontSize: 10, fontFamily: "'Inter',sans-serif", fontWeight: 700, padding: '2px 8px', borderRadius: 100, flexShrink: 0 }}>✓ Confirmed</span>}
                     <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: 'rgba(255,255,255,0.70)', flexShrink: 0 }}>{dayAccepted}/{day.activities.length}</span>
