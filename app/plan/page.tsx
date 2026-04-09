@@ -350,6 +350,7 @@ function PlanContent() {
   const [showExtraIdeas,  setShowExtraIdeas]  = useState(false);
   const [toast,           setToast]           = useState<string | null>(null);
   const [acceptedHotels,  setAcceptedHotels]  = useState<AcceptedHotel[]>([]);
+  const [lunaHotels,      setLunaHotels]      = useState<Record<number, HotelEntry>>({});
   const [seenIdeaNames,   setSeenIdeaNames]   = useState<string[]>([]);
   const [itineraryVersion, setItineraryVersion] = useState(0);
   const itineraryRef = useRef<ItineraryHandle>(null);
@@ -391,7 +392,7 @@ function PlanContent() {
     const numDays = sd && ed ? Math.round((new Date(ed).getTime() - new Date(sd).getTime()) / 86400000) : null;
     const title = `${dest}${numDays ? ` · ${numDays} days` : ''}`;
     const snapshot = itineraryRef.current?.getDaysSnapshot() ?? [];
-    const trip_data = { plan, photos, acceptedHotels, prompt, itineraryDays: snapshot };
+    const trip_data = { plan, photos, acceptedHotels, lunaHotels, prompt, itineraryDays: snapshot };
     return { dest, sd, ed, title, trip_data };
   };
 
@@ -483,11 +484,12 @@ function PlanContent() {
     // Restore guest draft after login
     if (draftStr && user && !plan) {
       try {
-        const draft = JSON.parse(draftStr) as { prompt: string; plan: string; photos: string[]; acceptedHotels: AcceptedHotel[]; itineraryDays: Day[] };
+        const draft = JSON.parse(draftStr) as { prompt: string; plan: string; photos: string[]; acceptedHotels: AcceptedHotel[]; lunaHotels?: Record<number, HotelEntry>; itineraryDays: Day[] };
         setInitialItineraryDays(draft.itineraryDays || []);
         setPlan(draft.plan || '');
         setPhotos(draft.photos || []);
         setAcceptedHotels(draft.acceptedHotels || []);
+        if (draft.lunaHotels) setLunaHotels(draft.lunaHotels);
         setLoading(false);
         localStorage.removeItem('guest_trip_draft');
         saveRestoredDraft(draft);
@@ -516,10 +518,11 @@ function PlanContent() {
     try {
       const { data } = await supabase.from('saved_trips').select('*').eq('id', id).single();
       if (data && data.trip_data) {
-        const td = data.trip_data as { plan?: string; photos?: string[]; acceptedHotels?: AcceptedHotel[]; itineraryDays?: Day[] };
+        const td = data.trip_data as { plan?: string; photos?: string[]; acceptedHotels?: AcceptedHotel[]; lunaHotels?: Record<number, HotelEntry>; itineraryDays?: Day[] };
         setPlan(td.plan || '');
         setPhotos(td.photos || []);
         setAcceptedHotels((td.acceptedHotels as AcceptedHotel[]) || []);
+        if (td.lunaHotels) setLunaHotels(td.lunaHotels);
         if (td.itineraryDays && td.itineraryDays.length > 0) {
           setInitialItineraryDays(td.itineraryDays);
         }
@@ -538,7 +541,7 @@ function PlanContent() {
     }
   };
 
-  const saveRestoredDraft = async (draft: { prompt: string; plan: string; photos: string[]; acceptedHotels: AcceptedHotel[]; itineraryDays: Day[] }) => {
+  const saveRestoredDraft = async (draft: { prompt: string; plan: string; photos: string[]; acceptedHotels: AcceptedHotel[]; lunaHotels?: Record<number, HotelEntry>; itineraryDays: Day[] }) => {
     if (!user) return;
     try {
       const p = draft.prompt;
@@ -554,7 +557,7 @@ function PlanContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title, destination: dest, start_date: sd, end_date: ed,
-          trip_data: { plan: draft.plan, photos: draft.photos, acceptedHotels: draft.acceptedHotels, prompt: p, itineraryDays: draft.itineraryDays },
+          trip_data: { plan: draft.plan, photos: draft.photos, acceptedHotels: draft.acceptedHotels, lunaHotels: draft.lunaHotels ?? {}, prompt: p, itineraryDays: draft.itineraryDays },
         }),
       });
       if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
@@ -841,6 +844,7 @@ function PlanContent() {
                   photos={photos}
                   acceptedHotels={acceptedHotels}
                   onActivityStatusChange={() => { setItineraryVersion(v => v + 1); markDirty(); }}
+                  lunaHotels={lunaHotels}
                   onPlaceHover={handlePlaceMouseOver}
                   onPlaceLeave={handlePlaneMouseLeave}
                   isGuest={!user}
@@ -1053,7 +1057,7 @@ function PlanContent() {
                     ...prev.filter(h => h.hotel.name.toLowerCase() !== d.hotelName!.toLowerCase()),
                     { hotel, segment },
                   ]);
-                  // Also show hotel card in the Itinerary tab on the check-in day
+                  // Add hotel card to Itinerary tab via parent state (prop-based, no ref timing issues)
                   const hotelEntry: HotelEntry = {
                     name: d.hotelName,
                     neighborhood: d.neighborhood ?? d.city ?? '',
@@ -1061,12 +1065,21 @@ function PlanContent() {
                     checkOut: dayToDate(checkOutDay),
                     bookingUrl: BOOKING_AFFILIATE.hotels,
                   };
-                  itineraryRef.current?.setHotelForDay(checkInDay, hotelEntry);
+                  setLunaHotels(prev => ({ ...prev, [checkInDay]: hotelEntry }));
                   setToast(`${d.hotelName} added to your stays`);
                   markDirty();
                 } else if (update.action === 'remove') {
                   setAcceptedHotels(prev => prev.filter(h => h.hotel.name.toLowerCase() !== d.hotelName!.toLowerCase()));
-                  itineraryRef.current?.removeHotelFromDay(d.hotelName);
+                  // Remove hotel card from Itinerary tab
+                  setLunaHotels(prev => {
+                    const updated = { ...prev };
+                    Object.keys(updated).forEach(k => {
+                      if (updated[Number(k)]?.name.toLowerCase() === d.hotelName!.toLowerCase()) {
+                        delete updated[Number(k)];
+                      }
+                    });
+                    return updated;
+                  });
                   setToast(`${d.hotelName} removed from your stays`);
                   markDirty();
                 }
