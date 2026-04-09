@@ -291,20 +291,43 @@ function HotelCarousel({ hotels, segment, segConfirmed, chooseHotel, photoCache,
 function ConfirmedSummary({ hotel, segment }: AcceptedHotel) {
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hotel.googleMapsQuery)}`;
   return (
-    <div style={{ background: 'rgba(22,163,74,0.06)', border: '1.5px solid rgba(22,163,74,0.25)', borderRadius: 12, padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-      <span style={{ fontSize: 26, flexShrink: 0 }}>🏨</span>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 14, color: '#111', margin: '0 0 2px' }}>{hotel.name}</p>
-        <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: '#6C6D6F', margin: '0 0 4px' }}>
-          📍 {hotel.neighborhood} · {segment.checkIn || 'Check-in'} → {segment.checkOut || 'Check-out'}
-        </p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-          {hotel.amenities.slice(0, 4).map(a => <AmenityPill key={a} label={a} />)}
+    <div style={{ background: 'rgba(22,163,74,0.06)', border: '1.5px solid rgba(22,163,74,0.25)', borderRadius: 12, padding: '14px 16px' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: hotel.amenities.length > 0 ? 10 : 0 }}>
+        <span style={{ fontSize: 26, flexShrink: 0 }}>🏨</span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 14, color: '#111', margin: '0 0 2px' }}>{hotel.name}</p>
+          <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: '#6C6D6F', margin: '0 0 4px' }}>
+            📍 {hotel.neighborhood} · {segment.checkIn || 'Check-in'} → {segment.checkOut || 'Check-out'}
+          </p>
+          {hotel.amenities.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+              {hotel.amenities.slice(0, 4).map(a => <AmenityPill key={a} label={a} />)}
+            </div>
+          )}
         </div>
+        <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
+          style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: '#FF8210', fontWeight: 600, textDecoration: 'none', flexShrink: 0 }}>
+          Map ↗
+        </a>
       </div>
-      <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
-        style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: '#FF8210', fontWeight: 600, textDecoration: 'none', flexShrink: 0 }}>
-        Map ↗
+      <a
+        href={bookingComLink(hotel.neighborhood ? `${hotel.name}, ${hotel.neighborhood}` : hotel.name)}
+        target="_blank"
+        rel="noopener noreferrer sponsored"
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+          padding: '9px 18px', background: '#003580', color: '#ffffff',
+          borderRadius: 8, textDecoration: 'none', width: '100%',
+          fontFamily: "'Lato', sans-serif", fontSize: 13, fontWeight: 700,
+          boxSizing: 'border-box',
+        }}
+      >
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+          <polyline points="15 3 21 3 21 9"/>
+          <line x1="10" y1="14" x2="21" y2="3"/>
+        </svg>
+        Book on Booking.com
       </a>
     </div>
   );
