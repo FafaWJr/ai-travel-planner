@@ -846,6 +846,7 @@ function PlanContent() {
                   isGuest={!user}
                   onGateRequired={() => openGate('Show me more ideas')}
                   initialDays={initialItineraryDays}
+                  startDate={prompt.match(/from (\d{4}-\d{2}-\d{2})/)?.[1]}
                 />
               </div>
               {/* StayTab — always mounted to preserve state, hidden when not active */}
