@@ -83,11 +83,15 @@ function extractJsonBlock(text: string): { json: Record<string, unknown> | null;
   }
 }
 
-/* Extract %%TRIP_UPDATE%% block from Luna's response */
+/* Extract %%TRIP_UPDATE%% block from Luna's response.
+   Supports both %%TRIP_UPDATE%%...%%END_TRIP_UPDATE%% and %%TRIP_UPDATE%%...%%TRIP_UPDATE%% */
 function parseTripUpdate(text: string): { update: TripUpdate | null; cleanText: string } {
-  const match = text.match(/%%TRIP_UPDATE%%\s*([\s\S]*?)\s*%%END_TRIP_UPDATE%%/);
+  // Match either closing format
+  const match = text.match(/%%TRIP_UPDATE%%\s*([\s\S]*?)\s*%%(?:END_TRIP_UPDATE|TRIP_UPDATE)%%/);
   if (!match) return { update: null, cleanText: text };
-  const cleanText = text.replace(/%%TRIP_UPDATE%%[\s\S]*?%%END_TRIP_UPDATE%%/g, '').replace(/\n{3,}/g, '\n\n').trim();
+  const cleanText = text
+    .replace(/%%TRIP_UPDATE%%[\s\S]*?%%(?:END_TRIP_UPDATE|TRIP_UPDATE)%%/g, '')
+    .replace(/\n{3,}/g, '\n\n').trim();
   try {
     const update = JSON.parse(match[1].trim()) as TripUpdate;
     return { update, cleanText };
