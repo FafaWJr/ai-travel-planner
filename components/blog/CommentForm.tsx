@@ -33,7 +33,7 @@ export default function CommentForm({ postSlug, onCommentAdded }: CommentFormPro
         post_slug: postSlug,
         user_id: user.id,
         comment_text: comment.trim(),
-        is_approved: false,
+        is_approved: true,
       });
 
     if (insertError) {
@@ -106,7 +106,7 @@ export default function CommentForm({ postSlug, onCommentAdded }: CommentFormPro
         </p>
       )}
       <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: '#9ca3af', marginTop: 8 }}>
-        Your comment will be reviewed before appearing publicly.
+        Your comment will appear immediately below.
       </p>
     </form>
   );
