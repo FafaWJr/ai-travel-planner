@@ -25,6 +25,14 @@ const PHOTOS = [
     src: '/about/photo-5.jpg',
     caption: 'Super Nintendo World, Universal Studios Japan',
   },
+  {
+    src: '/about/IMG_6137.jpeg',
+    caption: 'bali1',
+  },
+  {
+    src: '/about/IMG_6682.jpeg',
+    caption: 'bali2',
+  },
 ]
 
 const STATS = [
