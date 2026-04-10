@@ -12,7 +12,7 @@ interface CommentsSectionProps {
 
 export default function CommentsSection({ postSlug }: CommentsSectionProps) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const supabase = createClient();
@@ -37,15 +37,13 @@ export default function CommentsSection({ postSlug }: CommentsSectionProps) {
 
       {isAuthenticated ? (
         <>
-          <CommentForm postSlug={postSlug} onCommentAdded={() => setRefreshTrigger(p => p + 1)} />
+          <CommentForm postSlug={postSlug} onSuccess={() => setRefreshKey(k => k + 1)} />
           <div style={{ marginTop: '2.5rem' }}>
-            <h3 style={{
-              fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: '1.1rem',
-              color: '#00447B', marginBottom: '1.25rem',
-            }}>
+            <h3 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: '1.1rem', color: '#00447B', marginBottom: '1.25rem' }}>
               Traveller Comments
             </h3>
-            <CommentsList postSlug={postSlug} refreshTrigger={refreshTrigger} />
+            {/* key prop forces full remount on each refresh — guaranteed re-fetch */}
+            <CommentsList key={refreshKey} postSlug={postSlug} />
           </div>
         </>
       ) : (
