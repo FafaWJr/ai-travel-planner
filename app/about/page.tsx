@@ -263,6 +263,56 @@ export default function AboutPage() {
             <p style={{ fontFamily: 'var(--font-body)', fontSize: 17, lineHeight: 1.9, color: '#333', marginBottom: 0 }}>
               Yes, the plans are AI-generated, and we are proud of it. But everything we built around that intelligence, the personalisation engine, the refinement tools, Luna the travel assistant, was crafted with real intention and care. We are always improving it, always listening, always asking how we can make this feel even more like yours. Our goal has never changed. We want to give every traveller the chance to have the trip of their life.
             </p>
+
+            <div
+              style={{
+                marginTop: '40px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '16px',
+                textAlign: 'center',
+              }}
+            >
+              <p
+                style={{
+                  fontSize: '1.05rem',
+                  color: '#6C6D6F',
+                  margin: 0,
+                  fontFamily: 'Inter, Lato, sans-serif',
+                  fontWeight: 400,
+                }}
+              >
+                Want to see the world through our eyes?
+              </p>
+              <a
+                href="/blog"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  backgroundColor: '#FF8210',
+                  color: '#fff',
+                  fontFamily: 'Poppins, sans-serif',
+                  fontWeight: 600,
+                  fontSize: '0.95rem',
+                  padding: '14px 32px',
+                  borderRadius: '8px',
+                  textDecoration: 'none',
+                  transition: 'background-color 0.2s ease, transform 0.15s ease',
+                }}
+                onMouseEnter={e => {
+                  ;(e.currentTarget as HTMLAnchorElement).style.backgroundColor = '#e6730e'
+                  ;(e.currentTarget as HTMLAnchorElement).style.transform = 'translateY(-1px)'
+                }}
+                onMouseLeave={e => {
+                  ;(e.currentTarget as HTMLAnchorElement).style.backgroundColor = '#FF8210'
+                  ;(e.currentTarget as HTMLAnchorElement).style.transform = 'translateY(0)'
+                }}
+              >
+                Read our blog
+              </a>
+            </div>
           </div>
         </div>
       </section>
