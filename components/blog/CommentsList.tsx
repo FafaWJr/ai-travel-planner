@@ -27,6 +27,7 @@ export default function CommentsList({ postSlug, refreshTrigger = 0 }: CommentsL
   }, [postSlug, refreshTrigger]);
 
   const fetchComments = async () => {
+    setLoading(true);
     const supabase = createClient();
     const { data, error } = await supabase
       .from('blog_comments')

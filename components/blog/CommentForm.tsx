@@ -12,11 +12,13 @@ export default function CommentForm({ postSlug, onCommentAdded }: CommentFormPro
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
+    setSuccess(false);
 
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -43,8 +45,10 @@ export default function CommentForm({ postSlug, onCommentAdded }: CommentFormPro
     }
 
     setComment('');
+    setSuccess(true);
     setIsSubmitting(false);
     onCommentAdded();
+    setTimeout(() => setSuccess(false), 3000);
   };
 
   const isDirty = comment.trim().length >= 10;
@@ -103,6 +107,11 @@ export default function CommentForm({ postSlug, onCommentAdded }: CommentFormPro
       {error && (
         <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: '#dc2626', marginTop: 8 }}>
           {error}
+        </p>
+      )}
+      {success && (
+        <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: '#16a34a', fontWeight: 600, marginTop: 8 }}>
+          Comment posted successfully!
         </p>
       )}
       <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: '#9ca3af', marginTop: 8 }}>
