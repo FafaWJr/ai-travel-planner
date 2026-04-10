@@ -322,11 +322,11 @@ export default function AboutPage() {
             </h2>
           </div>
 
-          <div style={{ position: 'relative' }}>
+          <div style={{ position: 'relative', maxWidth: 480, margin: '0 auto' }}>
             <div
               style={{
                 position: 'relative', borderRadius: 24, overflow: 'hidden',
-                aspectRatio: '16/9', background: '#EEF3F9', cursor: 'grab',
+                aspectRatio: '3/4', background: '#111', cursor: 'grab',
                 userSelect: 'none',
               }}
               onMouseDown={e => handleDragStart(e.clientX)}
@@ -344,7 +344,7 @@ export default function AboutPage() {
                   draggable={false}
                   style={{
                     position: 'absolute', inset: 0, width: '100%', height: '100%',
-                    objectFit: 'cover', objectPosition: 'center top',
+                    objectFit: 'contain', objectPosition: 'center center',
                     opacity: i === activePhoto ? 1 : 0,
                     transition: 'opacity 0.6s ease',
                     pointerEvents: 'none',
