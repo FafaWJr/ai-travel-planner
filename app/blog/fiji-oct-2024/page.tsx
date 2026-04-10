@@ -2,10 +2,28 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import NavBar from '@/components/NavBar';
+import BlogBreadcrumbs from '@/components/BlogBreadcrumbs';
+import CommentsSection from '@/components/blog/CommentsSection';
 
 export const metadata: Metadata = {
-  title: "Bula! Fiji on a Smart Budget: Islands, Beach Clubs, and a Private Pool | Luna Let's Go",
-  description: "We split 7 nights between Nadi and Matamanoa Island, did Mala Mala, Cloud 9, and Castaway Island, then packed our own beer onto the boat. Here's exactly how we did it.",
+  title: "Fiji Travel Guide 2025: Islands, Beach Clubs & Budget Tips | Luna Let's Go",
+  description: "Plan your Fiji trip with our honest 7-night guide. Matamanoa Island, Mala Mala Beach Club, Cloud 9, and Castaway — real costs, smart strategies, and affiliate-free opinions.",
+  openGraph: {
+    title: "Fiji Travel Guide 2025: Islands, Beach Clubs & Budget Tips | Luna Let's Go",
+    description: "Plan your Fiji trip with our honest 7-night guide. Matamanoa Island, Mala Mala Beach Club, Cloud 9, and Castaway — real costs, smart strategies.",
+    url: 'https://www.lunaletsgo.com/blog/fiji-oct-2024',
+    images: [{ url: '/blog/fiji-oct-2024/Matamanoa2.JPG', width: 1200, height: 630, alt: 'Matamanoa Island Resort aerial view, Mamanuca Islands, Fiji' }],
+    type: 'article',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "Fiji Travel Guide 2025: Islands, Beach Clubs & Budget Tips",
+    description: "7 nights in Fiji on a smart budget — Matamanoa, Mala Mala, Cloud 9, Castaway.",
+    images: ['/blog/fiji-oct-2024/Matamanoa2.JPG'],
+  },
+  alternates: {
+    canonical: 'https://www.lunaletsgo.com/blog/fiji-oct-2024',
+  },
 };
 
 /* ─── Shared design tokens ────────────────────────────────────── */
@@ -61,20 +79,56 @@ function InfoIcon({ bg = NAVY }: { bg?: string }) {
 
 
 export default function FijiBlogPost() {
+  const articleSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: "Fiji Travel Guide 2025: Islands, Beach Clubs & Budget Tips",
+    description: "Plan your Fiji trip with our honest 7-night guide covering Matamanoa Island, Mala Mala Beach Club, Cloud 9, and Castaway Island.",
+    image: 'https://www.lunaletsgo.com/blog/fiji-oct-2024/Matamanoa2.JPG',
+    author: { '@type': 'Organization', name: "Luna Let's Go" },
+    publisher: {
+      '@type': 'Organization',
+      name: "Luna Let's Go",
+      logo: { '@type': 'ImageObject', url: 'https://www.lunaletsgo.com/LUNA-LOGO.svg' },
+    },
+    datePublished: '2024-10-15',
+    dateModified: new Date().toISOString().split('T')[0],
+  };
+
+  const destinationSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'TouristDestination',
+    name: 'Fiji',
+    description: 'Tropical Pacific archipelago with pristine beaches, vibrant coral reefs, and warm Fijian hospitality.',
+    url: 'https://www.lunaletsgo.com/blog/fiji-oct-2024',
+  };
+
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      { '@type': 'Question', name: 'What is the best time to visit Fiji?', acceptedAnswer: { '@type': 'Answer', text: 'May to October (dry season) offers the best weather — sunny days, calm seas, and lower humidity. Perfect for beach activities and island hopping.' } },
+      { '@type': 'Question', name: 'How much does a trip to Fiji cost?', acceptedAnswer: { '@type': 'Answer', text: 'Budget travellers can manage on $100–150 per day. Mid-range (mid-tier resorts, day trips) runs $200–350 per day. Island resorts like Matamanoa add a premium but can be offset by smart planning in Nadi first.' } },
+      { '@type': 'Question', name: 'Which Fiji islands should I visit?', acceptedAnswer: { '@type': 'Answer', text: 'The Mamanuca Islands (Matamanoa, Castaway, Mala Mala) are ideal for couples and beach lovers. The Yasawa Islands suit adventure travellers. Viti Levu (Nadi) is your affordable mainland base with easy access to day trips.' } },
+      { '@type': 'Question', name: 'Do I need a visa to visit Fiji?', acceptedAnswer: { '@type': 'Answer', text: 'Most nationalities receive a free 4-month tourist visa on arrival. Check Fiji\'s immigration website for your specific country before travelling.' } },
+      { '@type': 'Question', name: 'Is Fiji safe for tourists?', acceptedAnswer: { '@type': 'Answer', text: 'Yes. Fiji is one of the friendlier destinations in the Pacific. The Fijian people are known for genuine warmth. Apply standard travel sense — secure your belongings in Nadi and Suva, and you will have no issues.' } },
+    ],
+  };
+
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(destinationSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+
       <NavBar />
 
       <main style={{ paddingTop: 68, minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter', sans-serif" }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '3rem 1.5rem 5rem' }}>
 
           {/* Breadcrumb */}
-          <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 13, color: GRAY, marginBottom: '2.5rem' }}>
-            <Link href="/" style={{ color: NAVY, textDecoration: 'none' }}>Home</Link>
-            <span style={{ margin: '0 6px', color: '#C0C0C0' }}>/</span>
-            <Link href="/blog" style={{ color: NAVY, textDecoration: 'none' }}>Blog</Link>
-            <span style={{ margin: '0 6px', color: '#C0C0C0' }}>/</span>
-            Fiji on a Smart Budget
+          <div style={{ marginBottom: '2.5rem' }}>
+            <BlogBreadcrumbs postTitle="Fiji Travel Guide 2025" postSlug="fiji-oct-2024" />
           </div>
 
           {/* ── Article header ── */}
@@ -155,6 +209,28 @@ export default function FijiBlogPost() {
                 The secret was treating Fiji as two distinct experiences rather than one. First, Nadi. Then, the island. Here is exactly how it played out.
               </p>
 
+              {/* Quick Facts box */}
+              <div style={{ background: 'rgba(255,189,89,0.18)', borderLeft: `4px solid ${ORANGE}`, borderRadius: '0 14px 14px 0', padding: '1.5rem 1.75rem', margin: '2rem 0' }}>
+                <h3 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: '1rem', color: NAVY, marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  Quick Facts: Fiji
+                </h3>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {[
+                    { label: 'Best time to visit', value: 'May to October (dry season)' },
+                    { label: 'Budget range', value: '$100–350 AUD/day depending on island and resort' },
+                    { label: 'Ideal trip length', value: '7–10 nights' },
+                    { label: 'Island highlights', value: 'Mamanuca Islands, Mala Mala, Cloud 9, Castaway' },
+                    { label: 'Getting around', value: 'Ferry from Port Denarau, seaplane, island hopper' },
+                    { label: 'Currency', value: 'Fijian Dollar (FJD) — AUD and USD widely accepted' },
+                  ].map(({ label, value }) => (
+                    <li key={label} style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.92rem', color: '#3b3b3b', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: ORANGE, marginTop: 7, flexShrink: 0 }} />
+                      <span><strong style={{ color: NAVY }}>{label}:</strong> {value}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
               {/* Pull quote */}
               <blockquote style={{ background: 'linear-gradient(135deg, rgba(0,68,123,0.06) 0%, rgba(255,130,16,0.06) 100%)', borderLeft: `4px solid ${ORANGE}`, borderRadius: '0 12px 12px 0', padding: '1.4rem 1.5rem', margin: '2rem 0' }}>
                 <p style={{ fontFamily: "'Poppins', sans-serif", fontSize: '1.1rem', fontWeight: 500, fontStyle: 'italic', color: NAVY, margin: 0, lineHeight: 1.6 }}>
@@ -199,6 +275,19 @@ export default function FijiBlogPost() {
               <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
                 DoubleTree Resort by Hilton Fiji, Sonaisali Island — our Nadi base for nights 1 to 4
               </p>
+
+              {/* Luna CTA — early */}
+              <div style={{ background: `linear-gradient(135deg, ${ORANGE} 0%, #FFBD59 100%)`, borderRadius: 16, padding: '2rem', margin: '2.5rem 0', textAlign: 'center' }}>
+                <h3 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: '1.2rem', color: '#fff', marginBottom: '0.6rem' }}>
+                  Planning a Fiji Trip?
+                </h3>
+                <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.95rem', color: 'rgba(255,255,255,0.9)', lineHeight: 1.65, marginBottom: '1.25rem' }}>
+                  Let Luna build your personalised day-by-day Fiji itinerary — tailored to your budget, travel style, and dates, in seconds.
+                </p>
+                <Link href="/plan" style={{ display: 'inline-block', background: '#fff', color: ORANGE, fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: 14, padding: '11px 28px', borderRadius: 10, textDecoration: 'none' }}>
+                  Plan My Fiji Trip with Luna
+                </Link>
+              </div>
 
               {/* Section: Day 2 Mala Mala */}
               <h2 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: '1.4rem', color: NAVY, margin: '2.5rem 0 1rem', position: 'relative', paddingLeft: '1.1rem' }}>
@@ -400,6 +489,69 @@ export default function FijiBlogPost() {
                 And Matamanoa? The private pool, the ocean view, the endless blue, the staff who treated you like the only guests on the island. Three days that felt like a full reset. Bula to that.
               </p>
 
+              {/* Affiliate CTAs */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, margin: '2.5rem 0' }} className="blog-photo-duo">
+                <div style={{ border: `2px solid ${ORANGE}`, borderRadius: 14, padding: '1.4rem' }}>
+                  <h4 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: '0.95rem', color: NAVY, marginBottom: '0.6rem' }}>Find Your Fiji Hotel</h4>
+                  <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.88rem', color: GRAY, lineHeight: 1.6, marginBottom: '1rem' }}>
+                    Search and book hotels in Fiji with free cancellation and the best available rates.
+                  </p>
+                  <a href="https://www.awin1.com/cread.php?awinmid=18118&awinaffid=2825924&campaign=LifecycleOnboarding" target="_blank" rel="noopener noreferrer sponsored" style={{ display: 'inline-block', background: ORANGE, color: '#fff', fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: 13, padding: '10px 20px', borderRadius: 8, textDecoration: 'none' }}>
+                    Browse on Booking.com
+                  </a>
+                </div>
+                <div style={{ border: `2px solid ${ORANGE}`, borderRadius: 14, padding: '1.4rem' }}>
+                  <h4 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: '0.95rem', color: NAVY, marginBottom: '0.6rem' }}>Book Fiji Activities</h4>
+                  <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.88rem', color: GRAY, lineHeight: 1.6, marginBottom: '1rem' }}>
+                    Snorkeling, island hopping, cultural tours, and day trips — all in one place.
+                  </p>
+                  <a href="https://affiliate.klook.com/redirect?aid=117089&aff_adid=1248864&k_site=https%3A%2F%2Fwww.klook.com%2F" target="_blank" rel="noopener noreferrer sponsored" style={{ display: 'inline-block', background: ORANGE, color: '#fff', fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: 13, padding: '10px 20px', borderRadius: 8, textDecoration: 'none' }}>
+                    Explore on Klook
+                  </a>
+                </div>
+              </div>
+
+              {/* FAQ Section */}
+              <section style={{ margin: '3rem 0 2rem' }}>
+                <h2 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: '1.4rem', color: NAVY, margin: '0 0 1.5rem', position: 'relative', paddingLeft: '1.1rem' }}>
+                  <span style={{ position: 'absolute', left: 0, top: '0.2em', bottom: '0.2em', width: 4, background: ORANGE, borderRadius: 2 }} />
+                  Frequently Asked Questions
+                </h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {[
+                    { q: 'What is the best time to visit Fiji?', a: 'May to October is the dry season — sunny days, calm seas, lower humidity. Ideal for beach activities and island hopping. November to April is wetter and sees occasional cyclones, though prices are lower.' },
+                    { q: 'How much does a trip to Fiji cost?', a: 'Budget travellers can get by on $100–150 AUD per day staying in Nadi. Mid-range (a resort like the Hilton Sonaisali plus day trips) runs $200–350 per day. Private island resorts like Matamanoa add a premium, but anchoring your trip in Nadi first significantly reduces the overall cost.' },
+                    { q: 'Which Fiji islands should I visit?', a: 'The Mamanuca Islands are perfect for couples and beach lovers — Matamanoa, Castaway, and Mala Mala Beach Club are all standouts. The Yasawa Islands suit adventure and budget travellers. Viti Levu (Nadi) is your affordable mainland base with direct access to Port Denarau ferry terminals.' },
+                    { q: 'Do I need a visa to visit Fiji?', a: "Most nationalities receive a free 4-month tourist visa on arrival in Fiji. Check Fiji's official immigration website before travelling to confirm your country's specific requirements." },
+                    { q: 'Is Fiji safe for tourists?', a: 'Yes. Fiji is one of the friendliest destinations in the Pacific. Apply standard travel common sense — keep an eye on your belongings in Nadi and Suva — and you will have no issues. Resort islands are extremely safe.' },
+                  ].map(({ q, a }) => (
+                    <details key={q} style={{ background: '#fff', borderRadius: 12, padding: '1.1rem 1.4rem', border: '1.5px solid rgba(0,68,123,0.08)' }}>
+                      <summary style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: '0.95rem', color: NAVY, cursor: 'pointer', listStyle: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        {q}
+                        <span style={{ fontSize: 18, color: ORANGE, flexShrink: 0, marginLeft: 12 }}>+</span>
+                      </summary>
+                      <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.92rem', color: '#3b3b3b', lineHeight: 1.7, marginTop: 12, marginBottom: 0 }}>
+                        {a}
+                      </p>
+                    </details>
+                  ))}
+                </div>
+              </section>
+
+              {/* Final CTA */}
+              <div style={{ background: `linear-gradient(135deg, ${NAVY} 0%, #0077b6 100%)`, borderRadius: 16, padding: '2.25rem 2rem', margin: '2.5rem 0', textAlign: 'center' }}>
+                <h3 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: '1.25rem', color: '#fff', marginBottom: '0.6rem' }}>
+                  Your Fiji Adventure Starts Here
+                </h3>
+                <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.95rem', color: 'rgba(255,255,255,0.85)', lineHeight: 1.65, marginBottom: '1.25rem', maxWidth: 480, margin: '0 auto 1.25rem' }}>
+                  Skip the research rabbit hole. Luna builds your personalised Fiji itinerary — day by day, budget-aware, fully editable — in seconds.
+                </p>
+                <Link href="/plan" style={{ display: 'inline-block', background: ORANGE, color: '#fff', fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: 14, padding: '12px 30px', borderRadius: 10, textDecoration: 'none' }}>
+                  Plan My Fiji Trip with Luna
+                </Link>
+                <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 10, marginBottom: 0 }}>Free. No credit card required.</p>
+              </div>
+
               {/* Tags */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px solid #f0f0f0' }}>
                 {['Fiji', 'Island Hopping', 'Budget Travel', 'Matamanoa', 'Mala Mala', 'Cloud 9', 'Castaway Island', 'South Sea Cruises', 'Couples', 'Adults Only'].map(tag => (
@@ -537,10 +689,15 @@ export default function FijiBlogPost() {
         </div>
       </main>
 
+      {/* Comments */}
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 1.5rem 5rem' }}>
+        <CommentsSection postSlug="fiji-oct-2024" />
+      </div>
+
       {/* Affiliate disclaimer */}
       <div style={{ background: '#f0f0f0', padding: '1rem 2rem', textAlign: 'center' }}>
         <p style={{ fontFamily: "'Poppins', sans-serif", fontSize: '0.72rem', color: GRAY, maxWidth: 700, margin: '0 auto' }}>
-          Some hotel links in this article are affiliate links. If you book through them, Luna Let's Go earns a small commission at no extra cost to you. We only recommend places we have actually stayed in or would genuinely recommend.
+          <strong>Disclosure:</strong> Luna Let&apos;s Go earns a small commission when you book through affiliate links (Booking.com, Klook, etc.) at no extra cost to you. We only link to places and services we have actually used or genuinely recommend. Thank you for supporting our small team.
         </p>
       </div>
 
