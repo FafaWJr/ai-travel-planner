@@ -117,7 +117,7 @@ export default function FijiBlogPost() {
           </header>
 
           {/* ── Hero photo ── */}
-          <div style={{ position: 'relative', width: '100%', height: 420, borderRadius: 20, overflow: 'hidden', marginBottom: 12 }}>
+          <div className="blog-hero-img" style={{ position: 'relative', width: '100%', height: 420, borderRadius: 20, overflow: 'hidden', marginBottom: 12 }}>
             <Image
               src="/blog/fiji-oct-2024/Matamanoa2.JPG"
               alt="Matamanoa Island Resort aerial, Mamanuca Islands, Fiji"
@@ -132,7 +132,7 @@ export default function FijiBlogPost() {
           </p>
 
           {/* ── Article body: 2-column grid ── */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '3rem', alignItems: 'start' }}>
+          <div className="blog-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '3rem', alignItems: 'start' }}>
 
             {/* ── Main content column ── */}
             <article>
@@ -211,7 +211,7 @@ export default function FijiBlogPost() {
               </p>
 
               {/* Photo duo: Mala Mala */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, margin: '2rem 0 0' }}>
+              <div className="blog-photo-duo" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, margin: '2rem 0 0' }}>
                 <div style={{ position: 'relative', aspectRatio: '4/3', borderRadius: 14, overflow: 'hidden' }}>
                   <Image src="/blog/fiji-oct-2024/Mala%20Mala%20pool.jpeg" alt="Mala Mala Beach Club infinity pool" fill style={{ objectFit: 'cover' }} sizes="350px" />
                 </div>
@@ -302,7 +302,7 @@ export default function FijiBlogPost() {
               </p>
 
               {/* Photo duo: Matamanoa */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, margin: '2rem 0 0' }}>
+              <div className="blog-photo-duo" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, margin: '2rem 0 0' }}>
                 <div style={{ position: 'relative', aspectRatio: '4/3', borderRadius: 14, overflow: 'hidden' }}>
                   <Image src="/blog/fiji-oct-2024/Matamanoa-private%20pool.jpeg" alt="Private plunge pool at Matamanoa Island Resort" fill style={{ objectFit: 'cover' }} sizes="350px" />
                 </div>
@@ -543,6 +543,58 @@ export default function FijiBlogPost() {
           Some hotel links in this article are affiliate links. If you book through them, Luna Let's Go earns a small commission at no extra cost to you. We only recommend places we have actually stayed in or would genuinely recommend.
         </p>
       </div>
+
+      <style>{`
+        /* ── Mobile responsiveness ── */
+        @media (max-width: 768px) {
+
+          /* Outer wrapper: tighter padding */
+          main > div {
+            padding: 1.5rem 1rem 3rem !important;
+          }
+
+          /* Hero image: shorter on mobile */
+          .blog-hero-img {
+            height: 220px !important;
+            border-radius: 12px !important;
+          }
+
+          /* Two-column grid → single column stack */
+          .blog-layout {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 2rem !important;
+          }
+
+          /* Article body: full width, no overflow */
+          .blog-layout > article {
+            width: 100%;
+            min-width: 0;
+          }
+
+          /* Sidebar: full width, stacks below article */
+          .blog-layout > aside {
+            width: 100%;
+          }
+
+          /* Blockquotes: tighter on mobile */
+          blockquote {
+            padding: 1rem 1.1rem !important;
+            margin: 1.5rem 0 !important;
+          }
+          blockquote p {
+            font-size: 1rem !important;
+          }
+        }
+
+        /* Photo duos: stack on very small screens */
+        @media (max-width: 480px) {
+          .blog-photo-duo {
+            display: flex !important;
+            flex-direction: column !important;
+          }
+        }
+      `}</style>
     </>
   );
 }
