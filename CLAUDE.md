@@ -136,6 +136,37 @@ These NEVER change:
 - Europcar AU/NZ: `https://www.awin1.com/cread.php?s=4703163&v=10777&q=567194&r=2825924`
 - All exported from `lib/affiliate.ts` as `BOOKING_AFFILIATE` and `ACTIVITY_AFFILIATE`
 
+### Blog Post UI: Mobile Responsiveness Rules
+
+These rules apply to ALL blog components (`app/blog/`, `components/blog/`).
+Any new blog feature or layout change must follow these constraints.
+
+**Layout**
+- Article + sidebar wrapper MUST use a collapsing grid — single column on mobile, `1fr 340px` on desktop
+- `<aside>` sidebar must come AFTER `<article>` in DOM order so it stacks below on mobile naturally
+- Never use `position: sticky` on the sidebar without a mobile override that removes it
+
+**Tip Boxes and Pullquotes**
+- NEVER use `float: right` or `float: left` for tip/callout boxes or pullquotes
+- Use block elements with responsive classes; if inline styles are used, extract to a CSS module for media queries
+
+**Sidebar Cards**
+- No fixed pixel widths on sidebar cards — use `width: 100%` with `max-width` on desktop
+- Each card must have `box-sizing: border-box` and responsive padding
+
+**Article Body**
+- Always include horizontal padding on mobile (`px-4 md:px-0` on article wrapper)
+- Images: always `width: 100%; height: auto` or Next.js `<Image>` with responsive sizing
+- Image captions: `font-size: 0.75rem`, centered, must not overflow container
+
+**Breakpoint Testing Checklist** (verify before marking any blog UI task complete)
+- 375px (iPhone SE), 390px (iPhone 14), 768px (tablet), 1280px (desktop)
+
+**What NOT to do**
+- Do NOT create separate mobile and desktop components for the same blog section
+- Do NOT use `min-width` or `width` in px on any blog container without a mobile override
+- Do NOT place the sidebar before the article in DOM order
+
 ---
 
 ## Pre-Session Discovery Checklist
