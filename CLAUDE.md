@@ -214,3 +214,89 @@ After Claude Code finishes changes:
 
 **For detailed conventions, see CONVENTIONS.md**
 **For session setup, see SETUP-PROMPT.md**
+
+---
+
+## Persona System
+
+### Overview
+The travel persona quiz lives at `/quiz` (app/quiz/page.tsx).
+Users answer 5 multi-select card questions and 2 sliders (budget, duration).
+All selected values are collected into a flat array and passed through a
+weighted scoring function that returns one of 12 QuizPersona results.
+
+### The 12 Personas
+| ID | Name | Travel Style |
+|---|---|---|
+| explorer | The Explorer | Off the Beaten Path |
+| foodie | The Foodie | Taste-Led Travel |
+| relaxer | The Relaxer | Slow Travel |
+| photographer | The Photographer | Visual Storytelling |
+| culture | The Culture Seeker | Deep Cultural Immersion |
+| adventurer | The Adventurer | Adrenaline-First Travel |
+| luxury | The Luxury Traveller | Premium All the Way |
+| family | The Family Planner | Safe, Fun, All Ages |
+| romantic | The Romantic | Couples Escapes |
+| solo | The Solo Wanderer | Independence and Self-Discovery |
+| party | The Party Animal | Nightlife and Social Energy |
+| festival | The Festival Chaser | Events-First Travel |
+
+### QuizPersona Interface
+```ts
+interface QuizPersona {
+  id: string
+  name: string
+  travelStyle: string
+  description: string
+  travelProfile: string
+  tripStyle: string
+  askLuna: string[]       // 3 clickable prompts linking to /plan?luna_prompt=X
+  destinations: string[]  // 6-8 destinations fetched as photo cards via /api/destination-photos
+}
+```
+
+### Question Types
+- Card questions (Q0-Q4): multi-select up to maxSelect, Lucide icons per option
+- Budget slider (step 5): 5 levels from Backpacker to Luxury, maps to budget_* values
+- Duration slider (step 6): 5 levels from Weekend to Open-ended, maps to dur_* values
+
+### Scoring
+`calculatePersona(allSelectedValues: string[])` in app/quiz/page.tsx uses a
+`scoreMap` to award weighted points per persona ID for each selected value.
+Highest cumulative score wins. A user selecting party options AND beach options
+scores correctly across both personas — no single-answer override.
+
+### Supabase Storage
+On quiz completion, saved to `user_preferences` table:
+- `travel_persona` TEXT — full persona name e.g. "The Party Animal"
+- `travel_style` TEXT — style label e.g. "Nightlife and Social Energy"
+- `persona_completed_at` TIMESTAMPTZ
+
+Save is fire-and-forget. Silent for guests (not logged in).
+Uses `createClient()` from `@/lib/supabase/client`.
+
+### NavBar Integration
+`components/NavBar.tsx` fetches `travel_persona` from `user_preferences` on login.
+- If persona exists: shows orange pill badge with name + "Retake quiz" link
+- If no persona: shows "Discover your travel style" link with Compass SVG icon
+- No emojis — inline SVGs and Lucide icons only
+
+### Homepage Persona Cards
+`app/page.tsx` shows all 12 persona teaser cards in the "What kind of
+traveller are you?" section. Alternating orange/navy SVG dot pattern.
+All 12 link to `/quiz`.
+
+### Result Screen CTAs
+- "Start planning with Luna" button links to `/plan` (new tab)
+- Ask Luna prompt pills link to `/plan?luna_prompt=ENCODED` (new tab)
+- Destination photo cards link to `/plan?destination=NAME` (new tab)
+- Deals CTA block links to `/deals`
+- "Retake quiz" link resets state
+
+### Key Rules
+- Never make quiz single-select — multi-select is intentional and core
+- Never remove the budget or duration sliders — replace cards only for Q5/Q6
+- Never remove destination photo cards from result screen
+- Deals CTA block must remain in result screen below Ask Luna section
+- Lucide icons required on all card options — no emojis
+- Orange (#FF8210) is the primary action color throughout the quiz
