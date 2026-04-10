@@ -1,6 +1,7 @@
 'use client';
 import { useState, useId, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import FinalItineraryModal from './FinalItineraryModal';
+import DayNotes from './itinerary/DayNotes';
 import type { AcceptedHotel } from './StayTab';
 import {
   DndContext,
@@ -51,6 +52,7 @@ export interface Day {
   suggestions: Suggestion[];
   loadingMore: boolean;
   confirmed: boolean;
+  notes?: string;
 }
 
 const SLOTS: { key: TimeSlot; label: string; icon: string }[] = [
@@ -467,6 +469,9 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
       };
     }));
 
+  const handleNoteChange = (dayIndex: number, note: string) =>
+    setDays(prev => prev.map((d, i) => i === dayIndex ? { ...d, notes: note } : d));
+
   const activeActivity = activeId ? findActivity(activeId) : null;
 
   return (
@@ -612,6 +617,12 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
                     >
                       {day.confirmed ? '✓ Day accepted — click to undo' : '✓ Accept this day'}
                     </button>
+
+                    <DayNotes
+                      dayIndex={idx}
+                      initialNote={day.notes || ''}
+                      onSave={handleNoteChange}
+                    />
                   </div>
                 )}
               </div>
