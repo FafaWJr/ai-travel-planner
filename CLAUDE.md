@@ -1,7 +1,7 @@
 # Luna Let's Go - Claude Code Context
-**Last Updated:** 2026-04-10 09:56:07
+**Last Updated:** 2026-04-10 19:41:51
 **Current Branch:** main
-**Last Commit:** f683253 feat: add real photos to Fiji blog post and listing card
+**Last Commit:** 0c1e079 fix: mobile responsiveness for Fiji blog post
 **Deployment:** https://www.lunaletsgo.com
 
 ---
@@ -69,16 +69,16 @@ app/trip-ideas/page.tsx
 ## Recent Changes (Last 10 Commits)
 
 ```
-f683253 (HEAD -> main, origin/main, origin/HEAD) feat: add real photos to Fiji blog post and listing card
+0c1e079 (HEAD -> main, origin/main, origin/HEAD) fix: mobile responsiveness for Fiji blog post
+6bd16d7 (origin/preview/day-notes, preview/day-notes) feat: add per-day notes to itinerary tab
+be83430 fix: reduce photo zoom in blog post, add Hilton and Mala Mala drone photos
+04c877d chore: update CLAUDE.md context
+f683253 feat: add real photos to Fiji blog post and listing card
 1978ce1 fix: replace broken Image components with gradient placeholders on blog, remove Trip Snapshot sticky
 e4982ef (origin/preview/fiji-blog, preview/fiji-blog) feat: add Fiji Oct 2024 blog post and update blog listing page
 5bd5a7a chore: update update-context.sh to inline heredoc style and refresh CLAUDE.md
 40d23bf fix: stack date below Day pill in banner (column layout, bottom-left)
 7b500bf feat: add date and weekday to itinerary day banners
-142c1c5 chore: fix update-context.sh heredoc variable expansion and update CLAUDE.md
-6aef7e9 fix: ensure Luna always emits TRIP_UPDATE block for activity and hotel changes
-8b54421 feat: Luna adds activities via %%TRIP_UPDATE%% instead of plan regeneration
-218c214 fix: hotel appears as activity card in itinerary + Luna asks which day
 ```
 
 ---
