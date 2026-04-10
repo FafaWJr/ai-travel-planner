@@ -245,3 +245,48 @@ After Claude Code finishes changes:
 
 **For detailed conventions, see CONVENTIONS.md**
 **For session setup, see SETUP-PROMPT.md**
+
+---
+
+## Persona System
+
+### Overview
+The travel persona quiz is at `/quiz` (app/quiz/page.tsx).
+It assigns one of 12 personas based on 6 questions with weighted scoring.
+
+### The 12 Personas
+1. The Explorer — Off the Beaten Path
+2. The Foodie — Taste-Led Travel
+3. The Relaxer — Slow Travel
+4. The Photographer — Visual Storytelling
+5. The Culture Seeker — Deep Cultural Immersion
+6. The Adventurer — Adrenaline-First Travel
+7. The Luxury Traveller — Premium All the Way
+8. The Family Planner — Safe, Fun, All Ages
+9. The Romantic — Couples Escapes
+10. The Solo Wanderer — Independence and Self-Discovery
+11. The Party Animal — Nightlife and Social Energy
+12. The Festival Chaser — Events-First Travel
+
+### Persona Data Structure (QuizPersona)
+Each persona has: id, name, travelStyle, description, travelProfile,
+tripStyle, askLuna (string[]), destinations (string[])
+
+### Scoring
+calculatePersona(answers: string[]) in app/quiz/page.tsx uses a weighted
+scoreMap to match answers to persona IDs. Highest cumulative score wins.
+
+### Supabase Storage
+On quiz completion, result is upserted to user_preferences:
+- travel_persona TEXT — full persona name (e.g. "The Party Animal")
+- travel_style TEXT — style label (e.g. "Nightlife and Social Energy")
+- persona_completed_at TIMESTAMPTZ
+
+### NavBar Display
+NavBar.tsx fetches travel_persona from user_preferences on login.
+Shows orange badge with persona name + "Retake quiz" link in dropdown.
+Shows "Discover your travel style" CTA if no persona is set.
+
+### Homepage
+app/page.tsx shows all 12 persona teaser cards in the "What kind of
+traveller are you?" section. Each links to /quiz.

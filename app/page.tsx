@@ -484,27 +484,26 @@ export default function HomePage() {
         <div className="section-label">Find your travel style</div>
         <h2 className="section-title">What kind of traveller are you?</h2>
         <p className="section-sub centered" style={{margin:'0 auto 8px'}}>Take the 2-minute quiz and let Luna build trips matched exactly to your personality.</p>
-        <div className="persona-cards">
-          <div className="persona-card">
-            <svg width="18" height="18" viewBox="0 0 18 18" style={{flexShrink:0}}><circle cx="9" cy="9" r="9" fill="var(--orange)" /></svg>
-            <div className="p-name">The Explorer</div>
-          </div>
-          <div className="persona-card">
-            <svg width="18" height="18" viewBox="0 0 18 18" style={{flexShrink:0}}><circle cx="9" cy="9" r="9" fill="var(--navy)" /></svg>
-            <div className="p-name">The Foodie</div>
-          </div>
-          <div className="persona-card">
-            <svg width="18" height="18" viewBox="0 0 18 18" style={{flexShrink:0}}><circle cx="9" cy="9" r="9" fill="var(--orange)" /></svg>
-            <div className="p-name">The Relaxer</div>
-          </div>
-          <div className="persona-card">
-            <svg width="18" height="18" viewBox="0 0 18 18" style={{flexShrink:0}}><circle cx="9" cy="9" r="9" fill="var(--navy)" /></svg>
-            <div className="p-name">The Photographer</div>
-          </div>
-          <div className="persona-card">
-            <svg width="18" height="18" viewBox="0 0 18 18" style={{flexShrink:0}}><circle cx="9" cy="9" r="9" fill="var(--orange)" /></svg>
-            <div className="p-name">The Culture Seeker</div>
-          </div>
+        <div className="persona-cards" style={{justifyContent:'center',flexWrap:'wrap',gap:12}}>
+          {[
+            { name: 'The Explorer',         color: 'var(--orange)' },
+            { name: 'The Foodie',           color: 'var(--navy)'   },
+            { name: 'The Relaxer',          color: 'var(--orange)' },
+            { name: 'The Photographer',     color: 'var(--navy)'   },
+            { name: 'The Culture Seeker',   color: 'var(--orange)' },
+            { name: 'The Adventurer',       color: 'var(--navy)'   },
+            { name: 'The Luxury Traveller', color: 'var(--orange)' },
+            { name: 'The Family Planner',   color: 'var(--navy)'   },
+            { name: 'The Romantic',         color: 'var(--orange)' },
+            { name: 'The Solo Wanderer',    color: 'var(--navy)'   },
+            { name: 'The Party Animal',     color: 'var(--orange)' },
+            { name: 'The Festival Chaser',  color: 'var(--navy)'   },
+          ].map(({ name, color }) => (
+            <div key={name} className="persona-card" onClick={() => { window.location.href = '/quiz'; }}>
+              <svg width="18" height="18" viewBox="0 0 18 18" style={{flexShrink:0}}><circle cx="9" cy="9" r="9" fill={color} /></svg>
+              <div className="p-name">{name}</div>
+            </div>
+          ))}
         </div>
         <Link href="/quiz" style={{display:'inline-block',background:'var(--orange)',color:'white',borderRadius:50,padding:'16px 44px',fontFamily:"'Poppins',sans-serif",fontSize:16,fontWeight:500,textDecoration:'none',marginTop:8}}>Take the quiz &rarr;</Link>
       </section>

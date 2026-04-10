@@ -39,13 +39,11 @@ function NavInner() {
   useEffect(() => {
     if (!user) { setTravelPersona(null); return; }
     supabase
-      .from('travel_personas')
-      .select('persona_type')
+      .from('user_preferences')
+      .select('travel_persona')
       .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-      .then(({ data }) => { setTravelPersona(data?.persona_type ?? null); });
+      .single()
+      .then(({ data }) => { setTravelPersona(data?.travel_persona ?? null); });
   }, [user]); // eslint-disable-line
 
   useEffect(() => {
@@ -130,15 +128,29 @@ function NavInner() {
                       My Trips
                     </Link>
                     {/* Travel persona */}
-                    <div style={{ padding: '8px 16px' }}>
+                    <div style={{ padding: '8px 16px', borderBottom: '1px solid rgba(0,68,123,0.1)' }}>
                       {travelPersona ? (
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,130,16,0.08)', border: '1px solid rgba(255,130,16,0.2)', borderRadius: 8, padding: '6px 10px' }}>
-                          <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: '#FF8210', fontWeight: 600 }}>🧭 {travelPersona}</span>
-                          <Link href="/quiz" onClick={() => setMenuOpen(false)} style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'rgba(255,130,16,0.7)', textDecoration: 'none', marginLeft: 8 }}>Retake</Link>
-                        </div>
+                        <>
+                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,130,16,0.08)', border: '1px solid rgba(255,130,16,0.25)', borderRadius: 20, padding: '4px 12px' }}>
+                            <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="#FF8210" /></svg>
+                            <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 500, color: '#FF8210' }}>{travelPersona}</span>
+                          </div>
+                          <Link href="/quiz" onClick={() => setMenuOpen(false)} style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: 11, color: '#6C6D6F', marginTop: 4, textDecoration: 'none' }}>
+                            Retake quiz
+                          </Link>
+                        </>
                       ) : (
-                        <Link href="/quiz" onClick={() => setMenuOpen(false)} style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: 13, color: '#FF8210', textDecoration: 'none', padding: '3px 0' }} onMouseEnter={e => (e.currentTarget.style.opacity = '0.75')} onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
-                          ✨ Discover your travel style
+                        <Link
+                          href="/quiz"
+                          onClick={() => setMenuOpen(false)}
+                          style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500, color: '#FF8210', textDecoration: 'none' }}
+                          onMouseEnter={e => (e.currentTarget.style.opacity = '0.75')}
+                          onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF8210" strokeWidth="2">
+                            <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                          </svg>
+                          Discover your travel style
                         </Link>
                       )}
                     </div>
