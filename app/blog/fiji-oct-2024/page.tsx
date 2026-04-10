@@ -193,6 +193,13 @@ export default function FijiBlogPost() {
                 a comfortable, well-located hotel that set exactly the right tone for the start of the trip. Day one was intentionally low-key: pool time, a drink in hand, and the gradual unwinding that every long-haul arrival deserves.
               </p>
 
+              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 14, overflow: 'hidden', marginTop: '2rem', marginBottom: 8 }}>
+                <Image src="/blog/fiji-oct-2024/Hilton%20Nadi%20pool.jpeg" alt="DoubleTree Resort by Hilton Fiji pool, Sonaisali Island" fill style={{ objectFit: 'cover' }} sizes="700px" />
+              </div>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
+                DoubleTree Resort by Hilton Fiji, Sonaisali Island — our Nadi base for nights 1 to 4
+              </p>
+
               {/* Section: Day 2 Mala Mala */}
               <h2 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: '1.4rem', color: NAVY, margin: '2.5rem 0 1rem', position: 'relative', paddingLeft: '1.1rem' }}>
                 <span style={{ position: 'absolute', left: 0, top: '0.2em', bottom: '0.2em', width: 4, background: ORANGE, borderRadius: 2 }} />
@@ -205,15 +212,23 @@ export default function FijiBlogPost() {
 
               {/* Photo duo: Mala Mala */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, margin: '2rem 0 0' }}>
-                <div style={{ position: 'relative', height: 200, borderRadius: 14, overflow: 'hidden' }}>
+                <div style={{ position: 'relative', aspectRatio: '4/3', borderRadius: 14, overflow: 'hidden' }}>
                   <Image src="/blog/fiji-oct-2024/Mala%20Mala%20pool.jpeg" alt="Mala Mala Beach Club infinity pool" fill style={{ objectFit: 'cover' }} sizes="350px" />
                 </div>
-                <div style={{ position: 'relative', height: 200, borderRadius: 14, overflow: 'hidden' }}>
+                <div style={{ position: 'relative', aspectRatio: '4/3', borderRadius: 14, overflow: 'hidden' }}>
                   <Image src="/blog/fiji-oct-2024/Mala%20Mala%20pool2.jpeg" alt="Mala Mala Beach Club pool and ocean" fill style={{ objectFit: 'cover' }} sizes="350px" />
                 </div>
               </div>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginTop: 8, marginBottom: '2rem', fontStyle: 'italic' }}>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginTop: 8, marginBottom: '1.25rem', fontStyle: 'italic' }}>
                 Mala Mala Beach Club — whole-day vibes, chill and family friendly
+              </p>
+
+              {/* Drone shot: Mala Mala from above */}
+              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 14, overflow: 'hidden', marginBottom: 8 }}>
+                <Image src="/blog/fiji-oct-2024/Mala%20Mala%202.jpeg" alt="Mala Mala Beach Club from above, Mamanuca Islands" fill style={{ objectFit: 'cover' }} sizes="700px" />
+              </div>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
+                Mala Mala from above — the reef and lagoon put into perspective
               </p>
 
               {/* Section: Day 3 Cloud 9 */}
@@ -226,7 +241,7 @@ export default function FijiBlogPost() {
                 Day three started slowly at the hotel and built into something memorable. In the afternoon, we headed out to Cloud 9, a multi-level floating bar and restaurant anchored on the open water, accessible by boat from Port Denarau. What the photos do not capture is the way the atmosphere shifts as the afternoon stretches toward evening. A DJ, wood-fired pizza, cocktails, and then the sunset: the kind of sky that turns every shade of orange and pink before the horizon swallows it whole. Nobody was ready to leave, and nobody had to.
               </p>
 
-              <div style={{ position: 'relative', width: '100%', height: 260, borderRadius: 14, overflow: 'hidden', marginTop: '2rem', marginBottom: 8 }}>
+              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 14, overflow: 'hidden', marginTop: '2rem', marginBottom: 8 }}>
                 <Image src="/blog/fiji-oct-2024/Cloud.JPG" alt="Cloud 9 floating bar at sunset" fill style={{ objectFit: 'cover' }} sizes="700px" />
               </div>
               <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
@@ -247,7 +262,7 @@ export default function FijiBlogPost() {
                 For film and TV fans, Castaway Island carries a little extra history: some of the scenes from the Tom Hanks film <em>Cast Away</em> were recorded here, and the island also served as a location for the TV show <em>Survivor</em>. Standing on that beach, it is not hard to see why those productions chose this spot. The kind of day that becomes a story you tell for years.
               </p>
 
-              <div style={{ position: 'relative', width: '100%', height: 260, borderRadius: 14, overflow: 'hidden', marginTop: '2rem', marginBottom: 8 }}>
+              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 14, overflow: 'hidden', marginTop: '2rem', marginBottom: 8 }}>
                 <Image src="/blog/fiji-oct-2024/Castaway.JPG" alt="Castaway Island, Mamanuca, Fiji" fill style={{ objectFit: 'cover' }} sizes="700px" />
               </div>
               <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
@@ -288,10 +303,10 @@ export default function FijiBlogPost() {
 
               {/* Photo duo: Matamanoa */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, margin: '2rem 0 0' }}>
-                <div style={{ position: 'relative', height: 220, borderRadius: 14, overflow: 'hidden' }}>
+                <div style={{ position: 'relative', aspectRatio: '4/3', borderRadius: 14, overflow: 'hidden' }}>
                   <Image src="/blog/fiji-oct-2024/Matamanoa-private%20pool.jpeg" alt="Private plunge pool at Matamanoa Island Resort" fill style={{ objectFit: 'cover' }} sizes="350px" />
                 </div>
-                <div style={{ position: 'relative', height: 220, borderRadius: 14, overflow: 'hidden' }}>
+                <div style={{ position: 'relative', aspectRatio: '4/3', borderRadius: 14, overflow: 'hidden' }}>
                   <Image src="/blog/fiji-oct-2024/Matamanoa2.JPG" alt="Matamanoa Island aerial view" fill style={{ objectFit: 'cover' }} sizes="350px" />
                 </div>
               </div>
