@@ -1,7 +1,7 @@
 # Luna Let's Go - Claude Code Context
-**Last Updated:** 2026-04-10 19:41:51
+**Last Updated:** 2026-04-10 23:55:06
 **Current Branch:** main
-**Last Commit:** 0c1e079 fix: mobile responsiveness for Fiji blog post
+**Last Commit:** 1779e2d feat: quiz redesign v2 - multi-select, sliders, photo destinations, 12 personas, deals CTA
 **Deployment:** https://www.lunaletsgo.com
 
 ---
@@ -69,16 +69,16 @@ app/trip-ideas/page.tsx
 ## Recent Changes (Last 10 Commits)
 
 ```
-0c1e079 (HEAD -> main, origin/main, origin/HEAD) fix: mobile responsiveness for Fiji blog post
-6bd16d7 (origin/preview/day-notes, preview/day-notes) feat: add per-day notes to itinerary tab
-be83430 fix: reduce photo zoom in blog post, add Hilton and Mala Mala drone photos
-04c877d chore: update CLAUDE.md context
-f683253 feat: add real photos to Fiji blog post and listing card
-1978ce1 fix: replace broken Image components with gradient placeholders on blog, remove Trip Snapshot sticky
-e4982ef (origin/preview/fiji-blog, preview/fiji-blog) feat: add Fiji Oct 2024 blog post and update blog listing page
-5bd5a7a chore: update update-context.sh to inline heredoc style and refresh CLAUDE.md
-40d23bf fix: stack date below Day pill in banner (column layout, bottom-left)
-7b500bf feat: add date and weekday to itinerary day banners
+1779e2d (HEAD -> main, origin/main, origin/HEAD) feat: quiz redesign v2 - multi-select, sliders, photo destinations, 12 personas, deals CTA
+f2d9a5f feat: expand quiz to 12 personas, dynamic destinations, save to profile, navbar badge
+8a91d24 fix: replace em dashes with commas in Fiji blog CTA text
+a41e529 chore: add favicon, SEO prompt, and blog SEO skill files
+67c6461 docs: Add blog comment system documentation
+045c7cf fix: comment refresh via refreshKey prop and profiles FK join
+aff90a6 fix: nuclear rebuild of comment components — key-based remount for reliable refresh
+32dbe61 fix: comments now refresh and show success feedback after posting
+cebadce fix: auto-approve blog comments so they appear immediately
+ba4e5f0 feat: SEO + GEO optimisation for Fiji blog post
 ```
 
 ---
@@ -135,37 +135,6 @@ These NEVER change:
 - Klook activities: `https://affiliate.klook.com/redirect?aid=117089&aff_adid=1248864&k_site=https%3A%2F%2Fwww.klook.com%2F`
 - Europcar AU/NZ: `https://www.awin1.com/cread.php?s=4703163&v=10777&q=567194&r=2825924`
 - All exported from `lib/affiliate.ts` as `BOOKING_AFFILIATE` and `ACTIVITY_AFFILIATE`
-
-### Blog Post UI: Mobile Responsiveness Rules
-
-These rules apply to ALL blog components (`app/blog/`, `components/blog/`).
-Any new blog feature or layout change must follow these constraints.
-
-**Layout**
-- Article + sidebar wrapper MUST use a collapsing grid — single column on mobile, `1fr 340px` on desktop
-- `<aside>` sidebar must come AFTER `<article>` in DOM order so it stacks below on mobile naturally
-- Never use `position: sticky` on the sidebar without a mobile override that removes it
-
-**Tip Boxes and Pullquotes**
-- NEVER use `float: right` or `float: left` for tip/callout boxes or pullquotes
-- Use block elements with responsive classes; if inline styles are used, extract to a CSS module for media queries
-
-**Sidebar Cards**
-- No fixed pixel widths on sidebar cards — use `width: 100%` with `max-width` on desktop
-- Each card must have `box-sizing: border-box` and responsive padding
-
-**Article Body**
-- Always include horizontal padding on mobile (`px-4 md:px-0` on article wrapper)
-- Images: always `width: 100%; height: auto` or Next.js `<Image>` with responsive sizing
-- Image captions: `font-size: 0.75rem`, centered, must not overflow container
-
-**Breakpoint Testing Checklist** (verify before marking any blog UI task complete)
-- 375px (iPhone SE), 390px (iPhone 14), 768px (tablet), 1280px (desktop)
-
-**What NOT to do**
-- Do NOT create separate mobile and desktop components for the same blog section
-- Do NOT use `min-width` or `width` in px on any blog container without a mobile override
-- Do NOT place the sidebar before the article in DOM order
 
 ---
 
@@ -245,48 +214,3 @@ After Claude Code finishes changes:
 
 **For detailed conventions, see CONVENTIONS.md**
 **For session setup, see SETUP-PROMPT.md**
-
----
-
-## Persona System
-
-### Overview
-The travel persona quiz is at `/quiz` (app/quiz/page.tsx).
-It assigns one of 12 personas based on 6 questions with weighted scoring.
-
-### The 12 Personas
-1. The Explorer — Off the Beaten Path
-2. The Foodie — Taste-Led Travel
-3. The Relaxer — Slow Travel
-4. The Photographer — Visual Storytelling
-5. The Culture Seeker — Deep Cultural Immersion
-6. The Adventurer — Adrenaline-First Travel
-7. The Luxury Traveller — Premium All the Way
-8. The Family Planner — Safe, Fun, All Ages
-9. The Romantic — Couples Escapes
-10. The Solo Wanderer — Independence and Self-Discovery
-11. The Party Animal — Nightlife and Social Energy
-12. The Festival Chaser — Events-First Travel
-
-### Persona Data Structure (QuizPersona)
-Each persona has: id, name, travelStyle, description, travelProfile,
-tripStyle, askLuna (string[]), destinations (string[])
-
-### Scoring
-calculatePersona(answers: string[]) in app/quiz/page.tsx uses a weighted
-scoreMap to match answers to persona IDs. Highest cumulative score wins.
-
-### Supabase Storage
-On quiz completion, result is upserted to user_preferences:
-- travel_persona TEXT — full persona name (e.g. "The Party Animal")
-- travel_style TEXT — style label (e.g. "Nightlife and Social Energy")
-- persona_completed_at TIMESTAMPTZ
-
-### NavBar Display
-NavBar.tsx fetches travel_persona from user_preferences on login.
-Shows orange badge with persona name + "Retake quiz" link in dropdown.
-Shows "Discover your travel style" CTA if no persona is set.
-
-### Homepage
-app/page.tsx shows all 12 persona teaser cards in the "What kind of
-traveller are you?" section. Each links to /quiz.
