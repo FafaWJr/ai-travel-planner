@@ -27,11 +27,11 @@ const PHOTOS = [
   },
   {
     src: '/about/IMG_6137.jpeg',
-    caption: 'bali1',
+    caption: 'Swinging above the rice terraces, Ubud, Bali',
   },
   {
     src: '/about/IMG_6682.jpeg',
-    caption: 'bali2',
+    caption: 'Perched above the T-Rex, Kelingking Beach, Nusa Penida',
   },
 ]
 
