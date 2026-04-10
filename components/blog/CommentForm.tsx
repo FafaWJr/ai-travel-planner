@@ -1,52 +1,49 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
 interface CommentFormProps {
   postSlug: string;
-  onSuccess: () => void;
+  onCommentAdded: () => void;
 }
 
-export default function CommentForm({ postSlug, onSuccess }: CommentFormProps) {
+export default function CommentForm({ postSlug, onCommentAdded }: CommentFormProps) {
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUserId(user?.id ?? null);
-    });
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userId || comment.trim().length < 10) return;
-
     setIsSubmitting(true);
     setError(null);
     setSuccess(false);
 
     const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      setError('You must be logged in to comment.');
+      setIsSubmitting(false);
+      return;
+    }
+
     const { error: insertError } = await supabase
       .from('blog_comments')
-      .insert({ post_slug: postSlug, user_id: userId, comment_text: comment.trim(), is_approved: true });
+      .insert({ post_slug: postSlug, user_id: user.id, comment_text: comment.trim(), is_approved: true });
 
     if (insertError) {
       setError('Failed to post comment. Please try again.');
-    } else {
-      setComment('');
-      setSuccess(true);
-      setTimeout(() => {
-        onSuccess();
-        setSuccess(false);
-      }, 400);
+      setIsSubmitting(false);
+      return;
     }
 
+    setComment('');
+    setSuccess(true);
     setIsSubmitting(false);
+    onCommentAdded();
+    setTimeout(() => setSuccess(false), 3000);
   };
 
   const isDirty = comment.trim().length >= 10;
@@ -60,7 +57,6 @@ export default function CommentForm({ postSlug, onSuccess }: CommentFormProps) {
         rows={4}
         maxLength={1000}
         required
-        disabled={!userId}
         style={{
           width: '100%', padding: '14px 16px',
           border: '1.5px solid #C0C0C0', borderRadius: 10,
@@ -91,7 +87,7 @@ export default function CommentForm({ postSlug, onSuccess }: CommentFormProps) {
       {error && <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: '#dc2626', marginTop: 8 }}>{error}</p>}
       {success && <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: '#16a34a', fontWeight: 600, marginTop: 8 }}>Comment posted successfully!</p>}
       <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: '#9ca3af', marginTop: 8 }}>
-        {userId ? 'Your comment will appear immediately below.' : 'You must be signed in to comment.'}
+        Your comment will appear immediately below.
       </p>
     </form>
   );

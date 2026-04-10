@@ -37,13 +37,12 @@ export default function CommentsSection({ postSlug }: CommentsSectionProps) {
 
       {isAuthenticated ? (
         <>
-          <CommentForm postSlug={postSlug} onSuccess={() => setRefreshKey(k => k + 1)} />
+          <CommentForm postSlug={postSlug} onCommentAdded={() => setRefreshKey(k => k + 1)} />
           <div style={{ marginTop: '2.5rem' }}>
             <h3 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: '1.1rem', color: '#00447B', marginBottom: '1.25rem' }}>
               Traveller Comments
             </h3>
-            {/* key prop forces full remount on each refresh — guaranteed re-fetch */}
-            <CommentsList key={refreshKey} postSlug={postSlug} />
+            <CommentsList postSlug={postSlug} refreshKey={refreshKey} />
           </div>
         </>
       ) : (

@@ -7,36 +7,35 @@ interface Comment {
   id: string;
   comment_text: string;
   created_at: string;
-  profiles?: { full_name: string | null } | null;
+  profiles: { full_name: string | null } | null;
 }
 
-export default function CommentsList({ postSlug }: { postSlug: string }) {
+interface CommentsListProps {
+  postSlug: string;
+  refreshKey?: number;
+}
+
+export default function CommentsList({ postSlug, refreshKey = 0 }: CommentsListProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const supabase = createClient();
     setLoading(true);
+    const supabase = createClient();
     supabase
       .from('blog_comments')
       .select('id, comment_text, created_at, profiles(full_name)')
       .eq('post_slug', postSlug)
       .eq('is_approved', true)
       .order('created_at', { ascending: false })
-      .then(({ data, error: err }) => {
-        if (err) setError(err.message);
-        else setComments((data ?? []) as unknown as Comment[]);
+      .then(({ data, error }) => {
+        if (!error && data) setComments(data as unknown as Comment[]);
         setLoading(false);
       });
-  }, [postSlug]);
+  }, [postSlug, refreshKey]);
 
   if (loading) return (
     <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: '#9ca3af' }}>Loading comments...</p>
-  );
-
-  if (error) return (
-    <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: '#dc2626' }}>Could not load comments.</p>
   );
 
   if (comments.length === 0) return (
