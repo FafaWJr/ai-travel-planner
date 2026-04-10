@@ -544,7 +544,7 @@ export default function FijiBlogPost() {
                   Your Fiji Adventure Starts Here
                 </h3>
                 <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.95rem', color: 'rgba(255,255,255,0.85)', lineHeight: 1.65, marginBottom: '1.25rem', maxWidth: 480, margin: '0 auto 1.25rem' }}>
-                  Skip the research rabbit hole. Luna builds your personalised Fiji itinerary — day by day, budget-aware, fully editable — in seconds.
+                  Skip the research rabbit hole. Luna builds your personalised Fiji itinerary, day by day, budget-aware, fully editable, in seconds.
                 </p>
                 <Link href="/plan" style={{ display: 'inline-block', background: ORANGE, color: '#fff', fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: 14, padding: '12px 30px', borderRadius: 10, textDecoration: 'none' }}>
                   Plan My Fiji Trip with Luna
