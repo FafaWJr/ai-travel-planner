@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import NavBar from '@/components/NavBar'
+import Footer from '@/components/Footer'
 
 const PHOTOS = [
   {
@@ -104,20 +106,44 @@ export default function AboutPage() {
   }
 
   return (
-    <div style={{ fontFamily: 'var(--font-body)', color: '#000', background: '#fff', overflowX: 'hidden' }}>
+    <>
+      <NavBar />
+      <div style={{ fontFamily: 'var(--font-body)', color: '#000', background: '#fff', overflowX: 'hidden' }}>
 
       {/* HERO */}
       <section style={{
-        background: 'linear-gradient(135deg, #00447B 0%, #003566 60%, #001e3c 100%)',
-        padding: '140px 24px 100px',
         position: 'relative',
+        minHeight: '520px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
         overflow: 'hidden',
       }}>
-        <div style={{ position: 'absolute', top: -80, right: -80, width: 400, height: 400, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.06)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', top: 40, right: 40, width: 240, height: 240, borderRadius: '50%', border: '1px solid rgba(255,189,89,0.12)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', bottom: -60, left: -60, width: 320, height: 320, borderRadius: '50%', border: '1px solid rgba(255,130,16,0.08)', pointerEvents: 'none' }} />
+        {/* Background photo */}
+        <img
+          src="/images/wilson-fafa-bali.jpeg"
+          alt="Wilson and Fafa in Bali"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center 30%',
+            zIndex: 0,
+          }}
+        />
 
-        <div style={{ maxWidth: 760, margin: '0 auto', textAlign: 'center', position: 'relative', zIndex: 1 }}>
+        {/* Dark overlay */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,68,123,0.65) 100%)',
+          zIndex: 1,
+        }} />
+
+        {/* Text content */}
+        <div style={{ position: 'relative', zIndex: 2, textAlign: 'center', padding: '140px 24px 100px', maxWidth: 760, margin: '0 auto', width: '100%' }}>
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 8,
             background: 'rgba(255,189,89,0.15)', border: '1px solid rgba(255,189,89,0.3)',
@@ -425,5 +451,7 @@ export default function AboutPage() {
         }
       `}</style>
     </div>
+    <Footer />
+  </>
   )
 }
