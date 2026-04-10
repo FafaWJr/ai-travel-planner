@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import NavBar from '@/components/NavBar'
-import Footer from '@/components/Footer'
 
 const PHOTOS = [
   {
@@ -451,7 +450,6 @@ export default function AboutPage() {
         }
       `}</style>
     </div>
-    <Footer />
   </>
   )
 }
