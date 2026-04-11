@@ -12,7 +12,7 @@ interface UseUnsavedChangesGuardOptions {
 export function useUnsavedChangesGuard({
   hasUnsavedChanges,
   onNavigationAttempt,
-}: UseUnsavedChangesGuardOptions) {
+}: UseUnsavedChangesGuardOptions): { releaseGuard: () => void } {
   const hasUnsavedChangesRef = useRef(hasUnsavedChanges);
   const onNavigationAttemptRef = useRef(onNavigationAttempt);
 
@@ -88,4 +88,13 @@ export function useUnsavedChangesGuard({
     document.addEventListener('click', handleClick, true);
     return () => document.removeEventListener('click', handleClick, true);
   }, []);
+
+  // Synchronously clears the guard ref so beforeunload does not fire
+  // during intentional programmatic navigation (after user confirms in modal).
+  // Must be called immediately before window.location.href assignment.
+  const releaseGuard = () => {
+    hasUnsavedChangesRef.current = false;
+  };
+
+  return { releaseGuard };
 }

@@ -371,7 +371,7 @@ function PlanContent() {
   // True for both unsaved new trips and edited saved trips
   const hasUnsavedChanges = isDirty || (!!plan && !savedTripId);
 
-  useUnsavedChangesGuard({
+  const { releaseGuard } = useUnsavedChangesGuard({
     hasUnsavedChanges,
     onNavigationAttempt: (destination: string, type: 'link' | 'popstate') => {
       setUnsavedModal({ isOpen: true, pendingDestination: destination, pendingType: type, isSaving: false });
@@ -383,6 +383,8 @@ function PlanContent() {
     const success = await saveTrip();
     if (success) {
       const { pendingDestination, pendingType } = unsavedModal;
+      releaseGuard(); // synchronously clears ref BEFORE window.location.href fires beforeunload
+      setIsDirty(false);
       setUnsavedModal({ isOpen: false, pendingDestination: '', pendingType: 'link', isSaving: false });
       if (pendingType === 'popstate') {
         window.history.back();
@@ -396,6 +398,7 @@ function PlanContent() {
 
   const handleModalLeaveWithoutSaving = () => {
     const { pendingDestination, pendingType } = unsavedModal;
+    releaseGuard(); // synchronously clears ref BEFORE window.location.href fires beforeunload
     setIsDirty(false);
     setUnsavedModal({ isOpen: false, pendingDestination: '', pendingType: 'link', isSaving: false });
     if (pendingType === 'popstate') {
