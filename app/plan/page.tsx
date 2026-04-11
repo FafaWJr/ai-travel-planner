@@ -363,7 +363,7 @@ function PlanContent() {
   const [saveLoading, setSaveLoading] = useState(false);
   const [savedTripId, setSavedTripId] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState(false);
-  const [unsavedModal, setUnsavedModal] = useState<{ isOpen: boolean; pendingDestination: string; pendingType: 'push' | 'popstate'; isSaving: boolean }>({ isOpen: false, pendingDestination: '', pendingType: 'push', isSaving: false });
+  const [unsavedModal, setUnsavedModal] = useState<{ isOpen: boolean; pendingDestination: string; pendingType: 'link' | 'popstate'; isSaving: boolean }>({ isOpen: false, pendingDestination: '', pendingType: 'link', isSaving: false });
   const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'assistant'; content: string; planUpdated?: boolean; isWelcome?: boolean }[]>([]);
   const chatSyncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const markDirty = () => setIsDirty(true);
@@ -373,7 +373,7 @@ function PlanContent() {
 
   useUnsavedChangesGuard({
     hasUnsavedChanges,
-    onNavigationAttempt: (destination: string, type: 'push' | 'popstate') => {
+    onNavigationAttempt: (destination: string, type: 'link' | 'popstate') => {
       setUnsavedModal({ isOpen: true, pendingDestination: destination, pendingType: type, isSaving: false });
     },
   });
@@ -383,7 +383,7 @@ function PlanContent() {
     const success = await saveTrip();
     if (success) {
       const { pendingDestination, pendingType } = unsavedModal;
-      setUnsavedModal({ isOpen: false, pendingDestination: '', pendingType: 'push', isSaving: false });
+      setUnsavedModal({ isOpen: false, pendingDestination: '', pendingType: 'link', isSaving: false });
       if (pendingType === 'popstate') {
         window.history.back();
       } else {
@@ -397,7 +397,7 @@ function PlanContent() {
   const handleModalLeaveWithoutSaving = () => {
     const { pendingDestination, pendingType } = unsavedModal;
     setIsDirty(false);
-    setUnsavedModal({ isOpen: false, pendingDestination: '', pendingType: 'push', isSaving: false });
+    setUnsavedModal({ isOpen: false, pendingDestination: '', pendingType: 'link', isSaving: false });
     if (pendingType === 'popstate') {
       window.history.back();
     } else {
@@ -406,7 +406,7 @@ function PlanContent() {
   };
 
   const handleModalStay = () => {
-    setUnsavedModal({ isOpen: false, pendingDestination: '', pendingType: 'push', isSaving: false });
+    setUnsavedModal({ isOpen: false, pendingDestination: '', pendingType: 'link', isSaving: false });
   };
 
   const [isExportingPDF, setIsExportingPDF] = useState(false);
