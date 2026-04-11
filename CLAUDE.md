@@ -1,7 +1,7 @@
 # Luna Let's Go - Claude Code Context
-**Last Updated:** 2026-04-10 23:55:06
+**Last Updated:** 2026-04-11
 **Current Branch:** main
-**Last Commit:** 1779e2d feat: quiz redesign v2 - multi-select, sliders, photo destinations, 12 personas, deals CTA
+**Last Commit:** eb61007 fix: suppress Chrome native dialog after user confirms Luna unsaved changes modal
 **Deployment:** https://www.lunaletsgo.com
 
 ---
@@ -136,6 +136,19 @@ These NEVER change:
 - Europcar AU/NZ: `https://www.awin1.com/cread.php?s=4703163&v=10777&q=567194&r=2825924`
 - All exported from `lib/affiliate.ts` as `BOOKING_AFFILIATE` and `ACTIVITY_AFFILIATE`
 
+### Unsaved Changes Guard
+- **Files:** `hooks/useUnsavedChangesGuard.ts`, `components/UnsavedChangesModal.tsx`
+- **Purpose:** Warns user before leaving `/plan` with unsaved trip data. Shows Luna-branded modal with three options: Save and Leave, Leave Without Saving, Stay.
+- **Architecture:** Three-layer guard:
+  1. `document.addEventListener('click', handler, true)` — capture-phase click interceptor that blocks internal link navigation before Next.js sees it
+  2. `window.addEventListener('popstate', ...)` — catches browser back/forward button
+  3. `window.addEventListener('beforeunload', ...)` — catches tab close, browser close, hard refresh
+- **CRITICAL — Next.js App Router does NOT call `pushState` for Link navigation.** It uses the `window.navigation` API on modern browsers. Any attempt to intercept `window.history.pushState` will silently fail. Always use the capture-phase click listener for client-side navigation interception.
+- **`releaseGuard()`** — the hook returns a `releaseGuard()` function that synchronously clears `hasUnsavedChangesRef.current`. This MUST be called before any `window.location.href` assignment in the modal handlers. Without it, `beforeunload` fires while the ref is still `true` (React state is async), causing a double-dialog (Luna modal + Chrome native dialog).
+- **`markDirty()`** — defined in `plan/page.tsx` as `const markDirty = () => setIsDirty(true)`. Must NEVER have a `savedTripId` condition — that bug caused the guard to silently no-op for all new trips.
+- **`isDirty` state** — set to `true` after `generatePlan()` resolves (new trip) and after any trip mutation via `markDirty()`. Set to `false` after successful save via `saveTrip()`.
+- **`replaceState` is never intercepted** — Next.js App Router calls it heavily for internal state; blocking it breaks routing.
+
 ---
 
 ## Pre-Session Discovery Checklist
@@ -186,6 +199,7 @@ After Claude Code finishes changes:
 ## Known Active Issues
 
 **Recently Fixed:**
+- Unsaved changes guard: three-layer system (click capture + popstate + beforeunload) with Luna modal. pushState interception does not work with Next.js 16 App Router — uses document capture-phase click listener instead. `releaseGuard()` prevents double-dialog on confirm.
 - Luna sync bug (fixed via %%TRIP_UPDATE%% JSON payloads)
 - Photo pipeline (Unsplash -> Pexels, removed Google Places, added randomization)
 - Auth static rendering (fixed /auth/returning with dynamic rendering)
