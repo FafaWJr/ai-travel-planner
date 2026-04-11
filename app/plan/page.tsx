@@ -800,10 +800,11 @@ function PlanContent() {
                     {/* Orange accent bar */}
                     <div style={{ width:5, flexShrink:0, background:'#FF8210', borderRadius:'16px 0 0 16px' }} />
                     {/* Content */}
-                    <div style={{ flex:1, padding:'20px 24px', display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
-                      <div>
+                    <div style={{ flex:1, padding:'20px 24px', display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:16 }}>
+                      {/* Left — title, dates, secondary actions */}
+                      <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
                         {/* Destination + duration badge */}
-                        <div style={{ display:'flex', alignItems:'center', gap:12, flexWrap:'wrap', marginBottom: sd && ed ? 10 : 0 }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:12, flexWrap:'wrap' }}>
                           <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:28, color:'#00447B', margin:0, lineHeight:1.2 }}>
                             {destination}
                           </p>
@@ -828,27 +829,36 @@ function PlanContent() {
                             </span>
                           </div>
                         )}
+                        {/* Secondary actions — Export PDF + New trip */}
+                        <div style={{ display:'flex', gap:8, alignItems:'center', marginTop:4, flexWrap:'wrap' }}>
+                          <button
+                            onClick={handleExportPDF}
+                            disabled={isExportingPDF}
+                            style={{ background:'none', border:'1.5px solid rgba(0,68,123,0.20)', color:'#00447B', fontFamily:"'Poppins',sans-serif", fontWeight:500, fontSize:13, padding:'7px 16px', borderRadius:100, cursor: isExportingPDF ? 'default' : 'pointer', opacity: isExportingPDF ? 0.7 : 1 }}
+                          >
+                            {isExportingPDF ? 'Generating PDF…' : 'Export PDF'}
+                          </button>
+                          <button onClick={()=>router.push('/')} style={{ background:'#00447B', color:'#fff', fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:13, padding:'8px 20px', borderRadius:100, cursor:'pointer', border:'none' }}>
+                            New trip
+                          </button>
+                        </div>
                       </div>
-                      <div style={{ display:'flex', gap:8, alignItems:'center', flexShrink:0, flexWrap:'wrap' }}>
-                  <button
-                    onClick={handleExportPDF}
-                    disabled={isExportingPDF}
-                    style={{ background:'none', border:'1.5px solid rgba(0,68,123,0.20)', color:'#00447B', fontFamily:"'Poppins',sans-serif", fontWeight:500, fontSize:13, padding:'7px 16px', borderRadius:100, cursor: isExportingPDF ? 'default' : 'pointer', opacity: isExportingPDF ? 0.7 : 1 }}
-                  >
-                    {isExportingPDF ? 'Generating PDF…' : 'Export PDF'}
-                  </button>
-                  <button
-                    onClick={saveTrip}
-                    disabled={saveLoading || (!!savedTripId && !isDirty)}
-                    style={{ background: saveLoading ? 'rgba(255,130,16,0.6)' : (savedTripId && !isDirty) ? '#16A34A' : '#FF8210', color:'#fff', border:'none', fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:13, padding:'8px 20px', borderRadius:100, cursor: (saveLoading || (!!savedTripId && !isDirty)) ? 'default' : 'pointer', transition:'background 0.15s' }}
-                  >
-                    {saveLoading ? 'Saving…' : (savedTripId && !isDirty) ? '✓ Saved' : savedTripId ? 'Save changes' : 'Save trip'}
-                  </button>
-                  <button onClick={()=>router.push('/')} style={{ background:'#00447B', color:'#fff', fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:13, padding:'8px 20px', borderRadius:100, cursor:'pointer', border:'none' }}>
-                    New trip
-                  </button>
-                </div>
-              </div>
+                      {/* Right — Save button standalone */}
+                      <button
+                        onClick={saveTrip}
+                        disabled={saveLoading || (!!savedTripId && !isDirty)}
+                        style={{
+                          background: saveLoading ? 'rgba(255,130,16,0.6)' : (savedTripId && !isDirty) ? '#16A34A' : '#FF8210',
+                          color: '#fff', border: 'none',
+                          fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 14,
+                          padding: '10px 22px', borderRadius: 8,
+                          cursor: (saveLoading || (!!savedTripId && !isDirty)) ? 'default' : 'pointer',
+                          transition: 'background 0.15s', whiteSpace: 'nowrap', flexShrink: 0,
+                        }}
+                      >
+                        {saveLoading ? 'Saving…' : (savedTripId && !isDirty) ? '✓ Saved' : savedTripId ? 'Save changes' : 'Save trip'}
+                      </button>
+                    </div>
             </div>
           );
         })()}
