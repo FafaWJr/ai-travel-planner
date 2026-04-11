@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 
 interface UseUnsavedChangesGuardOptions {
   hasUnsavedChanges: boolean;
-  onNavigationAttempt: (destination: string) => void;
+  onNavigationAttempt: (destination: string, type: 'push' | 'popstate') => void;
 }
 
 export function useUnsavedChangesGuard({
@@ -22,7 +22,7 @@ export function useUnsavedChangesGuard({
     onNavigationAttemptRef.current = onNavigationAttempt;
   }, [onNavigationAttempt]);
 
-  // Browser-level: tab close, refresh, hard back
+  // 1. Browser-level: tab close, refresh, hard back
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (hasUnsavedChangesRef.current) {
@@ -34,34 +34,50 @@ export function useUnsavedChangesGuard({
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, []);
 
-  // Client-side navigation: intercept pushState / replaceState
+  // 2. Client-side navigation: intercept pushState only
   useEffect(() => {
     const originalPushState = window.history.pushState.bind(window.history);
     const originalReplaceState = window.history.replaceState.bind(window.history);
 
-    const interceptNavigation = (url: string | URL | null | undefined): boolean => {
+    const isSamePage = (url: string | URL | null | undefined): boolean => {
+      if (!url) return true;
+      try {
+        const dest = new URL(url.toString(), window.location.href);
+        // Same path AND same search = Next.js internal update, not real navigation
+        return (
+          dest.pathname === window.location.pathname &&
+          dest.search === window.location.search
+        );
+      } catch {
+        return false;
+      }
+    };
+
+    const interceptPush = (url: string | URL | null | undefined): boolean => {
       if (!hasUnsavedChangesRef.current) return false;
       if (!url) return false;
       const destination = url.toString();
       if (destination.startsWith('#')) return false;
-      onNavigationAttemptRef.current(destination);
+      if (isSamePage(destination)) return false;
+      onNavigationAttemptRef.current(destination, 'push');
       return true;
     };
 
     window.history.pushState = function (state, title, url) {
-      if (interceptNavigation(url ?? undefined)) return;
+      if (interceptPush(url ?? undefined)) return;
       originalPushState(state, title, url);
     };
 
+    // replaceState is used heavily by Next.js App Router internals — never block it
     window.history.replaceState = function (state, title, url) {
-      if (interceptNavigation(url ?? undefined)) return;
       originalReplaceState(state, title, url);
     };
 
+    // 3. Soft back/forward button
     const handlePopState = () => {
       if (hasUnsavedChangesRef.current) {
-        window.history.pushState(null, '', window.location.href);
-        onNavigationAttemptRef.current(document.referrer || '/');
+        originalPushState(null, '', window.location.href);
+        onNavigationAttemptRef.current('__popstate__', 'popstate');
       }
     };
     window.addEventListener('popstate', handlePopState);

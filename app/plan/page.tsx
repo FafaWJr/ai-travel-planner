@@ -363,18 +363,18 @@ function PlanContent() {
   const [saveLoading, setSaveLoading] = useState(false);
   const [savedTripId, setSavedTripId] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState(false);
-  const [unsavedModal, setUnsavedModal] = useState<{ isOpen: boolean; pendingDestination: string; isSaving: boolean }>({ isOpen: false, pendingDestination: '', isSaving: false });
+  const [unsavedModal, setUnsavedModal] = useState<{ isOpen: boolean; pendingDestination: string; pendingType: 'push' | 'popstate'; isSaving: boolean }>({ isOpen: false, pendingDestination: '', pendingType: 'push', isSaving: false });
   const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'assistant'; content: string; planUpdated?: boolean; isWelcome?: boolean }[]>([]);
   const chatSyncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const markDirty = () => { if (savedTripId) setIsDirty(true); };
+  const markDirty = () => setIsDirty(true);
 
   // True for both unsaved new trips and edited saved trips
   const hasUnsavedChanges = isDirty || (!!plan && !savedTripId);
 
   useUnsavedChangesGuard({
     hasUnsavedChanges,
-    onNavigationAttempt: (destination: string) => {
-      setUnsavedModal({ isOpen: true, pendingDestination: destination, isSaving: false });
+    onNavigationAttempt: (destination: string, type: 'push' | 'popstate') => {
+      setUnsavedModal({ isOpen: true, pendingDestination: destination, pendingType: type, isSaving: false });
     },
   });
 
@@ -382,23 +382,31 @@ function PlanContent() {
     setUnsavedModal(prev => ({ ...prev, isSaving: true }));
     const success = await saveTrip();
     if (success) {
-      const dest = unsavedModal.pendingDestination;
-      setUnsavedModal({ isOpen: false, pendingDestination: '', isSaving: false });
-      window.location.href = dest;
+      const { pendingDestination, pendingType } = unsavedModal;
+      setUnsavedModal({ isOpen: false, pendingDestination: '', pendingType: 'push', isSaving: false });
+      if (pendingType === 'popstate') {
+        window.history.back();
+      } else {
+        window.location.href = pendingDestination;
+      }
     } else {
       setUnsavedModal(prev => ({ ...prev, isSaving: false }));
     }
   };
 
   const handleModalLeaveWithoutSaving = () => {
-    const dest = unsavedModal.pendingDestination;
+    const { pendingDestination, pendingType } = unsavedModal;
     setIsDirty(false);
-    setUnsavedModal({ isOpen: false, pendingDestination: '', isSaving: false });
-    window.location.href = dest;
+    setUnsavedModal({ isOpen: false, pendingDestination: '', pendingType: 'push', isSaving: false });
+    if (pendingType === 'popstate') {
+      window.history.back();
+    } else {
+      window.location.href = pendingDestination;
+    }
   };
 
   const handleModalStay = () => {
-    setUnsavedModal({ isOpen: false, pendingDestination: '', isSaving: false });
+    setUnsavedModal({ isOpen: false, pendingDestination: '', pendingType: 'push', isSaving: false });
   };
 
   const [isExportingPDF, setIsExportingPDF] = useState(false);
@@ -641,6 +649,7 @@ function PlanContent() {
       if (!res.ok) throw new Error('Failed');
       const data = await res.json();
       setPlan(data.plan || data.content || '');
+      setIsDirty(true); // new trip exists but hasn't been saved yet
       const dest = p.replace(/^plan a (trip to |)?/i,'').replace(/\b(from \d{4}-\d{2}-\d{2}.*)/i,'').trim().split(' ').slice(0,5).join(' ');
       trackTripPlanGenerated(dest);
       setIsLoadingPhotos(true);
