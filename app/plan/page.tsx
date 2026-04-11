@@ -14,6 +14,8 @@ import { useAuth } from '@/context/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import { trackTripPlanGenerated, trackChatMessageSent } from '@/lib/analytics';
 import { generateTripPDF } from '@/lib/generateTripPDF';
+import UnsavedChangesModal from '@/components/UnsavedChangesModal';
+import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 
 type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'night';
 const SLOTS_LIST: { key: TimeSlot; label: string; icon: string }[] = [
@@ -361,9 +363,44 @@ function PlanContent() {
   const [saveLoading, setSaveLoading] = useState(false);
   const [savedTripId, setSavedTripId] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState(false);
+  const [unsavedModal, setUnsavedModal] = useState<{ isOpen: boolean; pendingDestination: string; isSaving: boolean }>({ isOpen: false, pendingDestination: '', isSaving: false });
   const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'assistant'; content: string; planUpdated?: boolean; isWelcome?: boolean }[]>([]);
   const chatSyncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const markDirty = () => { if (savedTripId) setIsDirty(true); };
+
+  // True for both unsaved new trips and edited saved trips
+  const hasUnsavedChanges = isDirty || (!!plan && !savedTripId);
+
+  useUnsavedChangesGuard({
+    hasUnsavedChanges,
+    onNavigationAttempt: (destination: string) => {
+      setUnsavedModal({ isOpen: true, pendingDestination: destination, isSaving: false });
+    },
+  });
+
+  const handleModalSaveAndLeave = async () => {
+    setUnsavedModal(prev => ({ ...prev, isSaving: true }));
+    const success = await saveTrip();
+    if (success) {
+      const dest = unsavedModal.pendingDestination;
+      setUnsavedModal({ isOpen: false, pendingDestination: '', isSaving: false });
+      window.location.href = dest;
+    } else {
+      setUnsavedModal(prev => ({ ...prev, isSaving: false }));
+    }
+  };
+
+  const handleModalLeaveWithoutSaving = () => {
+    const dest = unsavedModal.pendingDestination;
+    setIsDirty(false);
+    setUnsavedModal({ isOpen: false, pendingDestination: '', isSaving: false });
+    window.location.href = dest;
+  };
+
+  const handleModalStay = () => {
+    setUnsavedModal({ isOpen: false, pendingDestination: '', isSaving: false });
+  };
+
   const [isExportingPDF, setIsExportingPDF] = useState(false);
   const [initialItineraryDays, setInitialItineraryDays] = useState<Day[] | undefined>(undefined);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -395,8 +432,8 @@ function PlanContent() {
     return { dest, sd, ed, title, trip_data };
   };
 
-  const saveTrip = async () => {
-    if (!user) { openGate('Save trip'); return; }
+  const saveTrip = async (): Promise<boolean> => {
+    if (!user) { openGate('Save trip'); return false; }
     setSaveLoading(true);
     try {
       const { dest, sd, ed, title, trip_data } = buildTripPayload();
@@ -419,9 +456,11 @@ function PlanContent() {
       }
       setIsDirty(false);
       setToast(savedTripId ? 'Trip updated! ✓' : 'Trip saved! ✓');
+      return true;
     } catch (err) {
       console.error('[saveTrip] error:', err);
       setToast('Could not save trip. Please try again.');
+      return false;
     } finally {
       setSaveLoading(false);
     }
@@ -1147,6 +1186,14 @@ function PlanContent() {
           </div>
         </div>
       )}
+
+      <UnsavedChangesModal
+        isOpen={unsavedModal.isOpen}
+        isSaving={unsavedModal.isSaving}
+        onSaveAndLeave={handleModalSaveAndLeave}
+        onLeaveWithoutSaving={handleModalLeaveWithoutSaving}
+        onStay={handleModalStay}
+      />
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500&display=swap');
