@@ -5,6 +5,28 @@ import NavBar from '@/components/NavBar';
 import BlogBreadcrumbs from '@/components/BlogBreadcrumbs';
 import CommentsSection from '@/components/blog/CommentsSection';
 
+/**
+ * BLOG POST TEMPLATE RULES — apply to ALL blog posts on Luna Let's Go
+ *
+ * Hero badge: flag emoji + DESTINATION NAME (uppercase) + post type tag
+ * Example: 🇧🇷 RIO DE JANEIRO · TRAVEL STORY
+ *
+ * Location overlay on blog INDEX card image: "CITY · COUNTRY" uppercase
+ * Example: RIO DE JANEIRO · BRAZIL
+ *
+ * Index card badge: flag emoji + DESTINATION NAME uppercase
+ * Example: 🇧🇷 RIO DE JANEIRO
+ *
+ * Photo captions: describe what is ACTUALLY visible in the photo.
+ * Never assume left/right position — check the actual image.
+ *
+ * NEVER use em dashes anywhere. Use ".", "," or ":" instead.
+ *
+ * Affiliate links: always target="_blank" rel="nofollow sponsored noopener"
+ * CommentsSection: always rendered at the bottom of every post
+ * No Tailwind. No emoji in body text. Inline styles only.
+ */
+
 export const metadata: Metadata = {
   title: "5 Days in Rio de Janeiro: Samba, Beaches & Iconic Views | Luna Let's Go Blog",
   description:
@@ -163,8 +185,12 @@ export default function RioBlogPost() {
           <header style={{ marginBottom: '2.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: '1.2rem', flexWrap: 'wrap' }}>
               <span style={{ display: 'inline-block', background: `rgba(255,130,16,0.12)`, color: ORANGE, fontFamily: "'Poppins', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase', padding: '5px 14px', borderRadius: 20 }}>
-                Rio de Janeiro · Brazil · Travel Story
+                Rio de Janeiro · Travel Story
               </span>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(0,68,123,0.07)', padding: '5px 12px', borderRadius: 20 }}>
+                <span style={{ fontSize: 14, lineHeight: 1 }}>🇧🇷</span>
+                <span style={{ fontFamily: "'Poppins', sans-serif", fontSize: 12, fontWeight: 600, color: NAVY }}>Brazil</span>
+              </div>
             </div>
 
             <h1 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', color: NAVY, lineHeight: 1.2, marginBottom: '1rem', maxWidth: 780 }}>
@@ -202,7 +228,7 @@ export default function RioBlogPost() {
             />
           </div>
           <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', fontStyle: 'italic', marginBottom: '3rem' }}>
-            Rio de Janeiro, Brazil — Wilson &amp; Fatima, January 2026
+            Rio de Janeiro, Brazil. Wilson &amp; Fatima, January 2026
           </p>
 
           {/* ── Article body: 2-column grid ── */}
@@ -246,7 +272,7 @@ export default function RioBlogPost() {
               <SectionH2>Scooters Along Copacabana, Caipirinhas at Ipanema and Samba in Lapa</SectionH2>
 
               <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
-                We arrived at Santos Dumont airport and were in our apartment on Francisco Otaviano — a quiet street sitting between Copacabana and Ipanema — by mid-afternoon. The location was close to perfect. The beach was a two-minute walk in either direction.
+                We arrived at Santos Dumont airport and were in our apartment on Francisco Otaviano, a quiet street between Copacabana and Ipanema, by mid-afternoon. The location was close to perfect. The beach was a two-minute walk in either direction.
               </p>
 
               <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
@@ -263,7 +289,7 @@ export default function RioBlogPost() {
                 />
               </div>
               <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
-                Electric scooter along Copacabana — the Copacabana Palace on the left
+                WHOOSH electric scooters along Copacabana, with the iconic Copacabana Palace in the background.
               </p>
 
               {/* WHOOSH tip */}
@@ -306,11 +332,11 @@ export default function RioBlogPost() {
               <SectionH2>Botafogo, Flamengo and Dinner at the Legendary Garota de Ipanema</SectionH2>
 
               <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
-                Day two was slower. We walked through Botafogo and along the Flamengo waterfront, stopping for coffee and people-watching. The views of Sugarloaf from Botafogo beach are some of the best in the city — no cable car required.
+                Day two was slower. We walked through Botafogo and along the Flamengo waterfront, stopping for coffee and people-watching. The views of Sugarloaf from Botafogo beach are some of the best in the city, no cable car required.
               </p>
 
               <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
-                That evening we had dinner at Garota de Ipanema — the restaurant named after the famous bossa nova song, not the inspiration for it. The food was good, the atmosphere was warm, and the street outside was exactly as charming as it sounds.
+                That evening we had dinner at Garota de Ipanema, the restaurant named after the famous bossa nova song, not the inspiration for it. The food was good, the atmosphere was warm, and the street outside was exactly as charming as it sounds.
               </p>
 
               <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 14, overflow: 'hidden', marginTop: '2rem', marginBottom: 8 }}>
@@ -323,7 +349,7 @@ export default function RioBlogPost() {
                 />
               </div>
               <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
-                Copacabana beach — the view never gets old
+                Copacabana beach. The view never gets old.
               </p>
 
               {/* ── DAY 3 ── */}
@@ -331,7 +357,7 @@ export default function RioBlogPost() {
               <SectionH2>The Big Day: Sugarloaf, Cristo Redentor, Sambodromo, Maracana, Cathedral and Selaron Steps</SectionH2>
 
               <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
-                Day three was a full itinerary. We started early with the Sugarloaf cable car — getting up in the morning before the tour groups arrive makes a real difference. The views from the top, with the city laid out below and the Atlantic stretching to the horizon, are everything you expect and more.
+                Day three was a full itinerary. We started early with the Sugarloaf cable car. Getting up before the tour groups arrive makes a real difference. The views from the top, with the city laid out below and the Atlantic stretching to the horizon, are everything you expect and more.
               </p>
 
               {/* Three-column image grid */}
@@ -347,7 +373,7 @@ export default function RioBlogPost() {
                 ))}
               </div>
               <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
-                The Bondinho cable car up Sugarloaf — and the view that waits at the top
+                The Bondinho cable car up Sugarloaf, and the view that waits at the top
               </p>
 
               {/* Klook affiliate box */}
@@ -375,7 +401,7 @@ export default function RioBlogPost() {
                 />
               </div>
               <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
-                Cristo Redentor — bigger than any photo prepares you for
+                Cristo Redentor. Bigger than any photo prepares you for.
               </p>
 
               <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 14, overflow: 'hidden', marginTop: '2rem', marginBottom: 8 }}>
@@ -388,11 +414,11 @@ export default function RioBlogPost() {
                 />
               </div>
               <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
-                Sugarloaf (P&atilde;o de A&ccedil;&uacute;car) — the symbol of Rio
+                Sugarloaf (P&atilde;o de A&ccedil;&uacute;car), the symbol of Rio
               </p>
 
               <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
-                We continued through the afternoon: the Sambadrome (Sambodromo), the outside of Maracana, and then the Metropolitan Cathedral — an extraordinary brutalist cone of stained glass that catches the light in ways no photograph quite captures.
+                We continued through the afternoon: the Sambadrome (Sambodromo), the outside of Maracana, and then the Metropolitan Cathedral, an extraordinary brutalist cone of stained glass that catches the light in ways no photograph quite captures.
               </p>
 
               <div style={{ position: 'relative', width: '100%', maxWidth: 480, margin: '28px auto 8px' }}>
@@ -405,7 +431,7 @@ export default function RioBlogPost() {
                 />
               </div>
               <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
-                Metropolitan Cathedral of Rio de Janeiro — the stained glass from inside
+                Metropolitan Cathedral of Rio de Janeiro: the stained glass from inside
               </p>
 
               <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
@@ -422,7 +448,7 @@ export default function RioBlogPost() {
                 />
               </div>
               <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
-                The Selaron Steps in Lapa — tiled over decades, from 60 countries
+                The Selaron Steps in Lapa, tiled over decades from 60 countries.
               </p>
 
               {/* GoWithGuide affiliate box */}
@@ -449,7 +475,7 @@ export default function RioBlogPost() {
               </p>
 
               <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
-                Vendors walk the sand constantly. The combination to order is mate tea — iced, in a plastic cup — and Biscoito Globo, the light ring-shaped biscuits that are a Rio institution. There is no better beach snack on earth.
+                Vendors walk the sand constantly. The combination to order is mate tea, iced in a plastic cup, and Biscoito Globo, the light ring-shaped biscuits that are a Rio institution. There is no better beach snack on earth.
               </p>
 
               {/* Two-column image grid */}
@@ -464,7 +490,7 @@ export default function RioBlogPost() {
                 ))}
               </div>
               <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
-                Mate tea and Biscoito Globo — the definitive Rio beach snack combo
+                Mate tea and Biscoito Globo: the definitive Rio beach snack combo
               </p>
 
               <div style={{ position: 'relative', width: '100%', maxWidth: 480, margin: '28px auto 8px' }}>
@@ -477,7 +503,7 @@ export default function RioBlogPost() {
                 />
               </div>
               <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
-                Arpoador — the rock between Ipanema and Copacabana
+                Arpoador, the rock between Ipanema and Copacabana.
               </p>
 
               {/* Cervantes tip */}
@@ -492,7 +518,7 @@ export default function RioBlogPost() {
               </div>
 
               <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
-                That evening we went to a Beija-Flor samba school rehearsal — a weekly event open to the public in Nilópolis. Worth every minute of the commute. Then back to Copacabana and Cervantes for the sandwich.
+                That evening we went to a Beija-Flor samba school rehearsal, a weekly event open to the public in Nil&oacute;polis. Worth every minute of the commute. Then back to Copacabana and Cervantes for the sandwich.
               </p>
 
               <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 14, overflow: 'hidden', marginTop: '2rem', marginBottom: 8 }}>
@@ -505,7 +531,7 @@ export default function RioBlogPost() {
                 />
               </div>
               <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
-                The Cervantes pork and pineapple sandwich — order two
+                The Cervantes pork and pineapple sandwich. Order two.
               </p>
 
               {/* ── DAY 5 ── */}
@@ -709,7 +735,7 @@ export default function RioBlogPost() {
                   Getting Around Rio
                 </div>
                 <p style={{ fontSize: 13, color: GRAY, lineHeight: 1.6, margin: 0 }}>
-                  Use <strong>Uber</strong> for anything beyond walking distance — it is reliable, inexpensive and far easier than navigating local buses as a first-time visitor. WHOOSH scooters cover the beachfront. Avoid displaying your phone in unfamiliar areas.
+                  Use <strong>Uber</strong> for anything beyond walking distance. It is reliable, inexpensive and far easier than navigating local buses as a first-time visitor. WHOOSH scooters cover the beachfront. Avoid displaying your phone in unfamiliar areas.
                 </p>
               </div>
 

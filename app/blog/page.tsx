@@ -4,6 +4,19 @@ import Link from 'next/link';
 import Image from 'next/image';
 import NavBar from '@/components/NavBar';
 
+/**
+ * BLOG INDEX TEMPLATE RULES — all cards must follow this pattern:
+ *
+ * Badge: flag emoji + DESTINATION NAME (uppercase) — never plain "TRAVEL STORY"
+ * Location overlay: "CITY · COUNTRY" uppercase on the card image
+ * Date: "Month YYYY"
+ * Duration: "X days" or "X nights"
+ * Read time: "X min read"
+ *
+ * NEVER use em dashes in any card text. Use ".", "," or ":" instead.
+ * Most recent post always appears first in the grid.
+ */
+
 function FijiFlag() {
   return (
     <svg width="22" height="14" viewBox="0 0 22 14" xmlns="http://www.w3.org/2000/svg" style={{ borderRadius: 2, flexShrink: 0 }}>
