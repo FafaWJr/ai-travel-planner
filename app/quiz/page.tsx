@@ -32,6 +32,7 @@ interface QuizPersona {
   tripStyle: string;
   askLuna: string[];
   destinations: string[];
+  personaImage: string;
 }
 
 interface CardOption {
@@ -179,6 +180,7 @@ const QUIZ_RESULTS: QuizPersona[] = [
       'Replace the touristy activities in my plan with something local.',
     ],
     destinations: ['Georgia (Caucasus)', 'Albania', 'Kyrgyzstan', 'Oaxaca, Mexico', 'Faroe Islands', 'Northern Vietnam', 'Mozambique', 'Patagonia, Argentina'],
+    personaImage: '/quiz/luna-personas/the-explorer.png',
   },
   {
     id: 'foodie',
@@ -193,6 +195,7 @@ const QUIZ_RESULTS: QuizPersona[] = [
       'What street food should I absolutely not miss here?',
     ],
     destinations: ['San Sebastian, Spain', 'Bologna, Italy', 'Chiang Mai, Thailand', 'Tokyo, Japan', 'Mexico City, Mexico', 'Lyon, France', 'Lima, Peru', 'Marrakech, Morocco'],
+    personaImage: '/quiz/luna-personas/the-foodie.png',
   },
   {
     id: 'relaxer',
@@ -207,6 +210,7 @@ const QUIZ_RESULTS: QuizPersona[] = [
       'Which beach in my destination is the quietest and least crowded?',
     ],
     destinations: ['Maldives', 'Bali, Indonesia', 'Algarve, Portugal', 'Koh Lanta, Thailand', 'Sardinia, Italy', 'Tulum, Mexico', 'Seychelles', 'Madeira, Portugal'],
+    personaImage: '/quiz/luna-personas/the-relaxer.png',
   },
   {
     id: 'photographer',
@@ -221,6 +225,7 @@ const QUIZ_RESULTS: QuizPersona[] = [
       'Suggest a photography-focused day tour at my destination.',
     ],
     destinations: ['Santorini, Greece', 'Cappadocia, Turkey', 'Iceland', 'Kyoto, Japan', 'Cinque Terre, Italy', 'Antelope Canyon, USA', 'Luang Prabang, Laos', 'Petra, Jordan'],
+    personaImage: '/quiz/luna-personas/the-photographer.png',
   },
   {
     id: 'culture',
@@ -235,6 +240,7 @@ const QUIZ_RESULTS: QuizPersona[] = [
       'Replace one generic activity with something more historically significant.',
     ],
     destinations: ['Athens, Greece', 'Kyoto, Japan', 'Istanbul, Turkey', 'Cairo, Egypt', 'Havana, Cuba', 'Varanasi, India', 'Rome, Italy', 'Cartagena, Colombia'],
+    personaImage: '/quiz/luna-personas/the-culture-seeker.png',
   },
   {
     id: 'adventurer',
@@ -249,6 +255,7 @@ const QUIZ_RESULTS: QuizPersona[] = [
       'Swap the city hotel for something closer to the mountains or coast.',
     ],
     destinations: ['Queenstown, New Zealand', 'Nepal', 'Costa Rica', 'Moab, Utah, USA', 'Swiss Alps', 'Patagonia, Chile', 'Interlaken, Switzerland', 'Azores, Portugal'],
+    personaImage: '/quiz/luna-personas/the-adventurer.png',
   },
   {
     id: 'luxury',
@@ -263,6 +270,7 @@ const QUIZ_RESULTS: QuizPersona[] = [
       'What is the finest restaurant at this destination that I should book immediately?',
     ],
     destinations: ['Amalfi Coast, Italy', 'St Barts', 'Dubai, UAE', 'Bora Bora, French Polynesia', 'Tuscany, Italy', 'Maldives', 'Monaco', 'Mykonos, Greece'],
+    personaImage: '/quiz/luna-personas/the-luxury-traveller.png',
   },
   {
     id: 'family',
@@ -277,6 +285,7 @@ const QUIZ_RESULTS: QuizPersona[] = [
       'What family-friendly restaurant options are near my hotel?',
     ],
     destinations: ['Orlando, Florida, USA', 'Barcelona, Spain', 'Disneyland Paris', 'Gold Coast, Australia', 'Phuket, Thailand', 'Iceland', 'Porto, Portugal', 'Tokyo, Japan'],
+    personaImage: '/quiz/luna-personas/the-family-planner.png',
   },
   {
     id: 'romantic',
@@ -291,6 +300,7 @@ const QUIZ_RESULTS: QuizPersona[] = [
       'What is the most romantic neighbourhood to stay in at this destination?',
     ],
     destinations: ['Amalfi Coast, Italy', 'Paris, France', 'Santorini, Greece', 'Vienna, Austria', 'Bali, Indonesia', 'Prague, Czech Republic', 'Queenstown, New Zealand', 'Maldives'],
+    personaImage: '/quiz/luna-personas/the-romantic.png',
   },
   {
     id: 'solo',
@@ -305,6 +315,7 @@ const QUIZ_RESULTS: QuizPersona[] = [
       'Which neighbourhoods are safest and most fun for solo travellers at this destination?',
     ],
     destinations: ['Lisbon, Portugal', 'Bangkok, Thailand', 'Buenos Aires, Argentina', 'Amsterdam, Netherlands', 'Medellin, Colombia', 'Taipei, Taiwan', 'Budapest, Hungary', 'Cape Town, South Africa'],
+    personaImage: '/quiz/luna-personas/the-solo-wanderer.png',
   },
   {
     id: 'party',
@@ -319,6 +330,7 @@ const QUIZ_RESULTS: QuizPersona[] = [
       'Shift the Day 2 activities to the afternoon so we can recover from the night before.',
     ],
     destinations: ['Ibiza, Spain', 'Mykonos, Greece', 'Bangkok, Thailand', 'Miami, USA', 'Amsterdam, Netherlands', 'Berlin, Germany', 'Cancun, Mexico', 'Las Vegas, USA'],
+    personaImage: '/quiz/luna-personas/the-party-animal.png',
   },
   {
     id: 'festival',
@@ -333,6 +345,7 @@ const QUIZ_RESULTS: QuizPersona[] = [
       'What should I do in the city before the festival starts?',
     ],
     destinations: ['Rio de Janeiro, Brazil', 'Munich, Germany', 'New Orleans, USA', 'Boom, Belgium', 'Edinburgh, Scotland', 'Pamplona, Spain', 'Chiang Mai, Thailand', 'London, UK'],
+    personaImage: '/quiz/luna-personas/the-festival-chaser.png',
   },
 ];
 
@@ -426,6 +439,7 @@ async function savePersonaToProfile(persona: QuizPersona): Promise<void> {
       travel_persona: persona.name,
       travel_style: persona.travelStyle,
       persona_completed_at: new Date().toISOString(),
+      persona_image: persona.personaImage,
     }, { onConflict: 'user_id' });
     console.log('[quiz] persona saved:', persona.name);
   } catch (err) {
@@ -859,17 +873,28 @@ function QuizPageInner() {
           ) : quizPersona ? (
             /* ── RESULTS ── */
             <div style={{ background: '#fff', borderRadius: 20, padding: '40px', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }}>
-              {/* 1. Persona name + style badge */}
-              <div style={{ marginBottom: 24 }}>
-                <p style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 11, color: '#FF8210', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>
-                  Your Traveller Persona
-                </p>
-                <h2 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 800, fontSize: 34, color: '#00447B', lineHeight: 1.1, marginBottom: 12 }}>
-                  {quizPersona.name}
-                </h2>
-                <span style={{ display: 'inline-block', background: 'rgba(255,130,16,0.12)', border: '1.5px solid rgba(255,130,16,0.35)', borderRadius: 50, padding: '5px 18px', fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 13, color: '#FF8210' }}>
-                  {quizPersona.travelStyle}
-                </span>
+              {/* 1. Persona name + style badge + image */}
+              <div className="quiz-persona-header" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24, marginBottom: 24 }}>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 11, color: '#FF8210', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>
+                    Your Traveller Persona
+                  </p>
+                  <h2 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 800, fontSize: 34, color: '#00447B', lineHeight: 1.1, marginBottom: 12 }}>
+                    {quizPersona.name}
+                  </h2>
+                  <span style={{ display: 'inline-block', background: 'rgba(255,130,16,0.12)', border: '1.5px solid rgba(255,130,16,0.35)', borderRadius: 50, padding: '5px 18px', fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 13, color: '#FF8210' }}>
+                    {quizPersona.travelStyle}
+                  </span>
+                </div>
+                <div style={{ flexShrink: 0, width: 140, height: 140, borderRadius: '50%', overflow: 'hidden', border: '3px solid rgba(255,130,16,0.25)', boxShadow: '0 8px 24px rgba(0,68,123,0.15)' }}>
+                  <img
+                    src={quizPersona.personaImage}
+                    alt={quizPersona.name}
+                    width={140}
+                    height={140}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  />
+                </div>
               </div>
 
               {/* 2. Description */}
@@ -1043,6 +1068,10 @@ function QuizPageInner() {
           .quiz-card { padding: 24px 16px !important; }
           .quiz-options-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .quiz-dest-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+        @media (max-width: 520px) {
+          .quiz-persona-header { flex-direction: column-reverse !important; align-items: center !important; text-align: center !important; }
+          .quiz-persona-header > div:first-child { width: 100% !important; }
         }
         @media (max-width: 380px) {
           .quiz-options-grid { grid-template-columns: 1fr !important; }
