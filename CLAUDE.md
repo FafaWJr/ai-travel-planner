@@ -1,7 +1,7 @@
 # Luna Let's Go - Claude Code Context
-**Last Updated:** 2026-04-11
+**Last Updated:** 2026-04-12 17:50:17
 **Current Branch:** main
-**Last Commit:** eb61007 fix: suppress Chrome native dialog after user confirms Luna unsaved changes modal
+**Last Commit:** a29d521 fix: remove all em dashes from Rio post, fix badge and caption
 **Deployment:** https://www.lunaletsgo.com
 
 ---
@@ -24,6 +24,7 @@
 ## Active API Routes
 
 ```
+app/api/blog-comments/route.ts
 app/api/brevo-sync/route.ts
 app/api/budget-estimate/route.ts
 app/api/chat/route.ts
@@ -53,6 +54,7 @@ app/auth/returning/page.tsx
 app/auth/signup/page.tsx
 app/blog/fiji-oct-2024/page.tsx
 app/blog/page.tsx
+app/blog/rio-de-janeiro-5-days/page.tsx
 app/deals/page.tsx
 app/my-trips/page.tsx
 app/page.tsx
@@ -69,16 +71,16 @@ app/trip-ideas/page.tsx
 ## Recent Changes (Last 10 Commits)
 
 ```
-1779e2d (HEAD -> main, origin/main, origin/HEAD) feat: quiz redesign v2 - multi-select, sliders, photo destinations, 12 personas, deals CTA
-f2d9a5f feat: expand quiz to 12 personas, dynamic destinations, save to profile, navbar badge
-8a91d24 fix: replace em dashes with commas in Fiji blog CTA text
-a41e529 chore: add favicon, SEO prompt, and blog SEO skill files
-67c6461 docs: Add blog comment system documentation
-045c7cf fix: comment refresh via refreshKey prop and profiles FK join
-aff90a6 fix: nuclear rebuild of comment components — key-based remount for reliable refresh
-32dbe61 fix: comments now refresh and show success feedback after posting
-cebadce fix: auto-approve blog comments so they appear immediately
-ba4e5f0 feat: SEO + GEO optimisation for Fiji blog post
+a29d521 (HEAD -> main, origin/main, origin/HEAD) fix: remove all em dashes from Rio post, fix badge and caption
+c230283 fix: Rio blog tweaks - portrait images, Funk party copy, card badge
+e4aa19c feat: Rio de Janeiro 5-day blog post with comments API
+cf9fd66 (origin/feat/save-button-right, feat/save-button-right) feat: move Save trip button to far right of card header
+c35074e docs: document unsaved changes guard system in CLAUDE.md
+eb61007 fix: suppress Chrome native dialog after user confirms Luna unsaved changes modal
+d713a8b fix: unsaved guard v3 - click capture phase replaces pushState patching
+2dbc652 fix: unsaved changes guard - markDirty, popstate, same-page filter, generatePlan dirty
+837ad85 feat: unsaved changes guard on /plan page with branded modal
+0cdad3b feat: add blog CTA after final paragraph on About page
 ```
 
 ---
@@ -136,19 +138,6 @@ These NEVER change:
 - Europcar AU/NZ: `https://www.awin1.com/cread.php?s=4703163&v=10777&q=567194&r=2825924`
 - All exported from `lib/affiliate.ts` as `BOOKING_AFFILIATE` and `ACTIVITY_AFFILIATE`
 
-### Unsaved Changes Guard
-- **Files:** `hooks/useUnsavedChangesGuard.ts`, `components/UnsavedChangesModal.tsx`
-- **Purpose:** Warns user before leaving `/plan` with unsaved trip data. Shows Luna-branded modal with three options: Save and Leave, Leave Without Saving, Stay.
-- **Architecture:** Three-layer guard:
-  1. `document.addEventListener('click', handler, true)` — capture-phase click interceptor that blocks internal link navigation before Next.js sees it
-  2. `window.addEventListener('popstate', ...)` — catches browser back/forward button
-  3. `window.addEventListener('beforeunload', ...)` — catches tab close, browser close, hard refresh
-- **CRITICAL — Next.js App Router does NOT call `pushState` for Link navigation.** It uses the `window.navigation` API on modern browsers. Any attempt to intercept `window.history.pushState` will silently fail. Always use the capture-phase click listener for client-side navigation interception.
-- **`releaseGuard()`** — the hook returns a `releaseGuard()` function that synchronously clears `hasUnsavedChangesRef.current`. This MUST be called before any `window.location.href` assignment in the modal handlers. Without it, `beforeunload` fires while the ref is still `true` (React state is async), causing a double-dialog (Luna modal + Chrome native dialog).
-- **`markDirty()`** — defined in `plan/page.tsx` as `const markDirty = () => setIsDirty(true)`. Must NEVER have a `savedTripId` condition — that bug caused the guard to silently no-op for all new trips.
-- **`isDirty` state** — set to `true` after `generatePlan()` resolves (new trip) and after any trip mutation via `markDirty()`. Set to `false` after successful save via `saveTrip()`.
-- **`replaceState` is never intercepted** — Next.js App Router calls it heavily for internal state; blocking it breaks routing.
-
 ---
 
 ## Pre-Session Discovery Checklist
@@ -199,7 +188,6 @@ After Claude Code finishes changes:
 ## Known Active Issues
 
 **Recently Fixed:**
-- Unsaved changes guard: three-layer system (click capture + popstate + beforeunload) with Luna modal. pushState interception does not work with Next.js 16 App Router — uses document capture-phase click listener instead. `releaseGuard()` prevents double-dialog on confirm.
 - Luna sync bug (fixed via %%TRIP_UPDATE%% JSON payloads)
 - Photo pipeline (Unsplash -> Pexels, removed Google Places, added randomization)
 - Auth static rendering (fixed /auth/returning with dynamic rendering)
@@ -228,89 +216,3 @@ After Claude Code finishes changes:
 
 **For detailed conventions, see CONVENTIONS.md**
 **For session setup, see SETUP-PROMPT.md**
-
----
-
-## Persona System
-
-### Overview
-The travel persona quiz lives at `/quiz` (app/quiz/page.tsx).
-Users answer 5 multi-select card questions and 2 sliders (budget, duration).
-All selected values are collected into a flat array and passed through a
-weighted scoring function that returns one of 12 QuizPersona results.
-
-### The 12 Personas
-| ID | Name | Travel Style |
-|---|---|---|
-| explorer | The Explorer | Off the Beaten Path |
-| foodie | The Foodie | Taste-Led Travel |
-| relaxer | The Relaxer | Slow Travel |
-| photographer | The Photographer | Visual Storytelling |
-| culture | The Culture Seeker | Deep Cultural Immersion |
-| adventurer | The Adventurer | Adrenaline-First Travel |
-| luxury | The Luxury Traveller | Premium All the Way |
-| family | The Family Planner | Safe, Fun, All Ages |
-| romantic | The Romantic | Couples Escapes |
-| solo | The Solo Wanderer | Independence and Self-Discovery |
-| party | The Party Animal | Nightlife and Social Energy |
-| festival | The Festival Chaser | Events-First Travel |
-
-### QuizPersona Interface
-```ts
-interface QuizPersona {
-  id: string
-  name: string
-  travelStyle: string
-  description: string
-  travelProfile: string
-  tripStyle: string
-  askLuna: string[]       // 3 clickable prompts linking to /plan?luna_prompt=X
-  destinations: string[]  // 6-8 destinations fetched as photo cards via /api/destination-photos
-}
-```
-
-### Question Types
-- Card questions (Q0-Q4): multi-select up to maxSelect, Lucide icons per option
-- Budget slider (step 5): 5 levels from Backpacker to Luxury, maps to budget_* values
-- Duration slider (step 6): 5 levels from Weekend to Open-ended, maps to dur_* values
-
-### Scoring
-`calculatePersona(allSelectedValues: string[])` in app/quiz/page.tsx uses a
-`scoreMap` to award weighted points per persona ID for each selected value.
-Highest cumulative score wins. A user selecting party options AND beach options
-scores correctly across both personas — no single-answer override.
-
-### Supabase Storage
-On quiz completion, saved to `user_preferences` table:
-- `travel_persona` TEXT — full persona name e.g. "The Party Animal"
-- `travel_style` TEXT — style label e.g. "Nightlife and Social Energy"
-- `persona_completed_at` TIMESTAMPTZ
-
-Save is fire-and-forget. Silent for guests (not logged in).
-Uses `createClient()` from `@/lib/supabase/client`.
-
-### NavBar Integration
-`components/NavBar.tsx` fetches `travel_persona` from `user_preferences` on login.
-- If persona exists: shows orange pill badge with name + "Retake quiz" link
-- If no persona: shows "Discover your travel style" link with Compass SVG icon
-- No emojis — inline SVGs and Lucide icons only
-
-### Homepage Persona Cards
-`app/page.tsx` shows all 12 persona teaser cards in the "What kind of
-traveller are you?" section. Alternating orange/navy SVG dot pattern.
-All 12 link to `/quiz`.
-
-### Result Screen CTAs
-- "Start planning with Luna" button links to `/plan` (new tab)
-- Ask Luna prompt pills link to `/plan?luna_prompt=ENCODED` (new tab)
-- Destination photo cards link to `/plan?destination=NAME` (new tab)
-- Deals CTA block links to `/deals`
-- "Retake quiz" link resets state
-
-### Key Rules
-- Never make quiz single-select — multi-select is intentional and core
-- Never remove the budget or duration sliders — replace cards only for Q5/Q6
-- Never remove destination photo cards from result screen
-- Deals CTA block must remain in result screen below Ask Luna section
-- Lucide icons required on all card options — no emojis
-- Orange (#FF8210) is the primary action color throughout the quiz
