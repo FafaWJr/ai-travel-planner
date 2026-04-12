@@ -192,6 +192,19 @@ export default function BlogPage() {
             position: 'relative',
           }}>
 
+            {/**
+             * BLOG CARD TEMPLATE — all blog posts must follow this pattern:
+             * - Destination badge: country/city name in uppercase + country flag emoji
+             * - Location overlay on image: "LOCATION NAME · REGION/COUNTRY" in uppercase
+             * - Date format: "Month YYYY"
+             * - Read time: "X min read"
+             * - Duration: "X days" or "X nights"
+             * - Title: full post title
+             * - Excerpt: 1-2 sentence summary
+             * - Link: /blog/[slug]
+             * No em dashes anywhere. No plain "TRAVEL STORY" badge without a destination.
+             */}
+
             {/* ── Real post: Rio ── */}
             <Link href="/blog/rio-de-janeiro-5-days" style={{ textDecoration: 'none', color: 'inherit', display: 'block', background: '#fff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 16px rgba(0,68,123,0.08)', transition: 'transform 0.25s ease, box-shadow 0.25s ease' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 10px 32px rgba(0,68,123,0.14)'; }}
@@ -204,11 +217,15 @@ export default function BlogPage() {
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.35) 100%)' }} />
                 {/* Tags row */}
                 <div style={{ position: 'absolute', top: 14, left: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ background: '#FF8210', color: '#fff', fontFamily: 'var(--font-head)', fontSize: 11, fontWeight: 700, letterSpacing: '0.8px', textTransform: 'uppercase', padding: '4px 10px', borderRadius: 20 }}>Travel Story</span>
+                  <span style={{ background: '#FF8210', color: '#fff', fontFamily: 'var(--font-head)', fontSize: 11, fontWeight: 700, letterSpacing: '0.8px', textTransform: 'uppercase', padding: '4px 10px', borderRadius: 20 }}>Rio de Janeiro</span>
+                  <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.18)', borderRadius: 20, padding: '4px 8px', gap: 5, backdropFilter: 'blur(4px)' }}>
+                    <span style={{ fontSize: 14, lineHeight: 1 }}>🇧🇷</span>
+                    <span style={{ fontFamily: 'var(--font-head)', fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.9)' }}>Brazil</span>
+                  </div>
                 </div>
                 {/* Bottom label */}
                 <div style={{ position: 'absolute', bottom: 14, left: 14 }}>
-                  <span style={{ fontFamily: 'var(--font-head)', fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.7)', letterSpacing: '1px', textTransform: 'uppercase' }}>Rio de Janeiro, Brazil</span>
+                  <span style={{ fontFamily: 'var(--font-head)', fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.7)', letterSpacing: '1px', textTransform: 'uppercase' }}>Rio de Janeiro · Brazil</span>
                 </div>
               </div>
 

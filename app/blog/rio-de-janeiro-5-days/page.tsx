@@ -365,13 +365,13 @@ export default function RioBlogPost() {
                 From Sugarloaf we took an Uber up to Cristo Redentor. The statue is bigger than it looks in photos. Standing beneath it with the city and bay spread out below is genuinely moving.
               </p>
 
-              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 14, overflow: 'hidden', marginTop: '2rem', marginBottom: 8 }}>
+              <div style={{ position: 'relative', width: '100%', maxWidth: 480, margin: '28px auto 8px' }}>
                 <Image
                   src="/blog/rio-de-janeiro-5-days/Cristo%20Redentor.jpeg"
                   alt="Cristo Redentor (Christ the Redeemer), Rio de Janeiro"
-                  fill
-                  style={{ objectFit: 'cover' }}
-                  sizes="700px"
+                  width={960}
+                  height={1280}
+                  style={{ width: '100%', height: 'auto', borderRadius: 14, display: 'block' }}
                 />
               </div>
               <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
@@ -395,13 +395,13 @@ export default function RioBlogPost() {
                 We continued through the afternoon: the Sambadrome (Sambodromo), the outside of Maracana, and then the Metropolitan Cathedral — an extraordinary brutalist cone of stained glass that catches the light in ways no photograph quite captures.
               </p>
 
-              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 14, overflow: 'hidden', marginTop: '2rem', marginBottom: 8 }}>
+              <div style={{ position: 'relative', width: '100%', maxWidth: 480, margin: '28px auto 8px' }}>
                 <Image
                   src="/blog/rio-de-janeiro-5-days/Cathedral%20do%20Rio.jpeg"
                   alt="Metropolitan Cathedral of Rio de Janeiro interior, stained glass cone"
-                  fill
-                  style={{ objectFit: 'cover' }}
-                  sizes="700px"
+                  width={960}
+                  height={1280}
+                  style={{ width: '100%', height: 'auto', borderRadius: 14, display: 'block' }}
                 />
               </div>
               <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
@@ -437,7 +437,7 @@ export default function RioBlogPost() {
               </div>
 
               <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
-                That night, the day that had already included Sugarloaf, Cristo Redentor, the Cathedral and the Selaron Steps ended at a Funk party. Rio has a way of not letting you stop.
+                Somehow, after Sugarloaf, Cristo Redentor, the Cathedral, Maracana, the Sambodromo and the Selaron Steps, we still had energy left. We ended the night at a Funk party, dancing, drinking and going until 4am. Rio does not let you stop, and honestly, we did not want it to.
               </p>
 
               {/* ── DAY 4 ── */}
@@ -467,13 +467,13 @@ export default function RioBlogPost() {
                 Mate tea and Biscoito Globo — the definitive Rio beach snack combo
               </p>
 
-              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 14, overflow: 'hidden', marginTop: '2rem', marginBottom: 8 }}>
+              <div style={{ position: 'relative', width: '100%', maxWidth: 480, margin: '28px auto 8px' }}>
                 <Image
                   src="/blog/rio-de-janeiro-5-days/Day5-ArpoadorBeach.jpeg"
                   alt="Arpoador beach and rock, Rio de Janeiro"
-                  fill
-                  style={{ objectFit: 'cover' }}
-                  sizes="700px"
+                  width={960}
+                  height={1280}
+                  style={{ width: '100%', height: 'auto', borderRadius: 14, display: 'block' }}
                 />
               </div>
               <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
