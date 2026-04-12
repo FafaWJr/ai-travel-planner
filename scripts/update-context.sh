@@ -185,6 +185,120 @@ After Claude Code finishes changes:
 
 **For detailed conventions, see CONVENTIONS.md**
 **For session setup, see SETUP-PROMPT.md**
+
+---
+
+## Unsaved Changes Guard Architecture
+
+Implemented in \`app/plan/page.tsx\`. Intercepts all navigation away from an
+unsaved trip and shows a branded Luna modal instead of the native browser dialog.
+
+### State
+
+\`\`\`ts
+const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+\`\`\`
+
+\`hasUnsavedChanges\` is set to \`true\` via \`markDirty()\` on any trip
+modification. It resets to \`false\` after a successful save.
+
+### Triggers that call markDirty()
+
+- Accepting or rejecting a day
+- Accepting or rejecting an activity
+- Any Luna chat trip update (%%TRIP_UPDATE%% parsed successfully)
+- Adding or removing hotels via the Stays tab
+- Generating a new plan (generatePlan resets dirty then marks dirty once
+  generation completes)
+
+### Navigation interception
+
+Uses a **click capture phase listener** on \`document\` (not pushState patching,
+which caused regressions with Next.js router). When a click reaches the capture
+phase and \`hasUnsavedChanges\` is true, the guard:
+
+1. Checks if the click target resolves to an \`<a>\` tag pointing to a different
+   path than the current one.
+2. If yes: calls \`e.preventDefault()\` and \`e.stopPropagation()\`, stores the
+   intended \`href\` in \`pendingNavHref\` state, and shows the modal.
+3. If no (same-page links, buttons, non-navigation clicks): lets the event
+   through normally.
+
+Also handles \`beforeunload\` for browser tab close / refresh. The native dialog
+is suppressed after the user confirms leave in the Luna modal by removing the
+\`beforeunload\` listener before calling \`router.push(pendingNavHref)\`.
+
+### Modal
+
+Branded modal (not native browser dialog). Orange "Leave anyway" button,
+navy "Stay and save" button. Renders conditionally when \`showUnsavedModal\`
+state is true. Clicking "Stay and save" closes the modal and focuses the
+Save Trip button. Clicking "Leave anyway" removes the \`beforeunload\` listener
+then navigates to \`pendingNavHref\`.
+
+### Key constraint
+
+Do NOT patch \`window.history.pushState\` or \`window.history.replaceState\`.
+Next.js 16 App Router intercepts these and the patching causes double-navigation
+and race conditions. The click capture phase approach is the correct solution.
+
+---
+
+## Persona System
+
+The quiz at \`/quiz\` calculates one of 12 travel personas based on the user's
+multi-select answers across 7 steps (5 card questions + budget slider +
+duration slider).
+
+### 12 Personas
+
+| Persona | Profile |
+|---|---|
+| The Culture Seeker | History, museums, local food, slow travel |
+| The Adventure Junkie | Outdoor extremes, hiking, water sports |
+| The Luxury Traveller | High-end stays, fine dining, exclusive experiences |
+| The Budget Explorer | Hostels, street food, local transport, value-focused |
+| The Beach Bum | Sand, sea, sunsets, water activities |
+| The City Slicker | Urban exploration, nightlife, food scenes, architecture |
+| The Eco Wanderer | Sustainable travel, nature reserves, low-impact stays |
+| The Family Voyager | Kid-friendly, safe, structured, educational |
+| The Solo Nomad | Independent, flexible, authentic, off-the-beaten-path |
+| The Romantic Escapist | Couples travel, intimate settings, special occasions |
+| The Foodie Pilgrim | Culinary-led travel, local markets, cooking classes |
+| The Festival Fanatic | Events, music, cultural celebrations, nightlife |
+
+### Scoring
+
+All multi-select answers across steps 1-5 are collected into a flat array.
+Each answer maps to one or more persona tags. The persona with the highest
+tag count wins. Budget and duration sliders do not affect persona scoring;
+they are passed as separate context to Luna.
+
+### Persistence
+
+On quiz completion, the calculated persona is saved to \`user_preferences\`
+table (column: \`travel_persona\`) for the authenticated user. For guests,
+it is stored in \`localStorage\` as \`luna_travel_persona\`.
+
+### Luna integration
+
+The Luna system prompt in \`app/api/chat/route.ts\` reads the persona from
+the trip context (passed by the frontend) and uses it to colour responses.
+A "Culture Seeker" gets museum and food-first suggestions; an "Adventure
+Junkie" gets outdoor and active recommendations instead of sightseeing.
+
+### DestinationCard component
+
+\`components/quiz/DestinationCard.tsx\` fetches live photos via
+\`/api/destination-photos\` (Unsplash Tier 1, Pexels fallback) and renders
+clickable destination suggestions at the results screen. Each card links to
+\`/plan?luna_prompt=...\` with a pre-filled prompt matching the persona style.
+
+### Results screen
+
+Shows: persona name, one-line description, travel profile tags, trip style
+summary, 3 DestinationCard suggestions, "Ask Luna" prompt pills, and a
+Deals CTA block linking to \`/deals\`.
 EOF
 
 echo "CLAUDE.md regenerated successfully!"
