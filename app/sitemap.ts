@@ -38,6 +38,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
+      url: `${baseUrl}/blog/rio-de-janeiro-5-days`,
+      lastModified: new Date('2026-04-12'),
+      changeFrequency: 'monthly',
+      priority: 0.75,
+    },
+    {
+      url: `${baseUrl}/blog/fiji-oct-2024`,
+      lastModified: new Date('2024-10-15'),
+      changeFrequency: 'monthly',
+      priority: 0.75,
+    },
+    {
       url: `${baseUrl}/deals`,
       lastModified: now,
       changeFrequency: 'daily',
