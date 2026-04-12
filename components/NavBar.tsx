@@ -33,17 +33,21 @@ function NavInner() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [travelPersona, setTravelPersona] = useState<string | null>(null)
+  const [personaImage, setPersonaImage] = useState<string | null>(null)
   const menuDesktopRef = useRef<HTMLDivElement>(null)
   const menuMobileRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!user) { setTravelPersona(null); return; }
+    if (!user) { setTravelPersona(null); setPersonaImage(null); return; }
     supabase
       .from('user_preferences')
-      .select('travel_persona')
+      .select('travel_persona, persona_image')
       .eq('user_id', user.id)
       .single()
-      .then(({ data }) => { setTravelPersona(data?.travel_persona ?? null); });
+      .then(({ data }) => {
+        setTravelPersona(data?.travel_persona ?? null);
+        setPersonaImage(data?.persona_image ?? null);
+      });
   }, [user]); // eslint-disable-line
 
   useEffect(() => {
@@ -118,7 +122,7 @@ function NavInner() {
                   </svg>
                 </button>
                 {menuOpen && (
-                  <div style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: 224, background: '#fff', borderRadius: 'var(--r-md)', border: '1.5px solid var(--border)', boxShadow: 'var(--shadow-hover)', overflow: 'hidden', zIndex: 200, animation: 'fadeIn 0.12s ease both' }}>
+                  <div style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: 240, background: '#fff', borderRadius: 'var(--r-md)', border: '1.5px solid var(--border)', boxShadow: 'var(--shadow-hover)', overflow: 'hidden', zIndex: 200, animation: 'fadeIn 0.12s ease both' }}>
                     <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)' }}>
                       <p style={{ fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 13, color: '#111', margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayName}</p>
                       <p style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--gray-dark)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</p>
@@ -131,11 +135,33 @@ function NavInner() {
                     <div style={{ padding: '8px 16px', borderBottom: '1px solid rgba(0,68,123,0.1)' }}>
                       {travelPersona ? (
                         <>
-                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,130,16,0.08)', border: '1px solid rgba(255,130,16,0.25)', borderRadius: 20, padding: '4px 12px' }}>
-                            <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="#FF8210" /></svg>
-                            <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 500, color: '#FF8210' }}>{travelPersona}</span>
-                          </div>
-                          <Link href="/quiz" onClick={() => setMenuOpen(false)} style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: 11, color: '#6C6D6F', marginTop: 4, textDecoration: 'none' }}>
+                          <Link
+                            href="/quiz?show_result=true"
+                            onClick={() => setMenuOpen(false)}
+                            style={{ display: 'block', textDecoration: 'none', borderRadius: 8, padding: '4px 0' }}
+                            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'var(--bg-section)'}
+                            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                              {personaImage && (
+                                <div style={{ flexShrink: 0, width: 48, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                                  <img
+                                    src={personaImage}
+                                    alt={travelPersona}
+                                    style={{ width: 48, height: 'auto', objectFit: 'contain', display: 'block', filter: 'drop-shadow(0 2px 6px rgba(0,68,123,0.15))' }}
+                                  />
+                                </div>
+                              )}
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,130,16,0.08)', border: '1px solid rgba(255,130,16,0.25)', borderRadius: 20, padding: '4px 10px' }}>
+                                  <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="#FF8210" /></svg>
+                                  <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 500, color: '#FF8210' }}>{travelPersona}</span>
+                                </div>
+                                <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: '#6C6D6F', margin: '3px 0 0', lineHeight: 1 }}>View your persona</p>
+                              </div>
+                            </div>
+                          </Link>
+                          <Link href="/quiz" onClick={() => setMenuOpen(false)} style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: 11, color: '#9ca3af', marginTop: 6, textDecoration: 'none' }}>
                             Retake quiz
                           </Link>
                         </>
@@ -204,7 +230,53 @@ function NavInner() {
                     <Link href="/my-trips" onClick={() => setMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', fontFamily: 'var(--font-body)', fontSize: 13, color: '#111', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-section)')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                       My Trips
                     </Link>
-                    <div style={{ height: 1, background: 'var(--border)', margin: '2px 0' }} />
+                    {/* Travel persona - mobile */}
+                    <div style={{ padding: '8px 14px', borderTop: '1px solid rgba(0,68,123,0.08)', borderBottom: '1px solid rgba(0,68,123,0.08)' }}>
+                      {travelPersona ? (
+                        <>
+                          <Link
+                            href="/quiz?show_result=true"
+                            onClick={() => setMenuOpen(false)}
+                            style={{ display: 'block', textDecoration: 'none', borderRadius: 8, padding: '4px 0' }}
+                            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'var(--bg-section)'}
+                            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                              {personaImage && (
+                                <div style={{ flexShrink: 0, width: 48, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                                  <img
+                                    src={personaImage}
+                                    alt={travelPersona}
+                                    style={{ width: 48, height: 'auto', objectFit: 'contain', display: 'block', filter: 'drop-shadow(0 2px 6px rgba(0,68,123,0.15))' }}
+                                  />
+                                </div>
+                              )}
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,130,16,0.08)', border: '1px solid rgba(255,130,16,0.25)', borderRadius: 20, padding: '4px 10px' }}>
+                                  <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="#FF8210" /></svg>
+                                  <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 500, color: '#FF8210' }}>{travelPersona}</span>
+                                </div>
+                                <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: '#6C6D6F', margin: '3px 0 0', lineHeight: 1 }}>View your persona</p>
+                              </div>
+                            </div>
+                          </Link>
+                          <Link href="/quiz" onClick={() => setMenuOpen(false)} style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: 11, color: '#9ca3af', marginTop: 6, textDecoration: 'none' }}>
+                            Retake quiz
+                          </Link>
+                        </>
+                      ) : (
+                        <Link
+                          href="/quiz"
+                          onClick={() => setMenuOpen(false)}
+                          style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500, color: '#FF8210', textDecoration: 'none' }}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF8210" strokeWidth="2">
+                            <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                          </svg>
+                          Discover your travel style
+                        </Link>
+                      )}
+                    </div>
                     <button onClick={handleSignOut} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--gray-dark)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
                       Sign out
                     </button>

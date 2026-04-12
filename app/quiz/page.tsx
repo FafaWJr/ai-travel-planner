@@ -571,6 +571,34 @@ function QuizPageInner() {
 
   useEffect(() => { trackQuizStarted(); }, []);
 
+  // Show saved persona result (from navbar link)
+  useEffect(() => {
+    if (searchParams.get('show_result') !== 'true') return;
+    async function loadSavedPersona() {
+      try {
+        const client = createClient();
+        const { data: { user } } = await client.auth.getUser();
+        if (!user) return;
+        const { data } = await client
+          .from('user_preferences')
+          .select('travel_persona, persona_image')
+          .eq('user_id', user.id)
+          .single();
+        if (!data?.travel_persona) return;
+        const match = QUIZ_RESULTS.find(p => p.name === data.travel_persona);
+        if (!match) return;
+        const persona = data.persona_image
+          ? { ...match, personaImage: data.persona_image }
+          : match;
+        setQuizPersona(persona);
+        setCurrentStep(TOTAL_STEPS);
+      } catch (err) {
+        console.error('[quiz] show_result load error:', err);
+      }
+    }
+    loadSavedPersona();
+  }, [searchParams]); // eslint-disable-line
+
   // Resume after login
   useEffect(() => {
     if (searchParams.get('resume') !== 'true') return;
