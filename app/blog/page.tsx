@@ -1,5 +1,4 @@
 'use client';
-import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import NavBar from '@/components/NavBar';
@@ -123,25 +122,11 @@ const PLACEHOLDER_POSTS = [
     gradient: 'linear-gradient(135deg, #FF8210 0%, #FFBD59 100%)',
     date: 'Coming soon',
   },
-  {
-    id: 3,
-    category: 'Inspiration',
-    categoryColor: '#FF8210',
-    title: 'Hidden Gems of the Amalfi Coast Most Tourists Walk Past',
-    excerpt: 'Beyond Positano and Ravello lies a coastline of steep-staired villages, lemon groves, and trattorias with no English menu. Here\'s where to find them.',
-    destination: 'Amalfi Coast, Italy',
-    readTime: '7 min read',
-    gradient: 'linear-gradient(135deg, #679AC1 0%, #00447B 100%)',
-    date: 'Coming soon',
-  },
 ];
 
 
 
 export default function BlogPage() {
-  const [email, setEmail] = useState('');
-  const [submitted, setSubmitted] = useState(false);
-
   return (
     <>
       <NavBar />
@@ -344,6 +329,22 @@ export default function BlogPage() {
                   alignItems: 'center', justifyContent: 'center', gap: 10,
                   position: 'relative',
                 }}>
+                  <div style={{
+                    position: 'absolute',
+                    top: '12px',
+                    right: '12px',
+                    background: 'rgba(255,255,255,0.92)',
+                    color: '#00447B',
+                    fontFamily: 'var(--font-head)',
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    letterSpacing: '0.8px',
+                    textTransform: 'uppercase',
+                    padding: '4px 10px',
+                    borderRadius: '20px',
+                  }}>
+                    Coming Soon
+                  </div>
                   {(() => { const Illus = BlogIllustrations[post.id]; return Illus ? <Illus /> : null; })()}
                   <span style={{
                     fontFamily: 'var(--font-body)', fontSize: 12,
@@ -410,105 +411,6 @@ export default function BlogPage() {
             ))}
           </div>
 
-          {/* Coming soon overlay banner */}
-          <div style={{
-            marginTop: 48,
-            background: 'var(--bg-section)',
-            border: '2px solid rgba(0,68,123,0.10)',
-            borderRadius: 'var(--r-lg)',
-            padding: 'clamp(32px, 5vw, 56px) clamp(24px, 5vw, 56px)',
-            display: 'flex', flexDirection: 'column', alignItems: 'center',
-            textAlign: 'center', gap: 20,
-          }}>
-            {/* Lock icon */}
-            <div style={{
-              width: 64, height: 64, borderRadius: '50%',
-              background: 'rgba(255,130,16,0.10)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                <rect x="3" y="11" width="18" height="13" rx="2" fill="rgba(255,130,16,0.15)" stroke="#FF8210" strokeWidth="1.8"/>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#FF8210" strokeWidth="1.8" strokeLinecap="round"/>
-                <circle cx="12" cy="16" r="1.5" fill="#FF8210"/>
-              </svg>
-            </div>
-
-            <div>
-              <p style={{
-                fontFamily: 'var(--font-head)', fontWeight: 700, fontSize: 'clamp(18px, 2.5vw, 24px)',
-                color: 'var(--navy)', marginBottom: 8,
-              }}>
-                The blog is being crafted with care
-              </p>
-              <p style={{
-                fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--gray-dark)',
-                maxWidth: 480, margin: '0 auto', lineHeight: 1.65,
-              }}>
-                We're working on stories worth reading — real destinations, honest opinions, and practical tips from people who actually make the journey.
-              </p>
-            </div>
-
-            {/* Email signup */}
-            <div style={{
-              width: '100%', maxWidth: 440,
-              background: '#fff',
-              border: '1.5px solid var(--border)',
-              borderRadius: 'var(--r-md)',
-              padding: '24px 28px',
-            }}>
-              <p style={{
-                fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 14,
-                color: 'var(--navy)', marginBottom: 14,
-              }}>
-                Be the first to know when we launch
-              </p>
-              {submitted ? (
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: 8,
-                  background: 'rgba(22,163,74,0.08)', border: '1.5px solid rgba(22,163,74,0.25)',
-                  borderRadius: 'var(--r-md)', padding: '12px 16px',
-                }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="12" r="10" fill="rgba(22,163,74,0.15)" stroke="#16A34A" strokeWidth="1.5"/>
-                    <path d="M8 12l3 3 5-5" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  <span style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: '#15803D', fontWeight: 500 }}>
-                    You're on the list — we'll be in touch!
-                  </span>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <input
-                    type="email"
-                    placeholder="your@email.com"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    style={{
-                      flex: 1, minWidth: 180,
-                      padding: '11px 16px',
-                      border: '1.5px solid var(--border)',
-                      borderRadius: 'var(--r-md)',
-                      fontFamily: 'var(--font-body)', fontSize: 14, color: '#000',
-                      outline: 'none', background: '#fff',
-                    }}
-                    onFocus={e => (e.target.style.borderColor = 'var(--navy)')}
-                    onBlur={e => (e.target.style.borderColor = 'var(--border)')}
-                  />
-                  <button
-                    onClick={() => { if (email.includes('@')) setSubmitted(true); }}
-                    style={{
-                      background: 'var(--orange)', color: '#fff',
-                      fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 14,
-                      padding: '11px 22px', borderRadius: 'var(--r-md)',
-                      border: 'none', cursor: 'pointer', whiteSpace: 'nowrap',
-                    }}
-                  >
-                    Notify me
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
         </section>
       </main>
 
