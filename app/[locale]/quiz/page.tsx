@@ -9,6 +9,7 @@ import {
   Music2, Aperture, ChefHat, TreePine, Volume, Diamond, BookOpen,
   Shield, CalendarDays, MapPin, ClipboardList, Scale, Anchor,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import NavBar from '@/components/NavBar';
 import { createClient } from '@/lib/supabase/client';
 import { trackQuizStarted, trackQuizCompleted, trackDestinationSelected } from '@/lib/analytics';
@@ -577,6 +578,111 @@ function StepSlider({
 function QuizPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations('quizPage');
+
+  // Translated card questions (built inside component so t() is available)
+  const cardQuestions: CardQuestion[] = [
+    {
+      type: 'cards',
+      question: t('q1.question'),
+      subtitle: t('q1.subtitle'),
+      maxSelect: 3,
+      options: [
+        { label: t('q1.a1'),  value: 'ex_beach',    icon: 'Waves' },
+        { label: t('q1.a2'),  value: 'ex_culture',  icon: 'Landmark' },
+        { label: t('q1.a3'),  value: 'ex_party',    icon: 'Music' },
+        { label: t('q1.a4'),  value: 'ex_adventure',icon: 'Mountain' },
+        { label: t('q1.a5'),  value: 'ex_food',     icon: 'UtensilsCrossed' },
+        { label: t('q1.a6'),  value: 'ex_photo',    icon: 'Camera' },
+        { label: t('q1.a7'),  value: 'ex_festival', icon: 'Ticket' },
+        { label: t('q1.a8'),  value: 'ex_luxury',   icon: 'Star' },
+        { label: t('q1.a9'),  value: 'ex_romance',  icon: 'Heart' },
+        { label: t('q1.a10'), value: 'ex_family',   icon: 'Users' },
+        { label: t('q1.a11'), value: 'ex_solo',     icon: 'Compass' },
+        { label: t('q1.a12'), value: 'ex_explore',  icon: 'Map' },
+      ],
+    },
+    {
+      type: 'cards',
+      question: t('q2.question'),
+      subtitle: t('q2.subtitle'),
+      maxSelect: 2,
+      options: [
+        { label: t('q2.a1'), value: 'eve_quiet',     icon: 'Moon' },
+        { label: t('q2.a2'), value: 'eve_sundowner', icon: 'Waves' },
+        { label: t('q2.a3'), value: 'eve_dining',    icon: 'Wine' },
+        { label: t('q2.a4'), value: 'eve_club',      icon: 'Zap' },
+        { label: t('q2.a5'), value: 'eve_music',     icon: 'Radio' },
+        { label: t('q2.a6'), value: 'eve_cultural',  icon: 'Theater' },
+        { label: t('q2.a7'), value: 'eve_photo',     icon: 'SunDim' },
+        { label: t('q2.a8'), value: 'eve_outdoor',   icon: 'Flame' },
+        { label: t('q2.a9'), value: 'eve_family',    icon: 'Gamepad2' },
+      ],
+    },
+    {
+      type: 'cards',
+      question: t('q3.question'),
+      subtitle: t('q3.subtitle'),
+      maxSelect: 1,
+      options: [
+        { label: t('q3.a1'), value: 'who_solo',    icon: 'User' },
+        { label: t('q3.a2'), value: 'who_partner', icon: 'Heart' },
+        { label: t('q3.a3'), value: 'who_group',   icon: 'Users' },
+        { label: t('q3.a4'), value: 'who_family',  icon: 'Baby' },
+        { label: t('q3.a5'), value: 'who_luxury',  icon: 'Crown' },
+        { label: t('q3.a6'), value: 'who_open',    icon: 'Shuffle' },
+      ],
+    },
+    {
+      type: 'cards',
+      question: t('q4.question'),
+      subtitle: t('q4.subtitle'),
+      maxSelect: 3,
+      options: [
+        { label: t('q4.a1'),  value: 'must_party',   icon: 'Music2' },
+        { label: t('q4.a2'),  value: 'must_beach',   icon: 'Waves' },
+        { label: t('q4.a3'),  value: 'must_photo',   icon: 'Aperture' },
+        { label: t('q4.a4'),  value: 'must_food',    icon: 'ChefHat' },
+        { label: t('q4.a5'),  value: 'must_nature',  icon: 'TreePine' },
+        { label: t('q4.a6'),  value: 'must_peace',   icon: 'Volume' },
+        { label: t('q4.a7'),  value: 'must_luxury',  icon: 'Diamond' },
+        { label: t('q4.a8'),  value: 'must_culture', icon: 'BookOpen' },
+        { label: t('q4.a9'),  value: 'must_family',  icon: 'Shield' },
+        { label: t('q4.a10'), value: 'must_event',   icon: 'CalendarDays' },
+        { label: t('q4.a11'), value: 'must_offmap',  icon: 'MapPin' },
+      ],
+    },
+    {
+      type: 'cards',
+      question: t('q5.question'),
+      subtitle: t('q5.subtitle'),
+      maxSelect: 2,
+      options: [
+        { label: t('q5.a1'), value: 'style_planner',    icon: 'ClipboardList' },
+        { label: t('q5.a2'), value: 'style_spontaneous',icon: 'Shuffle' },
+        { label: t('q5.a3'), value: 'style_balanced',   icon: 'Scale' },
+        { label: t('q5.a4'), value: 'style_eventdriven',icon: 'Ticket' },
+        { label: t('q5.a5'), value: 'style_deep',       icon: 'Anchor' },
+        { label: t('q5.a6'), value: 'style_fastpace',   icon: 'Zap' },
+      ],
+    },
+  ];
+
+  // Translated slider display levels (value fields stay in BUDGET_LEVELS/DURATION_LEVELS for scoring)
+  const budgetDisplay = [
+    { label: t('q6.l0'), sublabel: t('q6.s0') },
+    { label: t('q6.l1'), sublabel: t('q6.s1') },
+    { label: t('q6.l2'), sublabel: t('q6.s2') },
+    { label: t('q6.l3'), sublabel: t('q6.s3') },
+    { label: t('q6.l4'), sublabel: t('q6.s4') },
+  ];
+  const durationDisplay = [
+    { label: t('q7.l0'), sublabel: t('q7.s0') },
+    { label: t('q7.l1'), sublabel: t('q7.s1') },
+    { label: t('q7.l2'), sublabel: t('q7.s2') },
+    { label: t('q7.l3'), sublabel: t('q7.s3') },
+    { label: t('q7.l4'), sublabel: t('q7.s4') },
+  ];
 
   // Multi-select state (for card questions 0-4)
   const [selections, setSelections] = useState<Record<number, string[]>>({});
@@ -745,10 +851,10 @@ function QuizPageInner() {
           {!showResults && (
             <div style={{ textAlign: 'center', marginBottom: 40 }}>
               <p style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', color: '#FFBD59', marginBottom: 10 }}>
-                Find your travel style
+                {t('label')}
               </p>
               <h1 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: 'clamp(26px,4vw,38px)', color: '#fff', marginBottom: 0, lineHeight: 1.2 }}>
-                Discover your traveller persona
+                {t('title')}
               </h1>
             </div>
           )}
@@ -759,12 +865,12 @@ function QuizPageInner() {
               {/* Progress */}
               <div style={{ marginBottom: 28 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: '#9ca3af' }}>Step {currentStep + 1} of {TOTAL_STEPS}</span>
+                  <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: '#9ca3af' }}>{t('stepOf', { current: currentStep + 1, total: TOTAL_STEPS })}</span>
                   <button
                     onClick={handleSkip}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontSize: 12, color: '#9ca3af', padding: 0 }}
                   >
-                    Skip
+                    {t('skip')}
                   </button>
                 </div>
                 <div style={{ width: '100%', height: 4, background: 'rgba(0,68,123,0.10)', borderRadius: 2 }}>
@@ -774,7 +880,7 @@ function QuizPageInner() {
 
               {/* Card questions (steps 0-4) */}
               {isCardStep && (() => {
-                const q = QUIZ_QUESTIONS[currentStep] as CardQuestion;
+                const q = cardQuestions[currentStep];
                 const stepSel = selections[currentStep] ?? [];
                 const maxReached = stepSel.length >= q.maxSelect;
 
@@ -785,7 +891,7 @@ function QuizPageInner() {
                     </h2>
                     <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: '#6C6D6F', marginBottom: 6 }}>{q.subtitle}</p>
                     <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: '#FFBD59', marginBottom: 20, fontWeight: 600 }}>
-                      {stepSel.length} of {q.maxSelect} selected
+                      {t('selected', { count: stepSel.length, max: q.maxSelect })}
                     </p>
 
                     <div className="quiz-options-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 28 }}>
@@ -841,12 +947,12 @@ function QuizPageInner() {
               {isBudgetStep && (
                 <div>
                   <h2 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: 22, color: '#00447B', marginBottom: 6 }}>
-                    What is your budget style?
+                    {t('q6.question')}
                   </h2>
                   <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: '#6C6D6F', marginBottom: 32 }}>
-                    Drag the slider or tap a level
+                    {t('q6.subtitle')}
                   </p>
-                  <StepSlider value={budgetSlider} onChange={setBudgetSlider} levels={BUDGET_LEVELS} label="Budget" />
+                  <StepSlider value={budgetSlider} onChange={setBudgetSlider} levels={budgetDisplay} label={t('q6.l2')} />
                 </div>
               )}
 
@@ -854,12 +960,12 @@ function QuizPageInner() {
               {isDurationStep && (
                 <div>
                   <h2 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: 22, color: '#00447B', marginBottom: 6 }}>
-                    How long do you want to travel?
+                    {t('q7.question')}
                   </h2>
                   <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: '#6C6D6F', marginBottom: 32 }}>
-                    Drag the slider or tap a duration
+                    {t('q7.subtitle')}
                   </p>
-                  <StepSlider value={durationSlider} onChange={setDurationSlider} levels={DURATION_LEVELS} label="Duration" />
+                  <StepSlider value={durationSlider} onChange={setDurationSlider} levels={durationDisplay} label={t('q7.l1')} />
                 </div>
               )}
 
@@ -870,7 +976,7 @@ function QuizPageInner() {
                     onClick={handleBack}
                     style={{ background: 'none', border: '1.5px solid rgba(0,68,123,0.20)', borderRadius: 50, padding: '11px 24px', fontFamily: "'Poppins', sans-serif", fontWeight: 500, fontSize: 14, color: '#00447B', cursor: 'pointer' }}
                   >
-                    Back
+                    {t('back')}
                   </button>
                 ) : <span />}
 
@@ -892,7 +998,7 @@ function QuizPageInner() {
                       transition: 'all 0.2s',
                     }}
                   >
-                    Continue
+                    {t('continue')}
                   </button>
                 ) : (
                   <button
@@ -912,7 +1018,7 @@ function QuizPageInner() {
                       transition: 'all 0.2s',
                     }}
                   >
-                    Reveal my persona
+                    {t('revealPersona')}
                   </button>
                 )}
               </div>
@@ -924,10 +1030,10 @@ function QuizPageInner() {
               <div className="quiz-persona-header" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24, marginBottom: 24 }}>
                 <div style={{ flex: 1 }}>
                   <p style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 11, color: '#FF8210', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>
-                    Your Traveller Persona
+                    {t('yourPersona')}
                   </p>
                   <h2 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 800, fontSize: 34, color: '#00447B', lineHeight: 1.1, marginBottom: 12 }}>
-                    {quizPersona.name}
+                    {t(`personas.${quizPersona.id}` as Parameters<typeof t>[0])}
                   </h2>
                   <span style={{ display: 'inline-block', background: 'rgba(255,130,16,0.12)', border: '1.5px solid rgba(255,130,16,0.35)', borderRadius: 50, padding: '5px 18px', fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 13, color: '#FF8210' }}>
                     {quizPersona.travelStyle}
@@ -952,7 +1058,7 @@ function QuizPageInner() {
               {/* 3. Travel Profile */}
               <div style={{ marginBottom: 24, background: '#F7F8FA', borderRadius: 12, padding: '20px 22px' }}>
                 <p style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 11, color: '#FF8210', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>
-                  Travel Profile
+                  {t('travelProfile')}
                 </p>
                 <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: '#3b3b3b', lineHeight: 1.7, margin: 0 }}>
                   {quizPersona.travelProfile}
@@ -962,7 +1068,7 @@ function QuizPageInner() {
               {/* 4. Suggested Trip Style */}
               <div style={{ marginBottom: 32, background: '#F7F8FA', borderRadius: 12, padding: '20px 22px' }}>
                 <p style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 11, color: '#FF8210', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>
-                  Suggested Trip Style
+                  {t('suggestedTripStyle')}
                 </p>
                 <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: '#3b3b3b', lineHeight: 1.7, margin: 0 }}>
                   {quizPersona.tripStyle}
@@ -978,7 +1084,7 @@ function QuizPageInner() {
                   onClick={() => trackDestinationSelected(quizPersona.name, 'quiz')}
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#FF8210', color: 'white', fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 16, padding: '14px 32px', borderRadius: 50, textDecoration: 'none', boxShadow: '0 8px 24px rgba(255,130,16,0.35)' }}
                 >
-                  Start planning with Luna
+                  {t('startPlanning')}
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
                     <path d="M5 12h14M12 5l7 7-7 7" />
                   </svg>
@@ -988,7 +1094,7 @@ function QuizPageInner() {
               {/* 6. Destination cards with photos */}
               <div style={{ marginBottom: 32 }}>
                 <p style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 11, color: '#FF8210', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 16 }}>
-                  Destinations for you
+                  {t('destinationsForYou')}
                 </p>
                 <div className="quiz-dest-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
                   {visibleDest.map(dest => (
@@ -1007,7 +1113,7 @@ function QuizPageInner() {
                     onClick={() => setShowAllDest(v => !v)}
                     style={{ marginTop: 12, background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontSize: 13, color: '#6C6D6F', padding: 0 }}
                   >
-                    {showAllDest ? 'Show fewer destinations' : `Show all ${quizPersona.destinations.length} destinations`}
+                    {showAllDest ? t('showFewer') : t('showAll', { count: quizPersona.destinations.length })}
                   </button>
                 )}
               </div>
@@ -1015,7 +1121,7 @@ function QuizPageInner() {
               {/* 7. Ask Luna prompts */}
               <div style={{ marginBottom: 32 }}>
                 <p style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 11, color: '#FF8210', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 14 }}>
-                  Ask Luna on your next trip
+                  {t('askLunaLabel')}
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {quizPersona.askLuna.map((prompt, i) => (
@@ -1040,16 +1146,16 @@ function QuizPageInner() {
               {/* 8. Deals CTA */}
               <div style={{ background: 'linear-gradient(135deg, #00447B 0%, #679AC1 100%)', borderRadius: 16, padding: '32px', textAlign: 'center', marginBottom: 28 }}>
                 <p style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 18, color: 'white', marginBottom: 8 }}>
-                  Ready to book? Check our exclusive deals
+                  {t('dealsTitle')}
                 </p>
                 <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: 'rgba(255,255,255,0.75)', marginBottom: 20 }}>
-                  Hotels, flights, tours and activities — all curated for your travel style
+                  {t('dealsSubtitle')}
                 </p>
                 <a
                   href="/deals"
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#FF8210', color: 'white', fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 15, padding: '12px 28px', borderRadius: 50, textDecoration: 'none' }}
                 >
-                  Explore deals
+                  {t('exploreDeals')}
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
                     <path d="M5 12h14M12 5l7 7-7 7" />
                   </svg>
@@ -1062,7 +1168,7 @@ function QuizPageInner() {
                   onClick={resetQuiz}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Inter', sans-serif", fontSize: 13, color: '#9ca3af', textDecoration: 'underline', padding: 0 }}
                 >
-                  Retake quiz
+                  {t('retake')}
                 </button>
               </div>
             </div>

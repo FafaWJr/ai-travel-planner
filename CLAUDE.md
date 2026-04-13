@@ -214,6 +214,7 @@ Config: `localePrefix: 'as-needed'` via next-intl v4, `i18n/routing.ts`
 | `components/NavBar.tsx` | Done | Done | Done |
 | `components/Footer.tsx` | Done | Done | Done |
 | `app/[locale]/start/page.tsx` + `HeroStepForm.tsx` | Done | Done | Done |
+| `app/[locale]/quiz/page.tsx` | Done | Done | Done |
 | Other pages | Not started | Not started | Not started |
 
 **Message namespaces** (`messages/*.json`):
