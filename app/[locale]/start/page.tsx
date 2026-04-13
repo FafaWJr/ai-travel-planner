@@ -1,12 +1,14 @@
 'use client';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import NavBar from '@/components/NavBar';
 import HeroStepForm from '@/components/HeroStepForm';
 import { trackCTAClick, trackTripPlanStarted } from '@/lib/analytics';
 
 export default function StartPage() {
   const router = useRouter();
+  const t = useTranslations('start');
 
   useEffect(() => {
     trackCTAClick('plan_a_trip', 'start_page');
@@ -38,7 +40,7 @@ export default function StartPage() {
             marginBottom: 10,
             lineHeight: 1.2,
           }}>
-            Plan your perfect trip
+            {t('title')}
           </h1>
           <p style={{
             fontFamily: 'var(--font-body)',
@@ -47,7 +49,7 @@ export default function StartPage() {
             maxWidth: 420,
             margin: '0 auto',
           }}>
-            Fill in the details and Luna will build your personalised itinerary in under 30 seconds.
+            {t('subtitle')}
           </p>
         </div>
 

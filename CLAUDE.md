@@ -213,10 +213,11 @@ Config: `localePrefix: 'as-needed'` via next-intl v4, `i18n/routing.ts`
 | `app/[locale]/page.tsx` (home) | Done | Done | Done |
 | `components/NavBar.tsx` | Done | Done | Done |
 | `components/Footer.tsx` | Done | Done | Done |
+| `app/[locale]/start/page.tsx` + `HeroStepForm.tsx` | Done | Done | Done |
 | Other pages | Not started | Not started | Not started |
 
 **Message namespaces** (`messages/*.json`):
-`nav`, `hero`, `howItWorks`, `features`, `yourway`, `meetLuna`, `tripIdeas`, `quiz`, `faq`, `finalCta`, `footer`, `language`
+`nav`, `hero`, `howItWorks`, `features`, `yourway`, `meetLuna`, `tripIdeas`, `quiz`, `faq`, `finalCta`, `footer`, `language`, `start`
 
 **Pattern**: Client components use `useTranslations()`, Server components use `getTranslations()`.
 **Links**: Use `Link` from `@/i18n/navigation` (NOT `next/link`) for all internal navigation.

@@ -1,5 +1,6 @@
 'use client';
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 
 /* ── Destination autocomplete ── */
 interface GeoResult { id:number; name:string; country:string; country_code:string; admin1?:string; }
@@ -9,7 +10,7 @@ function flagEmoji(code:string) {
   return String.fromCodePoint(...[...code.toUpperCase()].map(c=>0x1F1E6+c.charCodeAt(0)-65));
 }
 
-function DestinationInput({ value, onChange }: { value:string; onChange:(v:string)=>void }) {
+function DestinationInput({ value, onChange, placeholder }: { value:string; onChange:(v:string)=>void; placeholder:string }) {
   const [query,       setQuery]       = useState(value);
   const [results,     setResults]     = useState<GeoResult[]>([]);
   const [open,        setOpen]        = useState(false);
@@ -81,7 +82,7 @@ function DestinationInput({ value, onChange }: { value:string; onChange:(v:strin
         <input
           ref={inputRef} type="text" autoComplete="off" value={query}
           onChange={handleChange} onKeyDown={handleKey}
-          placeholder="Paris, France · Tokyo, Japan · Bali, Indonesia…"
+          placeholder={placeholder}
           style={{
             width:'100%', paddingLeft:48, paddingRight:40, paddingTop:15, paddingBottom:15,
             border:'1.5px solid rgba(0,68,123,0.15)', borderRadius:'var(--r-md)',
@@ -150,6 +151,8 @@ function DestinationInput({ value, onChange }: { value:string; onChange:(v:strin
 
 /* ── HeroStepForm ── */
 export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; preFilledData?:{budget:string;styles:string[]}|null }) {
+  const t = useTranslations('start');
+
   const [step, setStep] = useState(0);
   const [dest, setDest] = useState('');
   const [dep, setDep] = useState('');
@@ -179,8 +182,8 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
 
   const goNext = (nextStep: number) => {
     const errs: Record<string,string> = {};
-    if (!dest.trim()) errs.dest = 'Please enter your destination.';
-    if (!dep) errs.dep = 'Please choose a start date.';
+    if (!dest.trim()) errs.dest = t('errDest');
+    if (!dep) errs.dep = t('errDep');
     setErrors(errs);
     if (Object.keys(errs).length === 0) {
       saveFormDraft();
@@ -238,7 +241,7 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
     fontFamily:'var(--font-head)',fontWeight:700,fontSize:14,padding:'12px 28px',borderRadius:'var(--r-pill)',border:primary?'none':'1.5px solid rgba(0,68,123,0.15)',
     background:primary?'var(--navy)':'none',color:primary?'#fff':'var(--navy)',cursor:'pointer',transition:'all 0.18s',
   });
-  const STEPS = ['Where & When','Travel Style','Budget & Trip'];
+  const STEPS = [t('step1'), t('step2'), t('step3')];
 
   return (
     <div style={{ background:'#fff', borderRadius:'var(--r-lg)', boxShadow:'0 32px 80px rgba(0,0,0,0.28)', overflow:'hidden', textAlign:'left' }}>
@@ -262,13 +265,13 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
         {step===0 && (
           <div style={{ display:'flex',flexDirection:'column',gap:14 }}>
             <div>
-              <label style={lbl}>Destination <span style={{ color:'var(--orange)' }}>*</span></label>
-              <DestinationInput value={dest} onChange={v=>{setDest(v);if(v.trim())setErrors(p=>({...p,dest:''}));}} />
+              <label style={lbl}>{t('destination')} <span style={{ color:'var(--orange)' }}>*</span></label>
+              <DestinationInput value={dest} onChange={v=>{setDest(v);if(v.trim())setErrors(p=>({...p,dest:''}));}} placeholder={t('destinationPlaceholder')} />
               {errors.dest && <p style={{ fontFamily:'var(--font-body)',fontSize:12,color:'#E53E3E',marginTop:5,display:'flex',alignItems:'center',gap:4 }}>⚠ {errors.dest}</p>}
             </div>
 
             <div>
-              <label style={lbl}>From <span style={{ color:'var(--orange)' }}>*</span></label>
+              <label style={lbl}>{t('from')} <span style={{ color:'var(--orange)' }}>*</span></label>
               <div style={{ display:'flex', gap:8, alignItems:'center' }}>
                 <div style={{ position:'relative', flex:1, minWidth:0 }}>
                   <input type="date" value={dep} min={today}
@@ -277,7 +280,7 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
                     onFocus={e=>(e.target.style.borderColor=errors.dep?'#E53E3E':'var(--navy)')}
                     onBlur={e=>(e.target.style.borderColor=errors.dep?'#E53E3E':'rgba(0,68,123,0.15)')} />
                 </div>
-                <span style={{ fontFamily:'var(--font-body)',fontSize:11,color:'var(--gray-dark)',whiteSpace:'nowrap',flexShrink:0 }}>Est. arrival</span>
+                <span style={{ fontFamily:'var(--font-body)',fontSize:11,color:'var(--gray-dark)',whiteSpace:'nowrap',flexShrink:0 }}>{t('estArrival')}</span>
                 <div style={{ position:'relative', width:110, flexShrink:0 }}>
                   <input type="time" value={depTime} onChange={e=>setDepTime(e.target.value)}
                     style={{...inp,padding:'11px 8px'}}
@@ -289,7 +292,7 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
             </div>
 
             <div>
-              <label style={lbl}>To <span style={{ fontFamily:'var(--font-body)',fontWeight:400,textTransform:'none',letterSpacing:0,color:'var(--gray-dark)' }}>(optional)</span></label>
+              <label style={lbl}>{t('to')} <span style={{ fontFamily:'var(--font-body)',fontWeight:400,textTransform:'none',letterSpacing:0,color:'var(--gray-dark)' }}>({t('optional')})</span></label>
               <div style={{ display:'flex', gap:8, alignItems:'center' }}>
                 <div style={{ position:'relative', flex:1, minWidth:0 }}>
                   <input type="date" value={ret} min={dep || today}
@@ -298,7 +301,7 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
                     onFocus={e=>(e.target.style.borderColor='var(--navy)')}
                     onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} />
                 </div>
-                <span style={{ fontFamily:'var(--font-body)',fontSize:11,color:'var(--gray-dark)',whiteSpace:'nowrap',flexShrink:0 }}>Est. return</span>
+                <span style={{ fontFamily:'var(--font-body)',fontSize:11,color:'var(--gray-dark)',whiteSpace:'nowrap',flexShrink:0 }}>{t('estReturn')}</span>
                 <div style={{ position:'relative', width:110, flexShrink:0 }}>
                   <input type="time" value={retTime} onChange={e=>setRetTime(e.target.value)}
                     style={{...inp,padding:'11px 8px'}}
@@ -309,7 +312,10 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
             </div>
 
             <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:12 }}>
-              {([['Adults',adults,setAdultsChecked,1],['Children',kids,setKidsChecked,0]] as const).map(([l,val,set,min])=>(
+              {([
+                [t('adults'), adults, setAdultsChecked, 1],
+                [t('children'), kids, setKidsChecked, 0],
+              ] as const).map(([l,val,set,min])=>(
                 <div key={l as string}>
                   <label style={lbl}>{l as string}</label>
                   <div style={cBox}>
@@ -323,18 +329,18 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
 
             {(adults>0||kids>0) && (
               <div>
-                <p style={{ fontFamily:'var(--font-head)',fontWeight:500,fontSize:10,color:'var(--gray-dark)',textTransform:'uppercase',letterSpacing:0.8,marginBottom:8 }}>Ages <span style={{ fontWeight:400,textTransform:'none',letterSpacing:0 }}>(optional)</span></p>
+                <p style={{ fontFamily:'var(--font-head)',fontWeight:500,fontSize:10,color:'var(--gray-dark)',textTransform:'uppercase',letterSpacing:0.8,marginBottom:8 }}>{t('ages')} <span style={{ fontWeight:400,textTransform:'none',letterSpacing:0 }}>({t('optional')})</span></p>
                 <div style={{ display:'flex',flexWrap:'wrap',gap:6 }}>
                   {adultAges.map((age,i)=>(
                     <div key={`a${i}`} style={{ display:'flex',flexDirection:'column',alignItems:'center',gap:3 }}>
                       <input type="number" min={1} max={99} value={age} placeholder="—" onChange={e=>setAdultAges(p=>{const a=[...p];a[i]=e.target.value;return a;})} style={{ width:46,padding:'6px 0',textAlign:'center',background:'#F4F7FB',border:'1.5px solid rgba(0,68,123,0.12)',borderRadius:8,fontFamily:'var(--font-head)',fontWeight:600,fontSize:13,color:'var(--navy)',outline:'none' }} onFocus={e=>(e.target.style.borderColor='var(--navy)')} onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.12)')} />
-                      <span style={{ fontFamily:'var(--font-body)',fontSize:9,color:'var(--gray-dark)' }}>Adult {adults>1?i+1:''}</span>
+                      <span style={{ fontFamily:'var(--font-body)',fontSize:9,color:'var(--gray-dark)' }}>{t('adult')} {adults>1?i+1:''}</span>
                     </div>
                   ))}
                   {childAges.map((age,i)=>(
                     <div key={`c${i}`} style={{ display:'flex',flexDirection:'column',alignItems:'center',gap:3 }}>
                       <input type="number" min={1} max={17} value={age} placeholder="—" onChange={e=>setChildAges(p=>{const a=[...p];a[i]=e.target.value;return a;})} style={{ width:46,padding:'6px 0',textAlign:'center',background:'rgba(255,130,16,0.06)',border:'1.5px solid rgba(255,130,16,0.20)',borderRadius:8,fontFamily:'var(--font-head)',fontWeight:600,fontSize:13,color:'var(--navy)',outline:'none' }} onFocus={e=>(e.target.style.borderColor='var(--orange)')} onBlur={e=>(e.target.style.borderColor='rgba(255,130,16,0.20)')} />
-                      <span style={{ fontFamily:'var(--font-body)',fontSize:9,color:'var(--gray-dark)' }}>Child {kids>1?i+1:''}</span>
+                      <span style={{ fontFamily:'var(--font-body)',fontSize:9,color:'var(--gray-dark)' }}>{t('child')} {kids>1?i+1:''}</span>
                     </div>
                   ))}
                 </div>
@@ -342,7 +348,7 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
             )}
 
             <div style={{ display:'flex',justifyContent:'flex-end',paddingTop:4 }}>
-              <button onClick={()=>goNext(1)} style={navBtn()}>Next →</button>
+              <button onClick={()=>goNext(1)} style={navBtn()}>{t('next')} →</button>
             </div>
           </div>
         )}
@@ -351,7 +357,7 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
         {step===1 && (
           <div style={{ display:'flex',flexDirection:'column',gap:18 }}>
             <div>
-              <label style={{ ...lbl,marginBottom:10 }}>Travelling with</label>
+              <label style={{ ...lbl,marginBottom:10 }}>{t('travellingWith')}</label>
               <div style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8 }}>
                 {[{v:'solo',icon:'🧳',l:'Solo'},{v:'couple',icon:'💑',l:'Couple'},{v:'family',icon:'👨‍👩‍👧',l:'Family'},{v:'friends',icon:'🧑‍🤝‍🧑',l:'Friends'}].map(opt=>{
                   const active=companion===opt.v;
@@ -365,14 +371,14 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
               </div>
             </div>
             <div>
-              <label style={{ ...lbl,marginBottom:10 }}>Trip Style {styles.length>0&&<span style={{ fontFamily:'var(--font-body)',fontWeight:400,fontSize:10,color:'var(--orange)',textTransform:'none',letterSpacing:0,marginLeft:4 }}>{styles.length} selected</span>}</label>
+              <label style={{ ...lbl,marginBottom:10 }}>{t('travelStyles')} {styles.length>0&&<span style={{ fontFamily:'var(--font-body)',fontWeight:400,fontSize:10,color:'var(--orange)',textTransform:'none',letterSpacing:0,marginLeft:4 }}>{styles.length} {t('selected')}</span>}</label>
               <div style={{ display:'flex',flexWrap:'wrap',gap:6 }}>
                 {styleOpts.map(o=>{const active=styles.includes(o.v);return(<button key={o.v} onClick={()=>toggle(o.v)} style={{ background:active?'rgba(255,130,16,0.10)':'#F4F7FB',border:`1.5px solid ${active?'var(--orange)':'rgba(0,68,123,0.10)'}`,color:active?'var(--orange)':'#333',fontFamily:'var(--font-head)',fontWeight:active?600:400,fontSize:12,borderRadius:'var(--r-pill)',padding:'6px 13px',cursor:'pointer',transition:'all 0.15s' }}>{o.label}</button>);})}
               </div>
             </div>
             <div style={{ display:'flex',justifyContent:'space-between',paddingTop:4 }}>
-              <button onClick={()=>setStep(0)} style={navBtn(false)}>← Back</button>
-              <button onClick={()=>{ saveFormDraft(); setStep(2); }} style={navBtn()}>Next →</button>
+              <button onClick={()=>setStep(0)} style={navBtn(false)}>← {t('back')}</button>
+              <button onClick={()=>{ saveFormDraft(); setStep(2); }} style={navBtn()}>{t('next')} →</button>
             </div>
           </div>
         )}
@@ -381,7 +387,7 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
         {step===2 && (
           <div style={{ display:'flex',flexDirection:'column',gap:18 }}>
             <div>
-              <label style={{ ...lbl,marginBottom:10 }}>Budget Level</label>
+              <label style={{ ...lbl,marginBottom:10 }}>{t('budgetLevel')}</label>
               <div style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8 }}>
                 {[{v:'budget',e:'🎒',l:'Budget',s:'< $80 / day'},{v:'comfort',e:'🏨',l:'Comfort',s:'$80–150 / day'},{v:'premium',e:'🌟',l:'Premium',s:'$150–350 / day'},{v:'luxury',e:'💎',l:'Luxury',s:'$350+ / day'}].map(b=>{
                   const active=budget===b.v;
@@ -394,13 +400,13 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
               </div>
             </div>
             <div>
-              <label style={lbl}>Describe your ideal trip <span style={{ fontFamily:'var(--font-body)',fontWeight:400,textTransform:'none',letterSpacing:0,color:'var(--gray-dark)' }}>(optional)</span></label>
-              <p style={{ fontFamily:'var(--font-body)',fontSize:11,color:'var(--gray-dark)',marginBottom:8,lineHeight:1.5 }}>Vibe, pace, must-see spots, dietary needs, occasions — anything that makes this trip special.</p>
-              <textarea value={notes} onChange={e=>setNotes(e.target.value)} placeholder="e.g. Slow-paced honeymoon focused on local food and hidden gems. One of us is vegetarian. Avoid big tourist crowds." maxLength={600} rows={3} style={{ ...inp,resize:'vertical' }} onFocus={e=>(e.target.style.borderColor='var(--navy)')} onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} />
+              <label style={lbl}>{t('idealTrip')} <span style={{ fontFamily:'var(--font-body)',fontWeight:400,textTransform:'none',letterSpacing:0,color:'var(--gray-dark)' }}>({t('optional')})</span></label>
+              <p style={{ fontFamily:'var(--font-body)',fontSize:11,color:'var(--gray-dark)',marginBottom:8,lineHeight:1.5 }}>{t('idealTripHint')}</p>
+              <textarea value={notes} onChange={e=>setNotes(e.target.value)} placeholder={t('idealTripPlaceholder')} maxLength={600} rows={3} style={{ ...inp,resize:'vertical' }} onFocus={e=>(e.target.style.borderColor='var(--navy)')} onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} />
             </div>
             <div style={{ display:'flex',justifyContent:'space-between',paddingTop:4 }}>
-              <button onClick={()=>setStep(1)} style={navBtn(false)}>← Back</button>
-              <button onClick={submit} style={{ ...navBtn(),background:'var(--orange)',boxShadow:'0 6px 20px rgba(255,130,16,0.30)',letterSpacing:0.3 }}>✈ Let&apos;s Go!</button>
+              <button onClick={()=>setStep(1)} style={navBtn(false)}>← {t('back')}</button>
+              <button onClick={submit} style={{ ...navBtn(),background:'var(--orange)',boxShadow:'0 6px 20px rgba(255,130,16,0.30)',letterSpacing:0.3 }}>{t('generate')}</button>
             </div>
           </div>
         )}
