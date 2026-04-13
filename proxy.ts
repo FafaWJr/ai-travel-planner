@@ -6,7 +6,7 @@ import { routing } from './i18n/routing'
 
 const intlMiddleware = createIntlMiddleware(routing)
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   // Run next-intl locale detection first
   const intlResponse = intlMiddleware(request)
   if (intlResponse) return intlResponse
