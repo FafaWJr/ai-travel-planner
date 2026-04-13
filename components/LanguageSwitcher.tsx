@@ -1,7 +1,7 @@
 'use client';
 
 import { useLocale } from 'next-intl';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname, useRouter } from '@/i18n/navigation';
 import { useState, useRef, useEffect } from 'react';
 import { Globe } from 'lucide-react';
 
@@ -14,7 +14,7 @@ const LOCALES = [
 export default function LanguageSwitcher() {
   const locale = useLocale();
   const router = useRouter();
-  const pathname = usePathname();
+  const pathname = usePathname(); // from next-intl: already stripped of locale prefix
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -31,20 +31,13 @@ export default function LanguageSwitcher() {
   }, []);
 
   function switchLocale(newLocale: string) {
+    if (newLocale === locale) {
+      setOpen(false);
+      return;
+    }
     setOpen(false);
-    // Strip current locale prefix if present, then add new one
-    let newPath = pathname;
-    for (const l of LOCALES) {
-      if (l.code !== 'en' && pathname.startsWith(`/${l.code}`)) {
-        newPath = pathname.slice(`/${l.code}`.length) || '/';
-        break;
-      }
-    }
-    if (newLocale === 'en') {
-      router.push(newPath);
-    } else {
-      router.push(`/${newLocale}${newPath}`);
-    }
+    // next-intl router handles: cookie update, prefix add/remove, redirect
+    router.replace(pathname, { locale: newLocale });
   }
 
   return (
@@ -107,7 +100,7 @@ export default function LanguageSwitcher() {
                 padding: '11px 16px',
                 background: l.code === locale ? '#EEF4FB' : 'transparent',
                 border: 'none',
-                cursor: 'pointer',
+                cursor: l.code === locale ? 'default' : 'pointer',
                 fontFamily: "'Poppins', sans-serif",
                 fontSize: '14px',
                 fontWeight: l.code === locale ? 700 : 400,
