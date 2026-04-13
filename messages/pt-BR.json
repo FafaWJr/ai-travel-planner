@@ -167,7 +167,37 @@
     "idealTripHint": "Clima, ritmo, pontos imperdíveis, necessidades alimentares, ocasiões — tudo o que torna essa viagem especial.",
     "idealTripPlaceholder": "Ex.: Lua de mel tranquila com foco em gastronomia local e lugares escondidos. Um de nós é vegetariano. Evitar grandes aglomerações turísticas.",
     "errDest": "Por favor, insira seu destino.",
-    "errDep": "Por favor, escolha uma data de início."
+    "errDep": "Por favor, escolha uma data de início.",
+    "companions": {
+      "solo": "Solo",
+      "couple": "Casal",
+      "family": "Família",
+      "friends": "Amigos"
+    },
+    "budgetLevels": {
+      "budget": "Econômico",
+      "comfort": "Conforto",
+      "premium": "Premium",
+      "luxury": "Luxo"
+    },
+    "styles": {
+      "cultural": "Cultural",
+      "foodDrink": "Gastronomia",
+      "nightlife": "Vida Noturna",
+      "shopping": "Compras",
+      "family": "Família",
+      "adventure": "Aventura",
+      "beach": "Praia",
+      "wellness": "Bem-estar",
+      "romance": "Romance",
+      "nature": "Natureza",
+      "luxuryStyle": "Luxo",
+      "photography": "Fotografia",
+      "winterSports": "Esportes de Inverno",
+      "safari": "Safari",
+      "roadTrip": "Viagem de Carro",
+      "cityBreak": "City Break"
+    }
   },
   "language": {
     "en": "EN",

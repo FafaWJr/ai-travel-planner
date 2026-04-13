@@ -224,14 +224,14 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
   };
 
   const styleOpts = [
-    {v:'cultural',label:'🏛️ Cultural'},{v:'food',label:'🍽️ Food & Drink'},
-    {v:'nightlife',label:'🎉 Nightlife'},{v:'shopping',label:'🛍️ Shopping'},
-    {v:'family',label:'👨‍👩‍👧 Family'},{v:'adventure',label:'🏔️ Adventure'},
-    {v:'beach',label:'🏖️ Beach'},{v:'wellness',label:'🧘 Wellness'},
-    {v:'romance',label:'💑 Romance'},{v:'nature',label:'🌿 Nature'},
-    {v:'luxury',label:'💎 Luxury'},{v:'photography',label:'📸 Photography'},
-    {v:'ski',label:'🎿 Winter Sports'},{v:'safari',label:'🦁 Safari'},
-    {v:'roadtrip',label:'🚗 Road Trip'},{v:'citybreak',label:'🏙️ City Break'},
+    {v:'cultural',e:'🏛️',label:t('styles.cultural')},{v:'food',e:'🍽️',label:t('styles.foodDrink')},
+    {v:'nightlife',e:'🎉',label:t('styles.nightlife')},{v:'shopping',e:'🛍️',label:t('styles.shopping')},
+    {v:'family',e:'👨‍👩‍👧',label:t('styles.family')},{v:'adventure',e:'🏔️',label:t('styles.adventure')},
+    {v:'beach',e:'🏖️',label:t('styles.beach')},{v:'wellness',e:'🧘',label:t('styles.wellness')},
+    {v:'romance',e:'💑',label:t('styles.romance')},{v:'nature',e:'🌿',label:t('styles.nature')},
+    {v:'luxury',e:'💎',label:t('styles.luxuryStyle')},{v:'photography',e:'📸',label:t('styles.photography')},
+    {v:'ski',e:'🎿',label:t('styles.winterSports')},{v:'safari',e:'🦁',label:t('styles.safari')},
+    {v:'roadtrip',e:'🚗',label:t('styles.roadTrip')},{v:'citybreak',e:'🏙️',label:t('styles.cityBreak')},
   ];
   const inp: React.CSSProperties = {width:'100%',boxSizing:'border-box' as const,border:'1.5px solid rgba(0,68,123,0.15)',borderRadius:'var(--r-md)',padding:'11px 14px',fontFamily:'var(--font-body)',fontSize:14,color:'#000',background:'#fff',outline:'none',transition:'border-color 0.18s'};
   const lbl: React.CSSProperties = {fontFamily:'var(--font-head)',fontWeight:600,fontSize:11,color:'var(--navy)',marginBottom:6,display:'block',textTransform:'uppercase',letterSpacing:0.8};
@@ -359,7 +359,7 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
             <div>
               <label style={{ ...lbl,marginBottom:10 }}>{t('travellingWith')}</label>
               <div style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8 }}>
-                {[{v:'solo',icon:'🧳',l:'Solo'},{v:'couple',icon:'💑',l:'Couple'},{v:'family',icon:'👨‍👩‍👧',l:'Family'},{v:'friends',icon:'🧑‍🤝‍🧑',l:'Friends'}].map(opt=>{
+                {[{v:'solo',icon:'🧳',l:t('companions.solo')},{v:'couple',icon:'💑',l:t('companions.couple')},{v:'family',icon:'👨‍👩‍👧',l:t('companions.family')},{v:'friends',icon:'🧑‍🤝‍🧑',l:t('companions.friends')}].map(opt=>{
                   const active=companion===opt.v;
                   return (
                     <button key={opt.v} onClick={()=>setCompanion(opt.v)} style={{ background:active?'rgba(0,68,123,0.07)':'#F4F7FB',border:`2px solid ${active?'var(--navy)':'transparent'}`,borderRadius:'var(--r-md)',padding:'12px 6px',cursor:'pointer',textAlign:'center',transition:'all 0.15s' }}>
@@ -373,7 +373,7 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
             <div>
               <label style={{ ...lbl,marginBottom:10 }}>{t('travelStyles')} {styles.length>0&&<span style={{ fontFamily:'var(--font-body)',fontWeight:400,fontSize:10,color:'var(--orange)',textTransform:'none',letterSpacing:0,marginLeft:4 }}>{styles.length} {t('selected')}</span>}</label>
               <div style={{ display:'flex',flexWrap:'wrap',gap:6 }}>
-                {styleOpts.map(o=>{const active=styles.includes(o.v);return(<button key={o.v} onClick={()=>toggle(o.v)} style={{ background:active?'rgba(255,130,16,0.10)':'#F4F7FB',border:`1.5px solid ${active?'var(--orange)':'rgba(0,68,123,0.10)'}`,color:active?'var(--orange)':'#333',fontFamily:'var(--font-head)',fontWeight:active?600:400,fontSize:12,borderRadius:'var(--r-pill)',padding:'6px 13px',cursor:'pointer',transition:'all 0.15s' }}>{o.label}</button>);})}
+                {styleOpts.map(o=>{const active=styles.includes(o.v);return(<button key={o.v} onClick={()=>toggle(o.v)} style={{ background:active?'rgba(255,130,16,0.10)':'#F4F7FB',border:`1.5px solid ${active?'var(--orange)':'rgba(0,68,123,0.10)'}`,color:active?'var(--orange)':'#333',fontFamily:'var(--font-head)',fontWeight:active?600:400,fontSize:12,borderRadius:'var(--r-pill)',padding:'6px 13px',cursor:'pointer',transition:'all 0.15s' }}>{o.e} {o.label}</button>);})}
               </div>
             </div>
             <div style={{ display:'flex',justifyContent:'space-between',paddingTop:4 }}>
@@ -389,7 +389,7 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
             <div>
               <label style={{ ...lbl,marginBottom:10 }}>{t('budgetLevel')}</label>
               <div style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8 }}>
-                {[{v:'budget',e:'🎒',l:'Budget',s:'< $80 / day'},{v:'comfort',e:'🏨',l:'Comfort',s:'$80–150 / day'},{v:'premium',e:'🌟',l:'Premium',s:'$150–350 / day'},{v:'luxury',e:'💎',l:'Luxury',s:'$350+ / day'}].map(b=>{
+                {[{v:'budget',e:'🎒',l:t('budgetLevels.budget'),s:'< $80 / day'},{v:'comfort',e:'🏨',l:t('budgetLevels.comfort'),s:'$80–150 / day'},{v:'premium',e:'🌟',l:t('budgetLevels.premium'),s:'$150–350 / day'},{v:'luxury',e:'💎',l:t('budgetLevels.luxury'),s:'$350+ / day'}].map(b=>{
                   const active=budget===b.v;
                   return(<button key={b.v} onClick={()=>setBudget(b.v)} style={{ background:active?'rgba(0,68,123,0.07)':'#F4F7FB',border:`2px solid ${active?'var(--navy)':'transparent'}`,borderRadius:'var(--r-md)',padding:'14px 8px',cursor:'pointer',textAlign:'center',transition:'all 0.15s' }}>
                     <div style={{ fontSize:22,marginBottom:5 }}>{b.e}</div>

@@ -167,7 +167,37 @@
     "idealTripHint": "Vibe, pace, must-see spots, dietary needs, occasions — anything that makes this trip special.",
     "idealTripPlaceholder": "e.g. Slow-paced honeymoon focused on local food and hidden gems. One of us is vegetarian. Avoid big tourist crowds.",
     "errDest": "Please enter your destination.",
-    "errDep": "Please choose a start date."
+    "errDep": "Please choose a start date.",
+    "companions": {
+      "solo": "Solo",
+      "couple": "Couple",
+      "family": "Family",
+      "friends": "Friends"
+    },
+    "budgetLevels": {
+      "budget": "Budget",
+      "comfort": "Comfort",
+      "premium": "Premium",
+      "luxury": "Luxury"
+    },
+    "styles": {
+      "cultural": "Cultural",
+      "foodDrink": "Food & Drink",
+      "nightlife": "Nightlife",
+      "shopping": "Shopping",
+      "family": "Family",
+      "adventure": "Adventure",
+      "beach": "Beach",
+      "wellness": "Wellness",
+      "romance": "Romance",
+      "nature": "Nature",
+      "luxuryStyle": "Luxury",
+      "photography": "Photography",
+      "winterSports": "Winter Sports",
+      "safari": "Safari",
+      "roadTrip": "Road Trip",
+      "cityBreak": "City Break"
+    }
   },
   "language": {
     "en": "EN",
