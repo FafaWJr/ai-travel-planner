@@ -1,9 +1,20 @@
 'use client';
 import { useRef, useEffect, useCallback } from 'react';
-import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 import NavBar from '@/components/NavBar';
 
 export default function HomePage() {
+  const tHero = useTranslations('hero');
+  const tHow = useTranslations('howItWorks');
+  const tFeat = useTranslations('features');
+  const tYW = useTranslations('yourway');
+  const tML = useTranslations('meetLuna');
+  const tTI = useTranslations('tripIdeas');
+  const tQuiz = useTranslations('quiz');
+  const tFaq = useTranslations('faq');
+  const tCta = useTranslations('finalCta');
+
   const carouselRef = useRef<HTMLDivElement>(null);
   const autoPlayRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -224,35 +235,35 @@ export default function HomePage() {
         <div className="hero-content">
           <div className="hero-badge">
             <div className="hero-badge-dot"></div>
-            <span>The smarter way to travel</span>
+            <span>{tHero('badge')}</span>
           </div>
           <h1 className="hero-title">
-            <span className="navy">Your trip.<br /></span>
-            <span className="orange">Your rules.</span><br />
-            <span className="navy">Your way.</span>
+            <span className="navy">{tHero('title1')}<br /></span>
+            <span className="orange">{tHero('title2')}</span><br />
+            <span className="navy">{tHero('title3')}</span>
           </h1>
-          <p className="hero-sub">Not just another AI planner. Luna works with you, every step towards your perfect trip.</p>
+          <p className="hero-sub">{tHero('subtitle')}</p>
           <div className="hero-pills">
             <div className="hero-pill blue">
-              <div className="pill-title">30 seconds</div>
-              <div className="pill-sub">to a full itinerary</div>
+              <div className="pill-title">{tHero('pill1Title')}</div>
+              <div className="pill-sub">{tHero('pill1Sub')}</div>
             </div>
             <div className="hero-pill orange">
-              <div className="pill-title">100% personal</div>
-              <div className="pill-sub">built for your tastes</div>
+              <div className="pill-title">{tHero('pill2Title')}</div>
+              <div className="pill-sub">{tHero('pill2Sub')}</div>
             </div>
             <div className="hero-pill blue">
-              <div className="pill-title">Chat with Luna</div>
-              <div className="pill-sub">refine as you go</div>
+              <div className="pill-title">{tHero('pill3Title')}</div>
+              <div className="pill-sub">{tHero('pill3Sub')}</div>
             </div>
             <div className="hero-pill blue">
-              <div className="pill-title">Always free</div>
-              <div className="pill-sub">no account needed</div>
+              <div className="pill-title">{tHero('pill4Title')}</div>
+              <div className="pill-sub">{tHero('pill4Sub')}</div>
             </div>
           </div>
-          <Link href="/start" className="btn-letsgo">Let&apos;s Go &rarr;</Link>
+          <Link href="/start" className="btn-letsgo">{tHero('cta')} &rarr;</Link>
           <div style={{ cursor: 'pointer' }} onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}>
-            <div className="see-more">See more</div>
+            <div className="see-more">{tHero('seeMore')}</div>
             <div className="see-more-arrow">↓</div>
           </div>
         </div>
@@ -260,33 +271,33 @@ export default function HomePage() {
 
       {/* HOW IT WORKS */}
       <section className="section how" id="how-it-works">
-        <div className="section-label">How it works</div>
-        <h2 className="section-title">As easy as 1, 2, 3</h2>
-        <p className="section-sub centered">Tell us where you want to go. Luna handles everything else, in seconds.</p>
+        <div className="section-label">{tHow('label')}</div>
+        <h2 className="section-title">{tHow('title')}</h2>
+        <p className="section-sub centered">{tHow('subtitle')}</p>
         <div className="steps">
           <div className="step-card">
             <div className="step-num">1</div>
-            <h3>Tell Luna where you want to go</h3>
-            <p>Type your destination, travel dates, and who you are travelling with. That is all it takes to get started.</p>
+            <h3>{tHow('step1Title')}</h3>
+            <p>{tHow('step1Body')}</p>
           </div>
           <div className="step-card">
             <div className="step-num">2</div>
-            <h3>Get a full personalised plan</h3>
-            <p>Luna builds your complete itinerary with activities, stays, budget breakdown, weather tips, and local transport options.</p>
+            <h3>{tHow('step2Title')}</h3>
+            <p>{tHow('step2Body')}</p>
           </div>
           <div className="step-card">
             <div className="step-num">3</div>
-            <h3>Refine, save, and go</h3>
-            <p>Chat with Luna to tweak anything. Swap days, add ideas, change your style. Save your trip and head out with confidence.</p>
+            <h3>{tHow('step3Title')}</h3>
+            <p>{tHow('step3Body')}</p>
           </div>
         </div>
       </section>
 
       {/* EVERYTHING IN EVERY PLAN */}
       <section className="section features" id="features">
-        <div className="section-label">What you get</div>
-        <h2 className="section-title">Everything in every plan</h2>
-        <p className="section-sub">Every trip Luna builds comes fully loaded. No upgrades, no paywalls, no surprises.</p>
+        <div className="section-label">{tFeat('label')}</div>
+        <h2 className="section-title">{tFeat('title')}</h2>
+        <p className="section-sub">{tFeat('subtitle')}</p>
         <div className="features-grid">
           <div className="feat-card">
             <svg className="feat-icon" viewBox="0 0 44 44" fill="none">
@@ -296,8 +307,8 @@ export default function HomePage() {
               <line x1="16" y1="20" x2="28" y2="20" stroke="#00447B" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.4" />
               <line x1="16" y1="24" x2="22" y2="24" stroke="#00447B" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.4" />
             </svg>
-            <h3>Day-by-day itinerary</h3>
-            <p>A full schedule with timings, activity descriptions, insider tips, and local recommendations tailored to your style.</p>
+            <h3>{tFeat('itineraryTitle')}</h3>
+            <p>{tFeat('itineraryBody')}</p>
           </div>
           <div className="feat-card">
             <svg className="feat-icon" viewBox="0 0 44 44" fill="none">
@@ -306,8 +317,8 @@ export default function HomePage() {
               <path d="M15 16v-3a7 7 0 0 1 14 0v3" stroke="#FF8210" strokeWidth="1.5" strokeLinecap="round" />
               <circle cx="22" cy="24" r="2" fill="#FF8210" />
             </svg>
-            <h3>Hotel suggestions</h3>
-            <p>Curated stay options matched to your budget and location preferences, near the activities in your plan.</p>
+            <h3>{tFeat('hotelsTitle')}</h3>
+            <p>{tFeat('hotelsBody')}</p>
           </div>
           <div className="feat-card">
             <svg className="feat-icon" viewBox="0 0 44 44" fill="none">
@@ -318,8 +329,8 @@ export default function HomePage() {
               <path d="M14 22l-2 2" stroke="#00447B" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.4" />
               <path d="M30 22l2 2" stroke="#00447B" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.4" />
             </svg>
-            <h3>Weather and seasons</h3>
-            <p>Know what to expect and what to pack. Luna factors in seasonal weather and events so there are no unpleasant surprises.</p>
+            <h3>{tFeat('weatherTitle')}</h3>
+            <p>{tFeat('weatherBody')}</p>
           </div>
           <div className="feat-card">
             <svg className="feat-icon" viewBox="0 0 44 44" fill="none">
@@ -329,8 +340,8 @@ export default function HomePage() {
               <path d="M8 28h4v-6h16v6h4" stroke="#FF8210" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               <path d="M12 22v-4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v4" stroke="#FF8210" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
-            <h3>Getting around</h3>
-            <p>Transport options for every leg of your trip, from airport transfers to local taxis, trains, and everything in between.</p>
+            <h3>{tFeat('transportTitle')}</h3>
+            <p>{tFeat('transportBody')}</p>
           </div>
           <div className="feat-card">
             <svg className="feat-icon" viewBox="0 0 44 44" fill="none">
@@ -340,8 +351,8 @@ export default function HomePage() {
               <line x1="22" y1="19" x2="22" y2="26" stroke="#FF8210" strokeWidth="2" strokeLinecap="round" />
               <line x1="27" y1="20" x2="27" y2="26" stroke="#FF8210" strokeWidth="2" strokeLinecap="round" />
             </svg>
-            <h3>Budget breakdown</h3>
-            <p>A clear cost estimate across accommodation, food, activities, and transport. Know what you will spend before you go.</p>
+            <h3>{tFeat('budgetTitle')}</h3>
+            <p>{tFeat('budgetBody')}</p>
           </div>
           <div className="feat-card">
             <svg className="feat-icon" viewBox="0 0 44 44" fill="none">
@@ -350,8 +361,8 @@ export default function HomePage() {
               <circle cx="22" cy="22" r="3" fill="#FF8210" />
               <line x1="22" y1="28" x2="22" y2="32" stroke="#FF8210" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
-            <h3>Chat with Luna</h3>
-            <p>Ask Luna anything about your trip. Adjust days, add activities, get local advice. She is always one message away.</p>
+            <h3>{tFeat('chatTitle')}</h3>
+            <p>{tFeat('chatBody')}</p>
           </div>
         </div>
       </section>
@@ -360,42 +371,42 @@ export default function HomePage() {
       <section className="section yourway" id="your-way">
         <div className="yourway-grid">
           <div>
-            <div className="section-label">Personal by design</div>
-            <h2 className="section-title">Travel made personal, your way</h2>
-            <p className="section-sub">Generic itineraries are for everyone. Yours should be for you. Luna learns what you love and builds every trip around it.</p>
+            <div className="section-label">{tYW('label')}</div>
+            <h2 className="section-title">{tYW('title')}</h2>
+            <p className="section-sub">{tYW('subtitle')}</p>
             <div className="yourway-points">
               <div className="yw-point">
                 <div className="yw-dot"></div>
                 <div>
-                  <h4>Your interests, front and centre</h4>
-                  <p>From street food tours to mountain hikes, Luna surfaces only what genuinely excites you.</p>
+                  <h4>{tYW('point1Title')}</h4>
+                  <p>{tYW('point1Body')}</p>
                 </div>
               </div>
               <div className="yw-point">
                 <div className="yw-dot"></div>
                 <div>
-                  <h4>Your pace, not someone else&apos;s</h4>
-                  <p>Prefer slow mornings and long lunches? Or pack in every hour? Luna adapts to how you like to travel.</p>
+                  <h4>{tYW('point2Title')}</h4>
+                  <p>{tYW('point2Body')}</p>
                 </div>
               </div>
               <div className="yw-point">
                 <div className="yw-dot"></div>
                 <div>
-                  <h4>Your budget, respected</h4>
-                  <p>Set your range and Luna works within it, no upsells, no surprises.</p>
+                  <h4>{tYW('point3Title')}</h4>
+                  <p>{tYW('point3Body')}</p>
                 </div>
               </div>
             </div>
           </div>
           <div className="yourway-visual">
-            <div className="chat-label">You</div>
-            <div className="chat-bubble">I want 7 days in Japan. I love food and local markets but hate tourist traps.</div>
-            <div className="chat-label luna" style={{marginTop:16}}>Luna</div>
-            <div className="chat-bubble luna">Perfect. I&apos;ll build your Tokyo itinerary around Tsukiji outer market, hidden izakayas in Shimokitazawa, and a day trip to Nikko. No tourist traps, promise.</div>
-            <div className="chat-label" style={{marginTop:16}}>You</div>
-            <div className="chat-bubble">Can you make day 3 more relaxed? Maybe a morning at an onsen?</div>
-            <div className="chat-label luna" style={{marginTop:16}}>Luna</div>
-            <div className="chat-bubble luna">Done. I&apos;ve swapped day 3 to include a morning at Oedo-Onsen Monogatari and a gentle afternoon at Yanaka, one of Tokyo&apos;s most charming old neighbourhoods.</div>
+            <div className="chat-label">{tYW('chatYou')}</div>
+            <div className="chat-bubble">{tYW('chat1')}</div>
+            <div className="chat-label luna" style={{marginTop:16}}>{tYW('chatLuna')}</div>
+            <div className="chat-bubble luna">{tYW('chat2')}</div>
+            <div className="chat-label" style={{marginTop:16}}>{tYW('chatYou')}</div>
+            <div className="chat-bubble">{tYW('chat3')}</div>
+            <div className="chat-label luna" style={{marginTop:16}}>{tYW('chatLuna')}</div>
+            <div className="chat-bubble luna">{tYW('chat4')}</div>
           </div>
         </div>
       </section>
@@ -407,28 +418,28 @@ export default function HomePage() {
             <img src="/luna_BLUE.png" alt="Luna, your AI travel companion" />
           </div>
           <div className="luna-copy">
-            <div className="section-label">Meet Luna</div>
-            <h2 className="section-title">This isn&apos;t just another AI planner.</h2>
-            <p className="section-sub">Luna works with you, every step towards your perfect trip. She remembers your preferences, adapts your plan, and speaks to you, not at you.</p>
+            <div className="section-label">{tML('label')}</div>
+            <h2 className="section-title">{tML('title')}</h2>
+            <p className="section-sub">{tML('subtitle')}</p>
             <div className="luna-features">
               <div className="luna-feat">
                 <div className="luna-feat-check"></div>
-                <p><strong>Fully contextual.</strong> Every suggestion Luna makes is based on your complete trip, not a generic template.</p>
+                <p><strong>{tML('feat1Bold')}</strong>{tML('feat1Body')}</p>
               </div>
               <div className="luna-feat">
                 <div className="luna-feat-check"></div>
-                <p><strong>Conversational.</strong> Chat naturally. Change your mind. Luna keeps up without losing context.</p>
+                <p><strong>{tML('feat2Bold')}</strong>{tML('feat2Body')}</p>
               </div>
               <div className="luna-feat">
                 <div className="luna-feat-check"></div>
-                <p><strong>End-to-end.</strong> From itinerary to budget to stays and transport, Luna covers every detail in one plan.</p>
+                <p><strong>{tML('feat3Bold')}</strong>{tML('feat3Body')}</p>
               </div>
               <div className="luna-feat">
                 <div className="luna-feat-check"></div>
-                <p><strong>Always free.</strong> No subscriptions, no paywalls. Luna is yours from the very first message.</p>
+                <p><strong>{tML('feat4Bold')}</strong>{tML('feat4Body')}</p>
               </div>
             </div>
-            <Link href="/start" className="btn-letsgo-white">Plan with Luna &rarr;</Link>
+            <Link href="/start" className="btn-letsgo-white">{tML('cta')} &rarr;</Link>
           </div>
         </div>
       </section>
@@ -437,10 +448,10 @@ export default function HomePage() {
       <section className="section trip-ideas" id="trip-ideas">
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end',marginBottom:0}}>
           <div>
-            <div className="section-label">Inspiration</div>
-            <h2 className="section-title" style={{marginBottom:0}}>Trip ideas to get you started</h2>
+            <div className="section-label">{tTI('label')}</div>
+            <h2 className="section-title" style={{marginBottom:0}}>{tTI('title')}</h2>
           </div>
-          <Link href="/trip-ideas" style={{fontFamily:"'Lato',sans-serif",fontSize:14,fontWeight:700,color:'var(--orange)',textDecoration:'none'}}>See all ideas &rarr;</Link>
+          <Link href="/trip-ideas" style={{fontFamily:"'Lato',sans-serif",fontSize:14,fontWeight:700,color:'var(--orange)',textDecoration:'none'}}>{tTI('seeAll')} &rarr;</Link>
         </div>
         <div className="ideas-carousel-wrap" onMouseEnter={stopAutoPlay} onMouseLeave={startAutoPlay}>
           <button className="carousel-btn prev" onClick={()=>{ carouselRef.current?.scrollBy({left:-320,behavior:'smooth'}); startAutoPlay(); }}>
@@ -481,9 +492,9 @@ export default function HomePage() {
 
       {/* TRAVELLER PERSONA */}
       <section className="section persona" id="quiz">
-        <div className="section-label">Find your travel style</div>
-        <h2 className="section-title">What kind of traveller are you?</h2>
-        <p className="section-sub centered" style={{margin:'0 auto 8px'}}>Take the 2-minute quiz and let Luna build trips matched exactly to your personality.</p>
+        <div className="section-label">{tQuiz('label')}</div>
+        <h2 className="section-title">{tQuiz('title')}</h2>
+        <p className="section-sub centered" style={{margin:'0 auto 8px'}}>{tQuiz('subtitle')}</p>
         <div className="persona-cards" style={{justifyContent:'center',flexWrap:'wrap',gap:12}}>
           {[
             { name: 'The Explorer',         color: 'var(--orange)' },
@@ -499,51 +510,26 @@ export default function HomePage() {
             { name: 'The Party Animal',     color: 'var(--orange)' },
             { name: 'The Festival Chaser',  color: 'var(--navy)'   },
           ].map(({ name, color }) => (
-            <div key={name} className="persona-card" onClick={() => { window.location.href = '/quiz'; }}>
+            <Link key={name} href="/quiz" className="persona-card" style={{textDecoration:'none'}}>
               <svg width="18" height="18" viewBox="0 0 18 18" style={{flexShrink:0}}><circle cx="9" cy="9" r="9" fill={color} /></svg>
               <div className="p-name">{name}</div>
-            </div>
+            </Link>
           ))}
         </div>
-        <Link href="/quiz" style={{display:'inline-block',background:'var(--orange)',color:'white',borderRadius:50,padding:'16px 44px',fontFamily:"'Poppins',sans-serif",fontSize:16,fontWeight:500,textDecoration:'none',marginTop:8}}>Take the quiz &rarr;</Link>
+        <Link href="/quiz" style={{display:'inline-block',background:'var(--orange)',color:'white',borderRadius:50,padding:'16px 44px',fontFamily:"'Poppins',sans-serif",fontSize:16,fontWeight:500,textDecoration:'none',marginTop:8}}>{tQuiz('cta')} &rarr;</Link>
       </section>
 
-      {/* FAQ, GEO optimised: conversational Q&A for AI citation */}
+      {/* FAQ */}
       <section id="faq" style={{ background: '#F8FBFF', padding: '80px 24px' }}>
         <div style={{ maxWidth: 800, margin: '0 auto' }}>
-          <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: 12, fontWeight: 700, color: '#FF8210', letterSpacing: '0.12em', textTransform: 'uppercase', borderBottom: '2px solid #FF8210', display: 'inline-block', paddingBottom: 3, marginBottom: 16 }}>FAQ</p>
+          <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: 12, fontWeight: 700, color: '#FF8210', letterSpacing: '0.12em', textTransform: 'uppercase', borderBottom: '2px solid #FF8210', display: 'inline-block', paddingBottom: 3, marginBottom: 16 }}>{tFaq('label')}</p>
           <h2 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 'clamp(26px,3.5vw,38px)', color: '#00447B', lineHeight: 1.2, marginBottom: 48, letterSpacing: '-0.5px' }}>
-            Frequently Asked Questions
+            {tFaq('title')}
           </h2>
           <div itemScope itemType="https://schema.org/FAQPage">
-            {[
-              {
-                q: 'What is Luna Let\'s Go?',
-                a: "Luna Let's Go is a free AI travel planner that creates personalised, day-by-day trip itineraries in under 30 seconds. You tell Luna your destination, travel dates, group size, budget, and travel style, and the AI builds a complete, detailed plan including activities, accommodation suggestions, getting around, budget estimates, and local tips.",
-              },
-              {
-                q: 'How does the AI travel planner work?',
-                a: "Enter your trip details: destination, travel dates, number of travellers, budget level, and preferred travel styles (beach, adventure, culture, family, romance, etc.). Luna's AI analyses your preferences and generates a complete personalised itinerary with a day-by-day schedule, hotel recommendations, transport tips, a budget breakdown, and practical advice for your destination.",
-              },
-              {
-                q: 'Is Luna Let\'s Go free to use?',
-                a: "Yes. Luna Let's Go is completely free. You can generate a full personalised travel itinerary at no cost, with no account required to get started.",
-              },
-              {
-                q: 'What types of trips can Luna plan?',
-                a: "Luna can plan virtually any type of trip: beach holidays, city breaks, mountain adventures, cultural tours, family holidays, romantic getaways, solo travel, group trips, wellness retreats, and more. It supports all budget levels from budget-friendly to premium luxury.",
-              },
-              {
-                q: 'Can Luna plan family trips with children?',
-                a: "Absolutely. You can specify the ages of your children, and Luna tailors all activities to be age-appropriate and family-friendly, adjusting the pace, activity types, and accommodation recommendations to suit families travelling with kids.",
-              },
-              {
-                q: 'How long does it take to generate a travel itinerary?',
-                a: "Luna generates a complete, detailed travel itinerary in under 30 seconds. The plan includes a day-by-day schedule, accommodation options, transport advice, budget breakdown, and local tips, all personalised to your trip.",
-              },
-            ].map(({ q, a }, i) => (
+            {(['1','2','3','4','5','6'] as const).map((n) => (
               <div
-                key={i}
+                key={n}
                 itemScope
                 itemProp="mainEntity"
                 itemType="https://schema.org/Question"
@@ -553,14 +539,14 @@ export default function HomePage() {
                   itemProp="name"
                   style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 17, color: '#00447B', marginBottom: 10 }}
                 >
-                  {q}
+                  {tFaq(`q${n}` as Parameters<typeof tFaq>[0])}
                 </h3>
                 <div itemScope itemProp="acceptedAnswer" itemType="https://schema.org/Answer">
                   <p
                     itemProp="text"
                     style={{ fontFamily: "'Lato',sans-serif", fontSize: 15, fontWeight: 300, color: '#4a4a5a', lineHeight: 1.75, margin: 0 }}
                   >
-                    {a}
+                    {tFaq(`a${n}` as Parameters<typeof tFaq>[0])}
                   </p>
                 </div>
               </div>
@@ -571,9 +557,9 @@ export default function HomePage() {
 
       {/* FINAL CTA */}
       <section className="final-cta" id="cta">
-        <h2>Your next adventure starts here.</h2>
-        <p>Free, personal, and built around you. No account required to get started.</p>
-        <Link href="/start" className="btn-cta-white">Let&apos;s Go &rarr;</Link>
+        <h2>{tCta('title')}</h2>
+        <p>{tCta('subtitle')}</p>
+        <Link href="/start" className="btn-cta-white">{tCta('cta')} &rarr;</Link>
       </section>
 
     </>

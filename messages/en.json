@@ -8,7 +8,12 @@
     "about": "About",
     "myTrips": "My Trips",
     "login": "Login",
-    "getStarted": "Let's Go"
+    "getStarted": "Let's Go",
+    "signOut": "Sign out",
+    "menu": "Menu",
+    "discoverStyle": "Discover your travel style",
+    "retakeQuiz": "Retake quiz",
+    "viewPersona": "View your persona"
   },
   "hero": {
     "badge": "The smarter way to travel",
@@ -55,6 +60,69 @@
     "chatTitle": "Chat with Luna",
     "chatBody": "Ask Luna anything about your trip. Adjust days, add activities, get local advice. She is always one message away."
   },
+  "yourway": {
+    "label": "Personal by design",
+    "title": "Travel made personal, your way",
+    "subtitle": "Generic itineraries are for everyone. Yours should be for you. Luna learns what you love and builds every trip around it.",
+    "point1Title": "Your interests, front and centre",
+    "point1Body": "From street food tours to mountain hikes, Luna surfaces only what genuinely excites you.",
+    "point2Title": "Your pace, not someone else's",
+    "point2Body": "Prefer slow mornings and long lunches? Or pack in every hour? Luna adapts to how you like to travel.",
+    "point3Title": "Your budget, respected",
+    "point3Body": "Set your range and Luna works within it, no upsells, no surprises.",
+    "chatYou": "You",
+    "chatLuna": "Luna",
+    "chat1": "I want 7 days in Japan. I love food and local markets but hate tourist traps.",
+    "chat2": "Perfect. I'll build your Tokyo itinerary around Tsukiji outer market, hidden izakayas in Shimokitazawa, and a day trip to Nikko. No tourist traps, promise.",
+    "chat3": "Can you make day 3 more relaxed? Maybe a morning at an onsen?",
+    "chat4": "Done. I've swapped day 3 to include a morning at Oedo-Onsen Monogatari and a gentle afternoon at Yanaka, one of Tokyo's most charming old neighbourhoods."
+  },
+  "meetLuna": {
+    "label": "Meet Luna",
+    "title": "This isn't just another AI planner.",
+    "subtitle": "Luna works with you, every step towards your perfect trip. She remembers your preferences, adapts your plan, and speaks to you, not at you.",
+    "feat1Bold": "Fully contextual.",
+    "feat1Body": " Every suggestion Luna makes is based on your complete trip, not a generic template.",
+    "feat2Bold": "Conversational.",
+    "feat2Body": " Chat naturally. Change your mind. Luna keeps up without losing context.",
+    "feat3Bold": "End-to-end.",
+    "feat3Body": " From itinerary to budget to stays and transport, Luna covers every detail in one plan.",
+    "feat4Bold": "Always free.",
+    "feat4Body": " No subscriptions, no paywalls. Luna is yours from the very first message.",
+    "cta": "Plan with Luna"
+  },
+  "tripIdeas": {
+    "label": "Inspiration",
+    "title": "Trip ideas to get you started",
+    "seeAll": "See all ideas"
+  },
+  "quiz": {
+    "label": "Find your travel style",
+    "title": "What kind of traveller are you?",
+    "subtitle": "Take the 2-minute quiz and let Luna build trips matched exactly to your personality.",
+    "cta": "Take the quiz"
+  },
+  "faq": {
+    "label": "FAQ",
+    "title": "Frequently Asked Questions",
+    "q1": "What is Luna Let's Go?",
+    "a1": "Luna Let's Go is a free AI travel planner that creates personalised, day-by-day trip itineraries in under 30 seconds. You tell Luna your destination, travel dates, group size, budget, and travel style, and the AI builds a complete, detailed plan including activities, accommodation suggestions, getting around, budget estimates, and local tips.",
+    "q2": "How does the AI travel planner work?",
+    "a2": "Enter your trip details: destination, travel dates, number of travellers, budget level, and preferred travel styles (beach, adventure, culture, family, romance, etc.). Luna's AI analyses your preferences and generates a complete personalised itinerary with a day-by-day schedule, hotel recommendations, transport tips, a budget breakdown, and practical advice for your destination.",
+    "q3": "Is Luna Let's Go free to use?",
+    "a3": "Yes. Luna Let's Go is completely free. You can generate a full personalised travel itinerary at no cost, with no account required to get started.",
+    "q4": "What types of trips can Luna plan?",
+    "a4": "Luna can plan virtually any type of trip: beach holidays, city breaks, mountain adventures, cultural tours, family holidays, romantic getaways, solo travel, group trips, wellness retreats, and more. It supports all budget levels from budget-friendly to premium luxury.",
+    "q5": "Can Luna plan family trips with children?",
+    "a5": "Absolutely. You can specify the ages of your children, and Luna tailors all activities to be age-appropriate and family-friendly, adjusting the pace, activity types, and accommodation recommendations to suit families travelling with kids.",
+    "q6": "How long does it take to generate a travel itinerary?",
+    "a6": "Luna generates a complete, detailed travel itinerary in under 30 seconds. The plan includes a day-by-day schedule, accommodation options, transport advice, budget breakdown, and local tips, all personalised to your trip."
+  },
+  "finalCta": {
+    "title": "Your next adventure starts here.",
+    "subtitle": "Free, personal, and built around you. No account required to get started.",
+    "cta": "Let's Go"
+  },
   "footer": {
     "tagline": "AI-powered travel planning that feels human. Built for travellers who want something more personal.",
     "quickLinks": "Quick Links",
@@ -62,6 +130,7 @@
     "contact": "Contact",
     "privacyPolicy": "Privacy Policy",
     "terms": "Terms of Service",
+    "aboutUs": "About Us",
     "copyright": "© 2026 Luna Let's Go. All rights reserved. lunaletsgo.com"
   },
   "language": {

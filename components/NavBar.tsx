@@ -1,17 +1,18 @@
 'use client'
 
-import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { useState, useRef, useEffect, Suspense } from 'react'
+import { useTranslations } from 'next-intl'
+import { Link } from '@/i18n/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/context/AuthContext'
 import LanguageSwitcher from './LanguageSwitcher'
 
-const NAV_LINKS = [
-  { label: 'Trip Ideas', href: '/#trip-ideas' },
-  { label: 'Quiz', href: '/#quiz' },
-  { label: 'Blog', href: '/blog' },
-  { label: 'Deals', href: '/deals' },
+const NAV_LINK_KEYS = [
+  { key: 'tripIdeas', href: '/#trip-ideas' },
+  { key: 'quiz',     href: '/#quiz' },
+  { key: 'blog',     href: '/blog' },
+  { key: 'deals',    href: '/deals' },
 ]
 
 function Avatar({ name, avatarUrl }: { name: string; avatarUrl?: string | null }) {
@@ -31,6 +32,7 @@ function NavInner() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const supabase = createClient()
+  const tNav = useTranslations('nav')
   const [menuOpen, setMenuOpen] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [travelPersona, setTravelPersona] = useState<string | null>(null)
@@ -91,22 +93,22 @@ function NavInner() {
 
         {/* Desktop nav */}
         <div className="nav-desktop" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          {NAV_LINKS.map(({ label, href }) => (
-            <Link key={label} href={href} style={{ fontFamily: 'var(--font-head)', fontWeight: 500, fontSize: 14, color: isActive(href) ? 'var(--navy)' : 'var(--gray-dark)', padding: '8px 14px', borderRadius: 8, borderBottom: isActive(href) ? '2px solid var(--orange)' : '2px solid transparent', textDecoration: 'none' }}>
-              {label}
+          {NAV_LINK_KEYS.map(({ key, href }) => (
+            <Link key={key} href={href} style={{ fontFamily: 'var(--font-head)', fontWeight: 500, fontSize: 14, color: isActive(href) ? 'var(--navy)' : 'var(--gray-dark)', padding: '8px 14px', borderRadius: 8, borderBottom: isActive(href) ? '2px solid var(--orange)' : '2px solid transparent', textDecoration: 'none' }}>
+              {tNav(key as Parameters<typeof tNav>[0])}
             </Link>
           ))}
 
           {!loading && user && (
             <Link href="/my-trips" style={{ fontFamily: 'var(--font-head)', fontWeight: 500, fontSize: 14, color: isActive('/my-trips') ? 'var(--navy)' : 'var(--gray-dark)', padding: '8px 14px', borderRadius: 8, borderBottom: isActive('/my-trips') ? '2px solid var(--orange)' : '2px solid transparent', textDecoration: 'none' }}>
-              My Trips
+              {tNav('myTrips')}
             </Link>
           )}
 
           <LanguageSwitcher />
 
           <Link href="/start" style={{ marginLeft: 8, background: 'var(--navy)', color: '#fff', fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 14, padding: '10px 22px', borderRadius: 'var(--r-pill)', textDecoration: 'none' }}>
-            Plan a Trip
+            {tNav('planTrip')}
           </Link>
 
           {!loading && (
@@ -132,7 +134,7 @@ function NavInner() {
                     </div>
                     <Link href="/my-trips" onClick={() => setMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px', fontFamily: 'var(--font-body)', fontSize: 13, color: '#111', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-section)')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--navy)" strokeWidth="2" strokeLinecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
-                      My Trips
+                      {tNav('myTrips')}
                     </Link>
                     {/* Travel persona */}
                     <div style={{ padding: '8px 16px', borderBottom: '1px solid rgba(0,68,123,0.1)' }}>
@@ -160,12 +162,12 @@ function NavInner() {
                                   <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="#FF8210" /></svg>
                                   <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 500, color: '#FF8210' }}>{travelPersona}</span>
                                 </div>
-                                <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: '#6C6D6F', margin: '3px 0 0', lineHeight: 1 }}>View your persona</p>
+                                <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: '#6C6D6F', margin: '3px 0 0', lineHeight: 1 }}>{tNav('viewPersona')}</p>
                               </div>
                             </div>
                           </Link>
                           <Link href="/quiz" onClick={() => setMenuOpen(false)} style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: 11, color: '#9ca3af', marginTop: 6, textDecoration: 'none' }}>
-                            Retake quiz
+                            {tNav('retakeQuiz')}
                           </Link>
                         </>
                       ) : (
@@ -179,14 +181,14 @@ function NavInner() {
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF8210" strokeWidth="2">
                             <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
                           </svg>
-                          Discover your travel style
+                          {tNav('discoverStyle')}
                         </Link>
                       )}
                     </div>
                     <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
                     <button onClick={handleSignOut} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px', fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--gray-dark)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }} onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-section)')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
-                      Sign out
+                      {tNav('signOut')}
                     </button>
                   </div>
                 )}
@@ -198,7 +200,7 @@ function NavInner() {
                 onMouseEnter={e => { const el = e.currentTarget as HTMLAnchorElement; el.style.background = 'var(--orange)'; el.style.color = '#fff' }}
                 onMouseLeave={e => { const el = e.currentTarget as HTMLAnchorElement; el.style.background = 'transparent'; el.style.color = 'var(--orange)' }}
               >
-                Login
+                {tNav('login')}
               </Link>
             )
           )}
@@ -208,7 +210,7 @@ function NavInner() {
         <div className="nav-mobile" style={{ display: 'none', alignItems: 'center', gap: 10 }}>
           {!loading && user && (
             <Link href="/my-trips" style={{ fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 13, color: 'var(--navy)', textDecoration: 'none', padding: '6px 12px', border: '1.5px solid var(--border)', borderRadius: 'var(--r-pill)' }}>
-              My Trips
+              {tNav('myTrips')}
             </Link>
           )}
           {!loading && (
@@ -231,7 +233,7 @@ function NavInner() {
                       <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--gray-dark)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</p>
                     </div>
                     <Link href="/my-trips" onClick={() => setMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', fontFamily: 'var(--font-body)', fontSize: 13, color: '#111', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-section)')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                      My Trips
+                      {tNav('myTrips')}
                     </Link>
                     {/* Travel persona - mobile */}
                     <div style={{ padding: '8px 14px', borderTop: '1px solid rgba(0,68,123,0.08)', borderBottom: '1px solid rgba(0,68,123,0.08)' }}>
@@ -259,12 +261,12 @@ function NavInner() {
                                   <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="#FF8210" /></svg>
                                   <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 500, color: '#FF8210' }}>{travelPersona}</span>
                                 </div>
-                                <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: '#6C6D6F', margin: '3px 0 0', lineHeight: 1 }}>View your persona</p>
+                                <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: '#6C6D6F', margin: '3px 0 0', lineHeight: 1 }}>{tNav('viewPersona')}</p>
                               </div>
                             </div>
                           </Link>
                           <Link href="/quiz" onClick={() => setMenuOpen(false)} style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: 11, color: '#9ca3af', marginTop: 6, textDecoration: 'none' }}>
-                            Retake quiz
+                            {tNav('retakeQuiz')}
                           </Link>
                         </>
                       ) : (
@@ -276,19 +278,19 @@ function NavInner() {
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF8210" strokeWidth="2">
                             <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
                           </svg>
-                          Discover your travel style
+                          {tNav('discoverStyle')}
                         </Link>
                       )}
                     </div>
                     <button onClick={handleSignOut} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--gray-dark)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
-                      Sign out
+                      {tNav('signOut')}
                     </button>
                   </div>
                 )}
               </div>
             ) : (
               <Link href={loginHref} style={{ display: 'inline-block', padding: '7px 16px', borderRadius: 'var(--r-pill)', border: '1.5px solid var(--orange)', color: 'var(--orange)', fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>
-                Sign In
+                {tNav('login')}
               </Link>
             )
           )}
@@ -324,7 +326,7 @@ function NavInner() {
         padding: '24px 0',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px 20px', borderBottom: '1px solid var(--border)' }}>
-          <span style={{ fontFamily: 'var(--font-head)', fontWeight: 700, fontSize: 15, color: 'var(--navy)' }}>Menu</span>
+          <span style={{ fontFamily: 'var(--font-head)', fontWeight: 700, fontSize: 15, color: 'var(--navy)' }}>{tNav('menu')}</span>
           <button onClick={() => setDrawerOpen(false)} aria-label="Close menu" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-dark)', padding: 4 }}>
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
               <path d="M2 2l14 14M16 2L2 16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -333,9 +335,9 @@ function NavInner() {
         </div>
 
         <nav style={{ display: 'flex', flexDirection: 'column', padding: '12px 0', flex: 1 }}>
-          {NAV_LINKS.map(({ label, href }) => (
-            <Link key={label} href={href} onClick={() => setDrawerOpen(false)} style={{ fontFamily: 'var(--font-head)', fontWeight: 500, fontSize: 15, color: isActive(href) ? 'var(--navy)' : 'var(--gray-dark)', padding: '13px 20px', textDecoration: 'none', borderLeft: isActive(href) ? '3px solid var(--orange)' : '3px solid transparent' }}>
-              {label}
+          {NAV_LINK_KEYS.map(({ key, href }) => (
+            <Link key={key} href={href} onClick={() => setDrawerOpen(false)} style={{ fontFamily: 'var(--font-head)', fontWeight: 500, fontSize: 15, color: isActive(href) ? 'var(--navy)' : 'var(--gray-dark)', padding: '13px 20px', textDecoration: 'none', borderLeft: isActive(href) ? '3px solid var(--orange)' : '3px solid transparent' }}>
+              {tNav(key as Parameters<typeof tNav>[0])}
             </Link>
           ))}
           <div style={{ padding: '13px 20px' }}>
@@ -345,7 +347,7 @@ function NavInner() {
 
         <div style={{ padding: '16px 20px', borderTop: '1px solid var(--border)' }}>
           <Link href="/start" onClick={() => setDrawerOpen(false)} style={{ display: 'block', textAlign: 'center', background: 'var(--navy)', color: '#fff', fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 14, padding: '12px', borderRadius: 'var(--r-pill)', textDecoration: 'none' }}>
-            Plan a Trip
+            {tNav('planTrip')}
           </Link>
         </div>
       </div>

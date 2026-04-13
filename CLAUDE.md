@@ -203,6 +203,26 @@ After Claude Code finishes changes:
 
 ---
 
+## i18n Translation Status
+
+Supported locales: `en` (default, no prefix), `pt-BR` (`/pt-BR/`), `es` (`/es/`)
+Config: `localePrefix: 'as-needed'` via next-intl v4, `i18n/routing.ts`
+
+| Page / Component | EN | PT-BR | ES |
+|---|---|---|---|
+| `app/[locale]/page.tsx` (home) | Done | Done | Done |
+| `components/NavBar.tsx` | Done | Done | Done |
+| `components/Footer.tsx` | Done | Done | Done |
+| Other pages | Not started | Not started | Not started |
+
+**Message namespaces** (`messages/*.json`):
+`nav`, `hero`, `howItWorks`, `features`, `yourway`, `meetLuna`, `tripIdeas`, `quiz`, `faq`, `finalCta`, `footer`, `language`
+
+**Pattern**: Client components use `useTranslations()`, Server components use `getTranslations()`.
+**Links**: Use `Link` from `@/i18n/navigation` (NOT `next/link`) for all internal navigation.
+
+---
+
 ## Tech Stack
 
 - **Framework:** Next.js 16.1.6 (App Router, Turbopack)

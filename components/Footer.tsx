@@ -1,7 +1,10 @@
 'use client';
-import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 
 export default function Footer() {
+  const tFooter = useTranslations('footer');
+  const tNav = useTranslations('nav');
   return (
     <footer style={{
       background: '#00447B',
@@ -39,36 +42,36 @@ export default function Footer() {
             maxWidth: 240,
             margin: 0,
           }}>
-            AI-powered travel planning that feels human. Built for travellers who want something more personal.
+            {tFooter('tagline')}
           </p>
         </div>
 
         {/* Col 2 – Quick Links */}
         <div>
-          <p style={headingStyle}>Quick Links</p>
+          <p style={headingStyle}>{tFooter('quickLinks')}</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <FooterLink href="/start">Plan a Trip</FooterLink>
-            <FooterLink href="/trip-ideas">Trip Ideas</FooterLink>
-            <FooterLink href="/quiz">Travel Quiz</FooterLink>
-            <FooterLink href="/blog">Blog</FooterLink>
-            <FooterLink href="/deals">Deals</FooterLink>
-            <FooterLink href="/about">About Us</FooterLink>
-            <FooterLink href="/my-trips">My Trips</FooterLink>
+            <FooterLink href="/start">{tNav('planTrip')}</FooterLink>
+            <FooterLink href="/trip-ideas">{tNav('tripIdeas')}</FooterLink>
+            <FooterLink href="/quiz">{tNav('quiz')}</FooterLink>
+            <FooterLink href="/blog">{tNav('blog')}</FooterLink>
+            <FooterLink href="/deals">{tNav('deals')}</FooterLink>
+            <FooterLink href="/about">{tFooter('aboutUs')}</FooterLink>
+            <FooterLink href="/my-trips">{tNav('myTrips')}</FooterLink>
           </div>
         </div>
 
         {/* Col 3 – Legal */}
         <div>
-          <p style={headingStyle}>Legal</p>
+          <p style={headingStyle}>{tFooter('legal')}</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <FooterLink href="/privacy-policy">Privacy Policy</FooterLink>
-            <FooterLink href="/terms">Terms of Service</FooterLink>
+            <FooterLink href="/privacy-policy">{tFooter('privacyPolicy')}</FooterLink>
+            <FooterLink href="/terms">{tFooter('terms')}</FooterLink>
           </div>
         </div>
 
         {/* Col 4 – Contact */}
         <div>
-          <p style={headingStyle}>Contact</p>
+          <p style={headingStyle}>{tFooter('contact')}</p>
           <a
             href="mailto:hello@lunaletsgo.com"
             style={{
@@ -125,7 +128,7 @@ export default function Footer() {
             color: 'rgba(255,255,255,0.35)',
             margin: 0,
           }}>
-            &copy; 2026 Luna Let&apos;s Go. All rights reserved. lunaletsgo.com
+            {tFooter('copyright')}
           </p>
         </div>
       </div>
