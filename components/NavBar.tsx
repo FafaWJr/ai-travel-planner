@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from 'next/navigation'
 import { useState, useRef, useEffect, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/context/AuthContext'
+import LanguageSwitcher from './LanguageSwitcher'
 
 const NAV_LINKS = [
   { label: 'Trip Ideas', href: '/#trip-ideas' },
@@ -101,6 +102,8 @@ function NavInner() {
               My Trips
             </Link>
           )}
+
+          <LanguageSwitcher />
 
           <Link href="/start" style={{ marginLeft: 8, background: 'var(--navy)', color: '#fff', fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 14, padding: '10px 22px', borderRadius: 'var(--r-pill)', textDecoration: 'none' }}>
             Plan a Trip
@@ -335,6 +338,9 @@ function NavInner() {
               {label}
             </Link>
           ))}
+          <div style={{ padding: '13px 20px' }}>
+            <LanguageSwitcher />
+          </div>
         </nav>
 
         <div style={{ padding: '16px 20px', borderTop: '1px solid var(--border)' }}>

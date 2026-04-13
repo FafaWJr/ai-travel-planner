@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useLocale } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ChatMessage } from '@/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -73,6 +74,7 @@ What would you like to know?`,
 };
 
 export function ChatBox({ tripContext, destination }: ChatBoxProps) {
+  const locale = useLocale();
   const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MESSAGE]);
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
@@ -107,6 +109,7 @@ export function ChatBox({ tripContext, destination }: ChatBoxProps) {
         body: JSON.stringify({
           messages: newMessages,
           tripContext,
+          locale,
         }),
       });
 

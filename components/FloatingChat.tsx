@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
 import { createClient as createSupabaseClient } from '@/lib/supabase/client';
+import { useLocale } from 'next-intl';
 import { CheckCircle } from 'lucide-react';
 
 type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'night';
@@ -152,6 +153,7 @@ function buildWelcome(firstName: string | null, destination: string | null): str
 }
 
 export default function FloatingChat({ plan, destination, hotelContext, currentActivities, onAddToItinerary, onPlanUpdate, onTripUpdate, isGuest = false, onGateRequired, initialMessages, savedTripId, onMessagesChange }: Props) {
+  const locale = useLocale();
   const [open, setOpen] = useState(true);
   const [msgs, setMsgs] = useState<Msg[]>(
     initialMessages && initialMessages.length > 0
@@ -221,6 +223,7 @@ export default function FloatingChat({ plan, destination, hotelContext, currentA
           messages: next.filter(m => !m.isWelcome).map(m => ({ role: m.role, content: m.content })),
           tripContext: ctx,
           userName: firstName ?? undefined,
+          locale,
         }),
       });
       const raw = await collectSSE(res);

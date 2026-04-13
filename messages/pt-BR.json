@@ -1,0 +1,72 @@
+{
+  "nav": {
+    "planTrip": "Planejar Viagem",
+    "tripIdeas": "Ideias de Viagem",
+    "quiz": "Quiz de Viagem",
+    "blog": "Blog",
+    "deals": "Ofertas",
+    "about": "Sobre",
+    "myTrips": "Minhas Viagens",
+    "login": "Entrar",
+    "getStarted": "Vamos Lá"
+  },
+  "hero": {
+    "badge": "A forma mais inteligente de viajar",
+    "title1": "Sua viagem.",
+    "title2": "Suas regras.",
+    "title3": "Do seu jeito.",
+    "subtitle": "Mais do que um planejador de IA. A Luna trabalha com você, a cada passo rumo à viagem perfeita.",
+    "pill1Title": "30 segundos",
+    "pill1Sub": "para um roteiro completo",
+    "pill2Title": "100% pessoal",
+    "pill2Sub": "feito para o seu gosto",
+    "pill3Title": "Converse com a Luna",
+    "pill3Sub": "refine conforme avança",
+    "pill4Title": "Sempre grátis",
+    "pill4Sub": "sem precisar de conta",
+    "cta": "Vamos Lá",
+    "seeMore": "Ver mais"
+  },
+  "howItWorks": {
+    "label": "Como funciona",
+    "title": "Simples como 1, 2, 3",
+    "subtitle": "Diga para onde quer ir. A Luna cuida de todo o resto, em segundos.",
+    "step1Title": "Diga à Luna para onde quer ir",
+    "step1Body": "Digite seu destino, as datas de viagem e com quem vai viajar. É só isso para começar.",
+    "step2Title": "Receba um plano personalizado completo",
+    "step2Body": "A Luna monta seu roteiro completo com atividades, hospedagem, orçamento, dicas de clima e opções de transporte local.",
+    "step3Title": "Ajuste, salve e parta",
+    "step3Body": "Converse com a Luna para ajustar qualquer coisa. Troque dias, adicione ideias, mude o estilo. Salve sua viagem e parta com confiança."
+  },
+  "features": {
+    "label": "O que você recebe",
+    "title": "Tudo em cada plano",
+    "subtitle": "Cada viagem que a Luna cria já vem completa. Sem upgrades, sem bloqueios, sem surpresas.",
+    "itineraryTitle": "Roteiro dia a dia",
+    "itineraryBody": "Um cronograma completo com horários, descrições de atividades, dicas privilegiadas e recomendações locais sob medida para o seu estilo.",
+    "hotelsTitle": "Sugestões de hotéis",
+    "hotelsBody": "Opções de hospedagem selecionadas de acordo com seu orçamento e preferências de localização, perto das atividades do seu plano.",
+    "weatherTitle": "Clima e estações",
+    "weatherBody": "Saiba o que esperar e o que levar na mala. A Luna considera o clima sazonal e os eventos para que não haja surpresas desagradáveis.",
+    "transportTitle": "Como se locomover",
+    "transportBody": "Opções de transporte para cada trecho da sua viagem, desde transfers no aeroporto até táxis, trens e tudo mais.",
+    "budgetTitle": "Estimativa de gastos",
+    "budgetBody": "Uma estimativa clara dos custos com hospedagem, alimentação, atividades e transporte. Saiba o que vai gastar antes de ir.",
+    "chatTitle": "Converse com a Luna",
+    "chatBody": "Pergunte à Luna qualquer coisa sobre sua viagem. Ajuste dias, adicione atividades, peça dicas locais. Ela está sempre a uma mensagem de distância."
+  },
+  "footer": {
+    "tagline": "Planejamento de viagem com IA que parece humano. Feito para viajantes que querem algo mais pessoal.",
+    "quickLinks": "Links Rápidos",
+    "legal": "Legal",
+    "contact": "Contato",
+    "privacyPolicy": "Política de Privacidade",
+    "terms": "Termos de Serviço",
+    "copyright": "© 2026 Luna Let's Go. Todos os direitos reservados. lunaletsgo.com"
+  },
+  "language": {
+    "en": "EN",
+    "ptBR": "PT",
+    "es": "ES"
+  }
+}

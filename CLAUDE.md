@@ -330,3 +330,57 @@ clickable destination suggestions at the results screen. Each card links to
 Shows: persona name, one-line description, travel profile tags, trip style
 summary, 3 DestinationCard suggestions, "Ask Luna" prompt pills, and a
 Deals CTA block linking to `/deals`.
+
+---
+
+## Internationalisation (i18n)
+
+### Library
+`next-intl` (v4.x, compatible with Next.js 16+)
+
+### Supported locales
+| Locale | URL prefix | Label |
+|--------|-----------|-------|
+| `en` | none (default) | English |
+| `pt-BR` | `/pt-BR/` | Português |
+| `es` | `/es/` | Español |
+
+### Key files
+| File | Purpose |
+|------|---------|
+| `i18n/routing.ts` | Locale list, default locale, prefix strategy |
+| `i18n/request.ts` | Server-side message loader |
+| `messages/en.json` | English translations |
+| `messages/pt-BR.json` | Brazilian Portuguese translations |
+| `messages/es.json` | Spanish translations |
+| `components/LanguageSwitcher.tsx` | Globe icon dropdown in NavBar |
+| `proxy.ts` | next-intl middleware runs here (locale detection + redirect) |
+
+### App directory structure
+All pages live inside `app/[locale]/`. Auth and API routes stay at root:
+- `app/[locale]/` - all user-facing pages (home, start, quiz, plan, blog, etc.)
+- `app/auth/` - stays outside [locale] (OAuth callbacks must not be locale-prefixed)
+- `app/api/` - stays outside [locale] (API routes must not be locale-prefixed)
+
+Root `app/layout.tsx` is a minimal shell (just returns children).
+`app/[locale]/layout.tsx` has the full HTML, metadata, providers, and NextIntlClientProvider.
+
+### URL strategy
+`localePrefix: 'as-needed'` is intentional. English has NO prefix (preserves all SEO, no broken links). Other locales get a prefix. This is the non-breaking choice.
+
+### Adding translations for a new string
+1. Add the key to `messages/en.json` first.
+2. Add matching keys to `messages/pt-BR.json` and `messages/es.json`.
+3. Use `useTranslations('namespace')` in Client Components or `getTranslations('namespace')` in Server Components.
+
+### Adding a new page to i18n
+All pages inside `app/[locale]/` automatically participate in i18n. Pages in `app/auth/` and `app/api/` are intentionally excluded and must NOT be moved inside `[locale]/`.
+
+### Luna chat locale
+The active locale is sent with every chat API call in the `locale` field of the request body. The system prompt in `/api/chat/route.ts` prepends a language instruction when locale is `pt-BR` or `es`. This instruction is always prepended BEFORE the existing system prompt content, and the `%%TRIP_UPDATE%%` rules remain at the very END of the system prompt.
+
+### Never translate
+- Affiliate link URLs
+- `luna_redirect_after_login` localStorage key
+- API route paths
+- Auth callback URLs

@@ -8,7 +8,7 @@ export const maxDuration = 60;
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { messages, tripContext, userName } = body as { messages: ChatMessage[]; tripContext: string; userName?: string };
+    const { messages, tripContext, userName, locale } = body as { messages: ChatMessage[]; tripContext: string; userName?: string; locale?: string };
 
     if (!messages || !Array.isArray(messages)) {
       return new Response(
@@ -17,7 +17,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const systemMessage = `You are Luna, the travel agent behind Luna Let's Go - a smart, warm, and genuinely passionate travel planning assistant. You are NOT a generic AI. You are a person who loves travel deeply and wants every client to have the trip of their life.
+    const localeInstruction = locale === 'pt-BR'
+      ? 'You are Luna. ALWAYS respond in Brazilian Portuguese (pt-BR) in this conversation.\n\n'
+      : locale === 'es'
+      ? 'You are Luna. ALWAYS respond in Spanish in this conversation.\n\n'
+      : '';
+
+    const systemMessage = `${localeInstruction}You are Luna, the travel agent behind Luna Let's Go - a smart, warm, and genuinely passionate travel planning assistant. You are NOT a generic AI. You are a person who loves travel deeply and wants every client to have the trip of their life.
 
 You work for Luna Let's Go and you believe in its mission with everything you have got:
 "Give every person planning a trip the opportunity to have the best planner in the world, one shaped completely around their personal desires, travel style, and idea of a perfect trip. No compromises, no regrets."

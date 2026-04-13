@@ -1,0 +1,72 @@
+{
+  "nav": {
+    "planTrip": "Plan a Trip",
+    "tripIdeas": "Trip Ideas",
+    "quiz": "Travel Quiz",
+    "blog": "Blog",
+    "deals": "Deals",
+    "about": "About",
+    "myTrips": "My Trips",
+    "login": "Login",
+    "getStarted": "Let's Go"
+  },
+  "hero": {
+    "badge": "The smarter way to travel",
+    "title1": "Your trip.",
+    "title2": "Your rules.",
+    "title3": "Your way.",
+    "subtitle": "Not just another AI planner. Luna works with you, every step towards your perfect trip.",
+    "pill1Title": "30 seconds",
+    "pill1Sub": "to a full itinerary",
+    "pill2Title": "100% personal",
+    "pill2Sub": "built for your tastes",
+    "pill3Title": "Chat with Luna",
+    "pill3Sub": "refine as you go",
+    "pill4Title": "Always free",
+    "pill4Sub": "no account needed",
+    "cta": "Let's Go",
+    "seeMore": "See more"
+  },
+  "howItWorks": {
+    "label": "How it works",
+    "title": "As easy as 1, 2, 3",
+    "subtitle": "Tell us where you want to go. Luna handles everything else, in seconds.",
+    "step1Title": "Tell Luna where you want to go",
+    "step1Body": "Type your destination, travel dates, and who you are travelling with. That is all it takes to get started.",
+    "step2Title": "Get a full personalised plan",
+    "step2Body": "Luna builds your complete itinerary with activities, stays, budget breakdown, weather tips, and local transport options.",
+    "step3Title": "Refine, save, and go",
+    "step3Body": "Chat with Luna to tweak anything. Swap days, add ideas, change your style. Save your trip and head out with confidence."
+  },
+  "features": {
+    "label": "What you get",
+    "title": "Everything in every plan",
+    "subtitle": "Every trip Luna builds comes fully loaded. No upgrades, no paywalls, no surprises.",
+    "itineraryTitle": "Day-by-day itinerary",
+    "itineraryBody": "A full schedule with timings, activity descriptions, insider tips, and local recommendations tailored to your style.",
+    "hotelsTitle": "Hotel suggestions",
+    "hotelsBody": "Curated stay options matched to your budget and location preferences, near the activities in your plan.",
+    "weatherTitle": "Weather and seasons",
+    "weatherBody": "Know what to expect and what to pack. Luna factors in seasonal weather and events so there are no unpleasant surprises.",
+    "transportTitle": "Getting around",
+    "transportBody": "Transport options for every leg of your trip, from airport transfers to local taxis, trains, and everything in between.",
+    "budgetTitle": "Budget breakdown",
+    "budgetBody": "A clear cost estimate across accommodation, food, activities, and transport. Know what you will spend before you go.",
+    "chatTitle": "Chat with Luna",
+    "chatBody": "Ask Luna anything about your trip. Adjust days, add activities, get local advice. She is always one message away."
+  },
+  "footer": {
+    "tagline": "AI-powered travel planning that feels human. Built for travellers who want something more personal.",
+    "quickLinks": "Quick Links",
+    "legal": "Legal",
+    "contact": "Contact",
+    "privacyPolicy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "copyright": "© 2026 Luna Let's Go. All rights reserved. lunaletsgo.com"
+  },
+  "language": {
+    "en": "EN",
+    "ptBR": "PT",
+    "es": "ES"
+  }
+}

@@ -1,8 +1,16 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import createIntlMiddleware from 'next-intl/middleware'
+import { routing } from './i18n/routing'
 
-export async function proxy(request: NextRequest) {
+const intlMiddleware = createIntlMiddleware(routing)
+
+export async function middleware(request: NextRequest) {
+  // Run next-intl locale detection first
+  const intlResponse = intlMiddleware(request)
+  if (intlResponse) return intlResponse
+
   let supabaseResponse = NextResponse.next({
     request,
   })
@@ -38,6 +46,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|PNG|JPG|JPEG)$).*)',
+    '/((?!api|_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|PNG|JPG|JPEG)$).*)',
   ],
 }
