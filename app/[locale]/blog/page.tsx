@@ -2,7 +2,7 @@
 import { Link } from '@/i18n/navigation';
 import Image from 'next/image';
 import NavBar from '@/components/NavBar';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 /**
  * BLOG INDEX TEMPLATE RULES — all cards must follow this pattern:
@@ -134,6 +134,7 @@ const PLACEHOLDER_POSTS = [
 
 export default function BlogPage() {
   const t = useTranslations('blogIndex');
+  const locale = useLocale();
 
   return (
     <>
@@ -173,6 +174,32 @@ export default function BlogPage() {
             </p>
           </div>
         </section>
+
+        {/* ── EN-only notice ── */}
+        {locale !== 'en' && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            maxWidth: 1200,
+            margin: '0 auto',
+            padding: '16px clamp(20px, 5vw, 80px)',
+            background: 'rgba(0,68,123,0.05)',
+            borderBottom: '1px solid rgba(0,68,123,0.10)',
+            fontFamily: "'Inter', sans-serif",
+            fontSize: 14,
+            color: '#00447B',
+            fontWeight: 500,
+          }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+              stroke="#00447B" strokeWidth="2" strokeLinecap="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            {t('engOnlyNotice')}
+          </div>
+        )}
 
         {/* ── Placeholder posts section ── */}
         <section style={{ padding: 'clamp(48px, 8vw, 96px) clamp(20px, 5vw, 80px)', maxWidth: 1200, margin: '0 auto' }}>

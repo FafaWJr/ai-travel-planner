@@ -576,7 +576,8 @@
     "comingSoon": "Coming Soon",
     "categoryGuide": "Destination Guide",
     "categoryTips": "Travel Tips",
-    "minRead": "min read"
+    "minRead": "min read",
+    "engOnlyNotice": "Our blog posts are written in English."
   },
   "about": {
     "heroLabel": "Our story",

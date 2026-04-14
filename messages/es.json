@@ -576,7 +576,8 @@
     "comingSoon": "Próximamente",
     "categoryGuide": "Guía de Destino",
     "categoryTips": "Consejos de Viaje",
-    "minRead": "min de lectura"
+    "minRead": "min de lectura",
+    "engOnlyNotice": "Los artículos del blog están disponibles solo en inglés."
   },
   "about": {
     "heroLabel": "Nuestra historia",
