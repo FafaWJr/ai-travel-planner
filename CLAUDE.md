@@ -216,6 +216,7 @@ Config: `localePrefix: 'as-needed'` via next-intl v4, `i18n/routing.ts`
 | `app/[locale]/start/page.tsx` + `HeroStepForm.tsx` | Done | Done | Done |
 | `app/[locale]/quiz/page.tsx` | Done | Done | Done |
 | `app/[locale]/trip-ideas/page.tsx` | Done | Done | Done |
+| `app/[locale]/deals/page.tsx` | Done | Done | Done |
 | Other pages | Not started | Not started | Not started |
 
 **Message namespaces** (`messages/*.json`):

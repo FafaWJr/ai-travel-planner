@@ -1,44 +1,18 @@
 'use client';
+import { useTranslations } from 'next-intl';
 import NavBar from '@/components/NavBar';
 import { Hotel, Plane, Car, Map, Compass } from 'lucide-react';
 import { BOOKING_AFFILIATE, ACTIVITY_AFFILIATE } from '@/lib/affiliate';
 
 const PARTNERS = [
-  {
-    name: 'Booking.com',
-    category: 'Hotels, Flights & Car Rentals',
-    description: 'Find the best rates on accommodation, flights and rental cars worldwide.',
-    cta: 'Explore Deals',
-    href: BOOKING_AFFILIATE.hotels,
-    Icon: Hotel,
-  },
-  {
-    name: 'Klook',
-    category: 'Tours, Activities & Attractions',
-    description: 'Book experiences, day trips and skip-the-line tickets around the world.',
-    cta: 'Browse Activities',
-    href: ACTIVITY_AFFILIATE.klook,
-    Icon: Compass,
-  },
-  {
-    name: 'GoWithGuide',
-    category: 'Private & Guided Tours',
-    description: 'Connect with local experts for private tours tailored to your itinerary.',
-    cta: 'Find a Guide',
-    href: ACTIVITY_AFFILIATE.goWithGuide,
-    Icon: Map,
-  },
-  {
-    name: 'Xcaret',
-    category: 'Mexico Parks & Experiences',
-    description: 'Discover iconic Xcaret parks and unforgettable experiences in Mexico.',
-    cta: 'Explore Xcaret',
-    href: ACTIVITY_AFFILIATE.xcaret,
-    Icon: Plane,
-  },
+  { name: 'Booking.com', tKey: 'booking',     href: BOOKING_AFFILIATE.hotels,       Icon: Hotel },
+  { name: 'Klook',       tKey: 'klook',       href: ACTIVITY_AFFILIATE.klook,       Icon: Compass },
+  { name: 'GoWithGuide', tKey: 'goWithGuide', href: ACTIVITY_AFFILIATE.goWithGuide, Icon: Map },
+  { name: 'Xcaret',      tKey: 'xcaret',      href: ACTIVITY_AFFILIATE.xcaret,      Icon: Plane },
 ];
 
 export default function DealsPage() {
+  const t = useTranslations('deals');
   return (
     <div style={{ minHeight: '100vh', background: '#F7F5F2', fontFamily: "'Inter', sans-serif" }}>
       <NavBar />
@@ -58,7 +32,7 @@ export default function DealsPage() {
           letterSpacing: '-1px',
           lineHeight: 1.15,
         }}>
-          Deals &amp; Partners
+          {t('title')}
         </h1>
         <p style={{
           fontFamily: "'Inter', sans-serif",
@@ -68,7 +42,7 @@ export default function DealsPage() {
           margin: '0 auto',
           maxWidth: 480,
         }}>
-          Hand-picked partners to make your trip unforgettable.
+          {t('subtitle')}
         </p>
       </div>
 
@@ -79,7 +53,7 @@ export default function DealsPage() {
           gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
           gap: 24,
         }}>
-          {PARTNERS.map(({ name, category, description, cta, href, Icon }) => (
+          {PARTNERS.map(({ name, tKey, href, Icon }) => (
             <div
               key={name}
               style={{
@@ -126,7 +100,7 @@ export default function DealsPage() {
                   letterSpacing: '0.06em',
                   margin: '0 0 10px',
                 }}>
-                  {category}
+                  {t(`${tKey}.category` as Parameters<typeof t>[0])}
                 </p>
                 <p style={{
                   fontFamily: "'Inter', sans-serif",
@@ -135,7 +109,7 @@ export default function DealsPage() {
                   lineHeight: 1.6,
                   margin: 0,
                 }}>
-                  {description}
+                  {t(`${tKey}.description` as Parameters<typeof t>[0])}
                 </p>
               </div>
 
@@ -158,7 +132,7 @@ export default function DealsPage() {
                   marginTop: 4,
                 }}
               >
-                {cta} &rarr;
+                {t(`${tKey}.cta` as Parameters<typeof t>[0])} &rarr;
               </a>
             </div>
           ))}
@@ -201,7 +175,7 @@ export default function DealsPage() {
                 textTransform: 'uppercase',
                 letterSpacing: '0.06em',
                 margin: '0 0 10px',
-              }}>Car Rentals - AU &amp; NZ</p>
+              }}>{t('europcar.category')}</p>
               <p style={{
                 fontFamily: "'Inter', sans-serif",
                 fontSize: 13,
@@ -209,7 +183,7 @@ export default function DealsPage() {
                 lineHeight: 1.6,
                 margin: 0,
               }}>
-                Rent a car with ease across Australia and New Zealand. Great rates, flexible pick-up locations.
+                {t('europcar.description')}
               </p>
             </div>
             {/* Awin affiliate image tag - required for tracking */}
@@ -248,7 +222,7 @@ export default function DealsPage() {
                 marginTop: 4,
               }}
             >
-              View Car Deals &rarr;
+              {t('europcar.cta')} &rarr;
             </a>
           </div>
         </div>
@@ -262,7 +236,7 @@ export default function DealsPage() {
           color: '#6C6D6F',
           lineHeight: 1.6,
         }}>
-          Luna Let&apos;s Go may earn a commission from purchases made through our partner links at no extra cost to you.
+          {t('disclaimer')}
         </p>
       </div>
 

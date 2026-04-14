@@ -204,6 +204,36 @@
     "ptBR": "PT",
     "es": "ES"
   },
+  "deals": {
+    "title": "Ofertas e Parceiros",
+    "subtitle": "Parceiros selecionados para tornar sua viagem inesquecível.",
+    "disclaimer": "O Luna Let's Go pode receber uma comissão pelas compras feitas por meio dos nossos links de parceiros, sem custo adicional para você.",
+    "booking": {
+      "category": "Hotéis, Voos e Aluguel de Carros",
+      "description": "Encontre as melhores tarifas em hospedagem, voos e aluguel de carros no mundo todo.",
+      "cta": "Ver Ofertas"
+    },
+    "klook": {
+      "category": "Passeios, Atividades e Atrações",
+      "description": "Reserve experiências, passeios de dia e ingressos sem fila pelo mundo.",
+      "cta": "Explorar Atividades"
+    },
+    "goWithGuide": {
+      "category": "Passeios Privados e com Guia",
+      "description": "Conecte-se com especialistas locais para passeios privados adaptados ao seu roteiro.",
+      "cta": "Encontrar um Guia"
+    },
+    "xcaret": {
+      "category": "Parques e Experiências no México",
+      "description": "Descubra os icônicos parques Xcaret e experiências inesquecíveis no México.",
+      "cta": "Explorar Xcaret"
+    },
+    "europcar": {
+      "category": "Aluguel de Carros - AU e NZ",
+      "description": "Alugue um carro com facilidade na Austrália e Nova Zelândia. Ótimas tarifas e locais de retirada flexíveis.",
+      "cta": "Ver Ofertas de Carros"
+    }
+  },
   "tripIdeasPage": {
     "label": "Explore o mundo",
     "title": "Inspire-se. Vá a qualquer lugar.",

@@ -204,6 +204,36 @@
     "ptBR": "PT",
     "es": "ES"
   },
+  "deals": {
+    "title": "Deals & Partners",
+    "subtitle": "Hand-picked partners to make your trip unforgettable.",
+    "disclaimer": "Luna Let's Go may earn a commission from purchases made through our partner links at no extra cost to you.",
+    "booking": {
+      "category": "Hotels, Flights & Car Rentals",
+      "description": "Find the best rates on accommodation, flights and rental cars worldwide.",
+      "cta": "Explore Deals"
+    },
+    "klook": {
+      "category": "Tours, Activities & Attractions",
+      "description": "Book experiences, day trips and skip-the-line tickets around the world.",
+      "cta": "Browse Activities"
+    },
+    "goWithGuide": {
+      "category": "Private & Guided Tours",
+      "description": "Connect with local experts for private tours tailored to your itinerary.",
+      "cta": "Find a Guide"
+    },
+    "xcaret": {
+      "category": "Mexico Parks & Experiences",
+      "description": "Discover iconic Xcaret parks and unforgettable experiences in Mexico.",
+      "cta": "Explore Xcaret"
+    },
+    "europcar": {
+      "category": "Car Rentals - AU & NZ",
+      "description": "Rent a car with ease across Australia and New Zealand. Great rates, flexible pick-up locations.",
+      "cta": "View Car Deals"
+    }
+  },
   "tripIdeasPage": {
     "label": "Explore the world",
     "title": "Get Inspired. Go Anywhere.",
