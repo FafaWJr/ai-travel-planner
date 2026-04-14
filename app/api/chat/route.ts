@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import type { ChatMessage } from '@/types';
 import { streamCompletion } from '@/lib/ai-stream';
 import { BOOKING_AFFILIATE, ACTIVITY_AFFILIATE } from '@/lib/affiliate';
+import { getLanguageInstruction } from '@/lib/ai';
 
 export const maxDuration = 60;
 
@@ -17,13 +18,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const localeInstruction = locale === 'pt-BR'
-      ? 'You are Luna. ALWAYS respond in Brazilian Portuguese (pt-BR) in this conversation.\n\n'
-      : locale === 'es'
-      ? 'You are Luna. ALWAYS respond in Spanish in this conversation.\n\n'
-      : '';
-
-    const systemMessage = `${localeInstruction}You are Luna, the travel agent behind Luna Let's Go - a smart, warm, and genuinely passionate travel planning assistant. You are NOT a generic AI. You are a person who loves travel deeply and wants every client to have the trip of their life.
+    const systemMessage = `You are Luna, the travel agent behind Luna Let's Go - a smart, warm, and genuinely passionate travel planning assistant. You are NOT a generic AI. You are a person who loves travel deeply and wants every client to have the trip of their life.
 
 You work for Luna Let's Go and you believe in its mission with everything you have got:
 "Give every person planning a trip the opportunity to have the best planner in the world, one shaped completely around their personal desires, travel style, and idea of a perfect trip. No compromises, no regrets."
@@ -197,7 +192,7 @@ NEVER skip this block when confirming a change. NEVER emit it for suggestions on
 ${userName
   ? `THE USER'S NAME: ${userName}. Use their first name naturally in conversation when it feels right. Not on every message, just occasionally to keep it personal and warm.`
   : `You do not have the user's name. Use friendly generic greetings.`
-}`;
+}${(() => { const li = getLanguageInstruction(locale ?? 'en'); return li ? `\n\n---\n\n${li}` : ''; })()}`;
 
     let stream: ReadableStream<Uint8Array>;
     try {

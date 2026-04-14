@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { streamCompletion } from '@/lib/ai-stream';
+import { getLanguageInstruction } from '@/lib/ai';
 
 export const maxDuration = 30;
 
@@ -29,9 +30,10 @@ async function collectStream(stream: ReadableStream<Uint8Array>): Promise<string
 
 export async function POST(request: NextRequest) {
   try {
-    const { tripPrompt, dayNumber, dayTitle, destination, existingActivities, allDaysContext = '' } = await request.json();
+    const { tripPrompt, dayNumber, dayTitle, destination, existingActivities, allDaysContext = '', locale = 'en' } = await request.json();
+    const langInstruction = getLanguageInstruction(locale);
 
-    const systemPrompt = `You are a travel activity suggester. You respond ONLY with a valid JSON array — no prose, no markdown, no explanation before or after. Just the raw JSON array.`;
+    const systemPrompt = `You are a travel activity suggester. You respond ONLY with a valid JSON array — no prose, no markdown, no explanation before or after. Just the raw JSON array.${langInstruction ? `\n\n${langInstruction}` : ''}`;
 
     const userPrompt = `Trip context: "${tripPrompt}"
 Day ${dayNumber}: ${dayTitle} in ${destination}

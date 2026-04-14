@@ -1,6 +1,6 @@
 'use client';
 import { useState, useId, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import FinalItineraryModal from './FinalItineraryModal';
 import DayNotes from './itinerary/DayNotes';
 import type { AcceptedHotel } from './StayTab';
@@ -204,6 +204,7 @@ interface Props {
   onGateRequired?: () => void;
   initialDays?: Day[];
   startDate?: string;
+  locale?: string;
 }
 
 export interface ItineraryHandle {
@@ -220,7 +221,10 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
   onPlaceHover, onPlaceLeave,
   isGuest = false, onGateRequired,
   initialDays, startDate,
+  locale: localeProp,
 }, ref) {
+  const localeFromHook = useLocale();
+  const locale = localeProp ?? localeFromHook;
   const t = useTranslations('plan');
   const [days, setDays] = useState<Day[]>(() =>
     (initialDays && initialDays.length > 0) ? initialDays : parseItinerary(itineraryMd)
@@ -406,6 +410,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
           destination,
           existingActivities: day.activities.map(a => a.text),
           allDaysContext,
+          locale,
         }),
       });
       const data = await res.json();

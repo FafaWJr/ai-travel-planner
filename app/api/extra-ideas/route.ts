@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { streamCompletion } from '@/lib/ai-stream';
 import { ACTIVITY_AFFILIATE } from '@/lib/affiliate';
+import { getLanguageInstruction } from '@/lib/ai';
 
 export const maxDuration = 30;
 
@@ -31,12 +32,13 @@ async function collectStream(stream: ReadableStream<Uint8Array>): Promise<string
 
 export async function POST(request: NextRequest) {
   try {
-    const { prompt, existingActivities = [], seenIdeas = [], itineraryContext = '' } = await request.json();
+    const { prompt, existingActivities = [], seenIdeas = [], itineraryContext = '', locale = 'en' } = await request.json();
+    const langInstruction = getLanguageInstruction(locale);
     if (!prompt) {
       return new Response(JSON.stringify({ error: 'Missing prompt' }), { status: 400 });
     }
 
-    const systemPrompt = `You are a travel assistant. When asked, you return only a plain bullet-point list of extra travel ideas — nothing else. No introductions, no section headers, no summaries. Just the bullet list.
+    const systemPrompt = `You are a travel assistant. When asked, you return only a plain bullet-point list of extra travel ideas — nothing else. No introductions, no section headers, no summaries. Just the bullet list.${langInstruction ? `\n\n${langInstruction}` : ''}
 
 Where relevant, append an affiliate CTA link at the end of a bullet (after the description sentence):
 - For tours or guided experiences, add: [Find a Guide on GoWithGuide](${ACTIVITY_AFFILIATE.goWithGuide})

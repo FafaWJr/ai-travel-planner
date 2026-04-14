@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import EditableItinerary, { type ItineraryHandle, type Day } from '@/components/EditableItinerary';
 import { BOOKING_AFFILIATE } from '@/lib/affiliate';
 import FloatingChat, { type TripUpdate } from '@/components/FloatingChat';
@@ -335,6 +335,7 @@ function markdownToHtml(md: string): string {
 /* ── Main component ── */
 function PlanContent() {
   const t            = useTranslations('plan');
+  const locale       = useLocale();
   const searchParams = useSearchParams();
   const router       = useRouter();
   const sectionLabel = (id: string): string => {
@@ -663,7 +664,7 @@ function PlanContent() {
   const generatePlan = async (p: string) => {
     setLoading(true); setError('');
     try {
-      const res  = await fetch('/api/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({prompt:p}) });
+      const res  = await fetch('/api/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({prompt:p, locale}) });
       if (!res.ok) throw new Error('Failed');
       const data = await res.json();
       setPlan(data.plan || data.content || '');
@@ -719,7 +720,7 @@ function PlanContent() {
       const res = await fetch('/api/extra-ideas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, existingActivities, seenIdeas: seenIdeaNames, itineraryContext }),
+        body: JSON.stringify({ prompt, existingActivities, seenIdeas: seenIdeaNames, itineraryContext, locale }),
       });
       if (!res.ok) throw new Error('Failed');
       const data = await res.json();
@@ -923,6 +924,7 @@ function PlanContent() {
                   onGateRequired={() => openGate('Show me more ideas')}
                   initialDays={initialItineraryDays}
                   startDate={prompt.match(/from (\d{4}-\d{2}-\d{2})/)?.[1]}
+                  locale={locale}
                 />
               </div>
               {/* StayTab — always mounted to preserve state, hidden when not active */}

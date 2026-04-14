@@ -122,6 +122,17 @@ Make the plan engaging, specific, and genuinely helpful. Use bullet points, bold
   return userPrompt;
 }
 
+export function getLanguageInstruction(locale: string): string {
+  switch (locale) {
+    case 'pt-BR':
+      return `INSTRUÇÃO DE IDIOMA OBRIGATÓRIA: Você DEVE responder EXCLUSIVAMENTE em português do Brasil (pt-BR). Todo o conteúdo do roteiro, resumo do destino, clima, transporte, orçamento e dicas práticas deve ser escrito em português. Não use inglês em nenhuma parte da resposta. Esta instrução é absoluta e substitui qualquer outra.`;
+    case 'es':
+      return `INSTRUCCIÓN DE IDIOMA OBLIGATORIA: DEBES responder EXCLUSIVAMENTE en español. Todo el contenido del itinerario, resumen del destino, clima, transporte, presupuesto y consejos prácticos debe estar en español. No uses inglés en ninguna parte de la respuesta. Esta instrucción es absoluta y reemplaza cualquier otra.`;
+    default:
+      return '';
+  }
+}
+
 export const SYSTEM_PROMPT = `You are an expert travel planner with deep knowledge of destinations worldwide. You create personalised, detailed, and genuinely helpful travel itineraries. Your plans are specific (not generic), practical, and tailored to the traveller's preferences and budget. You write in an engaging, friendly tone while remaining professional and informative. Always use Markdown formatting with clear headers, bullet points, and bold text for key information.
 
 CRITICAL INSTRUCTIONS — you MUST follow these without exception:

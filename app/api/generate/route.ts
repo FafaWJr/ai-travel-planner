@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { tripFormSchema } from '@/lib/validators';
 import { getWeather } from '@/lib/weather';
-import { buildTravelPrompt, SYSTEM_PROMPT } from '@/lib/ai';
+import { buildTravelPrompt, SYSTEM_PROMPT, getLanguageInstruction } from '@/lib/ai';
 import { streamCompletion } from '@/lib/ai-stream';
 
 export const maxDuration = 60;
@@ -37,6 +37,12 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
+    const locale = (body.locale as string) || 'en';
+    const langInstruction = getLanguageInstruction(locale);
+    const systemPromptWithLang = langInstruction
+      ? `${SYSTEM_PROMPT}\n\n${langInstruction}`
+      : SYSTEM_PROMPT;
+
     /* ── Simple prompt mode (used by the new homepage search bar) ── */
     if (typeof body.prompt === 'string' && body.prompt.trim()) {
       const structuredPrompt = body.prompt.trim() + `
@@ -62,7 +68,7 @@ Make each section specific, practical and engaging. Use bullet points and bold t
       let stream: ReadableStream<Uint8Array>;
       try {
         stream = await streamCompletion([
-          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'system', content: systemPromptWithLang },
           { role: 'user', content: structuredPrompt },
         ]);
       } catch (err: any) {
