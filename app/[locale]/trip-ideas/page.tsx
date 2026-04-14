@@ -23,12 +23,12 @@ const DESTINATIONS = [
   // Beach
   { name:'Maldives',            country:'Indian Ocean',       days:'7–10 days', category:'Beach',     tag:'Luxury',      photo:'photo-1514282401047-d79a71a590e8', tags:['Beach','Resort','Snorkelling'] },
   { name:'Bali',                country:'Indonesia',          days:'10 days',   category:'Beach',     tag:'Budget pick', photo:'photo-1537996194471-e657df975ab4', tags:['Nature','Temples','Beach'] },
-  { name:'Phuket',              country:'Thailand',           days:'7 days',    category:'Beach',     tag:'Trending',    photo:'photo-1506665531195-3566af2b4dfa', tags:['Beach','Nightlife','Food'] },
-  { name:'Algarve',             country:'Portugal',           days:'7 days',    category:'Beach',     tag:'Europe pick', photo:'photo-1559827291-72ee739d0d9a', tags:['Beaches','Cliffs','Food'] },
-  { name:'Tulum',               country:'Mexico',             days:'7 days',    category:'Beach',     tag:'Boho',        photo:'photo-1552465011-b4e21bf6e79a', tags:['Beach','Ruins','Wellness'] },
+  { name:'Phuket',              country:'Thailand',           days:'7 days',    category:'Beach',     tag:'Trending',    photo:'https://images.pexels.com/photos/5057066/pexels-photo-5057066.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200', tags:['Beach','Nightlife','Food'] },
+  { name:'Algarve',             country:'Portugal',           days:'7 days',    category:'Beach',     tag:'Europe pick', photo:'https://images.pexels.com/photos/6409581/pexels-photo-6409581.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200', tags:['Beaches','Cliffs','Food'] },
+  { name:'Tulum',               country:'Mexico',             days:'7 days',    category:'Beach',     tag:'Boho',        photo:'https://images.pexels.com/photos/17058764/pexels-photo-17058764.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200', tags:['Beach','Ruins','Wellness'] },
   { name:'Maui',                country:'Hawaii, USA',        days:'10 days',   category:'Beach',     tag:'Dream',       photo:'photo-1542259009477-d625272157b7', tags:['Beach','Hiking','Nature'] },
   { name:'Zanzibar',            country:'Tanzania',           days:'8 days',    category:'Beach',     tag:'Hidden gem',  photo:'photo-1547471080-7cc2caa01a7e', tags:['Beach','Culture','Spice'] },
-  { name:'Mykonos',             country:'Greece',             days:'5 days',    category:'Beach',     tag:'Party',       photo:'photo-1570077188670-e3a8d69ac5ff', tags:['Beach','Nightlife','Views'] },
+  { name:'Mykonos',             country:'Greece',             days:'5 days',    category:'Beach',     tag:'Party',       photo:'https://images.pexels.com/photos/12848020/pexels-photo-12848020.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200', tags:['Beach','Nightlife','Views'] },
   { name:'Seychelles',          country:'East Africa',        days:'10 days',   category:'Beach',     tag:'Luxury',      photo:'photo-1482938289607-e9573fc25ebb', tags:['Beach','Nature','Diving'] },
   { name:'Cancun',              country:'Mexico',             days:'7 days',    category:'Beach',     tag:'All-inclusive',photo:'photo-1711220465753-2450b31ea318', tags:['Beach','Resort','Nightlife'] },
   // Mountains
@@ -45,7 +45,7 @@ const DESTINATIONS = [
   { name:'Paris',               country:'France',             days:'5 days',    category:'City',      tag:'Romance',     photo:'photo-1502602898657-3e91760cbb34', tags:['Art','Food','Fashion'] },
   { name:'Barcelona',           country:'Spain',              days:'5 days',    category:'City',      tag:'Vibrant',     photo:'photo-1539037116277-4db20889f2d4', tags:['Architecture','Beach','Food'] },
   { name:'Singapore',           country:'Singapore',          days:'5 days',    category:'City',      tag:'Modern',      photo:'photo-1525625293386-3f8f99389edd', tags:['Food','Architecture','Gardens'] },
-  { name:'Istanbul',            country:'Turkey',             days:'6 days',    category:'City',      tag:'Historic',    photo:'photo-1524492412937-b28074a5d7da', tags:['Culture','Food','History'] },
+  { name:'Istanbul',            country:'Turkey',             days:'6 days',    category:'City',      tag:'Historic',    photo:'https://images.pexels.com/photos/11060507/pexels-photo-11060507.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200', tags:['Culture','Food','History'] },
   { name:'Amsterdam',           country:'Netherlands',        days:'4 days',    category:'City',      tag:'Charming',    photo:'photo-1759959172943-c5b64b1ba2df', tags:['Canals','Museums','Cycling'] },
   { name:'Seoul',               country:'South Korea',        days:'7 days',    category:'City',      tag:'Trendy',      photo:'photo-1546874177-9e664107314e', tags:['Food','K-culture','Shopping'] },
   // Culture
@@ -59,19 +59,19 @@ const DESTINATIONS = [
   // Adventure
   { name:'Costa Rica',          country:'Central America',    days:'10 days',   category:'Adventure', tag:'Wild',        photo:'photo-1518259102261-b40117eabbc9', tags:['Jungle','Wildlife','Surf'] },
   { name:'Iceland',             country:'Iceland',            days:'8 days',    category:'Adventure', tag:'Epic',        photo:'photo-1531366936337-7c912a4589a7', tags:['Northern Lights','Geysers','Waterfalls'] },
-  { name:'Galápagos Islands',   country:'Ecuador',            days:'10 days',   category:'Adventure', tag:'Unique',      photo:'photo-1559825481-12a05cc00344', tags:['Wildlife','Diving','Nature'] },
+  { name:'Galápagos Islands',   country:'Ecuador',            days:'10 days',   category:'Adventure', tag:'Unique',      photo:'https://images.pexels.com/photos/18778320/pexels-photo-18778320.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200', tags:['Wildlife','Diving','Nature'] },
   // Family
   { name:'Orlando',             country:'USA',                days:'7 days',    category:'Family',    tag:'Theme parks', photo:'photo-1578318099746-8701bb066ceb', tags:['Theme Parks','Fun','Kids'] },
   { name:'Gold Coast',          country:'Australia',          days:'7 days',    category:'Family',    tag:'Sun & fun',   photo:'photo-1727163941293-0c3dc5074bf4', tags:['Beach','Theme Parks','Nature'] },
   { name:'Punta Cana',          country:'Dominican Republic', days:'8 days',    category:'Family',    tag:'All-inclusive',photo:'photo-1689783101560-a4f8550eb19b', tags:['Beach','Resort','Water Sports'] },
   // Romance
-  { name:'Santorini',           country:'Greece',             days:'6 days',    category:'Romance',   tag:'Dreamy',      photo:'photo-1742523688717-f7467132b117', tags:['Sunsets','Wine','Views'] },
+  { name:'Santorini',           country:'Greece',             days:'6 days',    category:'Romance',   tag:'Dreamy',      photo:'https://images.pexels.com/photos/17919740/pexels-photo-17919740.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200', tags:['Sunsets','Wine','Views'] },
   { name:'Lisbon',              country:'Portugal',           days:'5 days',    category:'Romance',   tag:'Charming',    photo:'photo-1548707309-dcebeab9ea9b', tags:['Trams','Food','Sunsets'] },
   { name:'Bora Bora',           country:'French Polynesia',   days:'8 days',    category:'Romance',   tag:'Luxury',      photo:'photo-1587540724311-9e76f5127c98', tags:['Overwater','Beach','Diving'] },
   // Nature
   { name:'Serengeti',           country:'Tanzania',           days:'9 days',    category:'Nature',    tag:'Safari',      photo:'photo-1523805009345-7448845a9e53', tags:['Safari','Wildlife','Savanna'] },
   { name:'Amazon Rainforest',   country:'Brazil',             days:'8 days',    category:'Nature',    tag:'Wild',        photo:'photo-1700753618948-79f177a3b19e', tags:['Jungle','Wildlife','Adventure'] },
-  { name:'Azores',              country:'Portugal',           days:'8 days',    category:'Nature',    tag:'Hidden gem',  photo:'photo-1528360983277-13d401cdc186', tags:['Volcanic','Whales','Nature'] },
+  { name:'Azores',              country:'Portugal',           days:'8 days',    category:'Nature',    tag:'Hidden gem',  photo:'https://images.pexels.com/photos/29086868/pexels-photo-29086868.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200', tags:['Volcanic','Whales','Nature'] },
   // Party
   { name:'Ibiza',               country:'Spain',              days:'5 days',    category:'Party',     tag:'Legendary',   photo:'photo-1533174072545-7a4b6ad7a6c3', tags:['Nightlife','Beach','Music'] },
   { name:'Miami',               country:'USA',                days:'5 days',    category:'Party',     tag:'Vibrant',     photo:'photo-1543968332-f99478b1ebdc', tags:['Beach','Nightlife','Art'] },
@@ -140,7 +140,7 @@ export default function TripIdeasPage() {
               onMouseLeave={e=>{(e.currentTarget as HTMLDivElement).style.transform='translateY(0)';(e.currentTarget as HTMLDivElement).style.boxShadow='none';}}
             >
               {/* Photo */}
-              <div style={{ height:200, backgroundImage:`url('https://images.unsplash.com/${dest.photo}?w=600&q=80')`, backgroundSize:'cover', backgroundPosition:'center', position:'relative' }}>
+              <div style={{ height:200, backgroundImage:`url('${dest.photo.startsWith("https://") ? dest.photo : `https://images.unsplash.com/${dest.photo}?w=600&q=80`}')`, backgroundSize:'cover', backgroundPosition:'center', position:'relative' }}>
                 <div style={{ position:'absolute', inset:0, background:'linear-gradient(to top, rgba(0,0,0,0.3) 0%, transparent 50%)' }} />
                 <span style={{ position:'absolute', top:12, left:12, background:'#FF8210', color:'white', fontFamily:"'Lato',sans-serif", fontSize:11, fontWeight:700, padding:'4px 12px', borderRadius:10 }}>
                   {BADGE_KEY_MAP[dest.tag] ? t(`badges.${BADGE_KEY_MAP[dest.tag]}` as Parameters<typeof t>[0]) : dest.tag}
