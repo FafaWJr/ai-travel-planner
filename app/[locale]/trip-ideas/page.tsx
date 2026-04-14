@@ -1,10 +1,23 @@
 'use client';
 import { useState } from 'react';
-import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 import NavBar from '@/components/NavBar';
 import { trackDestinationSelected } from '@/lib/analytics';
 
-const CATEGORIES = ['All','Beach','Mountains','City','Culture','Adventure','Family','Romance','Nature','Party'];
+const BADGE_KEY_MAP: Record<string, string> = {
+  'Luxury': 'luxury', 'Budget pick': 'budgetPick', 'Trending': 'trending',
+  'Europe pick': 'europePick', 'Boho': 'boho', 'Dream': 'dream',
+  'Hidden gem': 'hiddenGem', 'Party': 'party', 'All-inclusive': 'allInclusive',
+  'Adventure': 'adventure', 'Epic': 'epic', 'Classic': 'classic',
+  'Adrenaline': 'adrenaline', 'Bucket list': 'bucketList', 'Scenic': 'scenic',
+  'Wild': 'wild', 'Culture': 'culture', 'Iconic': 'iconic', 'Romance': 'romance',
+  'Vibrant': 'vibrant', 'Modern': 'modern', 'Historic': 'historic',
+  'Charming': 'charming', 'Trendy': 'trendy', 'Timeless': 'timeless',
+  'Ancient': 'ancient', 'Wonder': 'wonder', 'Safari': 'safari',
+  'Legendary': 'legendary', 'Carnival': 'carnival', 'Non-stop': 'nonStop',
+  'Sun & fun': 'sunFun', 'Theme parks': 'themeParks', 'Dreamy': 'dreamy',
+};
 
 const DESTINATIONS = [
   // Beach
@@ -67,8 +80,22 @@ const DESTINATIONS = [
 ];
 
 export default function TripIdeasPage() {
+  const t = useTranslations('tripIdeasPage');
   const [active, setActive] = useState('All');
   const filtered = active === 'All' ? DESTINATIONS : DESTINATIONS.filter(d => d.category === active);
+
+  const filterOptions = [
+    { value: 'All',       label: t('filters.all') },
+    { value: 'Beach',     label: t('filters.beach') },
+    { value: 'Mountains', label: t('filters.mountains') },
+    { value: 'City',      label: t('filters.city') },
+    { value: 'Culture',   label: t('filters.culture') },
+    { value: 'Adventure', label: t('filters.adventure') },
+    { value: 'Family',    label: t('filters.family') },
+    { value: 'Romance',   label: t('filters.romance') },
+    { value: 'Nature',    label: t('filters.nature') },
+    { value: 'Party',     label: t('filters.party') },
+  ];
 
   return (
     <div style={{ fontFamily:"'Lato',sans-serif", color:'#333', background:'#fff' }}>
@@ -76,36 +103,36 @@ export default function TripIdeasPage() {
 
       {/* Hero */}
       <section style={{ background:'#FFF8F0', padding:'72px 24px 56px', textAlign:'center' }}>
-        <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:12, fontWeight:700, color:'#FF8210', letterSpacing:'0.12em', textTransform:'uppercase', borderBottom:'2px solid #FF8210', display:'inline-block', paddingBottom:3, marginBottom:16 }}>Explore the world</p>
+        <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:12, fontWeight:700, color:'#FF8210', letterSpacing:'0.12em', textTransform:'uppercase', borderBottom:'2px solid #FF8210', display:'inline-block', paddingBottom:3, marginBottom:16 }}>{t('label')}</p>
         <h1 style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:'clamp(32px,5vw,56px)', color:'#00447B', lineHeight:1.1, marginBottom:16, letterSpacing:'-1px' }}>
-          Get Inspired.<br /><span style={{ color:'#FF8210', fontStyle:'italic' }}>Go Anywhere.</span>
+          {t('title').split('. ')[0]}.<br /><span style={{ color:'#FF8210', fontStyle:'italic' }}>{t('title').split('. ')[1]}</span>
         </h1>
         <p style={{ fontSize:17, fontWeight:300, color:'#6C6D6F', maxWidth:520, margin:'0 auto', lineHeight:1.7 }}>
-          Hand-picked destinations for every kind of traveller, every kind of trip.
+          {t('subtitle')}
         </p>
       </section>
 
       {/* Filter pills */}
       <div style={{ position:'sticky', top:68, zIndex:50, background:'#fff', borderBottom:'1px solid rgba(0,68,123,0.08)', padding:'12px 24px', overflowX:'auto', display:'flex', gap:8, whiteSpace:'nowrap' }}>
-        {CATEGORIES.map(cat => (
+        {filterOptions.map(opt => (
           <button
-            key={cat}
-            onClick={() => setActive(cat)}
+            key={opt.value}
+            onClick={() => setActive(opt.value)}
             style={{
-              fontFamily:"'Poppins',sans-serif", fontSize:13, fontWeight:active===cat?700:500,
+              fontFamily:"'Poppins',sans-serif", fontSize:13, fontWeight:active===opt.value?700:500,
               padding:'7px 18px', borderRadius:100, border:'1.5px solid',
-              borderColor: active===cat ? '#FF8210' : 'rgba(0,68,123,0.15)',
-              background: active===cat ? '#FF8210' : 'white',
-              color: active===cat ? 'white' : '#00447B',
+              borderColor: active===opt.value ? '#FF8210' : 'rgba(0,68,123,0.15)',
+              background: active===opt.value ? '#FF8210' : 'white',
+              color: active===opt.value ? 'white' : '#00447B',
               cursor:'pointer', transition:'all 0.15s', flexShrink:0,
             }}
-          >{cat}</button>
+          >{opt.label}</button>
         ))}
       </div>
 
       {/* Grid */}
       <div style={{ maxWidth:1280, margin:'0 auto', padding:'48px 24px 80px' }}>
-        <p style={{ fontFamily:"'Lato',sans-serif", fontSize:13, color:'#6C6D6F', marginBottom:32 }}>{filtered.length} destination{filtered.length !== 1 ? 's' : ''}</p>
+        <p style={{ fontFamily:"'Lato',sans-serif", fontSize:13, color:'#6C6D6F', marginBottom:32 }}>{t('destinations', { count: filtered.length })}</p>
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))', gap:24 }}>
           {filtered.map(dest => (
             <div key={dest.name} style={{ borderRadius:16, overflow:'hidden', border:'0.5px solid rgba(0,68,123,0.1)', background:'#fff', transition:'transform 0.2s, box-shadow 0.2s' }}
@@ -115,12 +142,14 @@ export default function TripIdeasPage() {
               {/* Photo */}
               <div style={{ height:200, backgroundImage:`url('https://images.unsplash.com/${dest.photo}?w=600&q=80')`, backgroundSize:'cover', backgroundPosition:'center', position:'relative' }}>
                 <div style={{ position:'absolute', inset:0, background:'linear-gradient(to top, rgba(0,0,0,0.3) 0%, transparent 50%)' }} />
-                <span style={{ position:'absolute', top:12, left:12, background:'#FF8210', color:'white', fontFamily:"'Lato',sans-serif", fontSize:11, fontWeight:700, padding:'4px 12px', borderRadius:10 }}>{dest.tag}</span>
+                <span style={{ position:'absolute', top:12, left:12, background:'#FF8210', color:'white', fontFamily:"'Lato',sans-serif", fontSize:11, fontWeight:700, padding:'4px 12px', borderRadius:10 }}>
+                  {BADGE_KEY_MAP[dest.tag] ? t(`badges.${BADGE_KEY_MAP[dest.tag]}` as Parameters<typeof t>[0]) : dest.tag}
+                </span>
               </div>
               {/* Body */}
               <div style={{ padding:'18px 20px 20px' }}>
                 <h3 style={{ fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:18, color:'#00447B', marginBottom:2 }}>{dest.name}</h3>
-                <p style={{ fontFamily:"'Lato',sans-serif", fontSize:12, color:'#6C6D6F', marginBottom:6, fontWeight:300 }}>{dest.country} · {dest.days}</p>
+                <p style={{ fontFamily:"'Lato',sans-serif", fontSize:12, color:'#6C6D6F', marginBottom:6, fontWeight:300 }}>{dest.country} · {dest.days.replace(/\s*days$/, '')} {t('days')}</p>
                 <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:16 }}>
                   {dest.tags.map(t => (
                     <span key={t} style={{ background:'#EEF4FB', color:'#00447B', fontFamily:"'Lato',sans-serif", fontSize:11, fontWeight:400, padding:'4px 10px', borderRadius:8 }}>{t}</span>
@@ -133,7 +162,7 @@ export default function TripIdeasPage() {
                   onMouseLeave={e=>(e.currentTarget.style.background='#FF8210')}
                   onClick={() => trackDestinationSelected(dest.name, dest.category)}
                 >
-                  Plan this trip →
+                  {t('planTrip')} →
                 </Link>
               </div>
             </div>
