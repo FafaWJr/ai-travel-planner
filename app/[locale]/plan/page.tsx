@@ -18,6 +18,11 @@ import { generateTripPDF } from '@/lib/generateTripPDF';
 import UnsavedChangesModal from '@/components/UnsavedChangesModal';
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 
+/* Map next-intl locale codes to JS Intl locale codes for date formatting */
+function toDateLocale(locale: string): string {
+  return locale === 'en' ? 'en-GB' : locale;
+}
+
 type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'night';
 const SLOTS_LIST: { key: TimeSlot; label: string; icon: string }[] = [
   { key: 'morning',   label: 'Morning',   icon: '🌅' },
@@ -808,7 +813,8 @@ function PlanContent() {
                 const ciM = prompt.match(/from (\d{4}-\d{2}-\d{2})/);
                 const coM = prompt.match(/to (\d{4}-\d{2}-\d{2})/);
                 const sd = ciM?.[1]; const ed = coM?.[1];
-                const fmt = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+                const dl = toDateLocale(locale);
+                const fmt = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString(dl,{day:'2-digit',month:'long',year:'numeric'});
                 const numDays = sd && ed ? Math.round((new Date(ed).getTime() - new Date(sd).getTime()) / 86400000) : null;
                 const destination = prompt.replace(/^plan a (trip to |)?/i,'').replace(/\b(from \d{4}-\d{2}-\d{2}.*)/i,'').trim().split(' ').slice(0,5).join(' ');
                 return (
@@ -827,7 +833,7 @@ function PlanContent() {
                           {numDays !== null && (
                             <span style={{ display:'inline-flex', alignItems:'center', gap:5, background:'#FFF4EA', color:'#CC6200', border:'1px solid #FFD0A0', borderRadius:20, padding:'5px 14px', fontSize:12, fontWeight:600, fontFamily:"'Inter',sans-serif", whiteSpace:'nowrap' }}>
                               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                              {numDays} {numDays === 1 ? 'day' : 'days'} trip
+                              {t('daysTrip', { n: numDays })}
                             </span>
                           )}
                         </div>
@@ -921,7 +927,7 @@ function PlanContent() {
                   onPlaceHover={handlePlaceMouseOver}
                   onPlaceLeave={handlePlaneMouseLeave}
                   isGuest={!user}
-                  onGateRequired={() => openGate('Show me more ideas')}
+                  onGateRequired={() => openGate(t('extraIdeas.show'))}
                   initialDays={initialItineraryDays}
                   startDate={prompt.match(/from (\d{4}-\d{2}-\d{2})/)?.[1]}
                   locale={locale}
@@ -999,7 +1005,7 @@ function PlanContent() {
               {activeSection === 'itinerary' && (
               <div style={{ marginTop:20 }}>
                 <button
-                  onClick={() => user ? handleExtraIdeas() : openGate('Show more ideas')}
+                  onClick={() => user ? handleExtraIdeas() : openGate(t('extraIdeas.show'))}
                   style={{
                     display:'flex', alignItems:'center', gap:8,
                     background:'none', border:'1.5px dashed rgba(255,130,16,0.55)',
@@ -1011,7 +1017,7 @@ function PlanContent() {
                   onMouseLeave={e=>{(e.currentTarget).style.background='none';}}
                 >
                   <span style={{ fontSize:16 }}>✨</span>
-                  {showExtraIdeas ? 'Hide extra ideas' : 'Show me more ideas'}
+                  {showExtraIdeas ? t('extraIdeas.hide') : t('extraIdeas.show')}
                   <span style={{ fontSize:12, transition:'transform 0.2s', transform: showExtraIdeas ? 'rotate(180deg)' : 'rotate(0deg)', display:'inline-block' }}>▾</span>
                 </button>
 

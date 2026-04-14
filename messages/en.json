@@ -699,6 +699,7 @@
       "footer": "lunaletsgo.com · AI-powered travel planning"
     },
     "day": {
+      "badge": "Day {n}",
       "confirmed": "Confirmed"
     },
     "chat": {
@@ -787,6 +788,11 @@
       "body": "Your trip has changes that haven't been saved yet, including activities, notes, and conversations with Luna. If you leave now, those changes will be lost.",
       "leaveWithout": "Leave without saving",
       "stay": "Stay on this page"
+    },
+    "daysTrip": "{n, plural, one {# day trip} other {# days trip}}",
+    "extraIdeas": {
+      "show": "Show me more ideas",
+      "hide": "Hide extra ideas"
     },
     "finalize": "Finalize My Trip",
     "moreIdeas": "A few more ideas for your trip",

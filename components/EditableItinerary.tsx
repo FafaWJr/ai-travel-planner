@@ -74,14 +74,15 @@ const GRADIENTS = [
 ];
 
 /* ─── Day date helper ────────────────────────────────────────── */
-function formatDayDate(startDate: string | undefined, dayIndex: number): string {
+function formatDayDate(startDate: string | undefined, dayIndex: number, locale: string = 'en-GB'): string {
   if (!startDate) return '';
   try {
     const d = new Date(startDate);
     if (isNaN(d.getTime())) return '';
     d.setDate(d.getDate() + dayIndex);
-    const weekday = d.toLocaleDateString('en-US', { weekday: 'long' });
-    const formatted = d.toLocaleDateString('en-GB'); // dd/mm/yyyy
+    const dl = locale === 'en' ? 'en-GB' : locale;
+    const weekday = d.toLocaleDateString(dl, { weekday: 'long' });
+    const formatted = d.toLocaleDateString(dl, { day: '2-digit', month: '2-digit', year: 'numeric' });
     return `${formatted} ${weekday}`;
   } catch {
     return '';
@@ -547,9 +548,9 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
                   }
                   <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top,rgba(0,0,0,0.60) 0%,rgba(0,0,0,0.10) 60%,transparent 100%)', display: 'flex', alignItems: 'flex-end', padding: '10px 14px', gap: 8 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', flexShrink: 0 }}>
-                      <span style={{ background: '#FF8210', color: '#fff', fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 11, padding: '3px 10px', borderRadius: 100 }}>Day {day.number}</span>
-                      {formatDayDate(startDate, idx) && (
-                        <span style={{ fontFamily: "'Inter',sans-serif", fontWeight: 600, fontSize: 11, color: '#fff', marginTop: 2, textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>{formatDayDate(startDate, idx)}</span>
+                      <span style={{ background: '#FF8210', color: '#fff', fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 11, padding: '3px 10px', borderRadius: 100 }}>{t('day.badge', { n: day.number })}</span>
+                      {formatDayDate(startDate, idx, locale) && (
+                        <span style={{ fontFamily: "'Inter',sans-serif", fontWeight: 600, fontSize: 11, color: '#fff', marginTop: 2, textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>{formatDayDate(startDate, idx, locale)}</span>
                       )}
                     </div>
                     <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 14, color: '#fff', flex: 1, margin: 0, textShadow: '0 1px 4px rgba(0,0,0,0.5)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{day.title}</p>
@@ -856,7 +857,7 @@ function SortableActivityItem({
               onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,68,123,0.05)')}
               onMouseLeave={e => (e.currentTarget.style.background = 'none')}
             >
-              <span style={{ background: '#FF8210', color: '#fff', fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 10, padding: '2px 7px', borderRadius: 100, flexShrink: 0 }}>Day {d.number}</span>
+              <span style={{ background: '#FF8210', color: '#fff', fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 10, padding: '2px 7px', borderRadius: 100, flexShrink: 0 }}>{t('day.badge', { n: d.number })}</span>
               <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: '#333', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.title}</span>
             </button>
           ))}

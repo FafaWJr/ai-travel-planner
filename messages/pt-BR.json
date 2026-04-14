@@ -699,6 +699,7 @@
       "footer": "lunaletsgo.com · Planejamento de viagem com IA"
     },
     "day": {
+      "badge": "Dia {n}",
       "confirmed": "Confirmado"
     },
     "chat": {
@@ -787,6 +788,11 @@
       "body": "Sua viagem tem alterações que ainda não foram salvas, incluindo atividades, notas e conversas com a Luna. Se você sair agora, essas alterações serão perdidas.",
       "leaveWithout": "Sair sem salvar",
       "stay": "Continuar nesta página"
+    },
+    "daysTrip": "{n, plural, one {# dia de viagem} other {# dias de viagem}}",
+    "extraIdeas": {
+      "show": "Mostrar mais ideias",
+      "hide": "Ocultar ideias extras"
     },
     "finalize": "Finalizar Minha Viagem",
     "moreIdeas": "Mais ideias para a sua viagem",
