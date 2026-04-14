@@ -208,6 +208,69 @@ The plan page (`/plan`) has a critical architecture that must be respected:
 New features on this page must preserve these patterns. UI strings for new
 features go in the `plan` namespace.
 
+### 4g. Module-level data arrays require special handling
+
+If a data array is defined at MODULE LEVEL (outside any component function), it CANNOT
+access `t()` directly because `useTranslations` is a React hook. Two patterns to handle this:
+
+**Pattern A (preferred for large arrays): Add a `key` field, translate at render point**
+```tsx
+// Module level — add a `key` field only, keep other fields as fallback
+const items = [
+  { key: 'hotels', name: 'Booking.com', href: 'https://...', icon: '🏨' },
+  { key: 'tours',  name: 'GetYourGuide', href: 'https://...', icon: '🎭' },
+]
+
+// Inside the component:
+function PartnerCards() {
+  const t = useTranslations('plan')
+  return items.map(item => (
+    <div key={item.key}>
+      <span>{t(`partners.${item.key}.category`)}</span>
+      <p>{t(`partners.${item.key}.description`)}</p>
+      <a href={item.href}>{t(`partners.${item.key}.cta`)} →</a>
+    </div>
+  ))
+}
+```
+
+**Pattern B (for small arrays): Move inside the component**
+```tsx
+function MyComponent() {
+  const t = useTranslations('namespace')
+  const items = [
+    { id: 'a', label: t('itemA') },
+    { id: 'b', label: t('itemB') },
+  ]
+  return items.map(item => <div key={item.id}>{item.label}</div>)
+}
+```
+
+Pattern A is preferred for large arrays to avoid re-creating on every render.
+Never translate values in module-level const declarations — hooks cannot be called there.
+
+### 4h. Sub-components must call useTranslations independently
+
+Each component function that renders translatable strings must call `useTranslations()` itself.
+A parent component's `t()` is NOT accessible in a child component or helper function.
+
+```tsx
+// WRONG — child cannot access parent's t()
+function Parent() {
+  const t = useTranslations('plan')
+  return <SlotHeader slot="morning" /> // SlotHeader has no access to t
+}
+
+// CORRECT — SlotHeader calls its own hook
+function SlotHeader({ slot }: { slot: string }) {
+  const t = useTranslations('plan')
+  return <span>{t(`timeOfDay.${slot}`)}</span>
+}
+```
+
+This applies to any extracted helper component: notes editor, day cards, modal dialogs,
+partner card components. Each needs its own `useTranslations` call.
+
 ---
 
 ## 5. PT-BR grammar rules (mandatory)
