@@ -644,5 +644,23 @@
         "desc": "Tu viaje se guarda completo. Vuelve a iniciar sesión la próxima semana y continúa exactamente donde lo dejaste."
       }
     }
+  },
+  "myTrips": {
+    "title": "Mis Viajes",
+    "subtitle": "Todos tus planes de viaje guardados en un solo lugar.",
+    "loading": "Cargando tus viajes…",
+    "emptyHeading": "Aún no has guardado ningún viaje",
+    "emptySubtext": "Planea tu próxima aventura y pulsa Guardar viaje para guardarlo aquí.",
+    "emptyCta": "Planear un nuevo viaje",
+    "tripCard": {
+      "days": "{n, plural, one {# día} other {# días}}",
+      "expired": "Vencido",
+      "saved": "Guardado el {date}",
+      "viewTrip": "Ver viaje",
+      "addFavorite": "Añadir a favoritos",
+      "removeFavorite": "Quitar de favoritos",
+      "deleteTrip": "Eliminar viaje"
+    },
+    "deleteConfirm": "¿Eliminar este viaje? Esta acción no se puede deshacer."
   }
 }

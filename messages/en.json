@@ -644,5 +644,23 @@
         "desc": "Your trip is saved in full. Log back in next week and pick up exactly where you left off."
       }
     }
+  },
+  "myTrips": {
+    "title": "My Trips",
+    "subtitle": "All your saved travel plans in one place.",
+    "loading": "Loading your trips…",
+    "emptyHeading": "You haven't saved any trips yet",
+    "emptySubtext": "Plan your next adventure and tap Save trip to keep it here.",
+    "emptyCta": "Plan a new trip",
+    "tripCard": {
+      "days": "{n, plural, one {# day} other {# days}}",
+      "expired": "Expired",
+      "saved": "Saved {date}",
+      "viewTrip": "View trip",
+      "addFavorite": "Add to favorites",
+      "removeFavorite": "Remove from favorites",
+      "deleteTrip": "Delete trip"
+    },
+    "deleteConfirm": "Delete this trip? This cannot be undone."
   }
 }

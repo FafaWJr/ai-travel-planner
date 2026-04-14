@@ -2,11 +2,12 @@
 export const dynamic = 'force-dynamic';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import NavBar from '@/components/NavBar';
 import { Clock } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 function isTripExpired(startDate?: string | null, endDate?: string | null): boolean {
   const referenceDate = endDate || startDate;
@@ -32,6 +33,7 @@ export default function MyTripsPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const supabase = createClient();
+  const t = useTranslations('myTrips');
 
   const [trips,      setTrips]      = useState<SavedTrip[]>([]);
   const [loading,    setLoading]    = useState(true);
@@ -58,14 +60,14 @@ export default function MyTripsPage() {
 
   const toggleFavorite = async (id: string, current: boolean) => {
     await supabase.from('saved_trips').update({ is_favorite: !current }).eq('id', id);
-    setTrips(prev => prev.map(t => t.id === id ? { ...t, is_favorite: !current } : t));
+    setTrips(prev => prev.map(item => item.id === id ? { ...item, is_favorite: !current } : item));
   };
 
   const deleteTrip = async (id: string) => {
-    if (!confirm('Delete this trip? This cannot be undone.')) return;
+    if (!confirm(t('deleteConfirm'))) return;
     setDeletingId(id);
     await supabase.from('saved_trips').delete().eq('id', id);
-    setTrips(prev => prev.filter(t => t.id !== id));
+    setTrips(prev => prev.filter(item => item.id !== id));
     setDeletingId(null);
   };
 
@@ -100,10 +102,10 @@ export default function MyTripsPage() {
         {/* Page header */}
         <div style={{ marginBottom: 36 }}>
           <h1 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 36, color: '#00447B', marginBottom: 6 }}>
-            My Trips
+            {t('title')}
           </h1>
           <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 16, color: '#6C6D6F' }}>
-            All your saved travel plans in one place.
+            {t('subtitle')}
           </p>
         </div>
 
@@ -111,7 +113,7 @@ export default function MyTripsPage() {
         {loading && (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 0', gap: 14 }}>
             <div style={{ width: 28, height: 28, borderRadius: '50%', border: '3px solid rgba(0,68,123,0.12)', borderTop: '3px solid #FF8210', animation: 'spin 1s linear infinite', flexShrink: 0 }} />
-            <p style={{ fontFamily: "'Inter',sans-serif", color: '#6C6D6F', fontSize: 15 }}>Loading your trips…</p>
+            <p style={{ fontFamily: "'Inter',sans-serif", color: '#6C6D6F', fontSize: 15 }}>{t('loading')}</p>
           </div>
         )}
 
@@ -130,17 +132,17 @@ export default function MyTripsPage() {
               <circle cx="14" cy="13" r="5" fill="none" stroke="#679AC1" strokeWidth="1.5"/>
             </svg>
             <h2 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 22, color: '#00447B', marginBottom: 10 }}>
-              You haven't saved any trips yet
+              {t('emptyHeading')}
             </h2>
             <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 15, color: '#6C6D6F', marginBottom: 28, maxWidth: 360, margin: '0 auto 28px', lineHeight: 1.6 }}>
-              Plan your next adventure and tap "Save trip" to keep it here.
+              {t('emptySubtext')}
             </p>
             <Link href="/" style={{
               display: 'inline-block', padding: '13px 32px', background: '#FF8210', color: '#fff',
               fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 15,
               borderRadius: 100, textDecoration: 'none',
             }}>
-              Plan a new trip
+              {t('emptyCta')}
             </Link>
           </div>
         )}
@@ -173,7 +175,7 @@ export default function MyTripsPage() {
                     <button
                       onClick={() => toggleFavorite(trip.id, trip.is_favorite)}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, flexShrink: 0 }}
-                      aria-label={trip.is_favorite ? 'Remove from favorites' : 'Add to favorites'}
+                      aria-label={trip.is_favorite ? t('tripCard.removeFavorite') : t('tripCard.addFavorite')}
                     >
                       <svg width="20" height="20" viewBox="0 0 24 24"
                         fill={trip.is_favorite ? '#FF8210' : 'none'}
@@ -190,7 +192,7 @@ export default function MyTripsPage() {
                       background: 'rgba(255,255,255,0.15)', borderRadius: 100, padding: '3px 10px',
                       fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 11, color: 'rgba(255,255,255,0.9)',
                     }}>
-                      {numDays(trip)} days
+                      {t('tripCard.days', { n: numDays(trip)! })}
                     </span>
                   )}
                 </div>
@@ -212,13 +214,13 @@ export default function MyTripsPage() {
                           letterSpacing: '0.04em', textTransform: 'uppercase', lineHeight: 1.4,
                         }}>
                           <Clock size={11} color="#6C6D6F" />
-                          Expired
+                          {t('tripCard.expired')}
                         </span>
                       )}
                     </div>
                   )}
                   <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: '#C0C0C0', marginBottom: 16 }}>
-                    Saved {fmtDate(trip.created_at)}
+                    {t('tripCard.saved', { date: fmtDate(trip.created_at) })}
                   </p>
 
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -235,14 +237,14 @@ export default function MyTripsPage() {
                       onMouseEnter={e => { const b = e.currentTarget; b.style.background = '#00447B'; b.style.color = '#fff'; }}
                       onMouseLeave={e => { const b = e.currentTarget; b.style.background = 'none'; b.style.color = '#00447B'; }}
                     >
-                      View trip
+                      {t('tripCard.viewTrip')}
                     </button>
 
                     {/* Delete */}
                     <button
                       onClick={() => deleteTrip(trip.id)}
                       disabled={deletingId === trip.id}
-                      aria-label="Delete trip"
+                      aria-label={t('tripCard.deleteTrip')}
                       style={{
                         width: 36, height: 36, border: 'none',
                         background: 'rgba(192,192,192,0.12)',

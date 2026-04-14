@@ -644,5 +644,23 @@
         "desc": "Sua viagem é salva por completo. Entre novamente na semana que vem e continue exatamente de onde parou."
       }
     }
+  },
+  "myTrips": {
+    "title": "Minhas Viagens",
+    "subtitle": "Todos os seus planos de viagem salvos em um só lugar.",
+    "loading": "Carregando suas viagens…",
+    "emptyHeading": "Você ainda não salvou nenhuma viagem",
+    "emptySubtext": "Planeje sua próxima aventura e toque em Salvar viagem para guardar aqui.",
+    "emptyCta": "Planejar uma nova viagem",
+    "tripCard": {
+      "days": "{n, plural, one {# dia} other {# dias}}",
+      "expired": "Expirado",
+      "saved": "Salvo em {date}",
+      "viewTrip": "Ver viagem",
+      "addFavorite": "Adicionar aos favoritos",
+      "removeFavorite": "Remover dos favoritos",
+      "deleteTrip": "Excluir viagem"
+    },
+    "deleteConfirm": "Excluir esta viagem? Isso não pode ser desfeito."
   }
 }
