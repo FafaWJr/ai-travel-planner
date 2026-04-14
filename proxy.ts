@@ -7,7 +7,31 @@ import { routing } from './i18n/routing'
 const intlMiddleware = createIntlMiddleware(routing)
 
 export async function proxy(request: NextRequest) {
-  // Run next-intl locale detection first
+  const { pathname } = request.nextUrl
+
+  // /auth/* routes live outside [locale]/ — skip intl locale detection
+  // to prevent redirect from /auth/login → /{locale}/auth/login (404)
+  if (pathname.startsWith('/auth')) {
+    let supabaseResponse = NextResponse.next({ request })
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!,
+      {
+        cookies: {
+          getAll() { return request.cookies.getAll() },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+            supabaseResponse = NextResponse.next({ request })
+            cookiesToSet.forEach(({ name, value, options }) => supabaseResponse.cookies.set(name, value, options))
+          },
+        },
+      }
+    )
+    await supabase.auth.getSession()
+    return supabaseResponse
+  }
+
+  // All other routes: next-intl locale detection first
   const intlResponse = intlMiddleware(request)
   if (intlResponse) return intlResponse
 
