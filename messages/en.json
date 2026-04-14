@@ -419,6 +419,151 @@
       "party": "The Party Animal",
       "festival": "The Festival Chaser",
       "beach_bum": "The Sun Seeker"
+    },
+    "personaContent": {
+      "explorer": {
+        "travelStyle": "Off the Beaten Path",
+        "description": "You live for the thrill of discovery. Guidebooks bore you. You want the street nobody else found, the village nobody else visited, and the story nobody else can tell.",
+        "travelProfile": "Independent, curious and adaptable. You plan loosely and leave room for magic. Your best memories are the ones that were not on any itinerary.",
+        "tripStyle": "Mix of transport modes, guesthouses with character, flexible itinerary, at least one moment that surprises even you.",
+        "askLuna": [
+          "What hidden spots should I add that most tourists miss?",
+          "Can you redesign Day 3 to include a lesser-known area nearby?",
+          "Replace the touristy activities in my plan with something local."
+        ]
+      },
+      "foodie": {
+        "travelStyle": "Taste-Led Travel",
+        "description": "Your itinerary is built around meals. You research restaurants before you book flights, wake up for morning markets, and judge a city entirely by its street food.",
+        "travelProfile": "Passionate, adventurous palate, willing to queue for the best bite in town. You always ask locals where they actually eat, not where they send tourists.",
+        "tripStyle": "Neighbourhood food walks, market mornings, at least one cooking class, curated restaurant list from local chefs, and a wine or spirits trail.",
+        "askLuna": [
+          "Add the best local market to Day 1 of my trip.",
+          "Replace the generic restaurant on Day 4 with something the locals actually go to.",
+          "What street food should I absolutely not miss here?"
+        ]
+      },
+      "relaxer": {
+        "travelStyle": "Slow Travel",
+        "description": "Your holiday is a recovery. You want white sand, warm water, a good book and absolutely nothing urgent on the schedule. If you rush, you are doing it wrong.",
+        "travelProfile": "You recharge by doing less, not more. You choose destinations over checklists and experiences over sightseeing counts.",
+        "tripStyle": "Beachfront stay, lazy mornings, spa days in the plan, minimal transfers, and evenings that end early by choice not necessity.",
+        "askLuna": [
+          "Slow down the pace of Day 2 and remove back-to-back activities.",
+          "Add a spa afternoon somewhere in my itinerary.",
+          "Which beach in my destination is the quietest and least crowded?"
+        ]
+      },
+      "photographer": {
+        "travelStyle": "Visual Storytelling",
+        "description": "You see the world through a lens. Golden hour is sacred, composition is everything, and you will absolutely get up at 5am for the perfect shot.",
+        "travelProfile": "Highly visual, detail-oriented and patient. You share your journey through images that stop the scroll. The best moment is always the one you almost missed.",
+        "tripStyle": "Itinerary timed around sunrise and sunset, viewpoints mapped in advance, slow pacing to actually compose shots, minimal back-to-back activities.",
+        "askLuna": [
+          "Add a sunrise activity to Day 1 and tell me the best viewpoint.",
+          "Which spots in my itinerary are the most photogenic?",
+          "Suggest a photography-focused day tour at my destination."
+        ]
+      },
+      "culture": {
+        "travelStyle": "Deep Cultural Immersion",
+        "description": "You come home knowing more than when you left. Museums, architecture, history and local traditions are what make a trip genuinely meaningful.",
+        "travelProfile": "Intellectually driven and respectful of local customs. You want context, not just photos. You ask why before you ask where.",
+        "tripStyle": "Museum mornings, historic quarter walks, local guide for context, at least one cultural workshop or performance, neighbourhood exploration off the main drag.",
+        "askLuna": [
+          "Add a locally guided history walk to my first full day.",
+          "What cultural workshop or class should I book at this destination?",
+          "Replace one generic activity with something more historically significant."
+        ]
+      },
+      "adventurer": {
+        "travelStyle": "Adrenaline-First Travel",
+        "description": "You want to come home with stories that make people say you did what. Physical challenge, outdoor intensity and pushing your limits is the whole point.",
+        "travelProfile": "Physically capable, fearless and motivated by challenge. You book the hike, the jump and the climb before you even look at the hotel.",
+        "tripStyle": "Multi-day trek, water sport or extreme activity, nature-based accommodation, minimal urban time, and at least one thing that scares you a little.",
+        "askLuna": [
+          "Add a multi-day trekking segment to my trip.",
+          "What is the best adventure activity available at my destination?",
+          "Swap the city hotel for something closer to the mountains or coast."
+        ]
+      },
+      "luxury": {
+        "travelStyle": "Premium All the Way",
+        "description": "You travel to be looked after. Five-star service, exceptional food, private transfers and curated experiences are not upgrades. They are your baseline.",
+        "travelProfile": "Discerning, quality-driven and unwilling to compromise. You research properties obsessively and notice immediately when service falls short.",
+        "tripStyle": "Five-star resort or boutique luxury property, private guided experiences, Michelin-starred meals, business class or private transfer, personalized attention throughout.",
+        "askLuna": [
+          "Upgrade my accommodation suggestions to five-star or boutique luxury options.",
+          "Add a private guided experience to Day 2 instead of the group tour.",
+          "What is the finest restaurant at this destination that I should book immediately?"
+        ]
+      },
+      "family": {
+        "travelStyle": "Safe, Fun, All Ages",
+        "description": "Every decision on your trip is filtered through one question: will the kids love this? You are simultaneously travel agent, entertainer and logistics wizard.",
+        "travelProfile": "Patient, organised, safety-conscious and always thinking two steps ahead. You know which activities work for all ages and which end in tears.",
+        "tripStyle": "Spacious family accommodation, mix of theme parks and cultural activities, no brutal back-to-back transfers, early dinners and a reliable itinerary with buffer time built in.",
+        "askLuna": [
+          "Make sure all activities in my plan are suitable for children.",
+          "Add a theme park or interactive kids experience to Day 3.",
+          "What family-friendly restaurant options are near my hotel?"
+        ]
+      },
+      "romantic": {
+        "travelStyle": "Couples Escapes",
+        "description": "Every moment on your trip is about connection. Sunset views, private dinners, long walks and experiences shared with the person you love most.",
+        "travelProfile": "Thoughtful and attentive to atmosphere. You care about the setting as much as the activity and always look for the most intimate version of an experience.",
+        "tripStyle": "Boutique hotel or private villa, candlelit dinner booked in advance, couples experiences like cooking classes or private tours, sunsets built into every day.",
+        "askLuna": [
+          "Add a sunset dinner or rooftop experience to our trip.",
+          "Book a couples cooking class or wine tasting for Day 3.",
+          "What is the most romantic neighbourhood to stay in at this destination?"
+        ]
+      },
+      "solo": {
+        "travelStyle": "Independence and Self-Discovery",
+        "description": "Travelling alone is not a compromise. It is the whole point. You make every decision on your own terms and come home knowing yourself a little better each time.",
+        "travelProfile": "Self-reliant, open-minded, adaptable and genuinely comfortable in your own company. You make friends easily and love the freedom of zero consensus.",
+        "tripStyle": "Social hostel or guesthouse with personality, flexible daily structure, solo-friendly group tours for socialising, evenings in lively local areas, real budget consciousness.",
+        "askLuna": [
+          "What are the best solo-friendly group tours or activities here?",
+          "Add a social hostel or guesthouse option to my stays.",
+          "Which neighbourhoods are safest and most fun for solo travellers at this destination?"
+        ]
+      },
+      "party": {
+        "travelStyle": "Nightlife and Social Energy",
+        "description": "Sleep is for the flight home. You travel for the nights, the music, the crowd and the stories that sound completely unbelievable on Monday morning.",
+        "travelProfile": "Social, energetic and spontaneous. You are always the one who finds the best party in any city. You live fully in the moment and make friends everywhere you go.",
+        "tripStyle": "Central hotel or party hostel, late starts and much later finishes, rooftop bars, beach clubs, underground clubs and at least one full all-nighter written into the plan.",
+        "askLuna": [
+          "Add the best beach club or rooftop bar to my itinerary.",
+          "What is the nightlife scene like here and what is the best night to go out?",
+          "Shift the Day 2 activities to the afternoon so we can recover from the night before."
+        ]
+      },
+      "festival": {
+        "travelStyle": "Events-First Travel",
+        "description": "You build your entire year around events. Whether it is Carnival, Tomorrowland or a local street festival, the event is not just part of the trip. It is the destination.",
+        "travelProfile": "Organised at least around events. Culturally engaged and passionate about shared collective experiences. You have a bucket list of events, not just places.",
+        "tripStyle": "Dates locked around the event, accommodation near the festival grounds, day-before exploration and day-after recovery built in, a blend of event intensity and local culture.",
+        "askLuna": [
+          "What major festivals or events are happening at my destination around my travel dates?",
+          "Add a recovery day after the main event in my itinerary.",
+          "What should I do in the city before the festival starts?"
+        ]
+      },
+      "beach_bum": {
+        "travelStyle": "Sun, Sand and Good Vibes",
+        "description": "Your perfect day starts with bare feet on warm sand, peaks at a beach bar with something cold in hand, and ends watching the horizon turn gold. The beach is not just a destination. It is a lifestyle.",
+        "travelProfile": "Laid-back but sociable. You gravitate toward places where beach culture is the whole identity. You have a sixth sense for finding the best beach bar on any coast and you always know where the vibe is right.",
+        "tripStyle": "Beachfront accommodation as close to the water as possible, beach club days, cocktail hours at sunset, social evenings that start easy and end when the mood says so, and at least one stretch of sand that makes you stop scrolling.",
+        "askLuna": [
+          "What is the best beach bar at my destination and what time should I arrive?",
+          "Find me the most beautiful beach near my hotel that locals actually use.",
+          "Add a beach club day to my itinerary with food, cocktails and ocean access."
+        ]
+      }
     }
   },
   "blogIndex": {

@@ -419,6 +419,151 @@
       "party": "El Animador de Fiestas",
       "festival": "El Cazador de Festivales",
       "beach_bum": "El Amante del Sol"
+    },
+    "personaContent": {
+      "explorer": {
+        "travelStyle": "Fuera de los Circuitos",
+        "description": "Vives para la emoción de descubrir. Las guías de viaje te aburren. Quieres la calle que nadie más encontró, el pueblo que nadie más visitó y la historia que nadie más puede contar.",
+        "travelProfile": "Independiente, curioso y adaptable. Planificas con flexibilidad y dejas espacio para la magia. Tus mejores recuerdos son los que no estaban en ningún itinerario.",
+        "tripStyle": "Combinación de medios de transporte, casas de huéspedes con carácter, itinerario flexible y al menos un momento que te sorprende incluso a ti mismo.",
+        "askLuna": [
+          "¿Qué lugares escondidos debería añadir que la mayoría de los turistas no conocen?",
+          "¿Puedes rediseñar el Día 3 para incluir una zona menos conocida cercana?",
+          "Reemplaza las actividades turísticas de mi plan con algo local."
+        ]
+      },
+      "foodie": {
+        "travelStyle": "Viaje Guiado por el Paladar",
+        "description": "Tu itinerario está construido en torno a las comidas. Investigas restaurantes antes de comprar los vuelos, madrugas para los mercados matutinos y juzgas una ciudad enteramente por su comida callejera.",
+        "travelProfile": "Apasionado, con paladar aventurero y dispuesto a hacer fila por el mejor bocado de la ciudad. Siempre preguntas a los locales dónde comen realmente, no dónde mandan a los turistas.",
+        "tripStyle": "Paseos gastronómicos por el barrio, mañanas en el mercado, al menos una clase de cocina, lista de restaurantes seleccionados por chefs locales y una ruta de vinos o destilados.",
+        "askLuna": [
+          "Añade el mejor mercado local al Día 1 de mi viaje.",
+          "Reemplaza el restaurante genérico del Día 4 con algo que los locales frecuentan de verdad.",
+          "¿Qué comida callejera no puedo perderme absolutamente aquí?"
+        ]
+      },
+      "relaxer": {
+        "travelStyle": "Viaje a Ritmo Lento",
+        "description": "Tus vacaciones son una recuperación. Quieres arena blanca, agua cálida, un buen libro y absolutamente nada urgente en el programa. Si tienes prisa, lo estás haciendo mal.",
+        "travelProfile": "Te recargas haciendo menos, no más. Eliges destinos sobre listas y experiencias sobre el conteo de atracciones.",
+        "tripStyle": "Alojamiento frente al mar, mañanas tranquilas, días de spa en el plan, traslados mínimos y noches que terminan temprano por elección, no por necesidad.",
+        "askLuna": [
+          "Reduce el ritmo del Día 2 y elimina las actividades seguidas.",
+          "Añade una tarde de spa en algún momento de mi itinerario.",
+          "¿Cuál es la playa más tranquila y menos concurrida en mi destino?"
+        ]
+      },
+      "photographer": {
+        "travelStyle": "Narrativa Visual",
+        "description": "Ves el mundo a través de un objetivo. La hora dorada es sagrada, la composición lo es todo y definitivamente te levantarás a las 5am para la foto perfecta.",
+        "travelProfile": "Altamente visual, detallista y paciente. Compartes tu viaje a través de imágenes que detienen el scroll. El mejor momento siempre es el que casi te pierdes.",
+        "tripStyle": "Itinerario organizado alrededor del amanecer y el atardecer, miradores mapeados con antelación, ritmo lento para componer las fotos y actividades sin prisas.",
+        "askLuna": [
+          "Añade una actividad al amanecer en el Día 1 y dime el mejor mirador.",
+          "¿Qué lugares de mi itinerario son los más fotogénicos?",
+          "Sugiere un tour enfocado en fotografía en mi destino."
+        ]
+      },
+      "culture": {
+        "travelStyle": "Inmersión Cultural Profunda",
+        "description": "Vuelves a casa sabiendo más que cuando saliste. Los museos, la arquitectura, la historia y las tradiciones locales son lo que hace que un viaje sea genuinamente significativo.",
+        "travelProfile": "Intelectualmente curioso y respetuoso con las costumbres locales. Quieres contexto, no solo fotos. Preguntas por qué antes de preguntar dónde.",
+        "tripStyle": "Mañanas en museos, paseos por el casco histórico, guía local para el contexto, al menos un taller o espectáculo cultural y exploración de barrios fuera del circuito principal.",
+        "askLuna": [
+          "Añade un paseo histórico guiado por un local a mi primer día completo.",
+          "¿Qué taller o clase cultural debería reservar en este destino?",
+          "Reemplaza una actividad genérica con algo más históricamente significativo."
+        ]
+      },
+      "adventurer": {
+        "travelStyle": "La Adrenalina Primero",
+        "description": "Quieres volver a casa con historias que hagan que la gente diga hiciste qué. El desafío físico, la intensidad al aire libre y superar tus límites es el objetivo.",
+        "travelProfile": "Físicamente capaz, intrépido y motivado por el desafío. Reservas la caminata, el salto y la escalada antes de siquiera mirar el hotel.",
+        "tripStyle": "Trekking de varios días, deporte acuático o actividad extrema, alojamiento en la naturaleza, tiempo mínimo en zonas urbanas y al menos una cosa que te asuste un poco.",
+        "askLuna": [
+          "Añade un segmento de trekking de varios días a mi viaje.",
+          "¿Cuál es la mejor actividad de aventura disponible en mi destino?",
+          "Cambia el hotel en la ciudad por algo más cercano a las montañas o la costa."
+        ]
+      },
+      "luxury": {
+        "travelStyle": "Premium de Principio a Fin",
+        "description": "Viajas para que te cuiden. El servicio cinco estrellas, la gastronomía excepcional, los traslados privados y las experiencias exclusivas no son extras. Son tu estándar.",
+        "travelProfile": "Exigente, orientado a la calidad y sin disposición a compromisos. Investigas propiedades de forma obsesiva y notas inmediatamente cuando el servicio no está a la altura.",
+        "tripStyle": "Resort cinco estrellas o propiedad boutique de lujo, experiencias guiadas privadas, cenas con estrella Michelin, clase ejecutiva o traslado privado y atención personalizada en todo momento.",
+        "askLuna": [
+          "Actualiza las sugerencias de alojamiento a opciones de cinco estrellas o boutique de lujo.",
+          "Añade una experiencia guiada privada al Día 2 en lugar del tour en grupo.",
+          "¿Cuál es el mejor restaurante en este destino que debería reservar de inmediato?"
+        ]
+      },
+      "family": {
+        "travelStyle": "Seguro, Divertido, Para Todas las Edades",
+        "description": "Cada decisión de tu viaje pasa por una pregunta: ¿les encantará esto a los niños? Eres simultáneamente agente de viajes, animador y mago de la logística.",
+        "travelProfile": "Paciente, organizado, consciente de la seguridad y siempre pensando dos pasos por delante. Sabes qué actividades funcionan para todas las edades y cuáles terminan en llanto.",
+        "tripStyle": "Alojamiento familiar espacioso, combinación de parques temáticos y actividades culturales, sin traslados agotadores seguidos, cenas tempranas e itinerario confiable con tiempo de margen incluido.",
+        "askLuna": [
+          "Asegúrate de que todas las actividades de mi plan sean adecuadas para niños.",
+          "Añade un parque temático o experiencia interactiva para niños en el Día 3.",
+          "¿Qué opciones de restaurante familiar hay cerca de mi hotel?"
+        ]
+      },
+      "romantic": {
+        "travelStyle": "Escapadas en Pareja",
+        "description": "Cada momento de tu viaje es sobre la conexión. Vistas al atardecer, cenas privadas, largas caminatas y experiencias compartidas con la persona que más amas.",
+        "travelProfile": "Atento y sensible a la atmósfera. Te importa tanto el escenario como la actividad y siempre buscas la versión más íntima de una experiencia.",
+        "tripStyle": "Hotel boutique o villa privada, cena a la luz de las velas reservada con antelación, experiencias en pareja como clases de cocina o tours privados y atardeceres planificados para cada día.",
+        "askLuna": [
+          "Añade una cena al atardecer o experiencia en rooftop a nuestro viaje.",
+          "Reserva una clase de cocina o cata de vinos en pareja para el Día 3.",
+          "¿Cuál es el barrio más romántico para alojarse en este destino?"
+        ]
+      },
+      "solo": {
+        "travelStyle": "Independencia y Autodescubrimiento",
+        "description": "Viajar solo no es un compromiso. Es el objetivo. Tomas cada decisión en tus propios términos y vuelves a casa conociéndote un poco mejor cada vez.",
+        "travelProfile": "Autosuficiente, de mente abierta, adaptable y genuinamente a gusto en tu propia compañía. Haces amigos con facilidad y amas la libertad de no necesitar consenso.",
+        "tripStyle": "Hostel social o casa de huéspedes con personalidad, estructura diaria flexible, tours en grupo para socializar, noches en zonas locales animadas y conciencia real del presupuesto.",
+        "askLuna": [
+          "¿Cuáles son los mejores tours o actividades para viajeros en solitario aquí?",
+          "Añade una opción de hostel social o casa de huéspedes a mis alojamientos.",
+          "¿Qué barrios son los más seguros y divertidos para viajeros solos en este destino?"
+        ]
+      },
+      "party": {
+        "travelStyle": "Energía Nocturna y Vida Social",
+        "description": "Dormir es para el vuelo de vuelta. Viajas por las noches, la música, la multitud y las historias que suenan completamente increíbles el lunes por la mañana.",
+        "travelProfile": "Social, lleno de energía y espontáneo. Siempre eres quien encuentra la mejor fiesta en cualquier ciudad. Vives plenamente en el momento y haces amigos en todas partes.",
+        "tripStyle": "Hotel central o hostel festivo, comienzos tardíos y finales mucho más tardíos, bares en rooftop, beach clubs, clubes underground y al menos una noche entera sin dormir escrita en el plan.",
+        "askLuna": [
+          "Añade el mejor beach club o bar en rooftop a mi itinerario.",
+          "¿Cómo es la vida nocturna aquí y cuál es la mejor noche para salir?",
+          "Cambia las actividades del Día 2 a la tarde para que podamos recuperarnos de la noche anterior."
+        ]
+      },
+      "festival": {
+        "travelStyle": "Viaje Guiado por Eventos",
+        "description": "Construyes todo el año en torno a eventos. Ya sea el Carnaval, el Tomorrowland o un festival callejero local, el evento no es solo parte del viaje. Es el destino.",
+        "travelProfile": "Organizado al menos en torno a los eventos. Culturalmente comprometido y apasionado por las experiencias colectivas compartidas. Tienes una lista de eventos por cumplir, no solo de lugares.",
+        "tripStyle": "Fechas definidas alrededor del evento, alojamiento cerca del recinto del festival, exploración el día anterior y recuperación el día siguiente incluidas, combinando la intensidad del evento con la cultura local.",
+        "askLuna": [
+          "¿Qué festivales o eventos importantes ocurren en mi destino alrededor de mis fechas de viaje?",
+          "Añade un día de recuperación después del evento principal en mi itinerario.",
+          "¿Qué debería hacer en la ciudad antes de que empiece el festival?"
+        ]
+      },
+      "beach_bum": {
+        "travelStyle": "Sol, Arena y Buenas Vibras",
+        "description": "Tu día perfecto empieza con los pies descalzos en la arena tibia, llega a su punto máximo en un beach bar con algo frío en la mano y termina viendo el horizonte volverse dorado. La playa no es solo un destino. Es un estilo de vida.",
+        "travelProfile": "Relajado pero sociable. Te sientes en casa en lugares donde la cultura de playa es la identidad principal. Tienes un sexto sentido para encontrar el mejor beach bar en cualquier costa y siempre sabes dónde está el buen ambiente.",
+        "tripStyle": "Alojamiento frente al mar lo más cerca posible del agua, días en beach clubs, cócteles al atardecer, noches tranquilas que empiezan despacio y terminan cuando el ambiente lo dice, y al menos una franja de arena que te hace dejar de mirar el móvil.",
+        "askLuna": [
+          "¿Cuál es el mejor beach bar en mi destino y a qué hora debería llegar?",
+          "Encuentra la playa más bonita cerca de mi hotel que los locales realmente usan.",
+          "Añade un día en beach club a mi itinerario con comida, cócteles y acceso al mar."
+        ]
+      }
     }
   },
   "blogIndex": {

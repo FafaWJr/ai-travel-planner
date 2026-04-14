@@ -1036,7 +1036,7 @@ function QuizPageInner() {
                     {t(`personas.${quizPersona.id}` as Parameters<typeof t>[0])}
                   </h2>
                   <span style={{ display: 'inline-block', background: 'rgba(255,130,16,0.12)', border: '1.5px solid rgba(255,130,16,0.35)', borderRadius: 50, padding: '5px 18px', fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 13, color: '#FF8210' }}>
-                    {quizPersona.travelStyle}
+                    {t(`personaContent.${quizPersona.id}.travelStyle` as Parameters<typeof t>[0])}
                   </span>
                 </div>
                 <div style={{ flexShrink: 0, width: 140, height: 140, borderRadius: '50%', overflow: 'hidden', border: '3px solid rgba(255,130,16,0.25)', boxShadow: '0 8px 24px rgba(0,68,123,0.15)' }}>
@@ -1052,7 +1052,7 @@ function QuizPageInner() {
 
               {/* 2. Description */}
               <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 16, color: '#3b3b3b', lineHeight: 1.75, marginBottom: 28, borderLeft: '3px solid #FF8210', paddingLeft: 18 }}>
-                {quizPersona.description}
+                {t(`personaContent.${quizPersona.id}.description` as Parameters<typeof t>[0])}
               </p>
 
               {/* 3. Travel Profile */}
@@ -1061,7 +1061,7 @@ function QuizPageInner() {
                   {t('travelProfile')}
                 </p>
                 <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: '#3b3b3b', lineHeight: 1.7, margin: 0 }}>
-                  {quizPersona.travelProfile}
+                  {t(`personaContent.${quizPersona.id}.travelProfile` as Parameters<typeof t>[0])}
                 </p>
               </div>
 
@@ -1071,7 +1071,7 @@ function QuizPageInner() {
                   {t('suggestedTripStyle')}
                 </p>
                 <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: '#3b3b3b', lineHeight: 1.7, margin: 0 }}>
-                  {quizPersona.tripStyle}
+                  {t(`personaContent.${quizPersona.id}.tripStyle` as Parameters<typeof t>[0])}
                 </p>
               </div>
 
@@ -1124,22 +1124,25 @@ function QuizPageInner() {
                   {t('askLunaLabel')}
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {quizPersona.askLuna.map((prompt, i) => (
-                    <a
-                      key={i}
-                      href={`/plan?luna_prompt=${encodeURIComponent(prompt)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(0,68,123,0.05)', border: '1.5px solid rgba(0,68,123,0.15)', borderRadius: 50, padding: '11px 20px', fontFamily: "'Inter', sans-serif", fontSize: 13, color: '#00447B', textDecoration: 'none', transition: 'all 0.15s' }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(0,68,123,0.10)'; (e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(0,68,123,0.30)'; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(0,68,123,0.05)'; (e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(0,68,123,0.15)'; }}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF8210" strokeWidth="2" style={{ flexShrink: 0 }}>
-                        <circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" />
-                      </svg>
-                      {prompt}
-                    </a>
-                  ))}
+                  {([0, 1, 2] as const).map(i => {
+                    const prompt = t(`personaContent.${quizPersona.id}.askLuna.${i}` as Parameters<typeof t>[0]);
+                    return (
+                      <a
+                        key={i}
+                        href={`/plan?luna_prompt=${encodeURIComponent(prompt)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(0,68,123,0.05)', border: '1.5px solid rgba(0,68,123,0.15)', borderRadius: 50, padding: '11px 20px', fontFamily: "'Inter', sans-serif", fontSize: 13, color: '#00447B', textDecoration: 'none', transition: 'all 0.15s' }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(0,68,123,0.10)'; (e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(0,68,123,0.30)'; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(0,68,123,0.05)'; (e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(0,68,123,0.15)'; }}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF8210" strokeWidth="2" style={{ flexShrink: 0 }}>
+                          <circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" />
+                        </svg>
+                        {prompt}
+                      </a>
+                    );
+                  })}
                 </div>
               </div>
 
