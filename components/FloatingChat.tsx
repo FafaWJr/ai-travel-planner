@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
 import { createClient as createSupabaseClient } from '@/lib/supabase/client';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { CheckCircle } from 'lucide-react';
 
 type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'night';
@@ -154,6 +154,7 @@ function buildWelcome(firstName: string | null, destination: string | null): str
 
 export default function FloatingChat({ plan, destination, hotelContext, currentActivities, onAddToItinerary, onPlanUpdate, onTripUpdate, isGuest = false, onGateRequired, initialMessages, savedTripId, onMessagesChange }: Props) {
   const locale = useLocale();
+  const t = useTranslations('plan');
   const [open, setOpen] = useState(true);
   const [msgs, setMsgs] = useState<Msg[]>(
     initialMessages && initialMessages.length > 0
@@ -287,8 +288,8 @@ export default function FloatingChat({ plan, destination, hotelContext, currentA
             <span style={{ position: 'absolute', bottom: 1, right: 1, width: 10, height: 10, borderRadius: '50%', background: '#22c55e', border: '2px solid #00447B' }} />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 14, color: '#fff', margin: 0 }}>Luna</p>
-            <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: 'rgba(255,255,255,0.65)', margin: 0 }}>AI Travel Assistant</p>
+            <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 14, color: '#fff', margin: 0 }}>{t('chat.name')}</p>
+            <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: 'rgba(255,255,255,0.65)', margin: 0 }}>{t('chat.role')}</p>
           </div>
           <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 18, display: 'inline-block', transition: 'transform 0.2s', transform: open ? 'rotate(0deg)' : 'rotate(180deg)' }}>▾</span>
         </div>
@@ -350,7 +351,7 @@ export default function FloatingChat({ plan, destination, hotelContext, currentA
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FF8210" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                           <polyline points="20 6 9 17 4 12" />
                         </svg>
-                        <span style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 11, color: '#FF8210' }}>Plan updated!</span>
+                        <span style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 11, color: '#FF8210' }}>{t('activity.planUpdated')}</span>
                       </div>
                     )}
 
@@ -408,7 +409,7 @@ export default function FloatingChat({ plan, destination, hotelContext, currentA
                   {2 - guestMsgCount > 0 ? `${2 - guestMsgCount} free message${2 - guestMsgCount === 1 ? '' : 's'} left` : 'Free limit reached'}
                 </span>
                 <button onClick={onGateRequired} style={{ fontFamily: "'Poppins',sans-serif", fontSize: 11, fontWeight: 600, color: '#FF8210', background: 'none', border: '1px solid rgba(255,130,16,0.4)', borderRadius: 100, padding: '2px 8px', cursor: 'pointer' }}>
-                  Sign in for unlimited
+                  {t('auth.signInForMore')}
                 </button>
               </div>
             )}

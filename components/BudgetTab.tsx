@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { ItineraryHandle, Day } from './EditableItinerary';
 import type { AcceptedHotel } from './StayTab';
+import { useTranslations } from 'next-intl';
 
 /* ─── Types ──────────────────────────────────────────────────── */
 type Currency = 'USD' | 'EUR' | 'AUD' | 'BRL';
@@ -102,6 +103,7 @@ function SummaryCard({ label, amount, symbol, currency, color }: {
 
 /* ─── Main component ─────────────────────────────────────────── */
 export default function BudgetTab({ itineraryRef, acceptedHotels, prompt, version }: Props) {
+  const t = useTranslations('plan');
   const [budget,       setBudget]       = useState<BudgetResult | null>(null);
   const [rates,        setRates]        = useState<ExchangeRates | null>(null);
   const [currency,     setCurrency]     = useState<Currency>('USD');
@@ -265,10 +267,10 @@ export default function BudgetTab({ itineraryRef, acceptedHotels, prompt, versio
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
         <div>
           <h2 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 20, color: '#00447B', margin: '0 0 4px' }}>
-            Budget Estimator
+            {t('budget.tabLabel')}
           </h2>
           <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, color: '#6C6D6F', margin: 0 }}>
-            Based on your accepted activities and confirmed hotel
+            {t('budget.basedOn')}
           </p>
         </div>
 
@@ -307,10 +309,10 @@ export default function BudgetTab({ itineraryRef, acceptedHotels, prompt, versio
       {stale && !loading && (
         <div style={{ background: 'rgba(255,130,16,0.07)', border: '1.5px dashed rgba(255,130,16,0.40)', borderRadius: 10, padding: '10px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
           <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, color: '#92400E', margin: 0 }}>
-            Your itinerary changed. Recalculate to update the budget.
+            {t('budget.recalcNeeded')}
           </p>
           <button onClick={calculate} style={{ background: '#FF8210', color: '#fff', border: 'none', borderRadius: 100, padding: '7px 16px', fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-            Recalculate
+            {t('budget.recalculate')}
           </button>
         </div>
       )}
@@ -319,7 +321,7 @@ export default function BudgetTab({ itineraryRef, acceptedHotels, prompt, versio
       {!loading && !budget && !error && (
         <div style={{ background: '#fff', borderRadius: 16, padding: '40px 24px', textAlign: 'center', border: '1.5px solid rgba(0,68,123,0.08)', boxShadow: '0 2px 20px rgba(0,68,123,0.07)' }}>
           <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(0,68,123,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 24 }}>💰</div>
-          <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 16, color: '#00447B', margin: '0 0 8px' }}>Get your budget estimate</p>
+          <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 16, color: '#00447B', margin: '0 0 8px' }}>{t('budget.getEstimate')}</p>
           <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, color: '#6C6D6F', margin: '0 0 20px', lineHeight: 1.6 }}>
             AI will analyse your accepted activities{acceptedHotels.length > 0 ? ' and confirmed hotel' : ''} to build a realistic cost breakdown.
           </p>
@@ -327,7 +329,7 @@ export default function BudgetTab({ itineraryRef, acceptedHotels, prompt, versio
             onClick={calculate}
             style={{ background: '#FF8210', color: '#fff', border: 'none', borderRadius: 100, padding: '11px 28px', fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 14, cursor: 'pointer' }}
           >
-            Generate Budget Estimate
+            {t('budget.generate')}
           </button>
           {acceptedHotels.length === 0 && (
             <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: '#9CA3AF', margin: '12px 0 0' }}>
@@ -341,8 +343,8 @@ export default function BudgetTab({ itineraryRef, acceptedHotels, prompt, versio
       {loading && (
         <div style={{ background: '#fff', borderRadius: 16, padding: '48px 24px', textAlign: 'center', border: '1.5px solid rgba(0,68,123,0.08)' }}>
           <div style={{ width: 44, height: 44, borderRadius: '50%', border: '3px solid rgba(0,68,123,0.10)', borderTop: '3px solid #FF8210', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
-          <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 15, color: '#00447B', marginBottom: 6 }}>Estimating your budget...</p>
-          <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, color: '#9CA3AF' }}>Analysing accepted activities and confirmed stays</p>
+          <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 15, color: '#00447B', marginBottom: 6 }}>{t('budget.estimating')}</p>
+          <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, color: '#9CA3AF' }}>{t('budget.analysing')}</p>
         </div>
       )}
 
@@ -362,7 +364,7 @@ export default function BudgetTab({ itineraryRef, acceptedHotels, prompt, versio
           {/* Summary cards */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 12, marginBottom: 20 }}>
             <div style={{ background: 'linear-gradient(135deg,#00447B,#0369A1)', borderRadius: 14, padding: '18px 20px', gridColumn: '1/-1' }}>
-              <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Confirmed Total</p>
+              <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('budget.confirmedTotal')}</p>
               <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 32, color: '#fff', margin: 0 }}>
                 {fmt(conv(budget.summary.confirmed_total), sym, currency)}
               </p>
@@ -394,7 +396,7 @@ export default function BudgetTab({ itineraryRef, acceptedHotels, prompt, versio
                 cursor: 'pointer',
               }}
             >
-              🔄 Recalculate
+              🔄 {t('budget.recalculate')}
             </button>
           </div>
 
@@ -448,7 +450,7 @@ export default function BudgetTab({ itineraryRef, acceptedHotels, prompt, versio
 
                       {pendingItems.length > 0 && (
                         <div style={{ margin: '8px 12px', border: '1.5px dashed rgba(0,68,123,0.15)', borderRadius: 10, padding: '8px 12px' }}>
-                          <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>Pending / Not confirmed</p>
+                          <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>{t('budget.pending')}</p>
                           {pendingItems.map((item, i) => (
                             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, padding: '4px 0', opacity: 0.65 }}>
                               <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: '#555' }}>{CATEGORY_ICONS[item.category]} {item.label}</span>

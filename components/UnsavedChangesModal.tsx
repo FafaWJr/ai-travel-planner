@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { AlertTriangle, Save, LogOut, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface UnsavedChangesModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ export default function UnsavedChangesModal({
   onLeaveWithoutSaving,
   onStay,
 }: UnsavedChangesModalProps) {
+  const t = useTranslations('plan');
   if (!isOpen) return null;
 
   return (
@@ -92,7 +94,7 @@ export default function UnsavedChangesModal({
             margin: '0 0 10px 0',
           }}
         >
-          You have unsaved changes
+          {t('unsaved.message')}
         </h2>
 
         {/* Body */}
@@ -176,7 +178,7 @@ export default function UnsavedChangesModal({
               textDecoration: 'underline',
             }}
           >
-            Stay on this page
+            {t('unsaved.stay')}
           </button>
         </div>
       </div>

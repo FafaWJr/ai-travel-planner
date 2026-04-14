@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 
 interface GateOverlayProps {
   onClose: () => void
@@ -15,6 +16,7 @@ interface GateOverlayProps {
 }
 
 export default function GateOverlay({ onClose, tripSnapshot }: GateOverlayProps) {
+  const t = useTranslations('plan')
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -93,7 +95,7 @@ export default function GateOverlay({ onClose, tripSnapshot }: GateOverlayProps)
           color: '#00447B',
           marginBottom: 10,
         }}>
-          Sign in to unlock this
+          {t('auth.signInToUnlock')}
         </h2>
         <p style={{
           fontFamily: 'var(--font-body)',
@@ -104,7 +106,7 @@ export default function GateOverlay({ onClose, tripSnapshot }: GateOverlayProps)
         }}>
           Create a free account to save your trip, move activities, get more suggestions, and come back to it anytime.
           <br />
-          <strong style={{ color: '#00447B' }}>Your current trip will be kept.</strong>
+          <strong style={{ color: '#00447B' }}>{t('auth.tripKept')}</strong>
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -126,7 +128,7 @@ export default function GateOverlay({ onClose, tripSnapshot }: GateOverlayProps)
             onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#003566' }}
             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = '#00447B' }}
           >
-            Sign in
+            {t('auth.signIn')}
           </button>
 
           <button
@@ -147,7 +149,7 @@ export default function GateOverlay({ onClose, tripSnapshot }: GateOverlayProps)
             onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#e6720e' }}
             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = '#FF8210' }}
           >
-            Create free account
+            {t('auth.createAccount')}
           </button>
 
           <button
@@ -163,7 +165,7 @@ export default function GateOverlay({ onClose, tripSnapshot }: GateOverlayProps)
               cursor: 'pointer',
             }}
           >
-            Maybe later
+            {t('auth.maybeLater')}
           </button>
         </div>
       </div>

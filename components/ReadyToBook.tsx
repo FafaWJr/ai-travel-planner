@@ -1,4 +1,6 @@
+'use client';
 import React from 'react';
+import { useTranslations } from 'next-intl';
 
 interface ReadyToBookProps {
   destination: string;
@@ -53,13 +55,14 @@ const partners = [
 ];
 
 export default function ReadyToBook({ destination }: ReadyToBookProps) {
+  const t = useTranslations('plan');
   return (
     <div style={{ border: '1px solid #e5e7eb', borderRadius: '16px', overflow: 'hidden', fontFamily: 'Inter, sans-serif', maxWidth: '860px', margin: '32px auto 0' }}>
 
       {/* Header */}
       <div style={{ backgroundColor: '#00447B', padding: '18px 24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#fff', fontSize: '18px', fontWeight: 600, marginBottom: '4px' }}>
-          ✈️ Ready to Book?
+          ✈️ {t('booking.ctaTitle')}
         </div>
         <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', margin: 0 }}>
           Best deals for <strong style={{ color: '#fff' }}>{destination}</strong>, handpicked partners for your trip.
@@ -113,7 +116,7 @@ export default function ReadyToBook({ destination }: ReadyToBookProps) {
 
         {/* Footer */}
         <p style={{ textAlign: 'center', fontSize: '12px', color: '#9ca3af', marginTop: '16px', paddingTop: '14px', borderTop: '1px solid #e5e7eb' }}>
-          We may earn a small commission when you book through these links, at no extra cost to you.
+          {t('booking.disclaimer')}
         </p>
 
       </div>

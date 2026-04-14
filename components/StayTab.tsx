@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { ItineraryHandle } from '@/components/EditableItinerary';
 import { bookingComLink } from '@/lib/affiliate';
+import { useTranslations } from 'next-intl';
 
 type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'night';
 
@@ -145,6 +146,7 @@ function HotelCard({
   photos: string[] | null | '__loading__';
   destination: string;
 }) {
+  const t = useTranslations('plan');
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hotel.googleMapsQuery)}`;
 
   return (
@@ -161,7 +163,7 @@ function HotelCard({
       flexDirection: 'column',
     }}>
       {isConfirmed && (
-        <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 5, background: '#16A34A', color: '#fff', fontFamily: "'Poppins',sans-serif", fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 100, display: 'flex', alignItems: 'center', gap: 5 }}>✓ Your stay</div>
+        <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 5, background: '#16A34A', color: '#fff', fontFamily: "'Poppins',sans-serif", fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 100, display: 'flex', alignItems: 'center', gap: 5 }}>✓ {t('stays.yourStay')}</div>
       )}
       <PhotoGallery photos={photos} name={hotel.name} />
       <div style={{ padding: '14px 16px 16px', flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -173,7 +175,7 @@ function HotelCard({
           <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: '#6C6D6F' }}>📍 {hotel.neighborhood}</span>
           <a href={mapsUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
             style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: '#FF8210', fontWeight: 600, textDecoration: 'none', marginLeft: 2 }}>
-            View on map ↗
+            {t('stays.viewOnMap')} ↗
           </a>
         </div>
         <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, color: '#555', lineHeight: 1.6, margin: '0 0 10px', flex: 1 }}>
@@ -185,16 +187,16 @@ function HotelCard({
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
           <div>
             <span style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 14, color: '#00447B' }}>{hotel.priceRange}</span>
-            <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: '#9CA3AF', marginLeft: 4 }}>(est.)</span>
+            <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: '#9CA3AF', marginLeft: 4 }}>({t('stays.estSuffix')})</span>
           </div>
           {isConfirmed ? (
-            <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: 12, color: '#16A34A', fontWeight: 600 }}>✓ Added</span>
+            <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: 12, color: '#16A34A', fontWeight: 600 }}>✓ {t('stays.added')}</span>
           ) : (
             <button onClick={onChoose}
               style={{ background: '#00447B', color: '#fff', border: 'none', borderRadius: 100, padding: '9px 18px', fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, transition: 'background 0.15s' }}
               onMouseEnter={e => { e.currentTarget.style.background = '#003566'; }}
               onMouseLeave={e => { e.currentTarget.style.background = '#00447B'; }}
-            >Choose This Stay</button>
+            >{t('stays.chooseStay')}</button>
           )}
         </div>
         {/* Booking.com affiliate button */}
@@ -289,6 +291,7 @@ function HotelCarousel({ hotels, segment, segConfirmed, chooseHotel, photoCache,
 
 /* ─── Segment confirmed summary ──────────────────────────────── */
 function ConfirmedSummary({ hotel, segment }: AcceptedHotel) {
+  const t = useTranslations('plan');
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hotel.googleMapsQuery)}`;
   return (
     <div style={{ background: 'rgba(22,163,74,0.06)', border: '1.5px solid rgba(22,163,74,0.25)', borderRadius: 12, padding: '14px 16px' }}>
@@ -307,7 +310,7 @@ function ConfirmedSummary({ hotel, segment }: AcceptedHotel) {
         </div>
         <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
           style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: '#FF8210', fontWeight: 600, textDecoration: 'none', flexShrink: 0 }}>
-          Map ↗
+          {t('stays.mapLink')} ↗
         </a>
       </div>
       <a
@@ -346,6 +349,7 @@ async function fetchHotelPhotosFromAPI(hotelName: string, city: string): Promise
 
 /* ─── Main component ─────────────────────────────────────────── */
 export default function StayTab({ prompt, destination, checkIn, checkOut, budget, itineraryRef, onAddToItinerary, onRemoveActivitiesMatching, onHotelsConfirmed, externalAccepted }: Props) {
+  const t = useTranslations('plan');
   const [segments,      setSegments]      = useState<LocationSegment[]>([]);
   const [seenIds,       setSeenIds]       = useState<Set<string>>(new Set());
   const [confirmed,     setConfirmed]     = useState<Record<string, AcceptedHotel>>({});
@@ -499,7 +503,7 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
       {/* ── Header ── */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginBottom: 14, paddingBottom: 10, borderBottom: '2px solid rgba(0,68,123,0.10)' }}>
         <h2 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 22, color: '#00447B', margin: 0 }}>
-          Where to Stay
+          {t('stays.tabLabel')}
         </h2>
         {totalSegments > 1 && (
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -529,10 +533,10 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
       }}>
         <div>
           <p style={{ color: 'white', fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 15, margin: '0 0 2px' }}>
-            Ready to book your stay?
+            {t('stays.readyToBook')}
           </p>
           <p style={{ color: 'rgba(255,255,255,0.75)', fontFamily: "'Lato', sans-serif", fontSize: 13, fontWeight: 300, margin: 0 }}>
-            Search thousands of hotels on Booking.com. Best price guarantee.
+            {t('stays.bookingDesc')}
           </p>
         </div>
         <a
@@ -546,7 +550,7 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
             whiteSpace: 'nowrap', flexShrink: 0,
           }}
         >
-          Search Hotels →
+          {t('stays.searchHotels')} →
         </a>
       </div>
 
@@ -563,8 +567,8 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
       {loading && (
         <div style={{ background: '#fff', borderRadius: 16, padding: '48px 24px', textAlign: 'center', border: '1.5px solid rgba(0,68,123,0.08)' }}>
           <div style={{ width: 44, height: 44, borderRadius: '50%', border: '3px solid rgba(0,68,123,0.10)', borderTop: '3px solid #FF8210', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
-          <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 15, color: '#00447B', marginBottom: 6 }}>Finding the best stays for you...</p>
-          <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, color: '#9CA3AF' }}>Matching hotels to your itinerary and travel style</p>
+          <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 15, color: '#00447B', marginBottom: 6 }}>{t('stays.findingStays')}</p>
+          <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, color: '#9CA3AF' }}>{t('stays.matchingStays')}</p>
         </div>
       )}
 
@@ -574,7 +578,7 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
           <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 14, color: '#DC2626', marginBottom: 12 }}>{error}</p>
           <button onClick={() => loadSuggestions()}
             style={{ background: '#FF8210', color: '#fff', border: 'none', borderRadius: 100, padding: '9px 22px', fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
-            Try again
+            {t('stays.tryAgain')}
           </button>
         </div>
       )}
@@ -684,7 +688,7 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
         <div style={{ marginTop: 24, padding: '14px 18px', background: 'rgba(22,163,74,0.08)', border: '1.5px solid rgba(22,163,74,0.25)', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 20 }}>🎉</span>
           <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 13, color: '#15803D', margin: 0 }}>
-            All accommodation confirmed! Your hotels have been added to the itinerary.
+            {t('stays.allConfirmed')}
           </p>
         </div>
       )}
