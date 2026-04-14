@@ -662,5 +662,94 @@
       "deleteTrip": "Eliminar viaje"
     },
     "deleteConfirm": "¿Eliminar este viaje? Esta acción no se puede deshacer."
+  },
+  "plan": {
+    "loading": "Cargando tu plan...",
+    "noPrompt": "No se proporcionó ningún destino.",
+    "startPlanning": "Empezar a planificar",
+    "crafting": "Creando tu viaje perfecto...",
+    "usuallyTakes": "Esto suele tardar unos 30 segundos",
+    "newTrip": "Nuevo viaje",
+    "timeOfDay": {
+      "morning": "Mañana",
+      "afternoon": "Tarde",
+      "evening": "Noche",
+      "night": "Madrugada"
+    },
+    "activity": {
+      "addedByYou": "Añadido por ti",
+      "addedByLuna": "Añadido por Luna",
+      "moveTo": "Mover a",
+      "addToPlan": "Añadir al plan",
+      "planUpdated": "¡Plan actualizado!",
+      "addToItinerary": "Añadir al itinerario",
+      "tapToSearch": "Toca para buscar este lugar"
+    },
+    "notes": {
+      "label": "Mis notas para este día",
+      "saved": "¡Nota guardada!"
+    },
+    "print": {
+      "button": "Imprimir / Guardar como PDF",
+      "heading": "Tu itinerario personalizado",
+      "footer": "lunaletsgo.com · Planificación de viajes con IA"
+    },
+    "day": {
+      "confirmed": "Confirmado"
+    },
+    "chat": {
+      "name": "Luna",
+      "role": "Asistente de Viaje con IA"
+    },
+    "stays": {
+      "tabLabel": "Dónde Alojarse",
+      "yourStay": "Tu alojamiento",
+      "viewOnMap": "Ver en el mapa",
+      "estSuffix": "est.",
+      "added": "Añadido",
+      "chooseStay": "Elegir este alojamiento",
+      "mapLink": "Mapa",
+      "readyToBook": "¿Listo para reservar tu alojamiento?",
+      "bookingDesc": "Busca miles de hoteles en Booking.com. Garantía de mejor precio.",
+      "searchHotels": "Buscar Hoteles",
+      "findingStays": "Encontrando los mejores alojamientos para ti...",
+      "matchingStays": "Combinando hoteles con tu itinerario y estilo de viaje",
+      "tryAgain": "Intentar de nuevo",
+      "allConfirmed": "¡Todo el alojamiento confirmado! Tus hoteles han sido añadidos al itinerario."
+    },
+    "budget": {
+      "tabLabel": "Estimación de Gastos",
+      "basedOn": "Basado en tus actividades aceptadas y el alojamiento confirmado",
+      "stays": "Alojamiento",
+      "recalcNeeded": "Tu itinerario cambió. Recalcula para actualizar el presupuesto.",
+      "recalculate": "Recalcular",
+      "getEstimate": "Obtener estimación de gastos",
+      "generate": "Generar Estimación de Gastos",
+      "estimating": "Estimando tu presupuesto...",
+      "analysing": "Analizando actividades aceptadas y alojamientos confirmados",
+      "confirmedTotal": "Total Confirmado",
+      "pending": "Pendiente / No confirmado"
+    },
+    "auth": {
+      "signInForMore": "Inicia sesión para acceso ilimitado",
+      "signInToUnlock": "Inicia sesión para desbloquear",
+      "tripKept": "Tu viaje actual se mantendrá.",
+      "signIn": "Iniciar sesión",
+      "createAccount": "Crear cuenta gratuita",
+      "maybeLater": "Ahora no"
+    },
+    "booking": {
+      "ctaTitle": "¿Listo para Reservar?",
+      "disclaimer": "Podemos ganar una pequeña comisión cuando reservas a través de nuestros enlaces, sin costo adicional para ti."
+    },
+    "unsaved": {
+      "message": "Tienes cambios sin guardar",
+      "stay": "Permanecer en esta página"
+    },
+    "finalize": "Finalizar Mi Viaje",
+    "moreIdeas": "Más ideas para tu viaje",
+    "loadingIdeas": "Buscando más ideas...",
+    "close": "Cerrar",
+    "time": "Hora"
   }
 }

@@ -662,5 +662,94 @@
       "deleteTrip": "Delete trip"
     },
     "deleteConfirm": "Delete this trip? This cannot be undone."
+  },
+  "plan": {
+    "loading": "Loading your plan...",
+    "noPrompt": "No trip prompt provided.",
+    "startPlanning": "Start planning",
+    "crafting": "Crafting your perfect trip...",
+    "usuallyTakes": "This usually takes about 30 seconds",
+    "newTrip": "New trip",
+    "timeOfDay": {
+      "morning": "Morning",
+      "afternoon": "Afternoon",
+      "evening": "Evening",
+      "night": "Night"
+    },
+    "activity": {
+      "addedByYou": "Added by you",
+      "addedByLuna": "Added by Luna",
+      "moveTo": "Move to",
+      "addToPlan": "Add to plan",
+      "planUpdated": "Plan updated!",
+      "addToItinerary": "Add to itinerary",
+      "tapToSearch": "Tap to search this place"
+    },
+    "notes": {
+      "label": "My Notes for this day",
+      "saved": "Note saved!"
+    },
+    "print": {
+      "button": "Print / Save as PDF",
+      "heading": "Your personalised itinerary",
+      "footer": "lunaletsgo.com · AI-powered travel planning"
+    },
+    "day": {
+      "confirmed": "Confirmed"
+    },
+    "chat": {
+      "name": "Luna",
+      "role": "AI Travel Assistant"
+    },
+    "stays": {
+      "tabLabel": "Where to Stay",
+      "yourStay": "Your stay",
+      "viewOnMap": "View on map",
+      "estSuffix": "est.",
+      "added": "Added",
+      "chooseStay": "Choose This Stay",
+      "mapLink": "Map",
+      "readyToBook": "Ready to book your stay?",
+      "bookingDesc": "Search thousands of hotels on Booking.com. Best price guarantee.",
+      "searchHotels": "Search Hotels",
+      "findingStays": "Finding the best stays for you...",
+      "matchingStays": "Matching hotels to your itinerary and travel style",
+      "tryAgain": "Try again",
+      "allConfirmed": "All accommodation confirmed! Your hotels have been added to the itinerary."
+    },
+    "budget": {
+      "tabLabel": "Budget Estimator",
+      "basedOn": "Based on your accepted activities and confirmed hotel",
+      "stays": "Stays",
+      "recalcNeeded": "Your itinerary changed. Recalculate to update the budget.",
+      "recalculate": "Recalculate",
+      "getEstimate": "Get your budget estimate",
+      "generate": "Generate Budget Estimate",
+      "estimating": "Estimating your budget...",
+      "analysing": "Analysing accepted activities and confirmed stays",
+      "confirmedTotal": "Confirmed Total",
+      "pending": "Pending / Not confirmed"
+    },
+    "auth": {
+      "signInForMore": "Sign in for unlimited",
+      "signInToUnlock": "Sign in to unlock this",
+      "tripKept": "Your current trip will be kept.",
+      "signIn": "Sign in",
+      "createAccount": "Create free account",
+      "maybeLater": "Maybe later"
+    },
+    "booking": {
+      "ctaTitle": "Ready to Book?",
+      "disclaimer": "We may earn a small commission when you book through these links, at no extra cost to you."
+    },
+    "unsaved": {
+      "message": "You have unsaved changes",
+      "stay": "Stay on this page"
+    },
+    "finalize": "Finalize My Trip",
+    "moreIdeas": "A few more ideas for your trip",
+    "loadingIdeas": "Looking for extra ideas...",
+    "close": "Close",
+    "time": "Time"
   }
 }
