@@ -220,10 +220,11 @@ Config: `localePrefix: 'as-needed'` via next-intl v4, `i18n/routing.ts`
 | `app/[locale]/about/page.tsx` | Done | Done | Done |
 | `app/[locale]/blog/page.tsx` (index UI only) | Done | Done | Done |
 | `app/[locale]/my-trips/page.tsx` | Done | Done | Done |
+| `app/[locale]/plan/page.tsx` + plan sub-components | Done | Done | Done |
 | Other pages | Not started | Not started | Not started |
 
 **Message namespaces** (`messages/*.json`):
-`nav`, `hero`, `howItWorks`, `features`, `yourway`, `meetLuna`, `tripIdeas`, `quiz`, `faq`, `finalCta`, `footer`, `language`, `start`, `deals`, `tripIdeasPage`, `quizPage`, `about`, `blogIndex`, `myTrips`
+`nav`, `hero`, `howItWorks`, `features`, `yourway`, `meetLuna`, `tripIdeas`, `quiz`, `faq`, `finalCta`, `footer`, `language`, `start`, `deals`, `tripIdeasPage`, `quizPage`, `about`, `blogIndex`, `myTrips`, `plan`
 
 **Pattern**: Client components use `useTranslations()`, Server components use `getTranslations()`.
 **Links**: Use `Link` from `@/i18n/navigation` (NOT `next/link`) for all internal navigation.
