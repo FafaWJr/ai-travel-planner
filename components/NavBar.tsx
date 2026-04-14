@@ -194,14 +194,14 @@ function NavInner() {
                 )}
               </div>
             ) : (
-              <Link
+              <a
                 href={loginHref}
                 style={{ marginLeft: 8, display: 'inline-block', padding: '8px 20px', borderRadius: 'var(--r-pill)', border: '1.5px solid var(--orange)', color: 'var(--orange)', fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 14, textDecoration: 'none', transition: 'background 0.15s, color 0.15s' }}
                 onMouseEnter={e => { const el = e.currentTarget as HTMLAnchorElement; el.style.background = 'var(--orange)'; el.style.color = '#fff' }}
                 onMouseLeave={e => { const el = e.currentTarget as HTMLAnchorElement; el.style.background = 'transparent'; el.style.color = 'var(--orange)' }}
               >
                 {tNav('login')}
-              </Link>
+              </a>
             )
           )}
         </div>
@@ -289,9 +289,9 @@ function NavInner() {
                 )}
               </div>
             ) : (
-              <Link href={loginHref} style={{ display: 'inline-block', padding: '7px 16px', borderRadius: 'var(--r-pill)', border: '1.5px solid var(--orange)', color: 'var(--orange)', fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>
+              <a href={loginHref} style={{ display: 'inline-block', padding: '7px 16px', borderRadius: 'var(--r-pill)', border: '1.5px solid var(--orange)', color: 'var(--orange)', fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>
                 {tNav('login')}
-              </Link>
+              </a>
             )
           )}
           {/* Hamburger */}
