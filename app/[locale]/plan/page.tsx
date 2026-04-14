@@ -337,6 +337,18 @@ function PlanContent() {
   const t            = useTranslations('plan');
   const searchParams = useSearchParams();
   const router       = useRouter();
+  const sectionLabel = (id: string): string => {
+    const map: Record<string, string> = {
+      overview:      t('tabs.overview'),
+      weather:       t('tabs.weather'),
+      itinerary:     t('tabs.itinerary'),
+      accommodation: t('tabs.stays'),
+      transport:     t('tabs.transport'),
+      budget:        t('tabs.budget'),
+      tips:          t('tabs.tips'),
+    };
+    return map[id] ?? id;
+  };
   const prompt       = searchParams.get('prompt') || '';
   const tripId       = searchParams.get('tripId');
 
@@ -839,7 +851,7 @@ function PlanContent() {
                             disabled={isExportingPDF}
                             style={{ background:'none', border:'1.5px solid rgba(0,68,123,0.20)', color:'#00447B', fontFamily:"'Poppins',sans-serif", fontWeight:500, fontSize:13, padding:'7px 16px', borderRadius:100, cursor: isExportingPDF ? 'default' : 'pointer', opacity: isExportingPDF ? 0.7 : 1 }}
                           >
-                            {isExportingPDF ? 'Generating PDF…' : 'Export PDF'}
+                            {isExportingPDF ? t('header.generatingPdf') : t('header.exportPdf')}
                           </button>
                           <button onClick={()=>router.push('/')} style={{ background:'#00447B', color:'#fff', fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:13, padding:'8px 20px', borderRadius:100, cursor:'pointer', border:'none' }}>
                             {t('newTrip')}
@@ -859,7 +871,7 @@ function PlanContent() {
                           transition: 'background 0.15s', whiteSpace: 'nowrap', flexShrink: 0,
                         }}
                       >
-                        {saveLoading ? 'Saving…' : (savedTripId && !isDirty) ? '✓ Saved' : savedTripId ? 'Save changes' : 'Save trip'}
+                        {saveLoading ? t('header.saving') : (savedTripId && !isDirty) ? '✓ Saved' : savedTripId ? 'Save changes' : t('header.saveTrip')}
                       </button>
                     </div>
             </div>
@@ -888,7 +900,7 @@ function PlanContent() {
                       fontFamily:"'Poppins',sans-serif", fontWeight: active ? 600 : 500, fontSize:13,
                       cursor:'pointer', whiteSpace:'nowrap', transition:'color 0.15s, background 0.15s', flexShrink:0,
                     }}>
-                      <s.Icon /> {s.label}
+                      <s.Icon /> {sectionLabel(s.id)}
                     </button>
                   );
                 })}
@@ -969,12 +981,12 @@ function PlanContent() {
                   return <>
                     {prev ? (
                       <button onClick={()=>setActiveSection(prev.id)} style={{ display:'flex', alignItems:'center', gap:6, background:'#fff', border:'1.5px solid rgba(0,68,123,0.15)', color:'#00447B', fontFamily:"'Poppins',sans-serif", fontWeight:500, fontSize:13, padding:'8px 16px', borderRadius:100, cursor:'pointer' }}>
-                        ← {prev.label}
+                        ← {sectionLabel(prev.id)}
                       </button>
                     ) : <div />}
                     {next && (
                       <button onClick={()=>setActiveSection(next.id)} style={{ display:'flex', alignItems:'center', gap:6, background:'#00447B', border:'none', color:'#fff', fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:13, padding:'8px 18px', borderRadius:100, cursor:'pointer' }}>
-                        {next.label} →
+                        {sectionLabel(next.id)} →
                       </button>
                     )}
                   </>;

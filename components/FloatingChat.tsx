@@ -421,7 +421,7 @@ export default function FloatingChat({ plan, destination, hotelContext, currentA
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && send()}
-                placeholder="Ask Luna anything about your trip..."
+                placeholder={t('chat.placeholder')}
                 style={{ flex: 1, background: '#F4F7FB', border: '1.5px solid rgba(0,68,123,0.12)', borderRadius: 10, padding: '8px 12px', fontSize: 13, color: '#000', outline: 'none', fontFamily: "'Inter',sans-serif" }}
                 onFocus={e => (e.target.style.borderColor = '#00447B')}
                 onBlur={e => (e.target.style.borderColor = 'rgba(0,68,123,0.12)')}

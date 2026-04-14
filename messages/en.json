@@ -699,7 +699,8 @@
     },
     "chat": {
       "name": "Luna",
-      "role": "AI Travel Assistant"
+      "role": "AI Travel Assistant",
+      "placeholder": "Ask Luna anything about your trip..."
     },
     "stays": {
       "tabLabel": "Where to Stay",
@@ -750,6 +751,33 @@
     "moreIdeas": "A few more ideas for your trip",
     "loadingIdeas": "Looking for extra ideas...",
     "close": "Close",
-    "time": "Time"
+    "time": "Time",
+    "tabs": {
+      "overview": "Overview",
+      "weather": "Weather",
+      "itinerary": "Itinerary",
+      "stays": "Stays",
+      "transport": "Transport",
+      "budget": "Budget",
+      "tips": "Tips"
+    },
+    "header": {
+      "saveTrip": "Save trip",
+      "saveTripAndLeave": "Save trip and leave",
+      "saving": "Saving...",
+      "exportPdf": "Export PDF",
+      "generatingPdf": "Generating PDF..."
+    },
+    "itinerary": {
+      "accepted": "accepted",
+      "removed": "removed",
+      "toReview": "to review",
+      "percentAccepted": "% accepted",
+      "daysConfirmed": "{n} of {total} {total, plural, one {day} other {days}} confirmed",
+      "acceptPrompt": "Accept individual days below when you're happy with them",
+      "acceptDay": "Accept this day",
+      "dayAccepted": "Day accepted — click to undo",
+      "moreIdeas": "More ideas for this day"
+    }
   }
 }

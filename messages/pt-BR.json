@@ -699,7 +699,8 @@
     },
     "chat": {
       "name": "Luna",
-      "role": "Assistente de Viagem com IA"
+      "role": "Assistente de Viagem com IA",
+      "placeholder": "Pergunte à Luna qualquer coisa sobre sua viagem..."
     },
     "stays": {
       "tabLabel": "Onde se Hospedar",
@@ -750,6 +751,33 @@
     "moreIdeas": "Mais ideias para a sua viagem",
     "loadingIdeas": "Buscando mais ideias...",
     "close": "Fechar",
-    "time": "Horário"
+    "time": "Horário",
+    "tabs": {
+      "overview": "Visão Geral",
+      "weather": "Clima",
+      "itinerary": "Roteiro",
+      "stays": "Hospedagem",
+      "transport": "Transporte",
+      "budget": "Orçamento",
+      "tips": "Dicas"
+    },
+    "header": {
+      "saveTrip": "Salvar viagem",
+      "saveTripAndLeave": "Salvar viagem e sair",
+      "saving": "Salvando...",
+      "exportPdf": "Exportar PDF",
+      "generatingPdf": "Gerando PDF..."
+    },
+    "itinerary": {
+      "accepted": "aceito",
+      "removed": "removido",
+      "toReview": "para revisar",
+      "percentAccepted": "% aceito",
+      "daysConfirmed": "{n} de {total} {total, plural, one {dia} other {dias}} confirmado",
+      "acceptPrompt": "Aceite os dias abaixo quando estiver satisfeito com eles",
+      "acceptDay": "Aceitar este dia",
+      "dayAccepted": "Dia aceito — clique para desfazer",
+      "moreIdeas": "Mais ideias para este dia"
+    }
   }
 }

@@ -482,10 +482,10 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
       {/* ── Counters + progress bar ── */}
       <div style={{ background: '#fff', borderRadius: 14, padding: '16px 20px 14px', marginBottom: 16, border: '1px solid rgba(0,68,123,0.08)', boxShadow: '0 1px 8px rgba(0,68,123,0.05)' }}>
         <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10 }}>
-          <StatPill color="#16A34A" bg="rgba(22,163,74,0.12)"  icon="✓">{accepted} accepted</StatPill>
-          <StatPill color="#DC2626" bg="rgba(220,38,38,0.10)"  icon="✕">{declined} removed</StatPill>
-          <StatPill color="#6C6D6F" bg="rgba(0,68,123,0.07)"   icon="○">{pending} to review</StatPill>
-          <span style={{ marginLeft: 'auto', fontFamily: "'Poppins',sans-serif", fontSize: 13, fontWeight: 700, color: '#00447B' }}>{progress}% accepted</span>
+          <StatPill color="#16A34A" bg="rgba(22,163,74,0.12)"  icon="✓">{accepted} {t('itinerary.accepted')}</StatPill>
+          <StatPill color="#DC2626" bg="rgba(220,38,38,0.10)"  icon="✕">{declined} {t('itinerary.removed')}</StatPill>
+          <StatPill color="#6C6D6F" bg="rgba(0,68,123,0.07)"   icon="○">{pending} {t('itinerary.toReview')}</StatPill>
+          <span style={{ marginLeft: 'auto', fontFamily: "'Poppins',sans-serif", fontSize: 13, fontWeight: 700, color: '#00447B' }}>{progress}{t('itinerary.percentAccepted')}</span>
         </div>
         <div style={{ height: 7, background: 'rgba(0,68,123,0.08)', borderRadius: 100, overflow: 'hidden' }}>
           <div style={{ height: '100%', width: `${progress}%`, background: 'linear-gradient(90deg,#16A34A,#4ADE80)', borderRadius: 100, transition: 'width 0.4s ease' }} />
@@ -494,8 +494,8 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
         <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
           <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: '#6C6D6F' }}>
             {confirmedDays === 0
-              ? 'Accept individual days below when you\'re happy with them'
-              : `${confirmedDays} of ${days.length} day${days.length !== 1 ? 's' : ''} confirmed`}
+              ? t('itinerary.acceptPrompt')
+              : t('itinerary.daysConfirmed', { n: confirmedDays, total: days.length })}
           </span>
           <button
             onClick={() => allConfirmed && setShowFinalModal(true)}
@@ -601,7 +601,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
                       onMouseEnter={e => { if (!day.loadingMore) e.currentTarget.style.background = 'rgba(0,68,123,0.04)'; }}
                       onMouseLeave={e => (e.currentTarget.style.background = 'none')}
                     >
-                      {day.loadingMore ? <><InlineSpinner /> Finding ideas...</> : <><span style={{ fontSize: 15 }}>+</span> More ideas for this day</>}
+                      {day.loadingMore ? <><InlineSpinner /> Finding ideas...</> : <><span style={{ fontSize: 15 }}>+</span> {t('itinerary.moreIdeas')}</>}
                     </button>
 
                     {/* Accept Day button */}
@@ -617,7 +617,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
                         cursor: 'pointer', transition: 'all 0.2s',
                       }}
                     >
-                      {day.confirmed ? '✓ Day accepted — click to undo' : '✓ Accept this day'}
+                      {day.confirmed ? `✓ ${t('itinerary.dayAccepted')}` : `✓ ${t('itinerary.acceptDay')}`}
                     </button>
 
                     <DayNotes

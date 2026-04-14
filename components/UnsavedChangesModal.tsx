@@ -135,7 +135,7 @@ export default function UnsavedChangesModal({
             }}
           >
             <Save size={16} />
-            {isSaving ? 'Saving...' : 'Save trip and leave'}
+            {isSaving ? t('header.saving') : t('header.saveTripAndLeave')}
           </button>
 
           {/* Leave without saving */}
