@@ -826,5 +826,12 @@
       "dayAccepted": "Dia aceito — clique para desfazer",
       "moreIdeas": "Mais ideias para este dia"
     }
+  },
+  "legal": {
+    "badge": "Legal",
+    "lastUpdated": "Última atualização",
+    "effective": "Vigente",
+    "appliesTo": "Aplica-se a",
+    "engOnlyBanner": "Esta página está disponível apenas em inglês. Estamos trabalhando nas traduções."
   }
 }

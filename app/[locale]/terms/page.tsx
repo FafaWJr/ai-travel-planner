@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import { getTranslations, getLocale } from 'next-intl/server'
+import NavBar from '@/components/NavBar'
 
 const BASE_URL = 'https://www.lunaletsgo.com';
 
@@ -15,9 +17,23 @@ export const metadata: Metadata = {
   },
 }
 
-export default function TermsOfServicePage() {
+export default async function TermsOfServicePage() {
+  const t = await getTranslations('legal')
+  const locale = await getLocale()
+
   return (
-    <main style={{ fontFamily: "'Inter', sans-serif", background: '#fff', color: '#1a1a2e', minHeight: '100vh' }}>
+    <main style={{ fontFamily: "'Inter', sans-serif", background: '#fff', color: '#1a1a2e', minHeight: '100vh', paddingTop: 68 }}>
+      <NavBar />
+
+      {/* EN-only banner */}
+      {locale !== 'en' && (
+        <div style={{
+          background: '#FFF7ED', borderBottom: '1px solid rgba(255,130,16,0.3)',
+          padding: '12px 64px', fontSize: '13px', color: '#92400E', textAlign: 'center'
+        }}>
+          {t('engOnlyBanner')}
+        </div>
+      )}
 
       {/* Hero */}
       <section style={{ background: '#0B2A4A', borderBottom: '3px solid #FF8210', padding: '56px 64px 48px' }}>
@@ -27,7 +43,7 @@ export default function TermsOfServicePage() {
             fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#FF8210',
             background: 'rgba(255,130,16,0.12)', border: '0.5px solid rgba(255,130,16,0.3)',
             padding: '4px 12px', borderRadius: '20px', marginBottom: '20px'
-          }}>Legal</span>
+          }}>{t('badge')}</span>
           <h1 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: '40px', color: '#fff', lineHeight: 1.2, marginBottom: '16px' }}>
             Terms of <span style={{ color: '#FFBD59' }}>Service</span>
           </h1>
@@ -36,13 +52,13 @@ export default function TermsOfServicePage() {
           </p>
           <div style={{ marginTop: '28px', display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
             {[
-              'Last updated: March 27, 2026',
-              'Effective: March 27, 2026',
-              'Applies to: lunaletsgo.com',
-            ].map((item) => (
-              <div key={item} style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              { label: t('lastUpdated'), value: 'March 27, 2026' },
+              { label: t('effective'), value: 'March 27, 2026' },
+              { label: t('appliesTo'), value: 'lunaletsgo.com' },
+            ].map(({ label, value }) => (
+              <div key={label} style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{ width: '4px', height: '4px', background: '#FF8210', borderRadius: '50%', display: 'inline-block' }} />
-                {item}
+                {label}: {value}
               </div>
             ))}
           </div>

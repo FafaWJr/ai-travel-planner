@@ -826,5 +826,12 @@
       "dayAccepted": "Día aceptado — haz clic para deshacer",
       "moreIdeas": "Más ideas para este día"
     }
+  },
+  "legal": {
+    "badge": "Legal",
+    "lastUpdated": "Última actualización",
+    "effective": "Vigente",
+    "appliesTo": "Se aplica a",
+    "engOnlyBanner": "Esta página solo está disponible en inglés. Estamos trabajando en las traducciones."
   }
 }
