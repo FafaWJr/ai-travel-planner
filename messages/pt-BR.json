@@ -743,8 +743,39 @@
       "ctaTitle": "Pronto para Reservar?",
       "disclaimer": "Podemos ganhar uma pequena comissão quando você reserva pelos nossos links, sem custo adicional para você."
     },
+    "partners": {
+      "bestDealsFor": "Melhores ofertas para",
+      "handpickedSuffix": "parceiros selecionados para a sua viagem.",
+      "hotels": {
+        "category": "Hotéis e Apartamentos",
+        "description": "Compare mais de 1 milhão de propriedades. Cancelamento gratuito na maioria.",
+        "cta": "Encontrar Hospedagem"
+      },
+      "tours": {
+        "category": "Passeios e Experiências",
+        "description": "Passeios com as melhores avaliações, guiados por especialistas locais.",
+        "cta": "Descobrir Atividades"
+      },
+      "uniqueStays": {
+        "category": "Hospedagens Únicas",
+        "description": "Encontre casas, apartamentos e experiências locais autênticas.",
+        "cta": "Ver Hospedagens Únicas"
+      },
+      "guided": {
+        "category": "Experiências Guiadas",
+        "description": "Tours premium, ingressos sem fila, guias privados.",
+        "cta": "Ver Experiências"
+      },
+      "carRental": {
+        "category": "Aluguel de Carros",
+        "description": "Compare todos os principais fornecedores. Garantia de melhor preço.",
+        "cta": "Comparar Aluguéis"
+      }
+    },
     "unsaved": {
       "message": "Você tem alterações não salvas",
+      "body": "Sua viagem tem alterações que ainda não foram salvas, incluindo atividades, notas e conversas com a Luna. Se você sair agora, essas alterações serão perdidas.",
+      "leaveWithout": "Sair sem salvar",
       "stay": "Continuar nesta página"
     },
     "finalize": "Finalizar Minha Viagem",

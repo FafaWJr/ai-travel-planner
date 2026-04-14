@@ -8,6 +8,7 @@ interface ReadyToBookProps {
 
 const partners = [
   {
+    key: 'hotels',
     category: 'Hotels & Apartments',
     name: 'Booking.com',
     description: 'Compare 1M+ properties. Free cancellation on most.',
@@ -17,6 +18,7 @@ const partners = [
     href: 'https://www.awin1.com/cread.php?awinmid=18118&awinaffid=2825924&campaign=LifecycleOnboarding',
   },
   {
+    key: 'tours',
     category: 'Tours & Experiences',
     name: 'GetYourGuide',
     description: 'Top-rated tours and activities led by local experts.',
@@ -26,6 +28,7 @@ const partners = [
     href: 'https://www.getyourguide.com',
   },
   {
+    key: 'uniqueStays',
     category: 'Unique Stays',
     name: 'Airbnb',
     description: 'Find homes, apartments and authentic local experiences.',
@@ -35,6 +38,7 @@ const partners = [
     href: 'https://www.airbnb.com',
   },
   {
+    key: 'guided',
     category: 'Guided Experiences',
     name: 'Viator',
     description: 'Premium tours, skip-the-line tickets, private guides.',
@@ -44,6 +48,7 @@ const partners = [
     href: 'https://www.viator.com',
   },
   {
+    key: 'carRental',
     category: 'Car Rental',
     name: 'Rentalcars.com',
     description: 'Compare all major providers. Best price guarantee.',
@@ -65,7 +70,7 @@ export default function ReadyToBook({ destination }: ReadyToBookProps) {
           ✈️ {t('booking.ctaTitle')}
         </div>
         <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', margin: 0 }}>
-          Best deals for <strong style={{ color: '#fff' }}>{destination}</strong>, handpicked partners for your trip.
+          {t('partners.bestDealsFor')} <strong style={{ color: '#fff' }}>{destination}</strong>, {t('partners.handpickedSuffix')}
         </p>
       </div>
 
@@ -77,7 +82,7 @@ export default function ReadyToBook({ destination }: ReadyToBookProps) {
           {partners.slice(0, 3).map((p) => (
             <div key={p.name} style={{ border: '1px solid #e5e7eb', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: '#fff' }}>
               <span style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: p.color }}>
-                {p.category}
+                {t(`partners.${p.key}.category` as Parameters<typeof t>[0])}
               </span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>
@@ -85,9 +90,9 @@ export default function ReadyToBook({ destination }: ReadyToBookProps) {
                 </div>
                 <p style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: '#111827' }}>{p.name}</p>
               </div>
-              <p style={{ fontSize: '13px', color: '#6b7280', margin: 0, lineHeight: 1.5, flex: 1 }}>{p.description}</p>
+              <p style={{ fontSize: '13px', color: '#6b7280', margin: 0, lineHeight: 1.5, flex: 1 }}>{t(`partners.${p.key}.description` as Parameters<typeof t>[0])}</p>
               <a href={p.href} target="_blank" rel="noopener noreferrer" style={{ fontSize: '13px', fontWeight: 600, color: p.color, textDecoration: 'none', marginTop: '4px' }}>
-                {p.cta}
+                {t(`partners.${p.key}.cta` as Parameters<typeof t>[0])} →
               </a>
             </div>
           ))}
@@ -98,7 +103,7 @@ export default function ReadyToBook({ destination }: ReadyToBookProps) {
           {partners.slice(3).map((p) => (
             <div key={p.name} style={{ border: '1px solid #e5e7eb', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: '#fff' }}>
               <span style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: p.color }}>
-                {p.category}
+                {t(`partners.${p.key}.category` as Parameters<typeof t>[0])}
               </span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>
@@ -106,9 +111,9 @@ export default function ReadyToBook({ destination }: ReadyToBookProps) {
                 </div>
                 <p style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: '#111827' }}>{p.name}</p>
               </div>
-              <p style={{ fontSize: '13px', color: '#6b7280', margin: 0, lineHeight: 1.5, flex: 1 }}>{p.description}</p>
+              <p style={{ fontSize: '13px', color: '#6b7280', margin: 0, lineHeight: 1.5, flex: 1 }}>{t(`partners.${p.key}.description` as Parameters<typeof t>[0])}</p>
               <a href={p.href} target="_blank" rel="noopener noreferrer" style={{ fontSize: '13px', fontWeight: 600, color: p.color, textDecoration: 'none', marginTop: '4px' }}>
-                {p.cta}
+                {t(`partners.${p.key}.cta` as Parameters<typeof t>[0])} →
               </a>
             </div>
           ))}

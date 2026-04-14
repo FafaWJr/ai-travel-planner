@@ -107,7 +107,7 @@ export default function UnsavedChangesModal({
             margin: '0 0 28px 0',
           }}
         >
-          Your trip has changes that haven&apos;t been saved yet, including activities, notes, and conversations with Luna. If you leave now, those changes will be lost.
+          {t('unsaved.body')}
         </p>
 
         {/* Buttons */}
@@ -160,7 +160,7 @@ export default function UnsavedChangesModal({
             }}
           >
             <LogOut size={16} />
-            Leave without saving
+            {t('unsaved.leaveWithout')}
           </button>
 
           {/* Stay */}

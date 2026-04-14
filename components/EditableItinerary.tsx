@@ -564,6 +564,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
                         <TimeSlotSection
                           key={key}
                           containerId={containerId}
+                          slotKey={key}
                           label={label}
                           icon={icon}
                           activities={slotActs}
@@ -664,10 +665,11 @@ export default EditableItinerary;
 
 /* ─── TimeSlotSection ────────────────────────────────────────── */
 function TimeSlotSection({
-  containerId, label, icon, activities, activeId,
+  containerId, slotKey, label, icon, activities, activeId,
   onAccept, onDecline, otherDays, onMoveToDay,
 }: {
   containerId: string;
+  slotKey: TimeSlot;
   label: string;
   icon: string;
   activities: Activity[];
@@ -677,6 +679,7 @@ function TimeSlotSection({
   otherDays: { number: number; title: string }[];
   onMoveToDay: (actId: string, toDayNum: number) => void;
 }) {
+  const t = useTranslations('plan');
   const ids = activities.map(a => a.id);
 
   return (
@@ -684,7 +687,7 @@ function TimeSlotSection({
       {/* Section header — never draggable */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 4px 6px', marginBottom: 4, borderBottom: '1px solid rgba(0,68,123,0.07)' }}>
         <span style={{ fontSize: 13 }}>{icon}</span>
-        <span style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 11, color: '#00447B', textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</span>
+        <span style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 11, color: '#00447B', textTransform: 'uppercase', letterSpacing: 0.5 }}>{t(`timeOfDay.${slotKey}` as Parameters<typeof t>[0])}</span>
       </div>
 
       <SortableContext id={containerId} items={ids} strategy={verticalListSortingStrategy}>

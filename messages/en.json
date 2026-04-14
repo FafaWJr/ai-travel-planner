@@ -743,8 +743,39 @@
       "ctaTitle": "Ready to Book?",
       "disclaimer": "We may earn a small commission when you book through these links, at no extra cost to you."
     },
+    "partners": {
+      "bestDealsFor": "Best deals for",
+      "handpickedSuffix": "handpicked partners for your trip.",
+      "hotels": {
+        "category": "Hotels & Apartments",
+        "description": "Compare 1M+ properties. Free cancellation on most.",
+        "cta": "Find Accommodation"
+      },
+      "tours": {
+        "category": "Tours & Experiences",
+        "description": "Top-rated tours and activities led by local experts.",
+        "cta": "Discover Activities"
+      },
+      "uniqueStays": {
+        "category": "Unique Stays",
+        "description": "Find homes, apartments and authentic local experiences.",
+        "cta": "Browse Unique Stays"
+      },
+      "guided": {
+        "category": "Guided Experiences",
+        "description": "Premium tours, skip-the-line tickets, private guides.",
+        "cta": "Browse Experiences"
+      },
+      "carRental": {
+        "category": "Car Rental",
+        "description": "Compare all major providers. Best price guarantee.",
+        "cta": "Compare Car Rentals"
+      }
+    },
     "unsaved": {
       "message": "You have unsaved changes",
+      "body": "Your trip has changes that haven't been saved yet, including activities, notes, and conversations with Luna. If you leave now, those changes will be lost.",
+      "leaveWithout": "Leave without saving",
       "stay": "Stay on this page"
     },
     "finalize": "Finalize My Trip",
