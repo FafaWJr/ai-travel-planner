@@ -60,7 +60,7 @@ export default function DayNotes({ dayIndex, initialNote, onSave }: DayNotesProp
             setText(e.target.value);
             setSaved(false);
           }}
-          placeholder="Add any personal notes, reminders, or tips for this day..."
+          placeholder={t('notes.placeholder')}
           rows={3}
           style={{
             width: "100%",

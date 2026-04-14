@@ -683,11 +683,15 @@
       "addToPlan": "Adicionar ao plano",
       "planUpdated": "Plano atualizado!",
       "addToItinerary": "Adicionar ao roteiro",
-      "tapToSearch": "Toque para pesquisar este lugar"
+      "tapToSearch": "Toque para pesquisar este lugar",
+      "moveToAnotherDay": "Mover para outro dia",
+      "accept": "Aceitar",
+      "remove": "Remover"
     },
     "notes": {
       "label": "Minhas notas para este dia",
-      "saved": "Nota salva!"
+      "saved": "Nota salva!",
+      "placeholder": "Adicione notas pessoais, lembretes ou dicas para este dia..."
     },
     "print": {
       "button": "Imprimir / Salvar como PDF",
@@ -700,7 +704,13 @@
     "chat": {
       "name": "Luna",
       "role": "Assistente de Viagem com IA",
-      "placeholder": "Pergunte à Luna qualquer coisa sobre sua viagem..."
+      "placeholder": "Pergunte à Luna qualquer coisa sobre sua viagem...",
+      "welcomeHey": "Olá, {name}!",
+      "welcomeHeyThere": "Olá!",
+      "welcomeTrip": "Já dei uma olhada na sua viagem para {destination} e estou muito animada com ela.",
+      "welcomeGeneric": "Já dei uma olhada no seu roteiro e estou muito animada.",
+      "welcomeIntro": "Sou a Luna, sua assistente de viagem pessoal aqui no Luna Let's Go!",
+      "welcomeCta": "Precisa adicionar um hotel, trocar uma atividade ou quer minha opinião honesta sobre o que vale a pena? É só perguntar, estou aqui para tudo. Vamos tornar essa viagem absolutamente inesquecível!"
     },
     "stays": {
       "tabLabel": "Onde se Hospedar",

@@ -144,17 +144,19 @@ function renderContent(text: string): React.ReactNode {
   });
 }
 
-function buildWelcome(firstName: string | null, destination: string | null): string {
-  const nameGreeting = firstName ? `Hey ${firstName}!` : `Hey there!`;
-  const destinationLine = destination
-    ? `I've already had a look at your trip to ${destination} and I'm seriously excited for you.`
-    : `I've already had a look at your itinerary and I'm seriously excited for you.`;
-  return `${nameGreeting} I'm Luna, your personal travel agent here at Luna Let's Go! ${destinationLine} Need to add a hotel, swap an activity, or just want my honest take on what's worth it and what to skip? Just ask, I'm here for all of it. Let's make this trip absolutely unforgettable!`;
-}
-
 export default function FloatingChat({ plan, destination, hotelContext, currentActivities, onAddToItinerary, onPlanUpdate, onTripUpdate, isGuest = false, onGateRequired, initialMessages, savedTripId, onMessagesChange }: Props) {
   const locale = useLocale();
   const t = useTranslations('plan');
+
+  const buildWelcome = (firstName: string | null, dest: string | null): string => {
+    const greeting = firstName
+      ? t('chat.welcomeHey', { name: firstName })
+      : t('chat.welcomeHeyThere');
+    const tripRef = dest
+      ? t('chat.welcomeTrip', { destination: dest })
+      : t('chat.welcomeGeneric');
+    return `${greeting} ${t('chat.welcomeIntro')} ${tripRef} ${t('chat.welcomeCta')}`;
+  };
   const [open, setOpen] = useState(true);
   const [msgs, setMsgs] = useState<Msg[]>(
     initialMessages && initialMessages.length > 0

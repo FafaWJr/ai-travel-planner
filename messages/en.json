@@ -683,11 +683,15 @@
       "addToPlan": "Add to plan",
       "planUpdated": "Plan updated!",
       "addToItinerary": "Add to itinerary",
-      "tapToSearch": "Tap to search this place"
+      "tapToSearch": "Tap to search this place",
+      "moveToAnotherDay": "Move to another day",
+      "accept": "Accept",
+      "remove": "Remove"
     },
     "notes": {
       "label": "My Notes for this day",
-      "saved": "Note saved!"
+      "saved": "Note saved!",
+      "placeholder": "Add any personal notes, reminders, or tips for this day..."
     },
     "print": {
       "button": "Print / Save as PDF",
@@ -700,7 +704,13 @@
     "chat": {
       "name": "Luna",
       "role": "AI Travel Assistant",
-      "placeholder": "Ask Luna anything about your trip..."
+      "placeholder": "Ask Luna anything about your trip...",
+      "welcomeHey": "Hey {name}!",
+      "welcomeHeyThere": "Hey there!",
+      "welcomeTrip": "I've already had a look at your trip to {destination} and I'm seriously excited for you.",
+      "welcomeGeneric": "I've already had a look at your itinerary and I'm seriously excited for you.",
+      "welcomeIntro": "I'm Luna, your personal travel agent here at Luna Let's Go!",
+      "welcomeCta": "Need to add a hotel, swap an activity, or just want my honest take on what's worth it and what to skip? Just ask, I'm here for all of it. Let's make this trip absolutely unforgettable!"
     },
     "stays": {
       "tabLabel": "Where to Stay",

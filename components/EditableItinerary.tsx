@@ -821,7 +821,7 @@ function SortableActivityItem({
             <button
               onClick={(e) => { e.stopPropagation(); setShowMovePicker(v => !v); }}
               onPointerDown={(e) => e.stopPropagation()}
-              title="Move to another day"
+              title={t('activity.moveToAnotherDay')}
               style={{
                 width: 26, height: 26, borderRadius: '50%', border: 'none',
                 cursor: 'pointer', fontSize: 12, background: showMovePicker ? 'rgba(0,68,123,0.15)' : 'rgba(0,68,123,0.07)',
@@ -830,8 +830,8 @@ function SortableActivityItem({
               }}
             >→</button>
           )}
-          <RoundBtn active={act.status === 'accepted'} activeColor="#16A34A" idleColor="rgba(22,163,74,0.12)" onClick={onAccept} label="Accept" onPointerDown={(e: React.PointerEvent) => e.stopPropagation()}>✓</RoundBtn>
-          <RoundBtn active={act.status === 'declined'} activeColor="#DC2626" idleColor="rgba(220,38,38,0.10)" onClick={onDecline} label="Remove" onPointerDown={(e: React.PointerEvent) => e.stopPropagation()}>✕</RoundBtn>
+          <RoundBtn active={act.status === 'accepted'} activeColor="#16A34A" idleColor="rgba(22,163,74,0.12)" onClick={onAccept} label={t('activity.accept')} onPointerDown={(e: React.PointerEvent) => e.stopPropagation()}>✓</RoundBtn>
+          <RoundBtn active={act.status === 'declined'} activeColor="#DC2626" idleColor="rgba(220,38,38,0.10)" onClick={onDecline} label={t('activity.remove')} onPointerDown={(e: React.PointerEvent) => e.stopPropagation()}>✕</RoundBtn>
         </div>
       </div>
 
