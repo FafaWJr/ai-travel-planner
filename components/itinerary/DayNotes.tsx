@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Check } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface DayNotesProps {
   dayIndex: number;
@@ -10,6 +11,7 @@ interface DayNotesProps {
 }
 
 export default function DayNotes({ dayIndex, initialNote, onSave }: DayNotesProps) {
+  const t = useTranslations('plan');
   const [text, setText] = useState(initialNote || "");
   const [savedText, setSavedText] = useState(initialNote || "");
   const [saved, setSaved] = useState(false);
@@ -48,7 +50,7 @@ export default function DayNotes({ dayIndex, initialNote, onSave }: DayNotesProp
           letterSpacing: "0.05em",
         }}
       >
-        My Notes for this day
+        {t('notes.label')}
       </p>
 
       <div style={{ position: "relative" }}>
@@ -125,7 +127,7 @@ export default function DayNotes({ dayIndex, initialNote, onSave }: DayNotesProp
             fontFamily: "Inter, sans-serif",
           }}
         >
-          Note saved!
+          {t('notes.saved')}
         </p>
       )}
     </div>

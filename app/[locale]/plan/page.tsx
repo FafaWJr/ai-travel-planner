@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import EditableItinerary, { type ItineraryHandle, type Day } from '@/components/EditableItinerary';
 import { BOOKING_AFFILIATE } from '@/lib/affiliate';
 import FloatingChat, { type TripUpdate } from '@/components/FloatingChat';
@@ -44,6 +45,7 @@ function IdeaCard({
   days: { number: number; title: string }[];
   onAdd: (text: string, dayNum: number, slot: TimeSlot) => void;
 }) {
+  const t = useTranslations('plan');
   const [open, setOpen] = useState(false);
   const [selDay, setSelDay] = useState<number>(days[0]?.number ?? 1);
   const [selSlot, setSelSlot] = useState<TimeSlot>('morning');
@@ -106,14 +108,14 @@ function IdeaCard({
 
             {/* Slot selector */}
             <div style={{ flex: 1, minWidth: 120 }}>
-              <label style={{ fontFamily: "'Poppins',sans-serif", fontSize: 11, fontWeight: 600, color: '#00447B', display: 'block', marginBottom: 5 }}>Time</label>
+              <label style={{ fontFamily: "'Poppins',sans-serif", fontSize: 11, fontWeight: 600, color: '#00447B', display: 'block', marginBottom: 5 }}>{t('time')}</label>
               <select
                 value={selSlot}
                 onChange={e => setSelSlot(e.target.value as TimeSlot)}
                 style={{ width: '100%', border: '1.5px solid rgba(0,68,123,0.15)', borderRadius: 8, padding: '7px 10px', fontFamily: "'Inter',sans-serif", fontSize: 13, color: '#333', background: '#fff', outline: 'none' }}
               >
                 {SLOTS_LIST.map(s => (
-                  <option key={s.key} value={s.key}>{s.icon} {s.label}</option>
+                  <option key={s.key} value={s.key}>{s.icon} {t(`timeOfDay.${s.key}` as Parameters<typeof t>[0])}</option>
                 ))}
               </select>
             </div>
@@ -127,7 +129,7 @@ function IdeaCard({
                 cursor: 'pointer', flexShrink: 0, alignSelf: 'flex-end',
               }}
             >
-              Add to itinerary
+              {t('activity.addToItinerary')}
             </button>
           </div>
         </div>
@@ -332,6 +334,7 @@ function markdownToHtml(md: string): string {
 
 /* ── Main component ── */
 function PlanContent() {
+  const t            = useTranslations('plan');
   const searchParams = useSearchParams();
   const router       = useRouter();
   const prompt       = searchParams.get('prompt') || '';
@@ -741,8 +744,8 @@ function PlanContent() {
               <div style={{ position:'absolute', inset:8, borderRadius:'50%', border:'2px solid rgba(0,68,123,0.06)', borderBottom:'2px solid rgba(0,68,123,0.30)', animation:'spin 1.5s linear infinite reverse' }} />
             </div>
             <div style={{ textAlign:'center' }}>
-              <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:22, color:'#00447B', marginBottom:8 }}>Crafting your perfect trip...</p>
-              <p style={{ fontFamily:"'Inter',sans-serif", color:'#6C6D6F', fontSize:15 }}>This usually takes about 30 seconds</p>
+              <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:22, color:'#00447B', marginBottom:8 }}>{t('crafting')}</p>
+              <p style={{ fontFamily:"'Inter',sans-serif", color:'#6C6D6F', fontSize:15 }}>{t('usuallyTakes')}</p>
             </div>
             <div className="plan-loading-steps" style={{ display:'flex', gap:8 }}>
               {['Researching destination','Building itinerary','Adding local tips'].map((s,i) => (
@@ -839,7 +842,7 @@ function PlanContent() {
                             {isExportingPDF ? 'Generating PDF…' : 'Export PDF'}
                           </button>
                           <button onClick={()=>router.push('/')} style={{ background:'#00447B', color:'#fff', fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:13, padding:'8px 20px', borderRadius:100, cursor:'pointer', border:'none' }}>
-                            New trip
+                            {t('newTrip')}
                           </button>
                         </div>
                       </div>
@@ -1002,13 +1005,13 @@ function PlanContent() {
                   <div style={{ marginTop:12, background:'#fff', borderRadius:14, border:'1.5px solid rgba(0,68,123,0.08)', boxShadow:'0 2px 16px rgba(0,68,123,0.06)', animation:'fadeIn 0.2s ease both' }}>
                     <div style={{ padding:'18px 24px 6px', borderBottom:'1px solid rgba(0,68,123,0.07)', display:'flex', alignItems:'center', gap:8 }}>
                       <span style={{ fontSize:18 }}>💡</span>
-                      <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:14, color:'#00447B' }}>A few more ideas for your trip</p>
+                      <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:14, color:'#00447B' }}>{t('moreIdeas')}</p>
                     </div>
                     <div style={{ padding:'16px 24px 20px' }}>
                       {extraIdeasLoading ? (
                         <div style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 0' }}>
                           <div style={{ width:22, height:22, borderRadius:'50%', border:'2.5px solid rgba(0,68,123,0.10)', borderTop:'2.5px solid #FF8210', animation:'spin 0.9s linear infinite', flexShrink:0 }} />
-                          <p style={{ fontFamily:"'Inter',sans-serif", color:'#9CA3AF', fontSize:13 }}>Looking for extra ideas...</p>
+                          <p style={{ fontFamily:"'Inter',sans-serif", color:'#9CA3AF', fontSize:13 }}>{t('loadingIdeas')}</p>
                         </div>
                       ) : (() => {
                         const ideas = parseIdeas(extraIdeas);
@@ -1164,9 +1167,9 @@ function PlanContent() {
               <div style={{ width:40, height:40, borderRadius:'50%', border:'3px solid rgba(0,68,123,0.12)', borderTop:'3px solid #FF8210', animation:'spin 1s linear infinite' }} />
             ) : (
               <div style={{ textAlign:'center' }}>
-                <p style={{ fontFamily:"'Inter',sans-serif", color:'#6C6D6F', fontSize:16, marginBottom:16 }}>No trip prompt provided.</p>
+                <p style={{ fontFamily:"'Inter',sans-serif", color:'#6C6D6F', fontSize:16, marginBottom:16 }}>{t('noPrompt')}</p>
                 <button onClick={()=>router.push('/')} style={{ background:'#FF8210', color:'#fff', border:'none', fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:14, padding:'12px 28px', borderRadius:100, cursor:'pointer' }}>
-                  Start planning
+                  {t('startPlanning')}
                 </button>
               </div>
             )}
@@ -1204,7 +1207,7 @@ function PlanContent() {
           {/* Name */}
           <div style={{ padding:'12px 14px 14px' }}>
             <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:14, color:'#00447B', marginBottom:2 }}>{popup.name}</p>
-            <p style={{ fontFamily:"'Inter',sans-serif", fontSize:11, color:'#9CA3AF' }}>Tap to search this place</p>
+            <p style={{ fontFamily:"'Inter',sans-serif", fontSize:11, color:'#9CA3AF' }}>{t('activity.tapToSearch')}</p>
           </div>
         </div>
       )}
@@ -1252,11 +1255,12 @@ function PlanContent() {
 }
 
 export default function PlanPage() {
+  const t = useTranslations('plan');
   return (
     <Suspense fallback={
       <div style={{ background:'#F4F7FB', minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:16 }}>
         <div style={{ width:48, height:48, borderRadius:'50%', border:'3px solid rgba(0,68,123,0.12)', borderTop:'3px solid #FF8210', animation:'spin 1s linear infinite' }} />
-        <p style={{ fontFamily:"'Poppins',sans-serif", color:'#00447B', fontSize:15 }}>Loading your plan...</p>
+        <p style={{ fontFamily:"'Poppins',sans-serif", color:'#00447B', fontSize:15 }}>{t('loading')}</p>
         <style>{`@keyframes spin { to { transform:rotate(360deg); } }`}</style>
       </div>
     }>

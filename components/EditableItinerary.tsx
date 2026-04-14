@@ -1,5 +1,6 @@
 'use client';
 import { useState, useId, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { useTranslations } from 'next-intl';
 import FinalItineraryModal from './FinalItineraryModal';
 import DayNotes from './itinerary/DayNotes';
 import type { AcceptedHotel } from './StayTab';
@@ -220,6 +221,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
   isGuest = false, onGateRequired,
   initialDays, startDate,
 }, ref) {
+  const t = useTranslations('plan');
   const [days, setDays] = useState<Day[]>(() =>
     (initialDays && initialDays.length > 0) ? initialDays : parseItinerary(itineraryMd)
   );
@@ -509,7 +511,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
               boxShadow: allConfirmed ? '0 4px 14px rgba(255,130,16,0.35)' : 'none',
             }}
           >
-            🏁 Finalize My Trip
+            🏁 {t('finalize')}
           </button>
         </div>
       </div>
@@ -546,7 +548,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
                       )}
                     </div>
                     <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 14, color: '#fff', flex: 1, margin: 0, textShadow: '0 1px 4px rgba(0,0,0,0.5)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{day.title}</p>
-                    {day.confirmed && <span style={{ background: 'rgba(22,163,74,0.80)', color: '#fff', fontSize: 10, fontFamily: "'Inter',sans-serif", fontWeight: 700, padding: '2px 8px', borderRadius: 100, flexShrink: 0 }}>✓ Confirmed</span>}
+                    {day.confirmed && <span style={{ background: 'rgba(22,163,74,0.80)', color: '#fff', fontSize: 10, fontFamily: "'Inter',sans-serif", fontWeight: 700, padding: '2px 8px', borderRadius: 100, flexShrink: 0 }}>✓ {t('day.confirmed')}</span>}
                     <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: 'rgba(255,255,255,0.70)', flexShrink: 0 }}>{dayAccepted}/{day.activities.length}</span>
                     <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14, flexShrink: 0, display: 'inline-block', transition: 'transform 0.2s', transform: day.open ? 'rotate(180deg)' : 'rotate(0deg)' }}>▾</span>
                   </div>
@@ -740,6 +742,7 @@ function SortableActivityItem({
   otherDays: { number: number; title: string }[];
   onMoveToDay: (toDayNum: number) => void;
 }) {
+  const t = useTranslations('plan');
   const [showMovePicker, setShowMovePicker] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
   const { attributes, listeners, setNodeRef, transform, transition, isOver } = useSortable({ id: act.id });
@@ -797,10 +800,10 @@ function SortableActivityItem({
             dangerouslySetInnerHTML={{ __html: inlineMd(act.text) }}
           />
           {act.manuallyAdded && (
-            <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 10, color: '#FF8210', fontWeight: 600, letterSpacing: 0.3 }}>✦ Added by you</span>
+            <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 10, color: '#FF8210', fontWeight: 600, letterSpacing: 0.3 }}>✦ {t('activity.addedByYou')}</span>
           )}
           {act.lunaAdded && (
-            <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 10, color: '#FF8210', fontWeight: 600, letterSpacing: 0.3 }}>✦ Added by Luna</span>
+            <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 10, color: '#FF8210', fontWeight: 600, letterSpacing: 0.3 }}>✦ {t('activity.addedByLuna')}</span>
           )}
         </div>
 
@@ -832,7 +835,7 @@ function SortableActivityItem({
           borderRadius: 12, boxShadow: '0 8px 28px rgba(0,68,123,0.14)',
           padding: '8px', minWidth: 200, marginTop: 4,
         }}>
-          <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 11, color: '#6C6D6F', margin: '0 6px 6px', textTransform: 'uppercase', letterSpacing: 0.4 }}>Move to</p>
+          <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 11, color: '#6C6D6F', margin: '0 6px 6px', textTransform: 'uppercase', letterSpacing: 0.4 }}>{t('activity.moveTo')}</p>
           {otherDays.map(d => (
             <button
               key={d.number}
@@ -857,6 +860,7 @@ function SortableActivityItem({
 
 /* ─── SuggestionCard ─────────────────────────────────────────── */
 function SuggestionCard({ sug, onAccept, onDecline }: { sug: Suggestion; onAccept: () => void; onDecline: () => void }) {
+  const t = useTranslations('plan');
   return (
     <div style={{ border: '1.5px solid rgba(255,130,16,0.22)', borderRadius: 12, background: 'rgba(255,247,237,0.6)', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px 6px', gap: 10 }}>
@@ -865,7 +869,7 @@ function SuggestionCard({ sug, onAccept, onDecline }: { sug: Suggestion; onAccep
           {sug.timing && <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: '#9A6700', margin: 0 }}>🕐 {sug.timing}</p>}
         </div>
         <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-          <button onClick={onAccept} style={{ display: 'flex', alignItems: 'center', gap: 4, background: '#16A34A', color: '#fff', border: 'none', borderRadius: 100, padding: '5px 12px', cursor: 'pointer', fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 12 }}>✓ Add to plan</button>
+          <button onClick={onAccept} style={{ display: 'flex', alignItems: 'center', gap: 4, background: '#16A34A', color: '#fff', border: 'none', borderRadius: 100, padding: '5px 12px', cursor: 'pointer', fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 12 }}>✓ {t('activity.addToPlan')}</button>
           <button onClick={onDecline} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(220,38,38,0.10)', color: '#DC2626', border: 'none', borderRadius: 100, padding: '5px 12px', cursor: 'pointer', fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 12 }}>✕</button>
         </div>
       </div>
