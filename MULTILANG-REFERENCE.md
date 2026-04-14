@@ -1,12 +1,12 @@
 # Luna Let's Go — Multilingual Reference Guide
 
-**Version:** April 2026
+**Version:** April 2026 — IMPLEMENTATION COMPLETE
 **Locales:** EN (default, no prefix), PT-BR (`/pt-BR/`), ES (`/es/`)
 **Stack:** next-intl v4, Next.js 16 App Router, `messages/` JSON files
 
 This document is the single source of truth for all translation decisions on
 lunaletsgo.com. Every new page, feature, and UI change must follow the rules
-here. No exceptions require discussion — just apply the rules.
+here. No exceptions — just apply the rules.
 
 ---
 
@@ -18,60 +18,86 @@ here. No exceptions require discussion — just apply the rules.
 - `i18n/request.ts` — loads the correct `messages/*.json` file per request
 - `i18n/navigation.ts` — locale-aware `Link`, `useRouter`, `usePathname`
 - `proxy.ts` — the middleware file (NEVER rename to `middleware.ts`)
-- `messages/en.json` — English strings (source of truth)
+- `messages/en.json` — English strings (source of truth for all keys)
 - `messages/pt-BR.json` — Brazilian Portuguese strings
 - `messages/es.json` — Spanish strings
 
-### Critical path rules (never violate)
+### Critical invariants (never violate)
 
 - `app/auth/` and `app/api/` stay **outside** `[locale]/` — never move them
+- `proxy.ts` must guard `/auth/*` BEFORE calling `intlMiddleware` (see section 4k)
 - **Server Components** use `getTranslations('namespace')` from `next-intl/server`
 - **Client Components** use `useTranslations('namespace')` from `next-intl`
-- The language switcher is in `NavBar` — already wired, no changes needed
 - All 3 JSON files must always be updated together in the same commit
+- Auth links must use plain `<a href="/auth/login">`, never locale-aware `Link`
 
 ---
 
-## 2. What has been translated (complete inventory)
+## 2. Complete translation inventory
 
-### Completed stages
+### All completed namespaces
 
-| Stage | Namespace(s) | Page | Status |
-|-------|-------------|------|--------|
-| Infra | `nav`, `footer`, `language` | NavBar + Footer | DONE |
-| Home | `hero`, `howItWorks`, `features`, `yourway`, `meetLuna`, `tripIdeas`, `quiz`, `faq`, `finalCta` | `/` | DONE |
-| 1 | `start` (+ `companions`, `budgetLevels`, `styles`) | `/start` | DONE |
-| 2 | `quizPage` (questions, answers, personas) | `/quiz` | DONE |
-| 2b | `quizPage.personaContent` | `/quiz` result screen | DONE |
-| 3 | `tripIdeasPage` (+ `filters`, `badges`) | `/trip-ideas` | DONE |
-| 4 | `deals` | `/deals` | DONE |
-| 5 | `about` | `/about` | DONE |
-| 6 | `blogIndex` | `/blog` index | DONE |
-| 7 | `myTrips` | `/my-trips` | DONE |
-| 8 | `plan` | `/plan` | DONE — all UI chrome, time slots, partner cards, modal, welcome message, tooltips, placeholders |
-| 9 | EN-only banner | `/privacy-policy`, `/terms` | PENDING |
+| Namespace | Page / Component | Keys cover |
+|-----------|-----------------|-----------|
+| `nav` | NavBar | All nav labels, CTA, language switcher, dropdown, mobile drawer |
+| `footer` | Footer | Tagline, quick links, legal links, contact, copyright |
+| `language` | Language switcher | EN, PT, ES labels |
+| `hero` | Home — hero | Badge, titles, subtitle, pills, CTA |
+| `howItWorks` | Home — how it works | Label, title, subtitle, 3 steps |
+| `features` | Home — features | Label, title, subtitle, 6 feature cards |
+| `yourway` | Home — your way | Label, title, subtitle, 3 points, chat demo |
+| `meetLuna` | Home — meet Luna | Label, title, subtitle, 4 features, CTA |
+| `tripIdeas` | Home — trip ideas strip | Label, title, seeAll |
+| `quiz` | Home — quiz teaser | Label, title, subtitle, CTA |
+| `faq` | Home — FAQ | Label, title, 6 Q&A pairs |
+| `finalCta` | Home — final CTA | Title, subtitle, CTA |
+| `start` | `/start` | All form labels, steps, placeholders, buttons, errors, companions, budgetLevels, styles |
+| `quizPage` | `/quiz` | All 7 questions + answers, 13 persona names, personaContent (all 13 personas full detail) |
+| `tripIdeasPage` | `/trip-ideas` | Header, filters, badges (35 types), count, CTA, days suffix |
+| `deals` | `/deals` | Title, subtitle, disclaimer, all 5 partner cards |
+| `about` | `/about` | Full page: hero, bios, story, quote, mission, features, carousel, CTA, stats |
+| `blogIndex` | `/blog` index | Hero, section header, CTAs, category badges, minRead, comingSoon, engOnlyNotice |
+| `myTrips` | `/my-trips` | Heading, subtitle, loading, empty state, trip cards (ICU plural days), delete confirm |
+| `plan` | `/plan` | Full page: tabs, header buttons, stats bar, itinerary flow, time slots, activity actions, notes, day badges, partner cards, chat welcome, unsaved modal, booking CTA, date pill, extra ideas |
+| `legal` | `/privacy-policy`, `/terms` | Badge, date meta labels, EN-only banner |
+
+### What each `plan` sub-object covers
+
+```
+plan.tabs           → Visão Geral, Clima, Roteiro, Hospedagem, Transporte, Orçamento, Dicas
+plan.header         → saveTrip, saveTripAndLeave, saving, exportPdf, generatingPdf
+plan.timeOfDay      → morning, afternoon, evening, night
+plan.activity       → moveTo, moveToAnotherDay, accept, remove, addedByYou, addedByLuna, ...
+plan.notes          → label, saved, placeholder
+plan.day            → badge ("Dia {n}"), confirmed
+plan.daysTrip       → ICU plural "{n, plural, one {# day trip} other {# days trip}}"
+plan.itinerary      → accepted, removed, toReview, percentAccepted, acceptPrompt, ...
+plan.stays          → full stays tab
+plan.budget         → full budget tab
+plan.partners       → bestDealsFor, handpickedSuffix, hotels/tours/uniqueStays/guided/carRental
+plan.chat           → name, role, placeholder, welcomeHey, welcomeHeyThere, welcomeTrip, ...
+plan.unsaved        → message, body, leaveWithout, stay
+plan.extraIdeas     → show, hide
+plan.auth           → signInForMore, signInToUnlock, ...
+plan.booking        → ctaTitle, disclaimer
+plan.finalize       → Finalizar Minha Viagem
+plan.moreIdeas      → "Mais ideias para a sua viagem" (section heading)
+plan.loadingIdeas   → "Buscando mais ideias..."
+```
 
 ---
 
 ## 3. What is NEVER translated
 
-These items must remain in English in all locales, permanently.
-
 ### 3a. AI-generated content
 
-**Rule: Never run AI output through i18n strings. Make the AI itself respond in the correct language.**
+**Rule: Never run AI output through i18n strings. Pass the locale to the AI and let it respond in the correct language.**
 
-Luna's itinerary output (day titles, activity descriptions, hotel descriptions,
-budget breakdowns, local tips, place names) is generated by the Anthropic API.
-The locale must be passed to every AI API call so Claude responds in the user's language.
+Luna's itinerary output (day titles, activity descriptions, tab content — weather,
+transport, tips — budget breakdowns) is generated by the Anthropic API. The locale
+is passed to every API call so Claude generates in the user's language.
 
-**How this is implemented:**
-- Every API call that sends a prompt to Claude must include `locale` in the request body
-- Every API route (`/api/generate`, `/api/chat`, `/api/day-suggestions`, etc.) must extract `locale` from the request
-- A strong language instruction must be appended at the **END** of the system prompt (not the beginning — models pay most attention to the end)
-- The language instruction must be placed AFTER `%%TRIP_UPDATE%%` rules in chat, and AFTER all other instructions in generate
-
-**Language instruction pattern (append at END of every AI system prompt):**
+**Implementation: `lib/ai.ts` has `getLanguageInstruction(locale)`:**
 ```ts
 function getLanguageInstruction(locale: string): string {
   switch (locale) {
@@ -85,258 +111,233 @@ function getLanguageInstruction(locale: string): string {
 }
 ```
 
-**Never** create i18n keys for AI output — that would duplicate Luna's locale
-awareness. The AI generates in the correct language; i18n handles UI chrome only.
+This instruction is appended at the **END** of every AI system prompt. Do NOT put it at the beginning — models pay most attention to the end.
 
-**What generates in the correct language (AI, not i18n):**
+**What is AI-generated (not i18n):**
 - Day titles, activity descriptions, local tips
-- Weather section content
-- Transport section content  
-- Budget breakdown text
-- Practical tips content
+- Weather, transport, budget, practical tips tab content
+- Section headings within AI output ("Destination Overview", "Getting Around", etc.)
 - Luna chat responses
+- Hotel descriptions and recommendations
+
+**Never** create i18n keys for AI output. The AI generates in the correct language.
 
 ### 3b. Blog post content
 
-**Rule: All blog posts are editorial content and stay in English permanently.**
+All blog posts (titles, excerpts, article body, metadata) stay in English permanently.
+The blog UI chrome IS translated. The blog index shows an EN-only notice for PT-BR and ES:
+`blogIndex.engOnlyNotice` — "Os artigos do blog estão disponíveis apenas em inglês."
 
-- Post titles, excerpt text, article body
-- Post metadata: dates ("January 2026"), author ("Wilson & Fatima"), duration ("5 days")
-- Country/location labels on card images ("Brazil", "Fiji")
+### 3c. Legal page content
 
-The blog UI chrome (heading, section title, CTAs, badges) IS translated. The
-posts themselves are not. This is an editorial decision, not a technical
-limitation.
+`/privacy-policy` and `/terms` content stays in English permanently.
+These pages show an EN-only banner for PT-BR and ES: `legal.engOnlyBanner`.
+The `legal` namespace only covers: badge, lastUpdated, effective, appliesTo, engOnlyBanner.
 
-### 3c. Proper nouns and brand names
+### 3d. Proper nouns and brand names
 
 - "Luna Let's Go" — brand name, never translates
-- "Booking.com", "Klook", "GoWithGuide", "Xcaret" — partner names, never translate
-- "Booking.com" in button text may be kept in EN even in PT-BR/ES ("Book on Booking.com")
+- "Booking.com", "Klook", "GoWithGuide", "Xcaret", "Airbnb", "Viator", "Rentalcars.com" — partner names, never translate
 - Destination names: "Tokyo", "Bali", "Paris" — proper nouns, always EN
+- About page photo captions: geographic proper nouns, stay EN
 
-### 3d. Affiliate links
+### 3e. Affiliate URLs
 
-**Rule: Never modify affiliate URLs under any circumstances.**
+**Never modify affiliate URLs under any circumstances.** Translating surrounding text is fine.
 
-Affiliate URLs are hardcoded and must stay exactly as defined. Translating
-surrounding text is fine. The URLs themselves are immutable.
+```
+Booking.com hotels: awin1.com/cread.php?awinmid=18118&awinaffid=2825924&campaign=LifecycleOnboarding
+GoWithGuide: https://tidd.ly/4s8kRkI
+Xcaret: https://tidd.ly/4sH1xfw
+Klook: https://affiliate.klook.com/redirect?aid=117089...
+```
 
-Booking.com hotels: `awin1.com/cread.php?awinmid=18118&awinaffid=2825924&campaign=LifecycleOnboarding`
-Booking.com flights: same base + `&ued=https%3A%2F%2Fwww.booking.com%2Fflights%2F...`
-Booking.com cars: same base + `&ued=https%3A%2F%2Fwww.booking.com%2Fcars%2F...`
-GoWithGuide: `https://tidd.ly/4s8kRkI`
-Xcaret: `https://tidd.ly/4sH1xfw`
-Klook: `https://affiliate.klook.com/redirect?aid=117089...`
+### 3f. Internal code identifiers
 
-### 3e. About page photo captions
+Quiz scoring: persona `id` values (`'beach_bum'`, `'explorer'` etc.) and answer `value`
+fields (`'ex_beach'`, `'must_beach'` etc.) are internal identifiers. Never translate.
+Only display text is translated, via `t('personas.' + id)` pattern.
 
-The adventure carousel in `/about` shows photos with geographic captions
-("Shibuya, Tokyo", "Cancún, Mexico"). These stay in English — they are
-geographic proper nouns, not translatable UI text.
+### 3g. Print and PDF templates
 
-### 3f. Legal pages
-
-`/privacy-policy` and `/terms` stay in English in all locales.
-Stage 9 adds a banner to the top of these pages in PT-BR and ES:
-"Esta página está disponível apenas em inglês." / "Esta página solo está disponible en inglés."
-
-### 3g. Quiz scoring logic
-
-The `K()` scoring function in the quiz uses persona `id` values (`'beach_bum'`,
-`'explorer'` etc.) and answer `value` fields (`'ex_beach'`, `'must_beach'` etc.).
-These are internal code identifiers — never translate or rename them. Only
-display text is translated.
+The print/PDF export uses hardcoded `"en-GB"` and `"en-AU"` date formats intentionally.
+These are static document exports — do NOT localise them. Only the interactive UI is localised.
 
 ---
 
 ## 4. Rules for all future development
 
-### 4a. Every new page must be translated from day one
-
-When you add a new page, its i18n strings go into all 3 JSON files at the same
-time the page is built. There is no "add translations later" workflow.
-
-**Checklist for every new page:**
+### 4a. CHECKLIST — Every new page
 
 ```
-[ ] Add namespace to messages/en.json
-[ ] Add same namespace to messages/pt-BR.json (with accents, grammar rules)
-[ ] Add same namespace to messages/es.json (with accents, grammar rules)
-[ ] Use getTranslations('namespace') for Server Components
-[ ] Use useTranslations('namespace') for Client Components
-[ ] Verify PT-BR encoding with node command
-[ ] Commit all 3 JSON files together
+[ ] Create namespace in messages/en.json
+[ ] Create same namespace in messages/pt-BR.json (PT-BR grammar rules apply)
+[ ] Create same namespace in messages/es.json (ES grammar rules apply)
+[ ] Server Component: import { getTranslations, getLocale } from 'next-intl/server'
+[ ] Client Component: import { useTranslations, useLocale } from 'next-intl'
+[ ] If page has its own layout (see 4l): add <NavBar /> explicitly
+[ ] If page has AI features: pass locale to all AI API calls (see 4j)
+[ ] If page has English-only content sections: add locale-aware notice (see 4m)
+[ ] Verify PT-BR encoding: node -e "const f=require('./messages/pt-BR.json'); console.log(f.namespace.key)"
+[ ] Commit all 3 JSON files in the same commit as the page code
 ```
 
-### 4b. Every new UI string must go into all 3 JSON files
+### 4b. CHECKLIST — Every new UI string on an existing page
 
-If you add a button, label, error message, toast, modal, or any visible text
-to an existing page, it goes into `en.json`, `pt-BR.json`, AND `es.json` in
-the same PR. Never add to just one file.
+```
+[ ] Add key to messages/en.json (in the correct namespace)
+[ ] Add key to messages/pt-BR.json with correct PT-BR translation
+[ ] Add key to messages/es.json with correct ES translation
+[ ] Replace hardcoded string in JSX with t('key')
+[ ] Verify PT-BR encoding
+[ ] Commit all 3 JSON files together with the code change
+```
 
 ### 4c. Namespace naming convention
 
 ```
 nav               → NavBar
 footer            → Footer
-hero              → Home page hero
+hero              → Home hero
 howItWorks        → Home "How it works"
 features          → Home features grid
 yourway           → Home "your way" section
 meetLuna          → Home Meet Luna section
 tripIdeas         → Home trip ideas strip
-quiz              → Home quiz teaser section
+quiz              → Home quiz teaser
 faq               → Home FAQ
 finalCta          → Home final CTA
 language          → Language switcher labels
 
-start             → /start form (includes companions, budgetLevels, styles sub-objects)
-quizPage          → /quiz (includes q1-q7, personas, personaContent sub-objects)
+start             → /start form
+quizPage          → /quiz (includes personaContent sub-object)
 tripIdeasPage     → /trip-ideas (includes filters, badges sub-objects)
 deals             → /deals
-about             → /about (includes stats, features sub-objects)
+about             → /about
 blogIndex         → /blog index
-myTrips           → /my-trips (includes tripCard sub-object)
-plan              → /plan (in progress — Stage 8)
+myTrips           → /my-trips
+plan              → /plan (all sub-objects listed in section 2)
+legal             → /privacy-policy, /terms
 ```
 
-New namespaces should follow the page route. Sub-objects for nested structures.
+New namespaces follow the page route. Sub-objects for nested structures.
 
 ### 4d. Component-level translation
 
-When a shared component (used across multiple pages) needs translation, the
-strings go in the most appropriate namespace. If a component is used on `/plan`
-only, strings go in `plan`. If shared across pages, create a dedicated namespace
-or add to `nav`/`footer` as appropriate.
+Shared components used across multiple pages: strings go in the namespace of the
+primary page, or create a dedicated namespace if the component is standalone.
+Components used only on one page use that page's namespace.
 
-### 4e. AI-generated content remains AI-driven
+### 4e. Date formatting with locale
 
-The locale is passed in the Anthropic API system prompt in `/api/chat/route.ts`.
-Luna already knows the user's locale and responds accordingly. Do NOT:
-- Add i18n strings for activity titles or descriptions
-- Attempt to translate hotel names or recommendations
-- Create fallback strings for AI output
+Never hardcode `"en-US"` or `"en-GB"` in `toLocaleDateString` calls inside
+interactive UI components. Use the `toDateLocale()` helper:
 
-### 4f. New features on the plan page
-
-The plan page (`/plan`) has a critical architecture that must be respected:
-- `%%TRIP_UPDATE%%` parsing runs on the COMPLETE SSE response, not chunks
-- `onTripUpdate` handles `add_activity`, `remove_activity`, `replace_activity`
-- `lunaHotels` state is passed as prop (not ref) to the Itinerary component
-
-New features on this page must preserve these patterns. UI strings for new
-features go in the `plan` namespace.
-
-### 4g. Module-level data arrays require special handling
-
-If a data array is defined at MODULE LEVEL (outside any component function), it CANNOT
-access `t()` directly because `useTranslations` is a React hook. Two patterns to handle this:
-
-**Pattern A (preferred for large arrays): Add a `key` field, translate at render point**
-```tsx
-// Module level — add a `key` field only, keep other fields as fallback
-const items = [
-  { key: 'hotels', name: 'Booking.com', href: 'https://...', icon: '🏨' },
-  { key: 'tours',  name: 'GetYourGuide', href: 'https://...', icon: '🎭' },
-]
-
-// Inside the component:
-function PartnerCards() {
-  const t = useTranslations('plan')
-  return items.map(item => (
-    <div key={item.key}>
-      <span>{t(`partners.${item.key}.category`)}</span>
-      <p>{t(`partners.${item.key}.description`)}</p>
-      <a href={item.href}>{t(`partners.${item.key}.cta`)} →</a>
-    </div>
-  ))
+```ts
+// In plan/page.tsx — already implemented, replicate this pattern elsewhere
+function toDateLocale(locale: string): string {
+  if (locale === 'en') return 'en-GB'
+  return locale  // 'pt-BR' and 'es' map directly to JS Intl locale codes
 }
+
+// Usage:
+const dl = toDateLocale(locale)  // locale from useLocale()
+n.toLocaleDateString(dl, { weekday: 'long' })  // → "sexta-feira" in PT-BR
+n.toLocaleDateString(dl, { day: '2-digit', month: 'short', year: 'numeric' })
 ```
 
-**Pattern B (for small arrays): Move inside the component**
+Helper functions that format dates must accept a `locale` parameter. Call
+sites must pass `useLocale()` (client) or `getLocale()` (server) into them.
+
+**Exception:** Print/PDF export uses hardcoded `"en-GB"` — do not change that.
+
+### 4f. Module-level data arrays require special handling
+
+Module-level constants (defined outside any component function) CANNOT access
+`useTranslations` because it is a React hook. Two patterns:
+
+**Pattern A (preferred for large arrays): add a `key` field, translate at render**
+```tsx
+// Module level — keep stable data, add key field for translation lookup
+const planPartners = [
+  { key: 'hotels', name: 'Booking.com', href: '...', icon: '🏨' },
+  { key: 'tours',  name: 'GetYourGuide', href: '...', icon: '🎭' },
+]
+
+// At render point inside component where t() is available:
+{planPartners.map(p => (
+  <div key={p.key}>
+    <span>{t(`partners.${p.key}.category`)}</span>
+    <a href={p.href}>{t(`partners.${p.key}.cta`)}</a>
+  </div>
+))}
+```
+
+**Pattern B (for small arrays): move inside the component**
 ```tsx
 function MyComponent() {
   const t = useTranslations('namespace')
-  const items = [
-    { id: 'a', label: t('itemA') },
-    { id: 'b', label: t('itemB') },
-  ]
+  const items = [{ id: 'a', label: t('itemA') }, { id: 'b', label: t('itemB') }]
   return items.map(item => <div key={item.id}>{item.label}</div>)
 }
 ```
 
-Pattern A is preferred for large arrays to avoid re-creating on every render.
-Never translate values in module-level const declarations — hooks cannot be called there.
+Pattern A avoids re-creating large arrays on every render.
 
-### 4h. Sub-components must call useTranslations independently
+### 4g. Sub-components must call useTranslations independently
 
-Each component function that renders translatable strings must call `useTranslations()` itself.
-A parent component's `t()` is NOT accessible in a child component or helper function.
+A parent's `t()` is not accessible in child components or helper functions.
+Each component that renders translatable strings needs its own `useTranslations()` call.
 
 ```tsx
-// WRONG — child cannot access parent's t()
+// WRONG
 function Parent() {
   const t = useTranslations('plan')
-  return <SlotHeader slot="morning" /> // SlotHeader has no access to t
+  return <SlotHeader slot="morning" />  // SlotHeader has no t()
 }
 
-// CORRECT — SlotHeader calls its own hook
+// CORRECT
 function SlotHeader({ slot }: { slot: string }) {
-  const t = useTranslations('plan')
+  const t = useTranslations('plan')     // own call
   return <span>{t(`timeOfDay.${slot}`)}</span>
 }
 ```
 
-This applies to any extracted helper component: notes editor, day cards, modal dialogs,
-partner card components. Each needs its own `useTranslations` call.
+### 4h. Hardcoded template functions must move inside components
 
-### 4i. Hardcoded template functions must be moved inside components
-
-If a function builds a string using template literals (not i18n keys) and that
-string needs to be translated, the function CANNOT stay at module level because
-it has no access to `useTranslations`. Move it inside the component.
+Module-level functions that build strings with template literals cannot use `t()`.
+Move them inside the component where `useTranslations` is available.
 
 ```tsx
-// WRONG — module level, no access to t()
+// WRONG — module level, no hook access
 function buildWelcome(name: string | null) {
-  return `Hey ${name ?? 'there'}! I'm Luna...`
+  return `Hey ${name ?? 'there'}! I'm Luna...`  // always English
 }
 
-// CORRECT — inside component, full access to t()
+// CORRECT — inside component
 function FloatingChat({ userName, destination }) {
   const t = useTranslations('plan')
-
   const buildWelcome = (name: string | null, dest: string | null) => {
     const greeting = name ? t('chat.welcomeHey', { name }) : t('chat.welcomeHeyThere')
     const tripRef = dest ? t('chat.welcomeTrip', { destination: dest }) : t('chat.welcomeGeneric')
     return `${greeting} ${t('chat.welcomeIntro')} ${tripRef} ${t('chat.welcomeCta')}`
   }
-
-  const [messages] = useState([{ role: 'assistant', content: buildWelcome(userName, destination) }])
   ...
 }
 ```
 
-Common locations where this pattern appears: welcome messages, email templates,
-notification strings, dynamic greetings.
+### 4i. AI API routes: locale must reach every endpoint
 
-### 4j. AI API routes: locale must reach every endpoint
+Every route that calls Claude must receive and use the locale:
 
-Every API route that calls Claude must:
-1. Accept `locale` in the request body
-2. Append a strong language instruction at the END of the system prompt
-3. The instruction must be AFTER `%%TRIP_UPDATE%%` rules (for chat) or AFTER all other instructions
-
-**Checklist for any new AI API route:**
 ```ts
-// 1. Extract locale
+// 1. Extract locale from request body
 const { prompt, locale, ...rest } = await req.json()
 
-// 2. Build language instruction
+// 2. Get language instruction (from lib/ai.ts)
 const langInstruction = getLanguageInstruction(locale ?? 'en')
 
-// 3. Append AT THE END of system prompt
+// 3. Append AT THE END of system prompt — AFTER all other content
 const systemPrompt = `
   ${baseInstructions}
   ${tripContextIfAny}
@@ -345,67 +346,107 @@ const systemPrompt = `
 `.trim()
 ```
 
-**Client-side: every AI API fetch must include locale:**
+**Client side: always include locale in AI fetch calls:**
 ```tsx
-// useLocale() from next-intl gives the current locale
 const locale = useLocale()
-
 await fetch('/api/generate', {
   method: 'POST',
   body: JSON.stringify({ prompt, locale })  // ← always include
 })
 ```
 
-API routes that need this treatment:
-- `/api/generate` — initial plan generation (all tab content)
+**AI API routes that require locale:**
+- `/api/generate` — initial plan generation
 - `/api/chat` — Luna chat responses
 - `/api/day-suggestions` — "More ideas for this day"
 - `/api/extra-ideas` — supplementary suggestions
-- `/api/budget-estimate` — if AI-generated text is included
+- `/api/budget-estimate` — if AI text is included
+- Any future route that sends a prompt to Claude
 
-### 4k. Auth routes must never go through intl middleware
+### 4j. Auth routes must never go through intl middleware
 
-In `proxy.ts`, auth paths must be guarded BEFORE `intlMiddleware` is called:
+In `proxy.ts`, guard `/auth/*` BEFORE calling `intlMiddleware`:
 
 ```ts
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Guard: /auth/* routes live outside [locale]/ — skip locale detection
-  // Without this, next-intl redirects /auth/login → /pt-BR/auth/login (404)
+  // /auth/* lives outside [locale]/ — skip locale detection entirely
+  // Without this guard, next-intl redirects /auth/login → /pt-BR/auth/login (404)
   if (pathname.startsWith('/auth')) {
-    return await updateSession(request)  // Supabase only, no locale redirect
+    return await updateSession(request)
   }
 
-  // All other routes: next-intl first
   const intlResponse = intlMiddleware(request)
   if (intlResponse) return intlResponse
-
   return await updateSession(request)
 }
 ```
 
-**Why this matters:** next-intl detects the user's locale from the `NEXT_LOCALE`
-cookie and issues a 307 redirect to `/{locale}/auth/login`. Since `app/auth/`
-is outside `app/[locale]/`, the locale-prefixed path 404s. The guard prevents
-this redirect entirely for auth paths.
-
 Also: never use `Link` from `@/i18n/navigation` for auth links. Use plain `<a href="/auth/login">`.
 
----
+### 4k. Self-contained pages must include NavBar explicitly
 
-## 10. Hotfixes Applied During Implementation
+Pages that render their own complete layout (their own hero section + footer)
+are **not wrapped by the locale layout's NavBar**. These pages must import and
+render `<NavBar />` themselves.
 
-| Fix | Root Cause | Solution |
-|-----|-----------|----------|
-| Login 404 | `proxy.ts` ran `intlMiddleware` on `/auth/*`, redirecting to `/{locale}/auth/login` (which doesn't exist) | Added `if (pathname.startsWith('/auth')) return updateSession(request)` guard before intlMiddleware |
-| Plan content in English | `/api/generate` never received locale — sent only `{prompt}` | Added `locale` to generate fetch call and system prompt |
-| Luna chat in English | Language instruction was "prepended" to system prompt (wrong position — ignored) | Moved instruction to END of system prompt, after all other content |
-| Time slots in English (MORNING etc.) | `p={morning:"Morning"...}` object was module-level, sub-component couldn't use `t()` | Added `useTranslations('plan')` to the slot rendering sub-component |
-| Partner cards in English | `nh=[{category:"Hotels & Apartments"...}]` array was module-level | Added `key` field to each item; translated `category/description/cta` at render point |
-| Luna welcome message in English | `buildWelcomeMessage()` was a module-level template function with no access to `t()` | Moved function inside FloatingChat component where `useTranslations` is available |
-| "Move to another day" tooltip in English | `title="Move to another day"` hardcoded on activity card button | Added `plan.activity.moveToAnotherDay` key and wired `title={t(...)}` |
-| Notes placeholder in English | `placeholder="Add any personal notes..."` hardcoded in DayNotes textarea | Added `plan.notes.placeholder` key and wired placeholder |
+Currently affected: `/privacy-policy`, `/terms`.
+
+**Test:** If a page renders its own `<footer>` inline, it is self-contained and
+needs `<NavBar />` manually added at the top, plus `paddingTop: 68` on the main wrapper.
+
+```tsx
+// Self-contained page pattern
+import NavBar from '@/components/NavBar'
+
+export default function LegalPage() {
+  return (
+    <>
+      <NavBar />
+      <main style={{ paddingTop: 68 }}>
+        {/* page content */}
+      </main>
+    </>
+  )
+}
+```
+
+### 4l. EN-only content sections: add a notice for PT-BR and ES
+
+When a section of the site intentionally stays in English (blog posts, legal
+content), show a locale-aware notice to PT-BR and ES visitors.
+
+**Pattern:**
+```tsx
+const locale = useLocale()  // or getLocale() for Server Components
+
+{locale !== 'en' && (
+  <div style={{
+    display: 'flex', alignItems: 'center', gap: 10,
+    background: 'rgba(0,68,123,0.06)',
+    border: '1px solid rgba(0,68,123,0.15)',
+    borderRadius: 10, padding: '12px 18px',
+    fontFamily: "'Inter', sans-serif", fontSize: 14,
+    color: '#00447B', fontWeight: 500,
+  }}>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+      stroke="#00447B" strokeWidth="2" strokeLinecap="round">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" y1="8" x2="12" y2="12"/>
+      <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    {t('namespace.engOnlyNotice')}
+  </div>
+)}
+```
+
+**Where this pattern is currently applied:**
+- `/blog` index — between hero and posts grid (`blogIndex.engOnlyNotice`)
+- `/privacy-policy` — first element inside `<main>` (`legal.engOnlyBanner`)
+- `/terms` — first element inside `<main>` (`legal.engOnlyBanner`)
+
+**Add to any future page where content deliberately stays in EN.**
 
 ---
 
@@ -414,13 +455,12 @@ Also: never use `Link` from `@/i18n/navigation` for auth links. Use plain `<a hr
 Every PT-BR string must pass these checks before committing:
 
 ### Verb ser
-- "é" = is (never bare "e")
-- "são" = are
-- "foi" = was
-- Common error: "e um" → "é um", "e gratuito" → "é gratuito", "Luna e" → "Luna é"
+- "é" = is (never bare "e" for the verb to be)
+- "são" = are, "foi" = was
+- Common errors: "e um" → "é um", "Luna e" → "Luna é", "e gratuito" → "é gratuito"
 
 ### Prepositions
-- "à" before feminine nouns (à beira-mar, à Luna, à viagem)
+- "à" before feminine nouns (à Luna, à viagem, à beira-mar)
 - "ao" before masculine nouns
 
 ### Mandatory accents (always required)
@@ -434,15 +474,14 @@ níveis, programação, táxis, até, Vamos Lá
 
 ### Forbidden constructs
 - No em dashes anywhere. Replace with ".", "," or ":"
-- Never "Voce" (must be "você")
-- Never "Nao" (must be "não")
+- Never "Voce" (must be "você"), never "Nao" (must be "não")
+- Never bare "e" when it means "is/are" — must be "é"/"são"
 
-### Encoding verification (run after every save)
+### Encoding verification (run after every file save)
 ```bash
 node -e "const f=require('./messages/pt-BR.json'); console.log(f.namespace.key)"
 ```
-The output must show accented characters. If you see plain ASCII, the file was
-saved without UTF-8 encoding. Fix before committing.
+Must show accented characters. If plain ASCII: file was saved without UTF-8. Fix before committing.
 
 ---
 
@@ -452,66 +491,71 @@ saved without UTF-8 encoding. Fix before committing.
 - Inverted punctuation where required: ¿, ¡
 - No em dashes. Replace with ".", "," or ":"
 - Required accents: tú, más, también, qué, dónde, además, después, sólo,
-  cómo, cuándo, así, fácil, últimos, próximo, aquí, allí, día, año
+  cómo, cuándo, así, fácil, últimos, próximo, aquí, allí, día, año, también
 
 ---
 
 ## 7. Quick reference for Claude Code
 
-When receiving a new page or feature task that involves any user-facing text:
-
 **Server Component:**
 ```tsx
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, getLocale } from 'next-intl/server'
 
 export default async function MyPage() {
-  const t = await getTranslations('myNamespace');
-  return <h1>{t('title')}</h1>;
+  const t = await getTranslations('myNamespace')
+  const locale = await getLocale()
+  return <h1>{t('title')}</h1>
 }
 ```
 
 **Client Component:**
 ```tsx
-'use client';
-import { useTranslations } from 'next-intl';
+'use client'
+import { useTranslations, useLocale } from 'next-intl'
 
 export default function MyComponent() {
-  const t = useTranslations('myNamespace');
-  return <button>{t('cta')}</button>;
+  const t = useTranslations('myNamespace')
+  const locale = useLocale()
+  return <button>{t('cta')}</button>
 }
 ```
 
-**With variables:**
+**With ICU plurals:**
 ```tsx
 // JSON: "days": "{n, plural, one {# day} other {# days}}"
-t('days', { n: 5 }) // → "5 days"
+t('days', { n: 5 })  // → "5 days" / "5 dias" / "5 días"
 ```
 
-**Locale-aware links:**
+**Locale-aware links (never for /auth/* routes):**
 ```tsx
-import { Link } from '@/i18n/navigation';
-<Link href="/about">About</Link>  // Automatically prefixes /pt-BR/ or /es/
+import { Link } from '@/i18n/navigation'
+<Link href="/about">About</Link>  // auto-prefixes /pt-BR/ or /es/
+```
+
+**Auth links (always plain anchor):**
+```tsx
+<a href="/auth/login">Login</a>  // never use locale-aware Link
 ```
 
 ---
 
-## 8. Stage 9 — Legal pages (pending)
+## 8. Known bugs fixed during implementation
 
-`/privacy-policy` and `/terms` contain legal content that stays in English.
-The only addition is a language banner at the top of the page:
-
-**PT-BR:** "Esta página está disponível apenas em inglês."
-**ES:** "Esta página solo está disponible en inglés."
-
-Implementation: detect locale in the page component, render the banner only
-when `locale !== 'en'`. No new namespace needed — add `legalBanner` key to
-the `footer` namespace or create a minimal `legal` namespace.
-
----
-
-## 9. Remaining stages
-
-| Stage | Page | What | Status |
-|-------|------|------|--------|
-| 8 | `/plan` | All UI chrome — see stage8-plan-i18n.md | IN PROGRESS |
-| 9 | `/privacy-policy`, `/terms` | EN-only banner | PENDING |
+| Bug | Root Cause | Fix Applied |
+|-----|-----------|-------------|
+| Login 404 in PT-BR/ES | `intlMiddleware` redirected `/auth/login` → `/{locale}/auth/login` (no such route) | Guard in `proxy.ts`: skip intlMiddleware for `/auth/*` |
+| All plan tab content in English | `/api/generate` fetch only sent `{prompt}`, no locale | Added `locale` to generate call body and system prompt |
+| Luna chat responses in English | Language instruction was prepended (ignored); must be at END | Moved instruction to END of system prompt, after `%%TRIP_UPDATE%%` |
+| MORNING/AFTERNOON etc. in English | `p={morning:"Morning"...}` was module-level; sub-component had no `t()` | Added `useTranslations('plan')` to TimeSlotSection sub-component |
+| Partner cards in English | `nh=[{category:"Hotels & Apartments"...}]` was module-level | Added `key` field per item; `t(\`partners.${key}.category\`)` at render |
+| Luna welcome message in English | `buildWelcomeMessage()` was module-level template function | Moved inside FloatingChat component to access `t()` |
+| "Move to another day" tooltip in English | `title="Move to another day"` hardcoded on button | Added `plan.activity.moveToAnotherDay`, wired `title={t(...)}` |
+| Accept/Remove button tooltips in English | `label:"Accept"` and `label:"Remove"` hardcoded as props to `eG` | Added `plan.activity.accept/remove`, wired at callsite |
+| Notes textarea placeholder in English | `placeholder="Add any personal notes..."` hardcoded | Added `plan.notes.placeholder`, wired placeholder |
+| Day badge "Day 1" in English | `["Day ", t.number]` hardcoded in two locations | Added `plan.day.badge = "Day {n}"` / "Dia {n}" / "Día {n}" |
+| "4 days trip" pill in English | Hardcoded plural `1===a?"day":"days"+" trip"` | Added `plan.daysTrip` ICU plural, wired with `t('daysTrip', {n: a})` |
+| Weekday "Friday" in English | `toLocaleDateString("en-US", {weekday:"long"})` hardcoded | Added `toDateLocale()` helper, pass locale to `eT()` function |
+| "01 May 2026" month in English | Inline formatter hardcoded `"en-GB"` | Replaced with `toDateLocale(locale)` in the main component |
+| Legal pages missing NavBar | Self-contained pages never imported `<NavBar />` | Added `import NavBar` and `<NavBar />` + `paddingTop: 68` to both pages |
+| Legal banner had incorrect suffix | Claude Code invented "Estamos trabalhando nas traduções" | Removed — banner text is exactly: "Esta página está disponível apenas em inglês." |
+| Blog missing EN-only notice | No notice existed for PT-BR/ES visitors | Added `blogIndex.engOnlyNotice` and conditional render between hero and posts |
