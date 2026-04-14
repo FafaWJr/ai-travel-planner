@@ -420,5 +420,72 @@
       "festival": "El Cazador de Festivales",
       "beach_bum": "El Amante del Sol"
     }
+  },
+  "about": {
+    "heroLabel": "Nuestra historia",
+    "heroH1Line1": "Creado por viajeros,",
+    "heroH1Line2": "para viajeros.",
+    "heroSubtitle": "Luna Let's Go nació de una simple frustración y un sueño compartido: hacer que cada viaje sea tan bueno como el que imaginaste.",
+    "storyLabel": "Cómo empezó todo",
+    "storyH2": "Una frustración convertida en una misión.",
+    "cofounder": "Co-fundador",
+    "wilsonBio": "Siempre el que tenía veinte pestañas abiertas a la vez, intentando cruzar información de blogs, publicaciones antiguas en foros y guías desactualizadas solo para planificar una semana de vacaciones. Tenía que haber una manera mejor.",
+    "fatimaBio": "El espíritu aventurero que reservaba el vuelo primero y pensaba en los detalles después. Aun así, pasaba semanas buscando las excursiones correctas y las joyas ocultas que valieran la pena el desvío.",
+    "storyP1": "Somos Wilson y Fatima, una pareja unida por una obsesión compartida: viajar. Somos el tipo de personas que, en el momento en que un viaje termina, ya están soñando con el siguiente. Hemos tomado vuelos de último momento, navegado por países sin hablar una palabra del idioma y perseguido amaneceres en lugares que apenas podíamos señalar en un mapa. Desde el caos del Cruce de Shibuya en Tokio hasta las fiestas de espuma en Cancún, desde el brillo de neón de Las Vegas hasta la magia del Super Nintendo World en Japón. Cada viaje nos dio algo que nunca podríamos haber planeado. Y ese es exactamente el punto.",
+    "storyP2Pre": "¿Pero la planificación? Esa parte nunca fue tan emocionante como el viaje en sí. Nos encontrábamos pasando horas, a veces días, revisando publicaciones genéricas de blogs, recomendaciones de trampas turísticas y reseñas contradictorias, tratando de armar un itinerario que realmente encajara con quiénes somos y lo que genuinamente queríamos hacer. No queríamos el itinerario estándar que recibe todo el mundo. Queríamos",
+    "storyP2Em": "nuestro",
+    "storyP2Post": "tipo de viaje.",
+    "storyQuote": "No queríamos un itinerario genérico. Queríamos un plan moldeado a nuestro alrededor, a nuestro ritmo, nuestros intereses, las cosas que hacen que viajar se sienta vivo.",
+    "storyP3": "Eso es exactamente para lo que nació Luna Let's Go. Construimos una plataforma que realmente te escucha — tu estilo de viaje, tu grupo, tu presupuesto, tus pasiones — y construye un viaje genuinamente personalizado en segundos. No una plantilla. No un copiar y pegar. Un plan hecho para ti.",
+    "storyP4": "Sí, los planes son generados por IA, y estamos orgullosos de ello. Pero todo lo que construimos alrededor de esa inteligencia — el motor de personalización, las herramientas de refinamiento, Luna la asistente de viajes — fue creado con verdadera intención y cuidado. Siempre estamos mejorando, siempre escuchando, siempre preguntando cómo podemos hacer que esto se sienta aún más tuyo. Nuestro objetivo nunca ha cambiado. Queremos dar a cada viajero la oportunidad de tener el viaje de su vida.",
+    "blogCta": "¿Quieres ver el mundo a través de nuestros ojos?",
+    "blogCtaBtn": "Lee nuestro blog",
+    "missionH2": "Nuestra misión es simple.",
+    "missionBodyPre": "Dar a cada persona que planifica un viaje la oportunidad de tener el",
+    "missionBodyBold": "mejor planificador del mundo",
+    "missionBodyPost": ", moldeado completamente en torno a sus deseos personales, estilo de viaje e idea de un viaje perfecto. Sin compromisos, sin arrepentimientos.",
+    "featuresLabel": "Qué hace Luna",
+    "featuresH2": "Todo lo que necesitas, nada de lo que no.",
+    "carouselLabel": "Nuestras aventuras",
+    "carouselH2": "Los viajes que inspiraron todo esto.",
+    "loadingPhoto": "Cargando foto...",
+    "prevPhoto": "Foto anterior",
+    "nextPhoto": "Foto siguiente",
+    "photoN": "Foto {n}",
+    "ctaH2": "¿Listo para planear tu próxima aventura?",
+    "ctaSubtitle": "Únete a miles de viajeros que dejan que Luna diseñe su viaje perfecto en 30 segundos.",
+    "ctaBtn": "Planear mi viaje ahora",
+    "stats": {
+      "stat1": "Para generar tu plan completo",
+      "stat2": "Países que planificamos",
+      "stat3": "Secciones detalladas del plan",
+      "stat4": "Formas de personalizarlo"
+    },
+    "features": {
+      "feature1": {
+        "title": "Viaje completo en 30 segundos",
+        "desc": "Dinos a dónde vas y Luna crea un plan completo y personalizado casi al instante. Sin pestañas infinitas, sin guías genéricos."
+      },
+      "feature2": {
+        "title": "Itinerario día a día",
+        "desc": "Mañana, tarde y noche planificados para cada día, adaptados a tu estilo de viaje, ritmo y grupo."
+      },
+      "feature3": {
+        "title": "Sugerencias de alojamiento",
+        "desc": "Sugerencias de hoteles seleccionados según tu presupuesto, desde casas de huéspedes boutique hasta escapadas de lujo."
+      },
+      "feature4": {
+        "title": "Refina con Luna",
+        "desc": "Chatea con Luna, tu asistente de viajes personal con IA. Cambia una actividad, obtén consejos locales, pregunta lo que quieras. Siempre está aquí."
+      },
+      "feature5": {
+        "title": "Acepta, rechaza y mueve",
+        "desc": "Cada sugerencia es tuya para mantener o cambiar. Arrastra actividades entre días hasta que el plan se sienta exactamente bien."
+      },
+      "feature6": {
+        "title": "Guarda y vuelve después",
+        "desc": "Tu viaje se guarda completo. Vuelve a iniciar sesión la próxima semana y continúa exactamente donde lo dejaste."
+      }
+    }
   }
 }

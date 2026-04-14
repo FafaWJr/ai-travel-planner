@@ -420,5 +420,72 @@
       "festival": "The Festival Chaser",
       "beach_bum": "The Sun Seeker"
     }
+  },
+  "about": {
+    "heroLabel": "Our story",
+    "heroH1Line1": "Built by travellers,",
+    "heroH1Line2": "for travellers.",
+    "heroSubtitle": "Luna Let's Go started with a simple frustration and a shared dream: to make every trip as good as the one you imagined.",
+    "storyLabel": "How it started",
+    "storyH2": "A frustration turned into a mission.",
+    "cofounder": "Co-founder",
+    "wilsonBio": "Always the one with twenty tabs open at once, trying to cross-reference blogs, old forum posts and outdated guides just to plan a single week away. There had to be a better way.",
+    "fatimaBio": "The adventurous spirit who would book the flight first and figure out the details later. Still, she would spend weeks hunting for the right excursions and hidden gems worth the detour.",
+    "storyP1": "We are Wilson and Fatima, a couple bound by one shared obsession: travel. We are the kind of people who, the moment one trip ends, are already dreaming about the next one. We have jumped on flights at short notice, navigated countries without speaking a word of the language, and chased sunrises in places we could barely point to on a map. From the chaos of Shibuya Crossing in Tokyo to foam parties in Cancún, from the neon glow of Las Vegas to the magic of Super Nintendo World in Japan. Every trip has given us something we never could have planned for. And that is exactly the point.",
+    "storyP2Pre": "But the planning? That part never felt as exciting as the trip itself. We found ourselves spending hours, sometimes days, sifting through generic blog posts, tourist trap recommendations and conflicting reviews, trying to piece together an itinerary that actually matched who we are and what we genuinely wanted to do. We did not want the highlights reel that everyone gets. We wanted",
+    "storyP2Em": "our",
+    "storyP2Post": "kind of trip.",
+    "storyQuote": "We did not want a generic itinerary. We wanted a plan shaped around us, our pace, our interests, the things that make travel feel alive.",
+    "storyP3": "That is exactly what Luna Let's Go was born to solve. We built a platform that truly listens to you, your travel style, your group, your budget, your passions, and builds a genuinely personalised trip in seconds. Not a template. Not a copy and paste. A plan made for you.",
+    "storyP4": "Yes, the plans are AI-generated, and we are proud of it. But everything we built around that intelligence, the personalisation engine, the refinement tools, Luna the travel assistant, was crafted with real intention and care. We are always improving it, always listening, always asking how we can make this feel even more like yours. Our goal has never changed. We want to give every traveller the chance to have the trip of their life.",
+    "blogCta": "Want to see the world through our eyes?",
+    "blogCtaBtn": "Read our blog",
+    "missionH2": "Our mission is simple.",
+    "missionBodyPre": "Give every person planning a trip the opportunity to have the",
+    "missionBodyBold": "best planner in the world",
+    "missionBodyPost": ", one shaped completely around their personal desires, travel style, and idea of a perfect trip. No compromises, no regrets.",
+    "featuresLabel": "What Luna does",
+    "featuresH2": "Everything you need, nothing you don't.",
+    "carouselLabel": "Our adventures",
+    "carouselH2": "The trips that inspired all of this.",
+    "loadingPhoto": "Loading photo...",
+    "prevPhoto": "Previous photo",
+    "nextPhoto": "Next photo",
+    "photoN": "Photo {n}",
+    "ctaH2": "Ready to plan your next adventure?",
+    "ctaSubtitle": "Join thousands of travellers who let Luna craft their perfect trip in 30 seconds flat.",
+    "ctaBtn": "Plan my trip now",
+    "stats": {
+      "stat1": "To generate your full plan",
+      "stat2": "Countries we can plan for",
+      "stat3": "Detailed plan sections",
+      "stat4": "Ways to make it yours"
+    },
+    "features": {
+      "feature1": {
+        "title": "Full trip in 30 seconds",
+        "desc": "Tell us where you are going and Luna crafts a complete, personalised plan almost instantly. No endless tabs, no generic guides."
+      },
+      "feature2": {
+        "title": "Day-by-day itinerary",
+        "desc": "Morning, afternoon and evening mapped out for every day, tailored to your travel style, pace and group."
+      },
+      "feature3": {
+        "title": "Accommodation picks",
+        "desc": "Curated hotel suggestions matched to your budget, from boutique guesthouses to luxury escapes."
+      },
+      "feature4": {
+        "title": "Refine with Luna",
+        "desc": "Chat with Luna, your personal AI travel assistant. Swap an activity, get insider tips, ask anything. She is always here."
+      },
+      "feature5": {
+        "title": "Accept, decline and move",
+        "desc": "Each suggestion is yours to keep or swap. Drag activities between days until the plan feels exactly right."
+      },
+      "feature6": {
+        "title": "Save and come back",
+        "desc": "Your trip is saved in full. Log back in next week and pick up exactly where you left off."
+      }
+    }
   }
 }

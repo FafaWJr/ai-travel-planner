@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import Link from 'next/link'
+import { Link } from '@/i18n/navigation'
 import NavBar from '@/components/NavBar'
+import { useTranslations } from 'next-intl'
 
 const PHOTOS = [
   {
@@ -36,46 +37,23 @@ const PHOTOS = [
 ]
 
 const STATS = [
-  { value: '30s', label: 'To generate your full plan' },
-  { value: '195', label: 'Countries we can plan for' },
-  { value: '7',   label: 'Detailed plan sections' },
-  { value: '∞',   label: 'Ways to make it yours' },
+  { value: '30s', tKey: 'stat1' },
+  { value: '195', tKey: 'stat2' },
+  { value: '7',   tKey: 'stat3' },
+  { value: '∞',   tKey: 'stat4' },
 ]
 
 const FEATURES = [
-  {
-    icon: '⚡️',
-    title: 'Full trip in 30 seconds',
-    desc: 'Tell us where you are going and Luna crafts a complete, personalised plan almost instantly. No endless tabs, no generic guides.',
-  },
-  {
-    icon: '🗓',
-    title: 'Day-by-day itinerary',
-    desc: 'Morning, afternoon and evening mapped out for every day, tailored to your travel style, pace and group.',
-  },
-  {
-    icon: '🏨',
-    title: 'Accommodation picks',
-    desc: 'Curated hotel suggestions matched to your budget, from boutique guesthouses to luxury escapes.',
-  },
-  {
-    icon: '💬',
-    title: 'Refine with Luna',
-    desc: 'Chat with Luna, your personal AI travel assistant. Swap an activity, get insider tips, ask anything. She is always here.',
-  },
-  {
-    icon: '✅',
-    title: 'Accept, decline and move',
-    desc: 'Each suggestion is yours to keep or swap. Drag activities between days until the plan feels exactly right.',
-  },
-  {
-    icon: '💾',
-    title: 'Save and come back',
-    desc: 'Your trip is saved in full. Log back in next week and pick up exactly where you left off.',
-  },
+  { icon: '⚡️', tKey: 'feature1' },
+  { icon: '🗓',  tKey: 'feature2' },
+  { icon: '🏨',  tKey: 'feature3' },
+  { icon: '💬',  tKey: 'feature4' },
+  { icon: '✅',  tKey: 'feature5' },
+  { icon: '💾',  tKey: 'feature6' },
 ]
 
 export default function AboutPage() {
+  const t = useTranslations('about')
   const [activePhoto, setActivePhoto] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   const [dragStartX, setDragStartX] = useState(0)
@@ -157,7 +135,7 @@ export default function AboutPage() {
             borderRadius: 100, padding: '6px 20px', marginBottom: 28,
           }}>
             <span style={{ fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 12, color: '#FFBD59', letterSpacing: 1.5, textTransform: 'uppercase' }}>
-              Our story
+              {t('heroLabel')}
             </span>
           </div>
 
@@ -166,15 +144,15 @@ export default function AboutPage() {
             fontSize: 'clamp(36px, 6vw, 60px)',
             color: '#fff', lineHeight: 1.15, marginBottom: 24,
           }}>
-            Built by travellers,<br />
-            <span style={{ color: '#FFBD59' }}>for travellers.</span>
+            {t('heroH1Line1')}<br />
+            <span style={{ color: '#FFBD59' }}>{t('heroH1Line2')}</span>
           </h1>
 
           <p style={{
             fontFamily: 'var(--font-body)', fontSize: 18, lineHeight: 1.8,
             color: 'rgba(255,255,255,0.72)', maxWidth: 560, margin: '0 auto',
           }}>
-            Luna Let&apos;s Go started with a simple frustration and a shared dream: to make every trip as good as the one you imagined.
+            {t('heroSubtitle')}
           </p>
         </div>
       </section>
@@ -182,13 +160,15 @@ export default function AboutPage() {
       {/* STATS BAR */}
       <section style={{ background: '#FF8210' }}>
         <div style={{ maxWidth: 960, margin: '0 auto', padding: '0 32px', display: 'flex', justifyContent: 'center', flexWrap: 'wrap' }}>
-          {STATS.map(({ value, label }, i) => (
-            <div key={label} style={{
+          {STATS.map(({ value, tKey }, i) => (
+            <div key={tKey} style={{
               flex: '1 1 140px', textAlign: 'center', padding: '28px 32px',
               borderRight: i < STATS.length - 1 ? '1px solid rgba(255,255,255,0.25)' : 'none',
             }}>
               <div style={{ fontFamily: 'var(--font-head)', fontWeight: 700, fontSize: 36, color: '#fff' }}>{value}</div>
-              <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'rgba(255,255,255,0.80)', marginTop: 4 }}>{label}</div>
+              <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'rgba(255,255,255,0.80)', marginTop: 4 }}>
+                {t(`stats.${tKey}` as Parameters<typeof t>[0])}
+              </div>
             </div>
           ))}
         </div>
@@ -201,12 +181,12 @@ export default function AboutPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
             <div style={{ width: 40, height: 3, background: '#FF8210', borderRadius: 2 }} />
             <span style={{ fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 12, color: '#FF8210', letterSpacing: 2, textTransform: 'uppercase' }}>
-              How it started
+              {t('storyLabel')}
             </span>
           </div>
 
           <h2 style={{ fontFamily: 'var(--font-head)', fontWeight: 500, fontSize: 'clamp(28px, 4vw, 42px)', color: '#00447B', lineHeight: 1.3, marginBottom: 40 }}>
-            A frustration turned into a mission.
+            {t('storyH2')}
           </h2>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, marginBottom: 52 }}>
@@ -215,11 +195,11 @@ export default function AboutPage() {
                 <div style={{ width: 52, height: 52, borderRadius: '50%', background: '#00447B', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-head)', fontWeight: 700, fontSize: 20, color: '#fff', flexShrink: 0 }}>W</div>
                 <div>
                   <div style={{ fontFamily: 'var(--font-head)', fontWeight: 700, fontSize: 18, color: '#00447B' }}>Wilson</div>
-                  <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: '#6C6D6F' }}>Co-founder</div>
+                  <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: '#6C6D6F' }}>{t('cofounder')}</div>
                 </div>
               </div>
               <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.75, color: '#333', margin: 0 }}>
-                Always the one with twenty tabs open at once, trying to cross-reference blogs, old forum posts and outdated guides just to plan a single week away. There had to be a better way.
+                {t('wilsonBio')}
               </p>
             </div>
 
@@ -228,22 +208,22 @@ export default function AboutPage() {
                 <div style={{ width: 52, height: 52, borderRadius: '50%', background: '#FF8210', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-head)', fontWeight: 700, fontSize: 20, color: '#fff', flexShrink: 0 }}>F</div>
                 <div>
                   <div style={{ fontFamily: 'var(--font-head)', fontWeight: 700, fontSize: 18, color: '#FF8210' }}>Fatima</div>
-                  <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: '#6C6D6F' }}>Co-founder</div>
+                  <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: '#6C6D6F' }}>{t('cofounder')}</div>
                 </div>
               </div>
               <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.75, color: '#333', margin: 0 }}>
-                The adventurous spirit who would book the flight first and figure out the details later. Still, she would spend weeks hunting for the right excursions and hidden gems worth the detour.
+                {t('fatimaBio')}
               </p>
             </div>
           </div>
 
           <div style={{ maxWidth: 720 }}>
             <p style={{ fontFamily: 'var(--font-body)', fontSize: 17, lineHeight: 1.9, color: '#333', marginBottom: 24 }}>
-              We are Wilson and Fatima, a couple bound by one shared obsession: travel. We are the kind of people who, the moment one trip ends, are already dreaming about the next one. We have jumped on flights at short notice, navigated countries without speaking a word of the language, and chased sunrises in places we could barely point to on a map. From the chaos of Shibuya Crossing in Tokyo to foam parties in Cancún, from the neon glow of Las Vegas to the magic of Super Nintendo World in Japan. Every trip has given us something we never could have planned for. And that is exactly the point.
+              {t('storyP1')}
             </p>
 
             <p style={{ fontFamily: 'var(--font-body)', fontSize: 17, lineHeight: 1.9, color: '#333', marginBottom: 24 }}>
-              But the planning? That part never felt as exciting as the trip itself. We found ourselves spending hours, sometimes days, sifting through generic blog posts, tourist trap recommendations and conflicting reviews, trying to piece together an itinerary that actually matched who we are and what we genuinely wanted to do. We did not want the highlights reel that everyone gets. We wanted <em>our</em> kind of trip.
+              {t('storyP2Pre')} <em>{t('storyP2Em')}</em> {t('storyP2Post')}
             </p>
 
             <div style={{
@@ -252,16 +232,16 @@ export default function AboutPage() {
               margin: '40px 0',
             }}>
               <p style={{ fontFamily: 'var(--font-head)', fontWeight: 500, fontSize: 19, lineHeight: 1.65, color: '#00447B', margin: 0, fontStyle: 'italic' }}>
-                &ldquo;We did not want a generic itinerary. We wanted a plan shaped around us, our pace, our interests, the things that make travel feel alive.&rdquo;
+                &ldquo;{t('storyQuote')}&rdquo;
               </p>
             </div>
 
             <p style={{ fontFamily: 'var(--font-body)', fontSize: 17, lineHeight: 1.9, color: '#333', marginBottom: 24 }}>
-              That is exactly what Luna Let&apos;s Go was born to solve. We built a platform that truly listens to you, your travel style, your group, your budget, your passions, and builds a genuinely personalised trip in seconds. Not a template. Not a copy and paste. A plan made for you.
+              {t('storyP3')}
             </p>
 
             <p style={{ fontFamily: 'var(--font-body)', fontSize: 17, lineHeight: 1.9, color: '#333', marginBottom: 0 }}>
-              Yes, the plans are AI-generated, and we are proud of it. But everything we built around that intelligence, the personalisation engine, the refinement tools, Luna the travel assistant, was crafted with real intention and care. We are always improving it, always listening, always asking how we can make this feel even more like yours. Our goal has never changed. We want to give every traveller the chance to have the trip of their life.
+              {t('storyP4')}
             </p>
 
             <div
@@ -283,7 +263,7 @@ export default function AboutPage() {
                   fontWeight: 400,
                 }}
               >
-                Want to see the world through our eyes?
+                {t('blogCta')}
               </p>
               <a
                 href="/blog"
@@ -310,7 +290,7 @@ export default function AboutPage() {
                   ;(e.currentTarget as HTMLAnchorElement).style.transform = 'translateY(0)'
                 }}
               >
-                Read our blog
+                {t('blogCtaBtn')}
               </a>
             </div>
           </div>
@@ -322,10 +302,10 @@ export default function AboutPage() {
         <div style={{ maxWidth: 760, margin: '0 auto', textAlign: 'center' }}>
           <div style={{ fontSize: 40, marginBottom: 24 }}>🌍</div>
           <h2 style={{ fontFamily: 'var(--font-head)', fontWeight: 700, fontSize: 'clamp(26px, 4vw, 38px)', color: '#fff', lineHeight: 1.35, marginBottom: 20 }}>
-            Our mission is simple.
+            {t('missionH2')}
           </h2>
           <p style={{ fontFamily: 'var(--font-body)', fontSize: 18, lineHeight: 1.85, color: 'rgba(255,255,255,0.78)', margin: '0 auto', maxWidth: 620 }}>
-            Give every person planning a trip the opportunity to have the <strong style={{ color: '#FFBD59' }}>best planner in the world</strong>, one shaped completely around their personal desires, travel style, and idea of a perfect trip. No compromises, no regrets.
+            {t('missionBodyPre')} <strong style={{ color: '#FFBD59' }}>{t('missionBodyBold')}</strong>{t('missionBodyPost')}
           </p>
         </div>
       </section>
@@ -336,18 +316,18 @@ export default function AboutPage() {
           <div style={{ textAlign: 'center', marginBottom: 60 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 16 }}>
               <div style={{ width: 32, height: 3, background: '#FF8210', borderRadius: 2 }} />
-              <span style={{ fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 12, color: '#FF8210', letterSpacing: 2, textTransform: 'uppercase' }}>What Luna does</span>
+              <span style={{ fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 12, color: '#FF8210', letterSpacing: 2, textTransform: 'uppercase' }}>{t('featuresLabel')}</span>
               <div style={{ width: 32, height: 3, background: '#FF8210', borderRadius: 2 }} />
             </div>
             <h2 style={{ fontFamily: 'var(--font-head)', fontWeight: 500, fontSize: 'clamp(26px, 4vw, 38px)', color: '#00447B', lineHeight: 1.3, margin: 0 }}>
-              Everything you need, nothing you don&apos;t.
+              {t('featuresH2')}
             </h2>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
-            {FEATURES.map(({ icon, title, desc }) => (
+            {FEATURES.map(({ icon, tKey }) => (
               <div
-                key={title}
+                key={tKey}
                 style={{ background: '#fff', borderRadius: 16, padding: '28px 24px', border: '1.5px solid rgba(0,68,123,0.08)', display: 'flex', gap: 18, alignItems: 'flex-start', transition: 'box-shadow 0.2s, transform 0.2s' }}
                 onMouseEnter={e => { const el = e.currentTarget as HTMLDivElement; el.style.boxShadow = '0 8px 32px rgba(0,68,123,0.10)'; el.style.transform = 'translateY(-3px)' }}
                 onMouseLeave={e => { const el = e.currentTarget as HTMLDivElement; el.style.boxShadow = 'none'; el.style.transform = 'translateY(0)' }}
@@ -356,8 +336,12 @@ export default function AboutPage() {
                   {icon}
                 </div>
                 <div>
-                  <h3 style={{ fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 16, color: '#00447B', marginBottom: 8, marginTop: 0 }}>{title}</h3>
-                  <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, lineHeight: 1.65, color: '#6C6D6F', margin: 0 }}>{desc}</p>
+                  <h3 style={{ fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 16, color: '#00447B', marginBottom: 8, marginTop: 0 }}>
+                    {t(`features.${tKey}.title` as Parameters<typeof t>[0])}
+                  </h3>
+                  <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, lineHeight: 1.65, color: '#6C6D6F', margin: 0 }}>
+                    {t(`features.${tKey}.desc` as Parameters<typeof t>[0])}
+                  </p>
                 </div>
               </div>
             ))}
@@ -371,11 +355,11 @@ export default function AboutPage() {
           <div style={{ textAlign: 'center', marginBottom: 52 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 16 }}>
               <div style={{ width: 32, height: 3, background: '#FF8210', borderRadius: 2 }} />
-              <span style={{ fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 12, color: '#FF8210', letterSpacing: 2, textTransform: 'uppercase' }}>Our adventures</span>
+              <span style={{ fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 12, color: '#FF8210', letterSpacing: 2, textTransform: 'uppercase' }}>{t('carouselLabel')}</span>
               <div style={{ width: 32, height: 3, background: '#FF8210', borderRadius: 2 }} />
             </div>
             <h2 style={{ fontFamily: 'var(--font-head)', fontWeight: 500, fontSize: 'clamp(26px, 4vw, 38px)', color: '#00447B', lineHeight: 1.3, margin: 0 }}>
-              The trips that inspired all of this.
+              {t('carouselH2')}
             </h2>
           </div>
 
@@ -416,7 +400,7 @@ export default function AboutPage() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
                   <div style={{ fontFamily: 'var(--font-head)', fontWeight: 500, fontSize: 15, color: 'rgba(255,255,255,0.5)' }}>
-                    Loading photo...
+                    {t('loadingPhoto')}
                   </div>
                 </div>
               )}
@@ -432,7 +416,7 @@ export default function AboutPage() {
                 </p>
               </div>
 
-              <button onClick={prev} aria-label="Previous photo" style={{
+              <button onClick={prev} aria-label={t('prevPhoto')} style={{
                 position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)',
                 width: 44, height: 44, borderRadius: '50%', border: 'none',
                 background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(8px)',
@@ -444,7 +428,7 @@ export default function AboutPage() {
                 onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.18)')}
               >‹</button>
 
-              <button onClick={next} aria-label="Next photo" style={{
+              <button onClick={next} aria-label={t('nextPhoto')} style={{
                 position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)',
                 width: 44, height: 44, borderRadius: '50%', border: 'none',
                 background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(8px)',
@@ -462,7 +446,7 @@ export default function AboutPage() {
                 <button
                   key={i}
                   onClick={() => goTo(i)}
-                  aria-label={`Photo ${i + 1}`}
+                  aria-label={t('photoN', { n: i + 1 })}
                   style={{
                     height: 8, width: i === activePhoto ? 32 : 8,
                     borderRadius: 100, border: 'none',
@@ -481,10 +465,10 @@ export default function AboutPage() {
       <section style={{ background: 'linear-gradient(135deg, #FF8210 0%, #e6720e 100%)', padding: '80px 24px' }}>
         <div style={{ maxWidth: 640, margin: '0 auto', textAlign: 'center' }}>
           <h2 style={{ fontFamily: 'var(--font-head)', fontWeight: 700, fontSize: 'clamp(26px, 4vw, 36px)', color: '#fff', lineHeight: 1.3, marginBottom: 16 }}>
-            Ready to plan your next adventure?
+            {t('ctaH2')}
           </h2>
           <p style={{ fontFamily: 'var(--font-body)', fontSize: 17, color: 'rgba(255,255,255,0.85)', marginBottom: 36, lineHeight: 1.7 }}>
-            Join thousands of travellers who let Luna craft their perfect trip in 30 seconds flat.
+            {t('ctaSubtitle')}
           </p>
           <Link href="/#planner" style={{
             display: 'inline-block', padding: '16px 40px',
@@ -497,7 +481,7 @@ export default function AboutPage() {
             onMouseEnter={e => { const el = e.currentTarget as HTMLAnchorElement; el.style.transform = 'translateY(-2px)'; el.style.boxShadow = '0 12px 40px rgba(0,0,0,0.20)' }}
             onMouseLeave={e => { const el = e.currentTarget as HTMLAnchorElement; el.style.transform = 'translateY(0)'; el.style.boxShadow = '0 8px 32px rgba(0,0,0,0.15)' }}
           >
-            ✈ Plan my trip now
+            ✈ {t('ctaBtn')}
           </Link>
         </div>
       </section>
