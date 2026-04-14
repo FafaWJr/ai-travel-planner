@@ -421,6 +421,18 @@
       "beach_bum": "El Amante del Sol"
     }
   },
+  "blogIndex": {
+    "heroTitle": "Blog de Viajes",
+    "heroSubtitle": "Viajes reales, opiniones honestas y el tipo de consejo que solo un amigo recién llegado te da.",
+    "sectionTitle": "Historias de Viaje",
+    "sectionSubtitle": "Destinos reales, opiniones honestas y consejos prácticos de personas que realmente hacen el viaje.",
+    "readStory": "Leer la historia",
+    "readMore": "Leer más",
+    "comingSoon": "Próximamente",
+    "categoryGuide": "Guía de Destino",
+    "categoryTips": "Consejos de Viaje",
+    "minRead": "min de lectura"
+  },
   "about": {
     "heroLabel": "Nuestra historia",
     "heroH1Line1": "Creado por viajeros,",

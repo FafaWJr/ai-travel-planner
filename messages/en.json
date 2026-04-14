@@ -421,6 +421,18 @@
       "beach_bum": "The Sun Seeker"
     }
   },
+  "blogIndex": {
+    "heroTitle": "Travel Blog",
+    "heroSubtitle": "Real trips, honest takes, and the kind of advice only a friend who just came back gives you.",
+    "sectionTitle": "Travel Stories",
+    "sectionSubtitle": "Real destinations, honest takes, and practical tips from people who actually make the journey.",
+    "readStory": "Read the story",
+    "readMore": "Read more",
+    "comingSoon": "Coming Soon",
+    "categoryGuide": "Destination Guide",
+    "categoryTips": "Travel Tips",
+    "minRead": "min read"
+  },
   "about": {
     "heroLabel": "Our story",
     "heroH1Line1": "Built by travellers,",

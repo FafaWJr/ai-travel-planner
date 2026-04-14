@@ -1,7 +1,8 @@
 'use client';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import Image from 'next/image';
 import NavBar from '@/components/NavBar';
+import { useTranslations } from 'next-intl';
 
 /**
  * BLOG INDEX TEMPLATE RULES — all cards must follow this pattern:
@@ -99,6 +100,11 @@ const BlogIllustrations: Record<number, () => React.ReactElement> = {
   ),
 };
 
+const CATEGORY_T_KEY: Record<string, 'categoryGuide' | 'categoryTips'> = {
+  'Destination Guide': 'categoryGuide',
+  'Travel Tips': 'categoryTips',
+};
+
 const PLACEHOLDER_POSTS = [
   {
     id: 1,
@@ -107,7 +113,7 @@ const PLACEHOLDER_POSTS = [
     title: '10 Unmissable Things to Do in Bali',
     excerpt: 'From the terraced rice fields of Ubud to the legendary surf breaks of Canggu — a local-style guide to Indonesia\'s most iconic island.',
     destination: 'Bali, Indonesia',
-    readTime: '8 min read',
+    readTimeNum: 8,
     gradient: 'linear-gradient(135deg, #00447B 0%, #679AC1 100%)',
     date: 'Coming soon',
   },
@@ -118,7 +124,7 @@ const PLACEHOLDER_POSTS = [
     title: 'How to Plan a 2-Week Japan Trip on a Midrange Budget',
     excerpt: 'Tokyo, Kyoto, and Osaka without breaking the bank — the ultimate guide to JR passes, capsule hotels, and the best ¥500 lunches of your life.',
     destination: 'Japan',
-    readTime: '12 min read',
+    readTimeNum: 12,
     gradient: 'linear-gradient(135deg, #FF8210 0%, #FFBD59 100%)',
     date: 'Coming soon',
   },
@@ -127,6 +133,8 @@ const PLACEHOLDER_POSTS = [
 
 
 export default function BlogPage() {
+  const t = useTranslations('blogIndex');
+
   return (
     <>
       <NavBar />
@@ -155,13 +163,13 @@ export default function BlogPage() {
               fontSize: 'clamp(36px, 5vw, 60px)',
               color: '#fff', lineHeight: 1.1, marginBottom: 20,
             }}>
-              Travel Blog
+              {t('heroTitle')}
             </h1>
             <p style={{
               fontFamily: 'var(--font-body)', fontSize: 'clamp(16px, 2vw, 20px)',
               color: 'rgba(255,255,255,0.75)', lineHeight: 1.6, margin: '0 auto',
             }}>
-              Real trips, honest takes, and the kind of advice only a friend who just came back gives you.
+              {t('heroSubtitle')}
             </p>
           </div>
         </section>
@@ -175,10 +183,10 @@ export default function BlogPage() {
               fontFamily: 'var(--font-head)', fontWeight: 700, fontSize: 'clamp(22px, 3vw, 32px)',
               color: 'var(--navy)', marginBottom: 12,
             }}>
-              Travel Stories
+              {t('sectionTitle')}
             </h2>
             <p style={{ fontFamily: 'var(--font-body)', fontSize: 16, color: 'var(--gray-dark)', maxWidth: 520, margin: '0 auto' }}>
-              Real destinations, honest takes, and practical tips from people who actually make the journey.
+              {t('sectionSubtitle')}
             </p>
           </div>
 
@@ -232,7 +240,7 @@ export default function BlogPage() {
                 <div style={{ fontFamily: 'var(--font-head)', fontSize: 12, color: 'var(--gray-dark)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 12 }}>
                   <span>January 2026</span>
                   <span style={{ color: '#C0C0C0' }}>·</span>
-                  <span>12 min read</span>
+                  <span>12 {t('minRead')}</span>
                   <span style={{ color: '#C0C0C0' }}>·</span>
                   <span>5 days</span>
                 </div>
@@ -248,7 +256,7 @@ export default function BlogPage() {
                     <span style={{ fontFamily: 'var(--font-head)', fontSize: 12, fontWeight: 600, color: 'var(--navy)' }}>Wilson &amp; Fatima</span>
                   </div>
                   <span style={{ fontFamily: 'var(--font-head)', fontSize: 12, fontWeight: 600, color: '#FF8210', display: 'flex', alignItems: 'center', gap: 4 }}>
-                    Read the story
+                    {t('readStory')}
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                       <path d="M3 7H11M8 4L11 7L8 10" stroke="#FF8210" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
@@ -286,7 +294,7 @@ export default function BlogPage() {
                 <div style={{ fontFamily: 'var(--font-head)', fontSize: 12, color: 'var(--gray-dark)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 12 }}>
                   <span>October 2024</span>
                   <span style={{ color: '#C0C0C0' }}>·</span>
-                  <span>10 min read</span>
+                  <span>10 {t('minRead')}</span>
                   <span style={{ color: '#C0C0C0' }}>·</span>
                   <span>7 nights</span>
                 </div>
@@ -294,7 +302,7 @@ export default function BlogPage() {
                   Bula! Fiji on a Smart Budget: Islands, Beach Clubs, and a Private Pool
                 </h3>
                 <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--gray-dark)', lineHeight: 1.6, marginBottom: 18 }}>
-                  We split 7 nights between Nadi and Matamanoa Island, did Mala Mala, Cloud 9, and Castaway, then packed our own beer onto the island boat. Here's exactly how we did it.
+                  We split 7 nights between Nadi and Matamanoa Island, did Mala Mala, Cloud 9, and Castaway, then packed our own beer onto the island boat. Here&apos;s exactly how we did it.
                 </p>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #f0f0f0', paddingTop: 14 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -302,7 +310,7 @@ export default function BlogPage() {
                     <span style={{ fontFamily: 'var(--font-head)', fontSize: 12, fontWeight: 600, color: 'var(--navy)' }}>Wilson &amp; Fatima</span>
                   </div>
                   <span style={{ fontFamily: 'var(--font-head)', fontSize: 12, fontWeight: 600, color: '#FF8210', display: 'flex', alignItems: 'center', gap: 4 }}>
-                    Read story
+                    {t('readStory')}
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                       <path d="M3 7H11M8 4L11 7L8 10" stroke="#FF8210" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
@@ -343,7 +351,7 @@ export default function BlogPage() {
                     padding: '4px 10px',
                     borderRadius: '20px',
                   }}>
-                    Coming Soon
+                    {t('comingSoon')}
                   </div>
                   {(() => { const Illus = BlogIllustrations[post.id]; return Illus ? <Illus /> : null; })()}
                   <span style={{
@@ -364,10 +372,10 @@ export default function BlogPage() {
                       padding: '3px 10px', borderRadius: 'var(--r-pill)',
                       textTransform: 'uppercase', letterSpacing: '0.07em',
                     }}>
-                      {post.category}
+                      {t(CATEGORY_T_KEY[post.category] as Parameters<typeof t>[0])}
                     </span>
                     <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--gray-dark)' }}>
-                      {post.readTime}
+                      {post.readTimeNum} {t('minRead')}
                     </span>
                   </div>
 
@@ -401,7 +409,7 @@ export default function BlogPage() {
                       cursor: 'not-allowed', alignSelf: 'flex-start',
                     }}
                   >
-                    Read more
+                    {t('readMore')}
                     <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
                       <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
