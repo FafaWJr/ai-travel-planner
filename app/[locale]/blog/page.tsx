@@ -292,6 +292,106 @@ export default function BlogPage() {
               </div>
             </Link>
 
+            {/* ── Real post: Japan Part 1 ── */}
+            <Link href="/blog/japan-may-2025-part-1" style={{ textDecoration: 'none', color: 'inherit', display: 'block', background: '#fff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 16px rgba(0,68,123,0.08)', transition: 'transform 0.25s ease, box-shadow 0.25s ease' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 10px 32px rgba(0,68,123,0.14)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 16px rgba(0,68,123,0.08)'; }}
+            >
+              {/* Card image */}
+              <div style={{ position: 'relative', width: '100%', height: 220, background: 'linear-gradient(135deg, #00447B 0%, #005fa3 40%, #0096c7 70%, #48cae4 100%)' }}>
+                <Image src="/blog/Japan-May-2025/Kiyomizu-dera.jpeg" alt="Kiyomizudera temple wooden stage overlooking forested hills of Kyoto Japan" fill style={{ objectFit: 'cover' }} sizes="380px" />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.35) 100%)' }} />
+                <div style={{ position: 'absolute', top: 14, left: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ background: '#FF8210', color: '#fff', fontFamily: 'var(--font-head)', fontSize: 11, fontWeight: 700, letterSpacing: '0.8px', textTransform: 'uppercase', padding: '4px 10px', borderRadius: 20 }}>Japan Part 1</span>
+                  <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.18)', borderRadius: 20, padding: '4px 8px', gap: 5, backdropFilter: 'blur(4px)' }}>
+                    <span style={{ fontSize: 14, lineHeight: 1 }}>🇯🇵</span>
+                    <span style={{ fontFamily: 'var(--font-head)', fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.9)' }}>Japan</span>
+                  </div>
+                </div>
+                <div style={{ position: 'absolute', bottom: 14, left: 14 }}>
+                  <span style={{ fontFamily: 'var(--font-head)', fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.7)', letterSpacing: '1px', textTransform: 'uppercase' }}>Osaka · Kyoto · Nara · Hiroshima</span>
+                </div>
+              </div>
+              {/* Card body */}
+              <div style={{ padding: '1.4rem 1.5rem 1.75rem' }}>
+                <div style={{ fontFamily: 'var(--font-head)', fontSize: 12, color: 'var(--gray-dark)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <span>May 2025</span>
+                  <span style={{ color: '#C0C0C0' }}>·</span>
+                  <span>14 {t('minRead')}</span>
+                  <span style={{ color: '#C0C0C0' }}>·</span>
+                  <span>7 days</span>
+                </div>
+                <h3 style={{ fontFamily: 'var(--font-head)', fontWeight: 700, fontSize: 17, color: 'var(--navy)', marginBottom: 10, lineHeight: 1.4 }}>
+                  Japan Part 1: Osaka, Kyoto, Nara and Hiroshima
+                </h3>
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--gray-dark)', lineHeight: 1.6, marginBottom: 18 }}>
+                  Sushi at midnight in Dotonbori, bluefin tuna at Kuromon Market, temple walks in Kyoto, wild deer in Nara and the Hiroshima Flower Festival.
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #f0f0f0', paddingTop: 14 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--navy)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-head)', fontSize: 11, fontWeight: 700, color: '#fff' }}>WF</div>
+                    <span style={{ fontFamily: 'var(--font-head)', fontSize: 12, fontWeight: 600, color: 'var(--navy)' }}>Wilson &amp; Fatima</span>
+                  </div>
+                  <span style={{ fontFamily: 'var(--font-head)', fontSize: 12, fontWeight: 600, color: '#FF8210', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    {t('readStory')}
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <path d="M3 7H11M8 4L11 7L8 10" stroke="#FF8210" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </span>
+                </div>
+              </div>
+            </Link>
+
+            {/* ── Real post: Japan Part 2 ── */}
+            <Link href="/blog/japan-may-2025-part-2" style={{ textDecoration: 'none', color: 'inherit', display: 'block', background: '#fff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 16px rgba(0,68,123,0.08)', transition: 'transform 0.25s ease, box-shadow 0.25s ease' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 10px 32px rgba(0,68,123,0.14)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 16px rgba(0,68,123,0.08)'; }}
+            >
+              {/* Card image */}
+              <div style={{ position: 'relative', width: '100%', height: 220, background: 'linear-gradient(135deg, #00447B 0%, #005fa3 40%, #0096c7 70%, #48cae4 100%)' }}>
+                <Image src="/blog/Japan-May-2025/Fuji.jpeg" alt="Mount Fuji snowcapped peak against a clear blue sky" fill style={{ objectFit: 'cover' }} sizes="380px" />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.35) 100%)' }} />
+                <div style={{ position: 'absolute', top: 14, left: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ background: '#FF8210', color: '#fff', fontFamily: 'var(--font-head)', fontSize: 11, fontWeight: 700, letterSpacing: '0.8px', textTransform: 'uppercase', padding: '4px 10px', borderRadius: 20 }}>Japan Part 2</span>
+                  <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.18)', borderRadius: 20, padding: '4px 8px', gap: 5, backdropFilter: 'blur(4px)' }}>
+                    <span style={{ fontSize: 14, lineHeight: 1 }}>🇯🇵</span>
+                    <span style={{ fontFamily: 'var(--font-head)', fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.9)' }}>Japan</span>
+                  </div>
+                </div>
+                <div style={{ position: 'absolute', bottom: 14, left: 14 }}>
+                  <span style={{ fontFamily: 'var(--font-head)', fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.7)', letterSpacing: '1px', textTransform: 'uppercase' }}>Tokyo · Mt Fuji · Osaka</span>
+                </div>
+              </div>
+              {/* Card body */}
+              <div style={{ padding: '1.4rem 1.5rem 1.75rem' }}>
+                <div style={{ fontFamily: 'var(--font-head)', fontSize: 12, color: 'var(--gray-dark)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <span>May 2025</span>
+                  <span style={{ color: '#C0C0C0' }}>·</span>
+                  <span>15 {t('minRead')}</span>
+                  <span style={{ color: '#C0C0C0' }}>·</span>
+                  <span>9 days</span>
+                </div>
+                <h3 style={{ fontFamily: 'var(--font-head)', fontWeight: 700, fontSize: 17, color: 'var(--navy)', marginBottom: 10, lineHeight: 1.4 }}>
+                  Japan Part 2: Tokyo, Mt Fuji, Osaka Expo and Universal Studios Japan
+                </h3>
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--gray-dark)', lineHeight: 1.6, marginBottom: 18 }}>
+                  Go-karts through Shibuya, TeamLab Borderless, a day at Mt Fuji, Osaka Expo 2025 and Super Nintendo World at Universal Studios Japan.
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #f0f0f0', paddingTop: 14 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--navy)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-head)', fontSize: 11, fontWeight: 700, color: '#fff' }}>WF</div>
+                    <span style={{ fontFamily: 'var(--font-head)', fontSize: 12, fontWeight: 600, color: 'var(--navy)' }}>Wilson &amp; Fatima</span>
+                  </div>
+                  <span style={{ fontFamily: 'var(--font-head)', fontSize: 12, fontWeight: 600, color: '#FF8210', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    {t('readStory')}
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <path d="M3 7H11M8 4L11 7L8 10" stroke="#FF8210" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </span>
+                </div>
+              </div>
+            </Link>
+
             {/* ── Real post: Fiji ── */}
             <Link href="/blog/fiji-oct-2024" style={{ textDecoration: 'none', color: 'inherit', display: 'block', background: '#fff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 16px rgba(0,68,123,0.08)', transition: 'transform 0.25s ease, box-shadow 0.25s ease' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 10px 32px rgba(0,68,123,0.14)'; }}
