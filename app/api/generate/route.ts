@@ -4,35 +4,9 @@ import { getWeather } from '@/lib/weather';
 import { buildTravelPrompt, SYSTEM_PROMPT, getLanguageInstruction } from '@/lib/ai';
 import { streamCompletion } from '@/lib/ai-stream';
 import { createClient } from '@/lib/supabase/server';
+import { collectStream } from '@/lib/stream-utils';
 
 export const maxDuration = 60;
-
-/** Collect an SSE stream into a plain text string */
-async function collectStream(stream: ReadableStream<Uint8Array>): Promise<string> {
-  const reader = stream.getReader();
-  const decoder = new TextDecoder();
-  let result = '';
-  let buffer = '';
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n');
-    buffer = lines.pop() ?? '';
-    for (const line of lines) {
-      if (!line.startsWith('data: ')) continue;
-      const json = line.slice(6).trim();
-      if (!json || json === '[DONE]') continue;
-      try {
-        const parsed = JSON.parse(json);
-        const delta = parsed?.choices?.[0]?.delta?.content;
-        if (delta) result += delta;
-      } catch { /* skip */ }
-    }
-  }
-  return result;
-}
 
 export async function POST(request: NextRequest) {
   try {

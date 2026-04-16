@@ -48,6 +48,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'slug and comment_text required' }, { status: 400 });
   }
 
+  if (comment_text.length > 2000) {
+    return NextResponse.json({ error: 'Comment must be 2000 characters or less.' }, { status: 400 });
+  }
+
   const { data, error } = await supabase
     .from('blog_comments')
     .insert({

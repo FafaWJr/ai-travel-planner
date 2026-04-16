@@ -7,7 +7,7 @@ export async function GET() {
   try {
     const res = await fetch(
       'https://api.frankfurter.app/latest?from=EUR&to=USD,AUD,BRL',
-      { next: { revalidate: 3600 } } // cache 1h server-side
+      { next: { revalidate: 3600 }, signal: AbortSignal.timeout(5000) } // cache 1h server-side
     );
     if (!res.ok) throw new Error(`Frankfurter ${res.status}`);
     const data = await res.json();

@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
       {
         next: { revalidate: 86400 }, // cache 24h
         headers: { 'User-Agent': 'AITravelPlanner/1.0 (educational project)' },
+        signal: AbortSignal.timeout(5000),
       }
     );
     const data = await res.json();

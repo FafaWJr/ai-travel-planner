@@ -1,31 +1,9 @@
 import { NextRequest } from 'next/server';
 import { streamCompletion } from '@/lib/ai-stream';
 import { createClient } from '@/lib/supabase/server';
+import { collectStream as collectText } from '@/lib/stream-utils';
 
 export const maxDuration = 60;
-
-async function collectText(stream: ReadableStream<Uint8Array>): Promise<string> {
-  const reader = stream.getReader();
-  const decoder = new TextDecoder();
-  let result = '', buffer = '';
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n');
-    buffer = lines.pop() ?? '';
-    for (const line of lines) {
-      if (!line.startsWith('data: ')) continue;
-      const json = line.slice(6).trim();
-      if (!json || json === '[DONE]') continue;
-      try {
-        const delta = JSON.parse(json)?.choices?.[0]?.delta?.content;
-        if (delta) result += delta;
-      } catch { /* skip */ }
-    }
-  }
-  return result;
-}
 
 const SYSTEM_PROMPT = `You are a travel budget estimator. Analyse the itinerary and return a cost estimate as compact JSON.
 

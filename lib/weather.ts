@@ -76,7 +76,7 @@ export async function getWeather(
     // Geocoding: get lat/lng for destination
     const geoRes = await fetch(
       `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(destination)}&count=1`,
-      { cache: 'no-store' }
+      { cache: 'no-store', signal: AbortSignal.timeout(5000) }
     );
 
     if (!geoRes.ok) {
@@ -105,7 +105,7 @@ export async function getWeather(
     // Fetch weather forecast
     const weatherRes = await fetch(
       `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode&timezone=auto&start_date=${clampedStartDate}&end_date=${clampedEndDate}`,
-      { cache: 'no-store' }
+      { cache: 'no-store', signal: AbortSignal.timeout(5000) }
     );
 
     if (!weatherRes.ok) {

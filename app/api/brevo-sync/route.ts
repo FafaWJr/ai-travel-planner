@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
         'content-type': 'application/json',
         'api-key': BREVO_API_KEY,
       },
+      signal: AbortSignal.timeout(5000),
       body: JSON.stringify({
         email,
         attributes: {
