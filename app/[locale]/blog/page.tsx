@@ -133,21 +133,33 @@ export default function BlogPage() {
 
         {/* ── Hero ── */}
         <section style={{
-          position: 'relative', overflow: 'hidden',
-          background: 'var(--navy)',
+          position: 'relative',
+          overflow: 'hidden',
+          background: '#00447B',
           padding: 'clamp(64px, 10vw, 112px) 40px',
           textAlign: 'center',
         }}>
-          {/* Background pattern */}
+
+          {/* Background image */}
           <div style={{
-            position: 'absolute', inset: 0, zIndex: 0,
-            backgroundImage: `
-              radial-gradient(circle at 20% 50%, rgba(255,130,16,0.15) 0%, transparent 60%),
-              radial-gradient(circle at 80% 20%, rgba(103,154,193,0.20) 0%, transparent 50%)
-            `,
+            position: 'absolute',
+            inset: 0,
+            backgroundImage: 'url(/blog-hero-map.jpg)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center center',
+            zIndex: 0,
           }} />
 
-          <div style={{ position: 'relative', zIndex: 1, maxWidth: 700, margin: '0 auto' }}>
+          {/* Radial vignette overlay */}
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 1,
+            background: 'radial-gradient(ellipse at center, rgba(0,68,123,0.45) 0%, rgba(0,20,55,0.82) 100%)',
+          }} />
+
+          {/* Content */}
+          <div style={{ position: 'relative', zIndex: 2, maxWidth: 700, margin: '0 auto' }}>
             <h1 style={{
               fontFamily: 'var(--font-head)', fontWeight: 700,
               fontSize: 'clamp(36px, 5vw, 60px)',
@@ -162,6 +174,7 @@ export default function BlogPage() {
               {t('heroSubtitle')}
             </p>
           </div>
+
         </section>
 
         {/* ── EN-only notice ── */}
