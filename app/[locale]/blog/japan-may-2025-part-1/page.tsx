@@ -226,7 +226,7 @@ export default function JapanPart1BlogPost() {
                     'Nijo Castle, Sanjusangendo and Kiyomizudera temples (May 3)',
                     'Day trip to Nara: sacred deer, Todai-ji Temple, traditional house (May 4)',
                     'Hiroshima: Flower Festival, Peace Memorial, Castle and gyoza (May 5)',
-                    'Nishiki Market before the Shinkansen east (May 6)',
+                    'Nishiki Market, Kyoto\'s Kitchen, before heading to Tokyo (May 6)',
                     'Where we stayed: Hotel Hillarys Shinsaibashi and YADO TENKU Kyoto Nijo',
                   ].map((item) => (
                     <li key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: '0.92rem', color: 'rgba(255,255,255,0.88)', lineHeight: 1.6 }}>
@@ -263,18 +263,10 @@ export default function JapanPart1BlogPost() {
                 We found a small traditional restaurant tucked away from the main drag and sat down for our first proper sushi. No translation needed. Just point, order, eat. The fish was impossibly fresh, the rice perfectly seasoned. This was the sushi trip, and it started exactly right.
               </p>
 
-              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 14, overflow: 'hidden', marginTop: '2rem', marginBottom: 8 }}>
-                <Image
-                  src="/blog/Japan-May-2025/Nakauoyacho.jpeg"
-                  alt="Narrow lantern-lit Japanese street at night, Osaka Japan"
-                  fill
-                  style={{ objectFit: 'cover' }}
-                  sizes="700px"
-                />
+              <div style={{ position: 'relative', width: '100%', aspectRatio: '3/4', borderRadius: 14, overflow: 'hidden', marginTop: '2rem', marginBottom: 8 }}>
+                <Image src="/blog/Japan-May-2025/osaka_night_street.jpeg" alt="Glowing lanterns and neon signs lining a narrow street in Osaka at night, Japan" fill style={{ objectFit: 'cover' }} sizes="700px" />
               </div>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
-                Osaka&apos;s night streets. Not bad for 11pm on arrival.
-              </p>
+              <p style={{ fontSize: '0.8rem', color: '#6C6D6F', textAlign: 'center', margin: '4px 0 24px' }}><em>Osaka at night. The city does not sleep and we were absolutely fine with that.</em></p>
 
               {/* DAY: May 1 */}
               <DayBadge label="May 1 - Day 1 in Osaka" />
@@ -288,18 +280,15 @@ export default function JapanPart1BlogPost() {
                 <a href={KLOOK_OSAKA_CASTLE} target="_blank" rel="nofollow sponsored noopener" style={{ color: ORANGE, fontWeight: 600 }}>Osaka Castle tickets in advance via Klook</a> to skip the queues.
               </p>
 
-              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 14, overflow: 'hidden', marginTop: '2rem', marginBottom: 8 }}>
-                <Image
-                  src="/blog/Japan-May-2025/Osaka%20Castle.jpeg"
-                  alt="Osaka Castle surrounded by green trees and blue sky, Osaka Japan"
-                  fill
-                  style={{ objectFit: 'cover' }}
-                  sizes="700px"
-                />
+              <div className="blog-photo-duo" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', margin: '2rem 0' }}>
+                <div style={{ position: 'relative', aspectRatio: '3/4', borderRadius: 10, overflow: 'hidden' }}>
+                  <Image src="/blog/Japan-May-2025/Osaka Castle.jpeg" alt="Osaka Castle tower rising above stone walls and green trees, Osaka Japan" fill style={{ objectFit: 'cover' }} sizes="340px" />
+                </div>
+                <div style={{ position: 'relative', aspectRatio: '3/4', borderRadius: 10, overflow: 'hidden' }}>
+                  <Image src="/blog/Japan-May-2025/Osaka Castle 2.jpeg" alt="Wilson and Fatima in samurai costumes in front of Osaka Castle, Japan" fill style={{ objectFit: 'cover' }} sizes="340px" />
+                </div>
               </div>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
-                Osaka Castle before the morning crowds arrived.
-              </p>
+              <p style={{ fontSize: '0.8rem', color: '#6C6D6F', textAlign: 'center', margin: '4px 0 24px' }}><em>Osaka Castle. Optional: dress like a samurai. Highly recommended.</em></p>
 
               <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
                 Then came <strong>Kuromon Market</strong> in Nippombashi. If you eat nothing else in Osaka, eat here. The market is a 580-metre covered street lined with vendors selling every kind of fresh food imaginable. This was one of the biggest highlights of the entire trip.
@@ -324,9 +313,11 @@ export default function JapanPart1BlogPost() {
               </ul>
 
               <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
-                Browse{' '}
-                <a href={KLOOK_KUROMON} target="_blank" rel="nofollow sponsored noopener" style={{ color: ORANGE, fontWeight: 600 }}>Kuromon Market food tours on Klook</a>{' '}
-                if you want a guided experience through the stalls.
+                Want a guided experience through the stalls? Browse{' '}
+                <a href="https://tidd.ly/4s8kRkI" target="_blank" rel="nofollow sponsored noopener" style={{ color: ORANGE, fontWeight: 600 }}>
+                  local Osaka food tours on GoWithGuide
+                </a>
+                {' '}for curated market walks with a local expert.
               </p>
 
               <div className="blog-photo-duo" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, margin: '2rem 0' }}>
@@ -373,7 +364,7 @@ export default function JapanPart1BlogPost() {
                 The morning was for shopping around Dotonbori: electronics, gifts, snacks by the bag. We had more sushi. Obviously.
               </p>
               <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
-                By midday we were on the Shinkansen to Kyoto. Arriving in Kyoto feels like stepping into a different mood. Where Osaka is loud and electric, Kyoto is quiet and old. We checked in to{' '}
+                We took a regular train to Kyoto, arriving late in the afternoon. Arriving in Kyoto feels like stepping into a different mood. Where Osaka is loud and electric, Kyoto is quiet and old. We checked in to{' '}
                 <a href={HOTEL_YADO} target="_blank" rel="nofollow sponsored noopener" style={{ color: ORANGE, fontWeight: 600 }}>YADO TENKU Kyoto Nijo</a>{' '}
                 and went straight to Pontocho.
               </p>
@@ -381,18 +372,10 @@ export default function JapanPart1BlogPost() {
                 Pontocho is a narrow alleyway running parallel to the Kamogawa River, lined with bars, restaurants and tiny hidden venues. We found a cocktail bar down a set of stairs that felt like a secret. Good drinks, no tourists, excellent music. Finished with ramen at a small restaurant on the strip.
               </p>
 
-              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 14, overflow: 'hidden', marginTop: '2rem', marginBottom: 8 }}>
-                <Image
-                  src="/blog/Japan-May-2025/Izakaya.jpeg"
-                  alt="Small Japanese bar with cocktails and low lighting, Kyoto Japan"
-                  fill
-                  style={{ objectFit: 'cover' }}
-                  sizes="700px"
-                />
+              <div style={{ position: 'relative', width: '100%', aspectRatio: '3/4', borderRadius: 14, overflow: 'hidden', marginTop: '2rem', marginBottom: 8 }}>
+                <Image src="/blog/Japan-May-2025/Pontocho.jpeg" alt="Narrow lantern-lit alleyway of Pontocho at night, Kyoto Japan" fill style={{ objectFit: 'cover' }} sizes="700px" />
               </div>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
-                Pontocho at night. Every door hides something worth finding.
-              </p>
+              <p style={{ fontSize: '0.8rem', color: '#6C6D6F', textAlign: 'center', margin: '4px 0 24px' }}><em>Pontocho at night. Every door hides something worth finding.</em></p>
 
               {/* DAY: May 3 */}
               <DayBadge label="May 3 - Kyoto Temples" />
@@ -423,37 +406,32 @@ export default function JapanPart1BlogPost() {
                 <strong>Sanjusangendo</strong> is a long hall containing 1,001 life-size statues of Kannon, the Buddhist deity of compassion. One thousand statues, standing in rows, all facing you. Not a place that leaves you indifferent.
               </p>
 
-              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 14, overflow: 'hidden', marginTop: '2rem', marginBottom: 8 }}>
-                <Image
-                  src="/blog/Japan-May-2025/Sanjusangendo.jpeg"
-                  alt="Sanjusangendo hall with rows of Kannon statues, Kyoto Japan"
-                  fill
-                  style={{ objectFit: 'cover' }}
-                  sizes="700px"
-                />
+              <div style={{ position: 'relative', width: '100%', aspectRatio: '3/4', borderRadius: 14, overflow: 'hidden', marginTop: '2rem', marginBottom: 8 }}>
+                <Image src="/blog/Japan-May-2025/Sanjusangendo.jpeg" alt="Rows of golden Kannon statues inside Sanjusangendo hall, Kyoto Japan" fill style={{ objectFit: 'cover' }} sizes="700px" />
               </div>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
-                Sanjusangendo. 1,001 statues. Every one different.
-              </p>
+              <p style={{ fontSize: '0.8rem', color: '#6C6D6F', textAlign: 'center', margin: '4px 0 24px' }}><em>Sanjusangendo. One thousand statues. Every single one different.</em></p>
 
               <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
                 <strong>Kiyomizudera</strong> is a temple built on a wooden stage cantilevered over a steep hillside with no nails. The view over Kyoto from the main hall platform is one of the best in the city. Go in the late afternoon when the light softens. Book a{' '}
                 <a href={KLOOK_KYOTO_TEMPLE} target="_blank" rel="nofollow sponsored noopener" style={{ color: ORANGE, fontWeight: 600 }}>Kyoto temple tour via Klook</a>{' '}
                 if you want a guide to bring the history to life.
               </p>
-
-              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 14, overflow: 'hidden', marginTop: '2rem', marginBottom: 8 }}>
-                <Image
-                  src="/blog/Japan-May-2025/Kiyomizu-dera.jpeg"
-                  alt="Kiyomizudera temple wooden stage overlooking forested hills of Kyoto Japan"
-                  fill
-                  style={{ objectFit: 'cover' }}
-                  sizes="700px"
-                />
-              </div>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
-                Kiyomizudera. The platform was built without a single nail.
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                The stone-paved pedestrian lanes of Ninenzaka and Sannenzaka wind down from the temple through Gion, lined with old wooden machiya townhouses, tea houses and craft shops tucked into every corner. Allow extra time to walk down slowly. It is as beautiful as the temple itself.
               </p>
+
+              <div className="blog-photo-duo" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', margin: '2rem 0' }}>
+                <div style={{ position: 'relative', aspectRatio: '3/4', borderRadius: 10, overflow: 'hidden' }}>
+                  <Image src="/blog/Japan-May-2025/Kiyomizu-dera.jpeg" alt="Kiyomizudera temple wooden stage overlooking forested hills of Kyoto Japan" fill style={{ objectFit: 'cover' }} sizes="240px" />
+                </div>
+                <div style={{ position: 'relative', aspectRatio: '3/4', borderRadius: 10, overflow: 'hidden' }}>
+                  <Image src="/blog/Japan-May-2025/Kiyomizu-dera2.jpeg" alt="Stone-paved Ninenzaka lane lined with traditional wooden machiya buildings, Kyoto Japan" fill style={{ objectFit: 'cover' }} sizes="240px" />
+                </div>
+                <div style={{ position: 'relative', aspectRatio: '3/4', borderRadius: 10, overflow: 'hidden' }}>
+                  <Image src="/blog/Japan-May-2025/Kiyomizu-dera3.jpeg" alt="View from Kiyomizudera temple looking over the rooftops of Kyoto, Japan" fill style={{ objectFit: 'cover' }} sizes="240px" />
+                </div>
+              </div>
+              <p style={{ fontSize: '0.8rem', color: '#6C6D6F', textAlign: 'center', margin: '4px 0 24px' }}><em>Kiyomizudera and the Ninenzaka lanes. Built without a single nail. Walked slowly.</em></p>
 
               {/* DAY: May 4 */}
               <DayBadge label="May 4 - Day Trip to Nara" />
@@ -470,6 +448,11 @@ export default function JapanPart1BlogPost() {
                 <a href={KLOOK_NARA} target="_blank" rel="nofollow sponsored noopener" style={{ color: ORANGE, fontWeight: 600 }}>Nara day trip on Klook</a>{' '}
                 to include a guided tour of the temples and park.
               </p>
+
+              <div style={{ position: 'relative', width: '100%', aspectRatio: '3/4', borderRadius: 14, overflow: 'hidden', marginTop: '2rem', marginBottom: 8 }}>
+                <Image src="/blog/Japan-May-2025/nara_deer.jpeg" alt="Wild sika deer bowing in front of a visitor in Nara Park, Japan" fill style={{ objectFit: 'cover' }} sizes="700px" />
+              </div>
+              <p style={{ fontSize: '0.8rem', color: '#6C6D6F', textAlign: 'center', margin: '4px 0 24px' }}><em>Nara deer are sacred, polite and fully aware of what you are holding.</em></p>
 
               <div className="blog-photo-duo" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, margin: '2rem 0' }}>
                 {[
@@ -549,18 +532,15 @@ export default function JapanPart1BlogPost() {
                 if travelling from Kyoto or Osaka.
               </p>
 
-              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 14, overflow: 'hidden', marginTop: '2rem', marginBottom: 8 }}>
-                <Image
-                  src="/blog/Japan-May-2025/hiroshima%20dome.jpeg"
-                  alt="Atomic Bomb Dome Hiroshima Peace Memorial reflected in the river, Japan"
-                  fill
-                  style={{ objectFit: 'cover' }}
-                  sizes="700px"
-                />
+              <div className="blog-photo-duo" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', margin: '2rem 0' }}>
+                <div style={{ position: 'relative', aspectRatio: '3/4', borderRadius: 10, overflow: 'hidden' }}>
+                  <Image src="/blog/Japan-May-2025/hiroshima dome.jpeg" alt="Atomic Bomb Dome Hiroshima Peace Memorial against a clear sky, Japan" fill style={{ objectFit: 'cover' }} sizes="340px" />
+                </div>
+                <div style={{ position: 'relative', aspectRatio: '3/4', borderRadius: 10, overflow: 'hidden' }}>
+                  <Image src="/blog/Japan-May-2025/dome2.jpeg" alt="Close-up view of the Atomic Bomb Dome ruins in Hiroshima, Japan" fill style={{ objectFit: 'cover' }} sizes="340px" />
+                </div>
               </div>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
-                The Atomic Bomb Dome. UNESCO World Heritage Site.
-              </p>
+              <p style={{ fontSize: '0.8rem', color: '#6C6D6F', textAlign: 'center', margin: '4px 0 24px' }}><em>The Atomic Bomb Dome. UNESCO World Heritage Site. The dome stood when everything around it was gone.</em></p>
 
               <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
                 Hiroshima Castle offered another layer of history, and then we found a craft and gyoza festival running nearby. Cold local beer, crispy pan-fried gyoza, festival atmosphere. Hiroshima gave us the full spectrum in a single day.
@@ -590,8 +570,8 @@ export default function JapanPart1BlogPost() {
 
               <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 14, overflow: 'hidden', marginTop: '2rem', marginBottom: 8 }}>
                 <Image
-                  src="/blog/Japan-May-2025/hiroshima%20market.jpeg"
-                  alt="Covered Japanese market arcade with food stalls, Japan"
+                  src="/blog/Japan-May-2025/Nakauoyacho.jpeg"
+                  alt="Covered market arcade at Nakauoyacho, the central section of Nishiki Market, Kyoto Japan"
                   fill
                   style={{ objectFit: 'cover' }}
                   sizes="700px"
