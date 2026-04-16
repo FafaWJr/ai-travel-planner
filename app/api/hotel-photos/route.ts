@@ -21,7 +21,6 @@ export async function GET(request: NextRequest) {
   const name = request.nextUrl.searchParams.get('name') || '';
   const city = request.nextUrl.searchParams.get('city') || '';
 
-  console.log('[hotel-photos] params:', Object.fromEntries(request.nextUrl.searchParams.entries()));
 
   if (!name.trim() || !city.trim()) {
     return Response.json({ photos: HOTEL_FALLBACKS }, { headers: NO_CACHE_HEADERS });
@@ -50,7 +49,6 @@ export async function GET(request: NextRequest) {
         }
         const photos: string[] = results.map((p) => p.urls.full);
         if (photos.length > 0) {
-          console.log(`[hotel-photos] Unsplash: ${photos.length} photos for "${name}, ${city}"`);
           return Response.json({ photos }, { headers: NO_CACHE_HEADERS });
         }
       }
@@ -73,7 +71,6 @@ export async function GET(request: NextRequest) {
           .sort(() => Math.random() - 0.5);
         const photos: string[] = shuffled.slice(0, 3).map((p) => p.src.landscape);
         if (photos.length > 0) {
-          console.log(`[hotel-photos] Pexels: ${photos.length} photos for "${name}"`);
           return Response.json({ photos }, { headers: NO_CACHE_HEADERS });
         }
       }

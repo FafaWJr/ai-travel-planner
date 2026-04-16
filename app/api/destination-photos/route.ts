@@ -123,7 +123,6 @@ async function fetchUnsplashPhotos(city: string): Promise<string[]> {
       }
     }
     const urls = results.map((p) => p.urls.full);
-    console.log(`[destination-photos] Unsplash: ${urls.length} photos for "${city}" (page ${randomPage})`);
     return urls;
   } catch (err) {
     console.error('[destination-photos] Unsplash fetch failed:', err);
@@ -163,7 +162,6 @@ export async function GET(request: NextRequest) {
   }
 
   const city = rawCity.split(',')[0].trim();
-  console.log(`[destination-photos] Fetching photos for city="${city}"`);
 
   // Tier 1: Unsplash API
   const unsplashPhotos = await fetchUnsplashPhotos(city);
@@ -192,6 +190,5 @@ export async function GET(request: NextRequest) {
   }
 
   // Tier 4: Generic fallbacks
-  console.log(`[destination-photos] Using destination fallback for "${city}"`);
   return NextResponse.json({ photos: fallbacks, source: 'fallback' }, { headers: NO_CACHE_HEADERS });
 }

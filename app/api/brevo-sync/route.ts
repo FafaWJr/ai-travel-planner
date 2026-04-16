@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Brevo not configured' }, { status: 500 });
     }
 
-    console.log('[Brevo] Adding contact:', email, 'to list 17');
+    console.log('[Brevo] Adding contact to list 17');
 
     // Upsert contact into Brevo and add to list 17
     const response = await fetch('https://api.brevo.com/v3/contacts', {
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     }
 
     const errorData = await response.json().catch(() => ({}));
-    console.error('[Brevo] Failed to add contact:', errorData);
+    console.error('[Brevo] Failed to add contact');
     return NextResponse.json({ error: 'Brevo error', details: errorData }, { status: 500 });
 
   } catch (err) {

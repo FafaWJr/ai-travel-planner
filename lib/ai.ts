@@ -133,6 +133,19 @@ export function getLanguageInstruction(locale: string): string {
   }
 }
 
+/**
+ * Sanitizes user-supplied context before injection into AI prompts.
+ * Prevents prompt injection via oversized or newline-heavy payloads.
+ */
+export function sanitizePromptInput(input: unknown, maxLength = 8000): string {
+  if (typeof input !== 'string') return '';
+  return input
+    .slice(0, maxLength)
+    .replace(/\n{4,}/g, '\n\n')  // collapse excessive newlines
+    .replace(/\r/g, '')           // strip carriage returns
+    .trim();
+}
+
 export const SYSTEM_PROMPT = `You are an expert travel planner with deep knowledge of destinations worldwide. You create personalised, detailed, and genuinely helpful travel itineraries. Your plans are specific (not generic), practical, and tailored to the traveller's preferences and budget. You write in an engaging, friendly tone while remaining professional and informative. Always use Markdown formatting with clear headers, bullet points, and bold text for key information.
 
 CRITICAL INSTRUCTIONS — you MUST follow these without exception:

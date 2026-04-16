@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import type { ChatMessage } from '@/types';
 import { streamCompletion } from '@/lib/ai-stream';
 import { BOOKING_AFFILIATE, ACTIVITY_AFFILIATE } from '@/lib/affiliate';
-import { getLanguageInstruction } from '@/lib/ai';
+import { getLanguageInstruction, sanitizePromptInput } from '@/lib/ai';
 import { createClient } from '@/lib/supabase/server';
 
 export const maxDuration = 60;
@@ -16,7 +16,8 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { messages, tripContext, userName, locale } = body as { messages: ChatMessage[]; tripContext: string; userName?: string; locale?: string };
+    const { messages, tripContext: rawTripContext, userName, locale } = body as { messages: ChatMessage[]; tripContext: string; userName?: string; locale?: string };
+    const tripContext = sanitizePromptInput(rawTripContext);
 
     if (!messages || !Array.isArray(messages)) {
       return new Response(

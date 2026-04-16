@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { streamCompletion } from '@/lib/ai-stream';
 import { ACTIVITY_AFFILIATE } from '@/lib/affiliate';
-import { getLanguageInstruction } from '@/lib/ai';
+import { getLanguageInstruction, sanitizePromptInput } from '@/lib/ai';
 import { createClient } from '@/lib/supabase/server';
 import { collectStream } from '@/lib/stream-utils';
 
@@ -16,6 +16,12 @@ export async function POST(request: NextRequest) {
     }
 
     const { prompt, existingActivities = [], seenIdeas = [], itineraryContext = '', locale = 'en' } = await request.json();
+    const safeActivities = Array.isArray(existingActivities)
+      ? existingActivities.map((a: unknown) => sanitizePromptInput(String(a), 200))
+      : [];
+    const safeSeenIdeas = Array.isArray(seenIdeas)
+      ? seenIdeas.map((n: unknown) => sanitizePromptInput(String(n), 200))
+      : [];
     const langInstruction = getLanguageInstruction(locale);
     if (!prompt) {
       return new Response(JSON.stringify({ error: 'Missing prompt' }), { status: 400 });
@@ -33,7 +39,7 @@ Only add a link when it genuinely fits the suggestion. Do not add multiple links
 ${itineraryContext ? `\nFULL ITINERARY:\n${itineraryContext}\n` : ''}
 List 7 extra places, activities or experiences the traveller could consider that would NOT typically be included in a standard itinerary for this trip. These could be nearby day-trip spots, a local neighbourhood worth walking, a food market, a viewpoint, a lesser-known attraction, a type of local restaurant, etc.
 
-${existingActivities.length > 0 ? `ALREADY IN PLANNER — do NOT suggest these or anything similar:\n${existingActivities.map((a: string) => `- ${a}`).join('\n')}\n\n` : ''}${seenIdeas.length > 0 ? `ALREADY SUGGESTED — do NOT repeat these:\n${seenIdeas.map((n: string) => `- ${n}`).join('\n')}\n\n` : ''}Format each as:
+${safeActivities.length > 0 ? `ALREADY IN PLANNER — do NOT suggest these or anything similar:\n${safeActivities.map((a: string) => `- ${a}`).join('\n')}\n\n` : ''}${safeSeenIdeas.length > 0 ? `ALREADY SUGGESTED — do NOT repeat these:\n${safeSeenIdeas.map((n: string) => `- ${n}`).join('\n')}\n\n` : ''}Format each as:
 - **Place or Activity Name** — one sentence on why it suits this trip.
 
 Only the list. Nothing else.`;
