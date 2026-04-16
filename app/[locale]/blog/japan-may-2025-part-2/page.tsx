@@ -167,10 +167,10 @@ export default function JapanPart2BlogPost() {
           </header>
 
           {/* Hero photo */}
-          <div className="blog-hero-img" style={{ position: 'relative', width: '100%', height: 420, borderRadius: 20, overflow: 'hidden', marginBottom: 12 }}>
+          <div className="blog-hero-img" style={{ position: 'relative', width: '100%', height: 560, borderRadius: 20, overflow: 'hidden', marginBottom: 12 }}>
             <Image
               src="/blog/Japan-May-2025/shibuya scramble square sky tower.jpeg"
-              alt="Panoramic view of Tokyo skyline from Shibuya Scramble Square observation deck at night, Japan"
+              alt="Shibuya Scramble Square observation deck in Tokyo at night, Japan"
               fill
               priority
               style={{ objectFit: 'cover' }}
@@ -178,7 +178,7 @@ export default function JapanPart2BlogPost() {
             />
           </div>
           <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', fontStyle: 'italic', marginBottom: '3rem' }}>
-            Shibuya Scramble Square, Tokyo at night. Japan, May 2025.
+            Shibuya Scramble Square, Tokyo. May 2025.
           </p>
 
           {/* Article body: 2-column grid */}
@@ -234,45 +234,60 @@ export default function JapanPart2BlogPost() {
               <SectionH2>Shibuya Crossing, the Nintendo Store and Centifolia Bar</SectionH2>
 
               <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
-                We arrived at Tokyo Station in the early afternoon after a smooth two-hour-twenty Shinkansen ride from Shin-Osaka. The contrast with Osaka was instant. Where Osaka felt loud and fast, Tokyo felt enormous and somehow still efficient. Thousands of people moving at pace, all apparently knowing exactly where they were going.
+                We arrived at Tokyo Station in the early afternoon after a smooth two-hour-twenty Shinkansen ride from Kyoto. The contrast with Osaka was instant. Where Osaka felt loud and fast, Tokyo felt enormous and somehow still efficient. Thousands of people moving at pace, all apparently knowing exactly where they were going.
               </p>
               <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
                 We checked into{' '}
                 <a href={HOTEL_ACT_ROPPONGI} target="_blank" rel="nofollow sponsored noopener" style={{ color: ORANGE, fontWeight: 600 }}>Act Hotel Roppongi</a>,
                 dropped our bags and walked straight to Shibuya. The scramble crossing at rush hour is something that has been photographed ten million times and is still not properly capturable. Six pedestrian streams, all at once, in total silence except for the chirping of the crossing signals. We stood watching it for 20 minutes before crossing ourselves.
               </p>
-              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
-                That evening we found the Nintendo Store in Shibuya Parco and spent far too long inside. We came away with a small Kirby plushie and a lot of dignity intact.
-              </p>
-
               <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 14, overflow: 'hidden', marginTop: '2rem', marginBottom: 8 }}>
                 <Image
-                  src="/blog/Japan-May-2025/hook machines win.jpeg"
-                  alt="Prize machine winnings including plush toys at a Japanese arcade"
+                  src="/blog/Japan-May-2025/shibuya.jpeg"
+                  alt="Shibuya scramble crossing packed with pedestrians crossing from all directions, Tokyo Japan"
                   fill
                   style={{ objectFit: 'cover' }}
                   sizes="700px"
                 />
               </div>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
-                The hook machine haul. We are not ashamed.
+              <p style={{ fontSize: '0.8rem', color: '#6C6D6F', textAlign: 'center', margin: '4px 0 24px' }}>
+                <em>Shibuya Crossing at rush hour. Six streams of pedestrians, all at once. Nothing prepares you.</em>
               </p>
 
               <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
-                We ended the night at Centifolia, a bar tucked into one of the Roppongi backstreets. Low lighting, a long whisky list and the kind of quiet that Tokyo hides surprisingly well.
+                That evening we found a complex near Shibuya packed with izakayas on every floor: small counters, steam rising from grills, locals packed shoulder to shoulder around low tables. We picked one at random and stayed for two hours. The food was exceptional: yakitori skewers still sizzling from the charcoal, cold Sapporo on draft, a ceramic flask of warm sake that appeared without us asking. No English menu, no tourist pricing, just good food and the low hum of a neighbourhood winding down after work. This is exactly what Japan is supposed to feel like.
               </p>
 
-              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 14, overflow: 'hidden', marginTop: '2rem', marginBottom: 8 }}>
+              <div style={{ position: 'relative', width: '100%', aspectRatio: '3/4', borderRadius: 14, overflow: 'hidden', marginTop: '2rem', marginBottom: 8 }}>
                 <Image
-                  src="/blog/Japan-May-2025/centifolia.jpeg"
-                  alt="Dimly lit cocktail bar interior with polished wooden bar and warm amber lighting, Roppongi Tokyo"
+                  src="/blog/Japan-May-2025/Izakaya.jpeg"
+                  alt="Warm-lit izakaya interior with wooden counters, small plates and sake flasks, Tokyo Japan"
                   fill
                   style={{ objectFit: 'cover' }}
                   sizes="700px"
                 />
               </div>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
-                Centifolia bar, Roppongi. One of the best quiet spots we found in Tokyo.
+              <p style={{ fontSize: '0.8rem', color: '#6C6D6F', textAlign: 'center', margin: '4px 0 24px' }}>
+                <em>Somewhere near Shibuya. One of those nights you cannot plan for.</em>
+              </p>
+
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                We ended the night at Centifolia, hidden on an upper floor in Azabu-Juban: one of the most difficult reservations in Tokyo and one of the most theatrical bar experiences we have ever had. The bartender is something of a legend, known globally for using a samurai sword to cut and shape the ice before building each cocktail. His drinks have gone viral online multiple times. The atmosphere is intimate and entirely deliberate: dim light, no music loud enough to interrupt conversation, every movement behind the bar precise and unhurried. Drinks are expensive. Advance booking is essential, and tables are booked out weeks ahead.
+              </p>
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                We had not booked. We decided to go anyway on the assumption that nothing ventured meant nothing gained. The receptionist checked, came back, and told us there was nothing available at the bar where everyone wants to sit. But then a pause: he could let us stand at the bar briefly while the bartender prepared our drinks, before moving to a table. We said yes immediately. Standing at that bar watching a sword come down on a block of clear ice, then watching the resulting shapes disappear into the drinks being built for us, was worth every yen.
+              </p>
+
+              <div className="blog-photo-duo" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, margin: '2rem 0' }}>
+                <div style={{ position: 'relative', aspectRatio: '3/4', borderRadius: 10, overflow: 'hidden' }}>
+                  <Image src="/blog/Japan-May-2025/centifolia.jpeg" alt="Intimate cocktail bar interior with low lighting and polished wooden bar at Centifolia, Azabu-Juban Tokyo" fill style={{ objectFit: 'cover' }} sizes="340px" />
+                </div>
+                <div style={{ position: 'relative', aspectRatio: '3/4', borderRadius: 10, overflow: 'hidden' }}>
+                  <Image src="/blog/Japan-May-2025/centifolia2.jpeg" alt="Theatrical cocktail preparation at Centifolia bar, Azabu-Juban Tokyo Japan" fill style={{ objectFit: 'cover' }} sizes="340px" />
+                </div>
+              </div>
+              <p style={{ fontSize: '0.8rem', color: '#6C6D6F', textAlign: 'center', margin: '4px 0 24px' }}>
+                <em>Centifolia, Azabu-Juban. A sword, a block of ice and one of the hardest bar reservations in Tokyo.</em>
               </p>
 
               {/* DAY: May 7 */}
@@ -283,9 +298,9 @@ export default function JapanPart2BlogPost() {
                 We spent the morning in Akihabara. Several floors of electronics, anime figurines, retro game cartridges and maid cafes. Even with no interest in buying anything, it is visually overwhelming in the best way.
               </p>
               <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
-                In the afternoon we did the go-kart experience through the streets of Tokyo dressed as Mario Kart characters. We booked through{' '}
+                In the afternoon we did the go-kart experience through the streets of Tokyo in costume characters. We went as Pokemons. We booked through{' '}
                 <a href={KLOOK_GOKART} target="_blank" rel="nofollow sponsored noopener" style={{ color: ORANGE, fontWeight: 600 }}>Klook</a>{' '}
-                in advance. You pick your costume, get a safety briefing and follow a guide through real public roads across Akihabara, Akasaka and parts of central Tokyo. It is chaotic, legal and absolutely ridiculous fun. Fatima wore a Princess Peach costume. Wilson was Donkey Kong.
+                in advance. You pick your costume, get a safety briefing and follow a guide through real public roads across Akihabara, Akasaka and parts of central Tokyo. It is chaotic, legal and absolutely ridiculous fun.
               </p>
 
               <div style={{ background: 'rgba(255,189,89,0.15)', border: `1.5px solid rgba(255,130,16,0.3)`, borderRadius: 12, padding: '1.2rem 1.4rem', margin: '2rem 0' }}>
@@ -301,7 +316,7 @@ export default function JapanPart2BlogPost() {
               <div className="blog-photo-duo" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, margin: '2rem 0' }}>
                 {[
                   { src: '/blog/Japan-May-2025/monkey kart.jpeg', alt: 'Go-kart rider in costume driving through Tokyo streets, Japan' },
-                  { src: '/blog/Japan-May-2025/monkeykart2.jpeg', alt: 'Group of go-kart riders in Mario Kart costumes stopped at traffic lights in Tokyo, Japan' },
+                  { src: '/blog/Japan-May-2025/monkeykart2.jpeg', alt: 'Group of go-kart riders in costumes stopped at traffic lights on public streets in Tokyo, Japan' },
                 ].map(({ src, alt }) => (
                   <div key={src} style={{ position: 'relative', aspectRatio: '4/3', borderRadius: 10, overflow: 'hidden' }}>
                     <Image src={src} alt={alt} fill style={{ objectFit: 'cover' }} sizes="340px" />
@@ -369,13 +384,16 @@ export default function JapanPart2BlogPost() {
 
               {/* DAY: May 9 */}
               <DayBadge label="Saturday, 9 May" />
-              <SectionH2>Roppongi Hills and Breakfast Above Shibuya Crossing</SectionH2>
+              <SectionH2>Slow Morning, Cafe L&apos;Occitane and a Full Day Shopping in Roppongi</SectionH2>
 
               <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
-                A slower morning. We explored the Roppongi Hills complex. The Mori Art Museum on the 53rd floor was showing a thoughtful contemporary exhibition, and the city view from the observation deck made a strong case for Tokyo being one of the most beautiful things humans have ever built.
+                The morning started gently. We walked to Cafe L&apos;Occitane in Shibuya, found a window table on an upper floor looking directly down onto the scramble crossing, and had a proper breakfast. Watching the crossing from above while coffee goes cold is a completely different experience from standing inside it. Worth the queue for a good seat.
               </p>
               <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
-                In the afternoon we went to Cafe L&apos;Occitane in Shibuya for breakfast with a window table looking directly down onto the crossing. Watching it from above with coffee in hand is a completely different experience from standing inside it.
+                The rest of the day was for Roppongi. Not the nightlife Roppongi, but the daytime version: towers of retail floors, convenience stores stacked into multi-level buildings, and the kind of pharmacy sprawl that Japan does like nowhere else. We spent most of the afternoon in Matsumoto Kiyoshi, the Japanese pharmacy chain that doubles as a beauty and lifestyle superstore. It takes at least two floors and an hour before you understand what you are looking at. We left with skincare products, snacks, eye masks and things we still cannot fully identify.
+              </p>
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                Tokyo&apos;s multi-floor shopping buildings reward going all the way to the top and working down. The top floors are always the least crowded and often the most interesting. A tip for anyone doing the same.
               </p>
 
               {/* DAY: May 10 */}
@@ -389,18 +407,15 @@ export default function JapanPart2BlogPost() {
                 This was the single best view of the entire trip. Book the sunset time slot on Klook and arrive slightly early to secure a spot on the open-air section.
               </p>
 
-              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 14, overflow: 'hidden', marginTop: '2rem', marginBottom: 8 }}>
-                <Image
-                  src="/blog/Japan-May-2025/shibuya scramble square sky tower.jpeg"
-                  alt="Panoramic view from Shibuya Scramble Square sky deck at sunset with Tokyo sprawl and Mt Fuji silhouette, Japan"
-                  fill
-                  style={{ objectFit: 'cover' }}
-                  sizes="700px"
-                />
+              <div className="blog-photo-duo" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, margin: '2rem 0' }}>
+                <div style={{ position: 'relative', aspectRatio: '3/4', borderRadius: 10, overflow: 'hidden' }}>
+                  <Image src="/blog/Japan-May-2025/shibuya scramble square sky tower.jpeg" alt="Panoramic view of Tokyo skyline at sunset from Shibuya Sky observation deck, Japan" fill style={{ objectFit: 'cover' }} sizes="340px" />
+                </div>
+                <div style={{ position: 'relative', aspectRatio: '3/4', borderRadius: 10, overflow: 'hidden' }}>
+                  <Image src="/blog/Japan-May-2025/shibuya_sky_2.jpeg" alt="Open-air rooftop observation deck at Shibuya Sky with visitors looking over Tokyo at dusk, Japan" fill style={{ objectFit: 'cover' }} sizes="340px" />
+                </div>
               </div>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
-                Shibuya Sky at sunset. Book the sunset slot. Arrive 20 minutes early.
-              </p>
+              <p style={{ fontSize: '0.8rem', color: '#6C6D6F', textAlign: 'center', margin: '4px 0 24px' }}><em>Shibuya Sky at sunset. Book the sunset slot. Arrive 20 minutes early.</em></p>
 
               <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
                 After sunset we went to Omoide Yokocho (Memory Lane): a cluster of tiny yakitori and ramen stalls in narrow alleys just west of Shinjuku Station. Standing at a counter eating grilled skewers under yellow light with smoke rising around you is one of those Tokyo moments that stays with you.
@@ -419,23 +434,36 @@ export default function JapanPart2BlogPost() {
                 for the easiest round-trip from Tokyo. Mt Fuji completely delivers. We visited the 5th Station on the Fujiyoshida side. The scale of the mountain against the landscape around it is genuinely something.
               </p>
 
-              <div className="blog-photo-duo" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, margin: '2rem 0' }}>
-                {[
-                  { src: '/blog/Japan-May-2025/Fuji.jpeg', alt: 'Mount Fuji snowcapped peak rising above cloud level, Japan' },
-                  { src: '/blog/Japan-May-2025/Fuji2.jpeg', alt: 'View of Mount Fuji reflected in the calm waters of Lake Kawaguchi, Japan' },
-                ].map(({ src, alt }) => (
-                  <div key={src} style={{ position: 'relative', aspectRatio: '4/3', borderRadius: 10, overflow: 'hidden' }}>
-                    <Image src={src} alt={alt} fill style={{ objectFit: 'cover' }} sizes="340px" />
-                  </div>
-                ))}
+              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 14, overflow: 'hidden', marginTop: '2rem', marginBottom: 8 }}>
+                <Image
+                  src="/blog/Japan-May-2025/Fuji.jpeg"
+                  alt="Mount Fuji snowcapped peak rising above cloud level seen from the 5th Station, Japan"
+                  fill
+                  style={{ objectFit: 'cover' }}
+                  sizes="700px"
+                />
               </div>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
-                Mt Fuji. Everything you imagined. Exactly that.
-              </p>
+              <p style={{ fontSize: '0.8rem', color: '#6C6D6F', textAlign: 'center', margin: '4px 0 24px' }}><em>Mt Fuji. Everything you imagined. Exactly that.</em></p>
 
               <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
-                <a href={KLOOK_FUJIQ} target="_blank" rel="nofollow sponsored noopener" style={{ color: ORANGE, fontWeight: 600 }}>Fuji-Q Highland</a> is the amusement park at the base of the mountain. The rides are among Japan&apos;s most extreme. Queues in May were 2 to 3 hours per ride. Go on a weekday or arrive at opening time.
+                <a href={KLOOK_FUJIQ} target="_blank" rel="nofollow sponsored noopener" style={{ color: ORANGE, fontWeight: 600 }}>Fuji-Q Highland</a> is the amusement park directly at the base of Mt Fuji. It has some of Japan&apos;s most extreme roller coasters: Fujiyama, Do-Dodonpa and Eejanaika all appear in the top tier of ride rankings globally. The park is genuinely intense. We went on Fujiyama first and spent the rest of the afternoon recovering between coasters.
               </p>
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                Queues in May were 2 to 3 hours for the major rides. Go on a weekday or arrive at opening time to front-load the big coasters before crowds build. The park also has quieter sections with Thomas the Tank Engine rides if you need a reset.
+              </p>
+
+              <div className="blog-photo-duo" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, margin: '2rem 0' }}>
+                <div style={{ position: 'relative', aspectRatio: '3/4', borderRadius: 10, overflow: 'hidden' }}>
+                  <Image src="/blog/Japan-May-2025/Fuji-q park.jpeg" alt="Fuji-Q Highland entrance gates with Mount Fuji visible in the background, Japan" fill style={{ objectFit: 'cover' }} sizes="240px" />
+                </div>
+                <div style={{ position: 'relative', aspectRatio: '3/4', borderRadius: 10, overflow: 'hidden' }}>
+                  <Image src="/blog/Japan-May-2025/Fuji-q park2.jpeg" alt="Fujiyama roller coaster at Fuji-Q Highland with Mt Fuji looming in the background, Japan" fill style={{ objectFit: 'cover' }} sizes="240px" />
+                </div>
+                <div style={{ position: 'relative', aspectRatio: '3/4', borderRadius: 10, overflow: 'hidden' }}>
+                  <Image src="/blog/Japan-May-2025/IMG_6666.jpeg" alt="View from inside Fuji-Q Highland with visitors and coaster tracks against a clear blue sky, Japan" fill style={{ objectFit: 'cover' }} sizes="240px" />
+                </div>
+              </div>
+              <p style={{ fontSize: '0.8rem', color: '#6C6D6F', textAlign: 'center', margin: '4px 0 24px' }}><em>Fuji-Q Highland. Extreme rides, extraordinary backdrop.</em></p>
 
               {/* DAY: May 12 */}
               <DayBadge label="Tuesday, 12 May" />
@@ -464,7 +492,13 @@ export default function JapanPart2BlogPost() {
               </p>
 
               <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
-                The pavilions were genuinely ambitious. The Saudi Arabia pavilion with its immersive environments, the Japan pavilion showcasing food and materials technology, smaller country pavilions with real craft and character. Plan a full day and arrive early.
+                The Grand Ring is the first thing you see. A 2km wooden circular structure enclosing the entire site, designed by architect Sou Fujimoto. It is the largest wooden structure ever built. Standing underneath it and understanding the scale takes a moment. The engineering is extraordinary and Japan built it in under two years.
+              </p>
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                Around 160 countries participated. The Saudi Arabia pavilion stood out: a fully immersive dark environment with projection and sound that felt closer to an art installation than a trade fair exhibit. The Japan pavilion focused on food technology, materials and sustainable design, and did it without feeling corporate. Smaller country pavilions from places like Bhutan and Rwanda had real craft and quiet character that the bigger national pavilions sometimes lacked.
+              </p>
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                Plan a full day and arrive when it opens. The Saudi Arabia and Japan pavilions queue from mid-morning. Go to one of those first, then work outward to smaller pavilions in the afternoon when the peak crowds have moved on.
               </p>
 
               {/* DAY: May 13 */}
@@ -485,6 +519,16 @@ export default function JapanPart2BlogPost() {
               <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
                 Donkey Kong Country is spectacular. The mine cart rollercoaster is faithful to the game in all the right ways.
               </p>
+
+              <div className="blog-photo-duo" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, margin: '2rem 0' }}>
+                <div style={{ position: 'relative', aspectRatio: '16/9', borderRadius: 10, overflow: 'hidden' }}>
+                  <Image src="/blog/Japan-May-2025/supernintendo_park.jpeg" alt="Super Nintendo World entrance with Bowser's Castle and colourful Mario-themed decorations at Universal Studios Japan" fill style={{ objectFit: 'cover' }} sizes="340px" />
+                </div>
+                <div style={{ position: 'relative', aspectRatio: '16/9', borderRadius: 10, overflow: 'hidden' }}>
+                  <Image src="/blog/Japan-May-2025/supernintendoworld.jpeg" alt="Inside Super Nintendo World at USJ with the Mushroom Kingdom landscape, Question Blocks and visitors wearing Mario caps, Japan" fill style={{ objectFit: 'cover' }} sizes="340px" />
+                </div>
+              </div>
+              <p style={{ fontSize: '0.8rem', color: '#6C6D6F', textAlign: 'center', margin: '4px 0 24px' }}><em>Super Nintendo World at Universal Studios Japan. Every detail is intentional.</em></p>
 
               {/* DAY: May 14 */}
               <DayBadge label="Thursday, 14 May" />
