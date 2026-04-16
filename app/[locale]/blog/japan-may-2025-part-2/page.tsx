@@ -19,11 +19,11 @@ import CommentsSection from '@/components/blog/CommentsSection';
 export const metadata: Metadata = {
   title: "Japan Part 2: Tokyo, Mt Fuji, Osaka Expo & Universal Studios | Luna Let's Go Blog",
   description:
-    'Monkey go-karts through Akihabara, TeamLab Borderless, Mt Fuji, Osaka Expo 2025, and Super Nintendo World. Japan part two delivered everything.',
+    'Shibuya Crossing at rush hour, TeamLab Borderless, go-karts through Tokyo, Mt Fuji, the Osaka World Expo 2025 and Super Nintendo World. The second half of Japan delivered everything.',
   openGraph: {
-    title: 'Japan Part 2: Tokyo, Mt Fuji, Osaka Expo & Universal Studios',
+    title: "Japan Part 2: Tokyo, Mt Fuji, Osaka Expo & Universal Studios",
     description:
-      'Our full Tokyo to Osaka story: go-karting through Shibuya, TeamLab art, Mt Fuji day trip, Osaka Expo 2025 and Super Nintendo World.',
+      'Five electric days in Tokyo, a sunrise at Mt Fuji, Osaka Expo 2025 and Super Nintendo World at Universal Studios Japan.',
     url: 'https://www.lunaletsgo.com/blog/japan-may-2025-part-2',
     type: 'article',
   },
@@ -83,29 +83,13 @@ function SectionH2({ children }: { children: React.ReactNode }) {
   );
 }
 
-/* ─── Hotel card ──────────────────────────────────────────────── */
-function HotelCard({ name, nights, note, link }: { name: string; nights: string; note: string; link: string }) {
-  return (
-    <div style={{ border: `2px solid ${ORANGE}`, borderRadius: 14, padding: '1.4rem', margin: '1.5rem 0' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem', flexWrap: 'wrap', gap: 8 }}>
-        <h4 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: '0.95rem', color: NAVY, margin: 0 }}>{name}</h4>
-        <span style={{ fontFamily: "'Poppins', sans-serif", fontSize: 12, color: ORANGE, fontWeight: 600 }}>{nights}</span>
-      </div>
-      <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.88rem', color: GRAY, lineHeight: 1.6, marginBottom: '1rem' }}>{note}</p>
-      <a href={link} target="_blank" rel="nofollow sponsored noopener" style={{ display: 'inline-block', background: ORANGE, color: '#fff', fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: 13, padding: '10px 20px', borderRadius: 8, textDecoration: 'none' }}>
-        Check availability on Booking.com
-      </a>
-    </div>
-  );
-}
-
 const articleSchema = {
   '@context': 'https://schema.org',
   '@type': 'BlogPosting',
-  headline: 'Japan Part 2: Tokyo, Mt Fuji, Osaka Expo 2025 and Universal Studios Japan',
+  headline: 'Japan Part 2: Tokyo Madness, Mt Fuji, Osaka Expo and Universal Studios Japan',
   description:
-    'Monkey go-karts through Akihabara, TeamLab Borderless immersive art, a Mt Fuji day trip, Osaka Expo 2025 and Super Nintendo World.',
-  image: 'https://www.lunaletsgo.com/blog/Japan-May-2025/shibuya%20scramble%20square%20sky%20tower.jpeg',
+    'Shibuya Crossing, TeamLab Borderless, go-karts through Tokyo, Mt Fuji, the Osaka World Expo 2025 and Super Nintendo World.',
+  image: 'https://www.lunaletsgo.com/blog/Japan-May-2025/shibuya scramble square sky tower.jpeg',
   author: { '@type': 'Person', name: 'Wilson & Fatima', url: 'https://www.lunaletsgo.com/about' },
   publisher: {
     '@type': 'Organization',
@@ -121,13 +105,13 @@ const faqSchema = {
   '@context': 'https://schema.org',
   '@type': 'FAQPage',
   mainEntity: [
-    { '@type': 'Question', name: 'Is go-karting through Tokyo streets safe?', acceptedAnswer: { '@type': 'Answer', text: 'Yes, with an operator like Street Kart or similar licensed companies. You drive licensed street karts on public roads, follow a guide, and must hold a valid international driving permit. It is loud, chaotic and completely brilliant.' } },
+    { '@type': 'Question', name: 'Is go-karting through Tokyo streets safe?', acceptedAnswer: { '@type': 'Answer', text: 'Yes, with a licensed operator. You drive street karts on public roads following a guide. You must hold a valid international driving permit. It is loud, chaotic and completely brilliant.' } },
     { '@type': 'Question', name: 'Do you need to book TeamLab Borderless in advance?', acceptedAnswer: { '@type': 'Answer', text: 'Yes. TeamLab Borderless Tokyo books out weeks in advance, especially on weekends. Book through Klook or the official TeamLab website as soon as your dates are confirmed.' } },
-    { '@type': 'Question', name: 'Can you do Mt Fuji as a day trip from Tokyo?', acceptedAnswer: { '@type': 'Answer', text: 'Yes. The journey takes around 2 hours each way from Shinjuku by bus or train. A full day gives you time at the fifth station, Lake Kawaguchi and Fuji-Q Highland if you want to add the theme park.' } },
+    { '@type': 'Question', name: 'Can you do Mt Fuji as a day trip from Tokyo?', acceptedAnswer: { '@type': 'Answer', text: 'Yes. The journey takes around 2 hours each way from Shinjuku by coach. A full day gives you time at the fifth station, Lake Kawaguchi, and Fuji-Q Highland if you want to add the theme park.' } },
     { '@type': 'Question', name: 'What is Osaka Expo 2025 like?', acceptedAnswer: { '@type': 'Answer', text: 'Osaka Expo 2025 runs from April to October 2025 on Yumeshima Island. Pavilions from over 150 countries showcase food, culture and technology. Give yourself a full day and book tickets in advance online.' } },
-    { '@type': 'Question', name: 'Is Super Nintendo World worth it at Universal Studios Japan?', acceptedAnswer: { '@type': 'Answer', text: 'Absolutely. Super Nintendo World is the most immersive theme park area we have ever seen. Book Express Passes online well in advance as the queues can be 90 minutes or more without them.' } },
-    { '@type': 'Question', name: 'Which Tokyo neighbourhood is best to stay in?', acceptedAnswer: { '@type': 'Answer', text: 'Roppongi puts you between the quiet residential streets and major art museums. Shinjuku suits nightlife and quick access to Fuji day trip buses. Shibuya is great for shopping and people-watching. All are well connected by metro.' } },
-    { '@type': 'Question', name: 'How do you get from Tokyo to Osaka quickly?', acceptedAnswer: { '@type': 'Answer', text: 'The Shinkansen Nozomi from Tokyo Station to Shin-Osaka takes around 2 hours 20 minutes. It is covered by the Japan Rail Pass (except Nozomi on some passes, check your pass type). Book reserved seats especially during Golden Week.' } },
+    { '@type': 'Question', name: 'Is Super Nintendo World worth it at Universal Studios Japan?', acceptedAnswer: { '@type': 'Answer', text: 'Absolutely. Super Nintendo World is the most immersive theme park area we have ever seen. Book Express Passes online well in advance as queues can be 90 minutes or more without them.' } },
+    { '@type': 'Question', name: 'Which Tokyo neighbourhood is best to stay in?', acceptedAnswer: { '@type': 'Answer', text: 'Roppongi puts you between the quiet residential streets and major museums. Shinjuku suits nightlife and quick access to Fuji day trip coaches. Shibuya is great for shopping and people-watching. All are well connected by metro.' } },
+    { '@type': 'Question', name: 'How do you get from Tokyo to Osaka quickly?', acceptedAnswer: { '@type': 'Answer', text: 'The Shinkansen Nozomi from Tokyo Station to Shin-Osaka takes around 2 hours 20 minutes. Book reserved seats especially during Golden Week.' } },
   ],
 };
 
@@ -174,19 +158,19 @@ export default function JapanPart2BlogPost() {
                 </div>
                 <div>
                   <div style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 14, color: NAVY }}>Wilson &amp; Fatima</div>
-                  <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 13, color: GRAY }}>May 6 to May 14, 2025</div>
+                  <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 13, color: GRAY }}>May 2025</div>
                 </div>
               </div>
               <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 13, color: GRAY }}><strong style={{ color: NAVY }}>9 days</strong> · Tokyo, Mt Fuji, Osaka</div>
-              <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 13, color: GRAY }}><strong style={{ color: NAVY }}>15 min</strong> read</div>
+              <div style={{ fontFamily: "'Poppins', sans-serif", fontSize: 13, color: GRAY }}><strong style={{ color: NAVY }}>13 min</strong> read</div>
             </div>
           </header>
 
           {/* Hero photo */}
           <div className="blog-hero-img" style={{ position: 'relative', width: '100%', height: 420, borderRadius: 20, overflow: 'hidden', marginBottom: 12 }}>
             <Image
-              src="/blog/Japan-May-2025/shibuya%20scramble%20square%20sky%20tower.jpeg"
-              alt="Shibuya Scramble Square sky tower observation deck at night with city lights stretching across Tokyo"
+              src="/blog/Japan-May-2025/shibuya scramble square sky tower.jpeg"
+              alt="Panoramic view of Tokyo skyline from Shibuya Scramble Square observation deck at night, Japan"
               fill
               priority
               style={{ objectFit: 'cover' }}
@@ -197,581 +181,621 @@ export default function JapanPart2BlogPost() {
             Shibuya Scramble Square, Tokyo at night. Japan, May 2025.
           </p>
 
-          {/* Two-column layout */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '3rem', alignItems: 'start' }} className="blog-grid">
+          {/* Article body: 2-column grid */}
+          <div className="blog-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '3rem', alignItems: 'start' }}>
 
-            {/* ── MAIN ARTICLE ─────────────────────────────── */}
+            {/* Main content column */}
             <article>
 
-              {/* Intro */}
-              <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: '#333', marginBottom: '1.2rem' }}>
-                After nine days weaving through Osaka markets, Kyoto temples, Nara deer parks and Hiroshima, we boarded the Shinkansen heading north to Tokyo. We had no idea what was waiting.
-              </p>
-              <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: '#333', marginBottom: '1.2rem' }}>
-                Part 2 was a completely different kind of travel. Less ancient, more electric. Neon-lit streets, immersive art installations, volcanic lakes reflecting a snowcapped peak, and a theme park built entirely around a video game world we grew up loving. Japan kept finding new ways to surprise us.
-              </p>
-              <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: '#333', marginBottom: '2.5rem' }}>
-                This is the full story of our final nine days: from Shibuya Crossing to the summit of Mt Fuji, Osaka Expo 2025, and Super Nintendo World at Universal Studios Japan.
-              </p>
-
-              {/* Day 8 */}
-              <SectionH2>Day 8 (May 6): Arriving in Tokyo</SectionH2>
-              <DayBadge label="Wednesday, 6 May" />
-              <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: '#333', marginBottom: '1.2rem' }}>
-                We arrived at Tokyo Station in the early afternoon after a smooth two-hour-twenty Shinkansen ride from Shin-Osaka. The contrast with Osaka was instant. Where Osaka felt loud and fast, Tokyo felt enormous and somehow still efficient. Thousands of people moving at pace, all apparently knowing exactly where they were going.
-              </p>
-              <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: '#333', marginBottom: '1.2rem' }}>
-                We checked into our hotel in Roppongi, dropped our bags, and walked straight to Shibuya. The scramble crossing at rush hour is something that has been photographed ten million times and is still not properly capturable. Six pedestrian streams, all at once, in total silence except for the chirping of the crossing signals. We stood watching it for 20 minutes before crossing ourselves, giggling the whole way.
-              </p>
-              <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: '#333', marginBottom: '1.5rem' }}>
-                That evening we found the Nintendo Store in Shibuya Parco and spent far too long testing demo units and watching Fatima win several rounds of the hook machine games. We came away with a small Kirby plushie and a lot of dignity intact.
-              </p>
-
-              <div style={{ position: 'relative', width: '100%', height: 380, borderRadius: 16, overflow: 'hidden', marginBottom: 12 }}>
-                <Image
-                  src="/blog/Japan-May-2025/hook%20machines%20win.jpeg"
-                  alt="Prize machine winnings including plush toys and small gifts at a Japanese arcade"
-                  fill
-                  style={{ objectFit: 'cover' }}
-                  sizes="(max-width: 768px) 100vw, 750px"
-                />
-              </div>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', fontStyle: 'italic', marginBottom: '2rem' }}>
-                The hook machine haul. We are not ashamed.
-              </p>
-
-              <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: '#333', marginBottom: '1.2rem' }}>
-                We ended the night at Centifolia, a beautiful bar tucked into one of the Roppongi backstreets. Low lighting, a long whisky list and the kind of quiet that Tokyo hides surprisingly well when you know where to look.
-              </p>
-
-              <div style={{ position: 'relative', width: '100%', height: 380, borderRadius: 16, overflow: 'hidden', marginBottom: 12 }}>
-                <Image
-                  src="/blog/Japan-May-2025/centifolia.jpeg"
-                  alt="Dimly lit cocktail bar interior with polished wooden bar and warm amber lighting"
-                  fill
-                  style={{ objectFit: 'cover' }}
-                  sizes="(max-width: 768px) 100vw, 750px"
-                />
-              </div>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', fontStyle: 'italic', marginBottom: '2rem' }}>
-                Centifolia bar, Roppongi. One of the best quiet spots we found in Tokyo.
-              </p>
-
-              {/* Day 9 */}
-              <SectionH2>Day 9 (May 7): Akihabara and Monkey Go-Karts</SectionH2>
-              <DayBadge label="Thursday, 7 May" />
-              <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: '#333', marginBottom: '1.2rem' }}>
-                We spent the morning in Akihabara. Several floors of electronics, anime figurines, retro game cartridges and maid cafes. Even with no interest in buying anything, it is visually overwhelming in the best way. The density of colour and neon in a single street block is something you simply cannot replicate anywhere else.
-              </p>
-              <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: '#333', marginBottom: '1.5rem' }}>
-                In the afternoon we did the go-kart experience through the streets of Tokyo dressed as Mario Kart characters. We booked through Klook in advance. You pick your costume at the base, get a safety briefing and then follow a guide through real public roads covering Akihabara, Akasaka and parts of central Tokyo. It is chaotic, legal and absolutely ridiculous fun. Fatima wore a Princess Peach costume. I was Donkey Kong. We are both fine with this.
-              </p>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-                <div style={{ position: 'relative', height: 280, borderRadius: 14, overflow: 'hidden' }}>
-                  <Image
-                    src="/blog/Japan-May-2025/monkey%20kart.jpeg"
-                    alt="Go-kart rider in costume driving through Tokyo streets with neon signs overhead"
-                    fill
-                    style={{ objectFit: 'cover' }}
-                    sizes="(max-width: 768px) 50vw, 360px"
-                  />
-                </div>
-                <div style={{ position: 'relative', height: 280, borderRadius: 14, overflow: 'hidden' }}>
-                  <Image
-                    src="/blog/Japan-May-2025/monkeykart2.jpeg"
-                    alt="Group of go-kart riders in Mario Kart costumes stopped at a city intersection in Tokyo"
-                    fill
-                    style={{ objectFit: 'cover' }}
-                    sizes="(max-width: 768px) 50vw, 360px"
-                  />
-                </div>
-              </div>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', fontStyle: 'italic', marginBottom: '2rem' }}>
-                Go-karting through Tokyo streets in Mario Kart costumes. Completely unhinged. Completely essential.
-              </p>
-
-              <div style={{ background: 'rgba(255,130,16,0.06)', borderLeft: `4px solid ${ORANGE}`, borderRadius: '0 12px 12px 0', padding: '1.2rem 1.4rem', margin: '1.5rem 0 2rem', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                <TipIcon />
-                <p style={{ margin: 0, fontFamily: "'Inter', sans-serif", fontSize: '0.9rem', lineHeight: 1.6, color: '#444' }}>
-                  <strong>Go-kart tip:</strong> You must hold a valid international driving permit (IDP) to drive. Get one from your national automobile club before you leave home. Without it, you will not be allowed to drive and will follow in a passenger vehicle instead.
+              {/* Intro callout */}
+              <div style={{ background: 'rgba(103,154,193,0.12)', borderLeft: `4px solid ${ORANGE}`, borderRadius: '0 14px 14px 0', padding: '1.5rem 1.75rem', marginBottom: '2.5rem' }}>
+                <p style={{ fontSize: '1.02rem', lineHeight: 1.8, color: '#2a2a3e', margin: 0 }}>
+                  After nine days weaving through Osaka markets, Kyoto temples, Nara deer parks and Hiroshima, we boarded the Shinkansen heading north to Tokyo. We had no idea what was waiting. Part 2 was a completely different kind of travel: less ancient, more electric.{' '}
+                  <Link href="/blog/japan-may-2025-part-1" style={{ color: ORANGE, fontWeight: 600 }}>If you missed Part 1 covering Osaka, Kyoto, Nara and Hiroshima, read it here.</Link>
                 </p>
               </div>
 
-              <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: '#333', marginBottom: '1.2rem' }}>
-                <a href={KLOOK_GOKART} target="_blank" rel="nofollow sponsored noopener" style={{ color: ORANGE, fontWeight: 600, textDecoration: 'none' }}>Book the Tokyo go-kart experience on Klook</a> well in advance, especially if you are visiting during peak season.
-              </p>
-
-              {/* Day 10 */}
-              <SectionH2>Day 10 (May 8): TeamLab Borderless</SectionH2>
-              <DayBadge label="Friday, 8 May" />
-              <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: '#333', marginBottom: '1.2rem' }}>
-                TeamLab Borderless is an immersive digital art museum where the installations bleed between rooms with no defined paths. You wander. Art follows you, reacts to you, splits around you. We spent four hours inside and still felt like we missed things.
-              </p>
-              <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: '#333', marginBottom: '1.5rem' }}>
-                The forest room, where thousands of hanging lanterns shift colour in response to touch, was the highlight. The overgrown lamp room, where vines and flowers climb across suspended lights, was close behind. No description does it justice. Book ahead on Klook and go with no plan: just wander and let it unfold.
-              </p>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-                <div style={{ position: 'relative', height: 280, borderRadius: 14, overflow: 'hidden' }}>
-                  <Image
-                    src="/blog/Japan-May-2025/team%20lab.jpeg"
-                    alt="Glowing digital art installation with flowing colours projected across floors walls and ceiling"
-                    fill
-                    style={{ objectFit: 'cover' }}
-                    sizes="(max-width: 768px) 50vw, 360px"
-                  />
-                </div>
-                <div style={{ position: 'relative', height: 280, borderRadius: 14, overflow: 'hidden' }}>
-                  <Image
-                    src="/blog/Japan-May-2025/teamlab2.jpeg"
-                    alt="Visitors standing inside a mirrored room with thousands of hanging illuminated orbs at TeamLab Borderless"
-                    fill
-                    style={{ objectFit: 'cover' }}
-                    sizes="(max-width: 768px) 50vw, 360px"
-                  />
-                </div>
-              </div>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', fontStyle: 'italic', marginBottom: '2rem' }}>
-                TeamLab Borderless, Tokyo. Every room is different. Every photo looks like a dream.
-              </p>
-
-              <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: '#333', marginBottom: '1.2rem' }}>
-                <a href={KLOOK_TEAMLAB} target="_blank" rel="nofollow sponsored noopener" style={{ color: ORANGE, fontWeight: 600, textDecoration: 'none' }}>Book TeamLab Borderless tickets through Klook</a> at least two weeks ahead. Weekend sessions in particular sell out fast.
-              </p>
-
-              <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: '#333', marginBottom: '1.2rem' }}>
-                That night we found a robot restaurant-style show bar near Shinjuku, which was exactly as absurd as described: giant robots, neon costumes, taiko drumming and enthusiastic audience participation. We also found a karaoke bar in the Shinjuku entertainment district, where we stayed until 2am. No regrets.
-              </p>
-
-              <div style={{ position: 'relative', width: '100%', height: 380, borderRadius: 16, overflow: 'hidden', marginBottom: 12 }}>
-                <Image
-                  src="/blog/Japan-May-2025/karaoke.jpeg"
-                  alt="Private karaoke booth with neon lights and a large screen in a Tokyo karaoke bar"
-                  fill
-                  style={{ objectFit: 'cover' }}
-                  sizes="(max-width: 768px) 100vw, 750px"
-                />
-              </div>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', fontStyle: 'italic', marginBottom: '2rem' }}>
-                2am karaoke in Shinjuku. We gave it everything.
-              </p>
-
-              {/* Day 11 */}
-              <SectionH2>Day 11 (May 9): Roppongi and Breakfast Above Shibuya</SectionH2>
-              <DayBadge label="Saturday, 9 May" />
-              <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: '#333', marginBottom: '1.2rem' }}>
-                A slower morning. We explored the Roppongi Hills complex, which turned out to be far more interesting than a shopping mall deserves to be. The Mori Art Museum on the 53rd floor was showing a thoughtful contemporary exhibition and the city view from the observation deck made a strong case for Tokyo being one of the most beautiful things humans have ever built.
-              </p>
-              <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: '#333', marginBottom: '1.2rem' }}>
-                In the afternoon we took ourselves to the Shibuya Sky observation deck for golden hour. We had booked the <a href={KLOOK_SHIBUYA_SKY} target="_blank" rel="nofollow sponsored noopener" style={{ color: ORANGE, fontWeight: 600, textDecoration: 'none' }}>Shibuya Sky sunset slot through Klook</a> two weeks before, which turned out to be essential. The view from the top of Shibuya Scramble Square at sunset, looking across the entire sprawl of Tokyo, is something we will not easily forget.
-              </p>
-
-              {/* Day 12 */}
-              <SectionH2>Day 12 (May 10): Shibuya Sky at Sunset and Omoide Yokocho</SectionH2>
-              <DayBadge label="Sunday, 10 May" />
-              <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: '#333', marginBottom: '1.5rem' }}>
-                The rooftop at Shibuya Sky has an outdoor section with no glass barrier between you and the open air, 230 metres above street level. The floor below shows the scramble crossing as a tiny grid. As the sun drops, the neon comes on across the city in waves. It is hard to express how large Tokyo feels from up there.
-              </p>
-
-              <div style={{ position: 'relative', width: '100%', height: 420, borderRadius: 16, overflow: 'hidden', marginBottom: 12 }}>
-                <Image
-                  src="/blog/Japan-May-2025/shibuya%20scramble%20square%20sky%20tower.jpeg"
-                  alt="Panoramic view from Shibuya Scramble Square sky deck at dusk with city lights spreading across Tokyo"
-                  fill
-                  style={{ objectFit: 'cover' }}
-                  sizes="(max-width: 768px) 100vw, 750px"
-                />
-              </div>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', fontStyle: 'italic', marginBottom: '2rem' }}>
-                Shibuya Sky. The most extraordinary city view we have seen anywhere.
-              </p>
-
-              <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: '#333', marginBottom: '1.2rem' }}>
-                For dinner we walked to Omoide Yokocho, the narrow alley of yakitori stalls near Shinjuku Station that locals call Memory Lane. Eight or ten seats per stall, no menus, smoke from the charcoal grills drifting across the lane, the kind of place that has not changed in 60 years. We squeezed in, pointed at things, drank cold Kirin and ate some of the best skewered chicken of our lives.
-              </p>
-
-              {/* Mid-article CTA */}
-              <div style={{ background: `linear-gradient(135deg, ${NAVY} 0%, #0a5c9e 100%)`, borderRadius: 16, padding: '2rem', margin: '3rem 0', color: '#fff', textAlign: 'center' }}>
-                <div style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: '1.2rem', marginBottom: '0.6rem', lineHeight: 1.3 }}>
-                  Planning your own Japan trip?
-                </div>
-                <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.95rem', opacity: 0.88, lineHeight: 1.6, marginBottom: '1.4rem' }}>
-                  Luna builds personalised Japan itineraries in seconds, balancing cities, temples, theme parks and travel logistics automatically.
-                </p>
-                <Link href="/start" style={{ display: 'inline-block', background: ORANGE, color: '#fff', fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: 14, padding: '12px 28px', borderRadius: 10, textDecoration: 'none' }}>
-                  Plan my Japan trip with Luna
-                </Link>
-              </div>
-
-              {/* Day 13 */}
-              <SectionH2>Day 13 (May 11): Mt Fuji Day Trip</SectionH2>
-              <DayBadge label="Monday, 11 May" />
-              <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: '#333', marginBottom: '1.2rem' }}>
-                We booked a day trip from Shinjuku to Mt Fuji and Lake Kawaguchi through Klook. The bus left at 7am and reached the Fuji fifth station at around 9:30. May is a good month for Fuji: the snowline is still visible from the fifth station and the crowds are smaller than July or August when the hiking season opens.
-              </p>
-              <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: '#333', marginBottom: '1.5rem' }}>
-                Standing below the volcanic cone, looking up at the perfect symmetrical slope, is one of those moments where you stop trying to take photos because no photo will be accurate. We walked the Ochudo trail around the fifth station for a couple of hours, then descended to Lake Kawaguchi for lunch by the water.
-              </p>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-                <div style={{ position: 'relative', height: 300, borderRadius: 14, overflow: 'hidden' }}>
-                  <Image
-                    src="/blog/Japan-May-2025/Fuji.jpeg"
-                    alt="Mount Fuji snowcapped peak rising above cloud level against a blue sky"
-                    fill
-                    style={{ objectFit: 'cover' }}
-                    sizes="(max-width: 768px) 50vw, 360px"
-                  />
-                </div>
-                <div style={{ position: 'relative', height: 300, borderRadius: 14, overflow: 'hidden' }}>
-                  <Image
-                    src="/blog/Japan-May-2025/Fuji2.jpeg"
-                    alt="View of Mount Fuji reflected in a calm lake at Kawaguchi with cherry blossoms in the foreground"
-                    fill
-                    style={{ objectFit: 'cover' }}
-                    sizes="(max-width: 768px) 50vw, 360px"
-                  />
-                </div>
-              </div>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', fontStyle: 'italic', marginBottom: '2rem' }}>
-                Mt Fuji from above and reflected at Lake Kawaguchi. Two ways of seeing the same mountain.
-              </p>
-
-              <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: '#333', marginBottom: '1.2rem' }}>
-                In the afternoon we went to Fuji-Q Highland, the amusement park at the base of the mountain, for the roller coasters. Fuji-Q holds several world records for steepness and speed and the coasters deliver on that reputation fully. Book your <a href={KLOOK_FUJI} target="_blank" rel="nofollow sponsored noopener" style={{ color: ORANGE, fontWeight: 600, textDecoration: 'none' }}>Mt Fuji day trip</a> and <a href={KLOOK_FUJIQ} target="_blank" rel="nofollow sponsored noopener" style={{ color: ORANGE, fontWeight: 600, textDecoration: 'none' }}>Fuji-Q Highland tickets</a> through Klook ahead of time.
-              </p>
-
-              <div style={{ background: 'rgba(255,130,16,0.06)', borderLeft: `4px solid ${ORANGE}`, borderRadius: '0 12px 12px 0', padding: '1.2rem 1.4rem', margin: '1.5rem 0 2rem', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                <TipIcon />
-                <p style={{ margin: 0, fontFamily: "'Inter', sans-serif", fontSize: '0.9rem', lineHeight: 1.6, color: '#444' }}>
-                  <strong>Fuji visibility tip:</strong> Mt Fuji is often hidden in cloud, especially in summer. May and October give the best odds of clear skies. Check the live webcam at Lake Kawaguchi the night before and be prepared to adjust plans if visibility is poor.
-                </p>
-              </div>
-
-              {/* Day 14 */}
-              <SectionH2>Day 14 (May 12): Osaka Expo 2025</SectionH2>
-              <DayBadge label="Tuesday, 12 May" />
-              <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: '#333', marginBottom: '1.2rem' }}>
-                We took the Shinkansen back south to Osaka, checked into our hotel near Universal City and headed straight to Yumeshima Island for Osaka Expo 2025. The expo runs from April to October 2025 across a custom-built island in Osaka Bay with pavilions from over 150 countries.
-              </p>
-              <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: '#333', marginBottom: '1.5rem' }}>
-                The scale of it is staggering. We spent a full day and covered maybe 40 percent of the grounds. Standout pavilions included the circular Grand Ring walkway (reportedly the largest wooden structure in the world), the Japan pavilion, and a handful of smaller national pavilions serving extraordinary food. The Australia and Brazil pavilions had long queues, both worth it.
-              </p>
-
-              <div style={{ position: 'relative', width: '100%', height: 400, borderRadius: 16, overflow: 'hidden', marginBottom: 12 }}>
-                <Image
-                  src="/blog/Japan-May-2025/OsakaExpo.jpeg"
-                  alt="Osaka Expo 2025 pavilions and the Grand Ring wooden walkway structure under a blue sky"
-                  fill
-                  style={{ objectFit: 'cover' }}
-                  sizes="(max-width: 768px) 100vw, 750px"
-                />
-              </div>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', fontStyle: 'italic', marginBottom: '2rem' }}>
-                Osaka Expo 2025, Yumeshima Island. A full day was not enough.
-              </p>
-
-              <div style={{ background: 'rgba(255,130,16,0.06)', borderLeft: `4px solid ${ORANGE}`, borderRadius: '0 12px 12px 0', padding: '1.2rem 1.4rem', margin: '1.5rem 0 2rem', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                <TipIcon />
-                <p style={{ margin: 0, fontFamily: "'Inter', sans-serif", fontSize: '0.9rem', lineHeight: 1.6, color: '#444' }}>
-                  <strong>Expo tip:</strong> Book tickets online before arriving in Japan. Timed entry tickets for specific pavilions often sell out weeks ahead. Arrive early and head for the most popular national pavilions first. Comfortable shoes are essential.
-                </p>
-              </div>
-
-              {/* Day 15 */}
-              <SectionH2>Day 15 (May 13): Universal Studios Japan and Super Nintendo World</SectionH2>
-              <DayBadge label="Wednesday, 13 May" />
-              <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: '#333', marginBottom: '1.2rem' }}>
-                Universal Studios Japan was our last full day in Japan and we saved it for Super Nintendo World. We had heard good things. The reality exceeded them significantly.
-              </p>
-              <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: '#333', marginBottom: '1.2rem' }}>
-                Super Nintendo World is entered through a warp pipe. You emerge into a life-size recreation of the Mushroom Kingdom, complete with moving Goombas, interactive question blocks that respond to your wristband, and a full-scale Bowser's Castle looming at the back. The Mario Kart ride inside the castle is genuinely extraordinary: augmented reality kart racing with physical motion tracked to the visuals.
-              </p>
-              <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: '#333', marginBottom: '1.5rem' }}>
-                We had Express Passes booked through Klook, without which the queues for Mario Kart can run to two hours. If you are going, book <a href={KLOOK_USJ} target="_blank" rel="nofollow sponsored noopener" style={{ color: ORANGE, fontWeight: 600, textDecoration: 'none' }}>USJ tickets and Express Passes on Klook</a> as early as possible. They sell out months ahead.
-              </p>
-
-              <div style={{ background: 'rgba(0,68,123,0.05)', border: `1px solid rgba(0,68,123,0.15)`, borderRadius: 14, padding: '1.4rem 1.6rem', margin: '2rem 0' }}>
-                <p style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: '0.95rem', color: NAVY, marginBottom: '0.6rem' }}>Practical tip: USJ Express Pass</p>
-                <ul style={{ paddingLeft: '1.2rem', margin: 0, fontFamily: "'Inter', sans-serif", fontSize: '0.9rem', lineHeight: 1.7, color: '#444' }}>
-                  <li>Express Pass 4 or 7 are the most common options. Buy 7 if your budget allows.</li>
-                  <li>Mario Kart Express is sold as a separate add-on from the main pass.</li>
-                  <li>All passes have entry time slots. Book the Mario Kart slot for first thing in the morning.</li>
-                  <li>The Butterbeer and Wand experience in The Wizarding World of Harry Potter next door is also worthwhile.</li>
-                </ul>
-              </div>
-
-              {/* Day 16 */}
-              <SectionH2>Day 16 (May 14): Umeda Sky Building and Farewell Osaka</SectionH2>
-              <DayBadge label="Thursday, 14 May" />
-              <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: '#333', marginBottom: '1.2rem' }}>
-                Our last morning in Japan. We checked out of the hotel, stored luggage at Osaka Station, and walked to the Umeda Sky Building for one final city view. Two towers joined by a floating garden observatory at the top, connected by escalators that cross open air between them. The view over northern Osaka is calm and vast.
-              </p>
-
-              <div style={{ position: 'relative', width: '100%', height: 400, borderRadius: 16, overflow: 'hidden', marginBottom: 12 }}>
-                <Image
-                  src="/blog/Japan-May-2025/umeda.jpeg"
-                  alt="Umeda Sky Building twin towers in Osaka with the connected floating garden observatory at the top"
-                  fill
-                  style={{ objectFit: 'cover' }}
-                  sizes="(max-width: 768px) 100vw, 750px"
-                />
-              </div>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', fontStyle: 'italic', marginBottom: '2rem' }}>
-                Umeda Sky Building. A quiet end to a very full trip.
-              </p>
-
-              <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: '#333', marginBottom: '1.2rem' }}>
-                We had lunch at a small ramen shop in the basement restaurant floor of Osaka Station, the kind of place with a ticket machine at the entrance and seats for eight people. We shared a bowl of tonkotsu ramen and a plate of gyoza and talked about coming back.
-              </p>
-              <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: '#333', marginBottom: '2.5rem' }}>
-                The Shinkansen to the airport left at 2pm. Japan was over.
-              </p>
-
-              {/* Japan Food Section */}
-              <SectionH2>Eating Your Way Through Japan</SectionH2>
-              <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: '#333', marginBottom: '1.2rem' }}>
-                Food in Japan deserves its own conversation. Across two weeks and four cities, we ate spectacularly well. The combination of extraordinary quality, affordable prices and the density of good options in every neighbourhood makes Japan one of the best countries in the world to eat in.
-              </p>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-                <div style={{ position: 'relative', height: 260, borderRadius: 14, overflow: 'hidden' }}>
-                  <Image
-                    src="/blog/Japan-May-2025/Osaka%20feast%20food.jpeg"
-                    alt="Spread of Japanese dishes including sashimi gyoza ramen and yakitori on a restaurant table"
-                    fill
-                    style={{ objectFit: 'cover' }}
-                    sizes="(max-width: 768px) 50vw, 360px"
-                  />
-                </div>
-                <div style={{ position: 'relative', height: 260, borderRadius: 14, overflow: 'hidden' }}>
-                  <Image
-                    src="/blog/Japan-May-2025/shinkansen%20lunch.jpeg"
-                    alt="Ekiben bento box lunch eaten on the Shinkansen with views of the Japanese countryside outside the window"
-                    fill
-                    style={{ objectFit: 'cover' }}
-                    sizes="(max-width: 768px) 50vw, 360px"
-                  />
-                </div>
-              </div>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', fontStyle: 'italic', marginBottom: '2rem' }}>
-                Left: a proper Osaka feast. Right: the Shinkansen ekiben lunch, one of the joys of train travel in Japan.
-              </p>
-
-              <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: '#333', marginBottom: '1.2rem' }}>
-                Some highlights across the trip: the ekiben (station bento boxes) sold on Shinkansen platforms were excellent meals in themselves. Convenience store onigiri from FamilyMart or 7-Eleven is genuinely good food, not a compromise. Ramen quality is consistently high everywhere, even in cheap side-street spots. The gap between a 600 yen convenience store meal and a 1,200 yen sit-down lunch is surprisingly small.
-              </p>
-              <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: '#333', marginBottom: '2.5rem' }}>
-                Our highest recommendation: do not over-plan food. Walk until something smells good, go in, point at the pictures if there is no English menu. Japan has the lowest food risk of any country we have visited. Everything is clean, fresh and cared about.
-              </p>
-
-              {/* Practical tips */}
-              <SectionH2>Practical Tips for Tokyo and Osaka</SectionH2>
-              <div style={{ background: 'rgba(255,130,16,0.06)', borderLeft: `4px solid ${ORANGE}`, borderRadius: '0 12px 12px 0', padding: '1.2rem 1.4rem', margin: '1.5rem 0', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                <TipIcon />
-                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.9rem', lineHeight: 1.7, color: '#444' }}>
-                  <strong>IC card:</strong> Get a Suica or PASMO card at any station machine on day one. It covers all metro, bus and most local train lines in Tokyo. Add money as you go. Works in convenience stores and vending machines too.
-                </div>
-              </div>
-              <div style={{ background: 'rgba(255,130,16,0.06)', borderLeft: `4px solid ${ORANGE}`, borderRadius: '0 12px 12px 0', padding: '1.2rem 1.4rem', margin: '1.5rem 0', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                <TipIcon />
-                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.9rem', lineHeight: 1.7, color: '#444' }}>
-                  <strong>eSIM:</strong> Buy a Japan eSIM from Airalo or similar before departure. Data is fast and coverage in both cities is comprehensive including on metro lines.
-                </div>
-              </div>
-              <div style={{ background: 'rgba(255,130,16,0.06)', borderLeft: `4px solid ${ORANGE}`, borderRadius: '0 12px 12px 0', padding: '1.2rem 1.4rem', margin: '1.5rem 0', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                <TipIcon />
-                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.9rem', lineHeight: 1.7, color: '#444' }}>
-                  <strong>Book ahead:</strong> TeamLab, Shibuya Sky, USJ Express Passes, go-karts and the Osaka Expo pavilions all require advance booking. Leave nothing to walk-up chance, especially in May.
-                </div>
-              </div>
-              <div style={{ background: 'rgba(255,130,16,0.06)', borderLeft: `4px solid ${ORANGE}`, borderRadius: '0 12px 12px 0', padding: '1.2rem 1.4rem', margin: '1.5rem 0', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                <TipIcon />
-                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.9rem', lineHeight: 1.7, color: '#444' }}>
-                  <strong>Cash still matters:</strong> Many small ramen shops, izakayas and temple shops do not accept cards. Withdraw from 7-Eleven ATMs (the most reliable for foreign cards) and keep some yen handy.
-                </div>
-              </div>
-
-              {/* Luna CTA box */}
-              <div style={{ background: `linear-gradient(135deg, ${ORANGE} 0%, #e07010 100%)`, borderRadius: 16, padding: '2rem', margin: '3rem 0', color: '#fff', textAlign: 'center' }}>
-                <div style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: '1.25rem', marginBottom: '0.6rem', lineHeight: 1.3 }}>
-                  Ready to plan your Japan adventure?
-                </div>
-                <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.95rem', opacity: 0.9, lineHeight: 1.6, marginBottom: '1.4rem', maxWidth: 480, margin: '0 auto 1.4rem' }}>
-                  Tell Luna where you want to go and she will build a complete Japan itinerary: cities, day trips, theme parks and travel logistics, all personalised to your style.
-                </p>
-                <Link href="/start" style={{ display: 'inline-block', background: '#fff', color: ORANGE, fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: 14, padding: '12px 28px', borderRadius: 10, textDecoration: 'none' }}>
-                  Start planning with Luna
-                </Link>
-              </div>
-
-              {/* FAQ */}
-              <SectionH2>Frequently Asked Questions</SectionH2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', marginBottom: '2.5rem' }}>
-                {faqSchema.mainEntity.map((item, i) => (
-                  <details key={i} style={{ background: '#fff', borderRadius: 12, border: '1px solid rgba(0,68,123,0.10)', padding: '1.1rem 1.3rem' }}>
-                    <summary style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: '0.95rem', color: NAVY, cursor: 'pointer', listStyle: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      {item.name}
-                      <span style={{ color: ORANGE, fontSize: 18, fontWeight: 400, flexShrink: 0, marginLeft: 12 }}>+</span>
-                    </summary>
-                    <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.92rem', color: GRAY, lineHeight: 1.7, marginTop: '0.8rem', marginBottom: 0 }}>
-                      {item.acceptedAnswer.text}
-                    </p>
-                  </details>
-                ))}
-              </div>
-
-              {/* Read also */}
-              <SectionH2>Read Also</SectionH2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: '2.5rem' }}>
-                <Link href="/blog/japan-may-2025-part-1" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '1rem 1.2rem', background: '#fff', border: '1px solid rgba(0,68,123,0.10)', borderRadius: 12, textDecoration: 'none' }}>
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: ORANGE, flexShrink: 0 }} />
-                  <span style={{ fontFamily: "'Poppins', sans-serif", fontSize: '0.9rem', fontWeight: 600, color: NAVY }}>Japan Part 1: Osaka, Kyoto, Nara and Hiroshima</span>
-                </Link>
-                <Link href="/blog/fiji-oct-2024" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '1rem 1.2rem', background: '#fff', border: '1px solid rgba(0,68,123,0.10)', borderRadius: 12, textDecoration: 'none' }}>
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: ORANGE, flexShrink: 0 }} />
-                  <span style={{ fontFamily: "'Poppins', sans-serif", fontSize: '0.9rem', fontWeight: 600, color: NAVY }}>Fiji October 2024: Islands, Resorts and the Best Slow Travel</span>
-                </Link>
-                <Link href="/blog/rio-de-janeiro-5-days" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '1rem 1.2rem', background: '#fff', border: '1px solid rgba(0,68,123,0.10)', borderRadius: 12, textDecoration: 'none' }}>
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: ORANGE, flexShrink: 0 }} />
-                  <span style={{ fontFamily: "'Poppins', sans-serif", fontSize: '0.9rem', fontWeight: 600, color: NAVY }}>Rio de Janeiro in 5 Days: Carnival, Favelas and the Best Caipirinhas</span>
-                </Link>
-              </div>
-
-              {/* Final CTA */}
-              <div style={{ background: `linear-gradient(135deg, ${NAVY} 0%, #0a5c9e 100%)`, borderRadius: 16, padding: '2.5rem 2rem', margin: '3rem 0', color: '#fff', textAlign: 'center' }}>
-                <div style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: '1.4rem', marginBottom: '0.7rem', lineHeight: 1.3 }}>
-                  Japan inspired you. Now make it happen.
-                </div>
-                <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '1rem', opacity: 0.88, lineHeight: 1.6, marginBottom: '1.6rem', maxWidth: 520, margin: '0 auto 1.6rem' }}>
-                  Luna plans your full Japan trip: from first shinkansen to last izakaya. Personalised to your travel style, budget and group.
-                </p>
-                <Link href="/start" style={{ display: 'inline-block', background: ORANGE, color: '#fff', fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: 15, padding: '14px 32px', borderRadius: 10, textDecoration: 'none' }}>
-                  Build my Japan itinerary
-                </Link>
-              </div>
-
-              {/* Tags */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: '2rem' }}>
-                {['Japan', 'Tokyo', 'Mt Fuji', 'Osaka Expo', 'Universal Studios Japan', 'TeamLab', 'Go-kart', 'Travel 2025'].map(tag => (
-                  <span key={tag} style={{ fontFamily: "'Poppins', sans-serif", fontSize: 12, fontWeight: 600, color: NAVY, background: 'rgba(0,68,123,0.08)', padding: '5px 14px', borderRadius: 20 }}>
-                    {tag}
-                  </span>
-                ))}
-              </div>
-
-              {/* Affiliate disclaimer */}
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: '#aaa', lineHeight: 1.6, borderTop: '1px solid #eee', paddingTop: '1.5rem', marginBottom: 0 }}>
-                Some links in this post are affiliate links. If you book through them, Luna Let&apos;s Go earns a small commission at no extra cost to you. We only link to experiences and hotels we actually used.
-              </p>
-
-            </article>
-
-            {/* ── SIDEBAR ──────────────────────────────────── */}
-            <aside style={{ position: 'sticky', top: 90 }}>
-
-              {/* Trip Snapshot */}
-              <div style={{ background: '#fff', borderRadius: 16, padding: '1.5rem', border: '1px solid rgba(0,68,123,0.10)', marginBottom: '1.5rem' }}>
-                <h3 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: '1rem', color: NAVY, marginBottom: '1.2rem', borderBottom: '2px solid rgba(255,130,16,0.2)', paddingBottom: '0.6rem' }}>
-                  Trip Snapshot
+              {/* Highlights box */}
+              <div style={{ background: `linear-gradient(135deg, ${NAVY} 0%, #005fa3 60%, #0077b6 100%)`, borderRadius: 16, padding: '1.75rem 2rem', marginBottom: '2.5rem', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', top: -30, right: -20, width: 120, height: 120, background: 'rgba(255,255,255,0.05)', borderRadius: '50%' }} />
+                <h3 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: '1rem', color: '#FFBD59', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  What&apos;s in this post
                 </h3>
-                <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontFamily: "'Inter', sans-serif", fontSize: '0.88rem', color: '#444', lineHeight: 1.7 }}>
-                  <li><strong style={{ color: NAVY }}>Dates:</strong> May 6 to 14, 2025</li>
-                  <li><strong style={{ color: NAVY }}>Duration:</strong> 9 days</li>
-                  <li><strong style={{ color: NAVY }}>Cities:</strong> Tokyo, Mt Fuji, Osaka</li>
-                  <li><strong style={{ color: NAVY }}>Travellers:</strong> 2 adults</li>
-                  <li><strong style={{ color: NAVY }}>Style:</strong> Mix of adventure and culture</li>
-                  <li><strong style={{ color: NAVY }}>Budget:</strong> Mid-range to splurge</li>
-                </ul>
-              </div>
-
-              {/* Don't Miss */}
-              <div style={{ background: '#fff', borderRadius: 16, padding: '1.5rem', border: '1px solid rgba(0,68,123,0.10)', marginBottom: '1.5rem' }}>
-                <h3 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: '1rem', color: NAVY, marginBottom: '1.2rem', borderBottom: '2px solid rgba(255,130,16,0.2)', paddingBottom: '0.6rem' }}>
-                  Don&apos;t Miss
-                </h3>
-                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {[
-                    { label: 'Tokyo Go-Karting', link: KLOOK_GOKART },
-                    { label: 'TeamLab Borderless', link: KLOOK_TEAMLAB },
-                    { label: 'Shibuya Sky sunset', link: KLOOK_SHIBUYA_SKY },
-                    { label: 'Mt Fuji day trip', link: KLOOK_FUJI },
-                    { label: 'Universal Studios Japan', link: KLOOK_USJ },
-                  ].map(({ label, link }) => (
-                    <li key={label}>
-                      <a href={link} target="_blank" rel="nofollow sponsored noopener" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', fontFamily: "'Inter', sans-serif", fontSize: '0.88rem', color: NAVY, fontWeight: 500 }}>
-                        <span style={{ width: 7, height: 7, borderRadius: '50%', background: ORANGE, flexShrink: 0 }} />
-                        {label}
-                      </a>
+                    'Shibuya Crossing at rush hour and the Nintendo Store (May 6)',
+                    'Akihabara district and go-karting through central Tokyo (May 7)',
+                    'TeamLab Borderless and late-night karaoke in Shinjuku (May 8)',
+                    'Shibuya Sky at sunset: the best view of the trip (May 10)',
+                    'Day trip to Mt Fuji and Fuji-Q Highland (May 11)',
+                    'Osaka Expo 2025: a full day on Yumeshima Island (May 12)',
+                    'Super Nintendo World at Universal Studios Japan (May 13)',
+                    'Umeda Sky Building farewell and goodbye to Japan (May 14)',
+                    'Where we stayed: Act Hotel Roppongi + Oriental Hotel Universal City',
+                  ].map((item) => (
+                    <li key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: '0.92rem', color: 'rgba(255,255,255,0.88)', lineHeight: 1.6 }}>
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#FFBD59', marginTop: 7, flexShrink: 0 }} />
+                      {item}
                     </li>
                   ))}
                 </ul>
               </div>
 
-              {/* Where We Stayed */}
-              <div style={{ background: '#fff', borderRadius: 16, padding: '1.5rem', border: '1px solid rgba(0,68,123,0.10)', marginBottom: '1.5rem' }}>
-                <h3 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: '1rem', color: NAVY, marginBottom: '1.2rem', borderBottom: '2px solid rgba(255,130,16,0.2)', paddingBottom: '0.6rem' }}>
-                  Where We Stayed
-                </h3>
-                <HotelCard
-                  name="Act Hotel Roppongi, Tokyo"
-                  nights="5 nights (May 6 to 11)"
-                  note="Well-located in Roppongi with easy metro access to Shibuya, Shinjuku and Akihabara. Clean, compact rooms typical of Tokyo."
-                  link={HOTEL_ACT_ROPPONGI}
-                />
-                <HotelCard
-                  name="Oriental Hotel Universal City, Osaka"
-                  nights="3 nights (May 11 to 14)"
-                  note="Walking distance from Universal Studios Japan. Comfortable rooms and easy access back into Osaka city by train."
-                  link={HOTEL_ORIENTAL_USJ}
+              {/* Opening paragraphs */}
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                Neon-lit streets, immersive art installations, volcanic lakes reflecting a snowcapped peak, and a theme park built entirely around a video game world we grew up loving. Japan kept finding new ways to surprise us.
+              </p>
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                This is the full story of our final nine days: from Shibuya Crossing to the summit of Mt Fuji, Osaka Expo 2025 and Super Nintendo World at Universal Studios Japan.
+              </p>
+
+              {/* DAY: May 6 */}
+              <DayBadge label="Wednesday, 6 May" />
+              <SectionH2>Shibuya Crossing, the Nintendo Store and Centifolia Bar</SectionH2>
+
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                We arrived at Tokyo Station in the early afternoon after a smooth two-hour-twenty Shinkansen ride from Shin-Osaka. The contrast with Osaka was instant. Where Osaka felt loud and fast, Tokyo felt enormous and somehow still efficient. Thousands of people moving at pace, all apparently knowing exactly where they were going.
+              </p>
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                We checked into{' '}
+                <a href={HOTEL_ACT_ROPPONGI} target="_blank" rel="nofollow sponsored noopener" style={{ color: ORANGE, fontWeight: 600 }}>Act Hotel Roppongi</a>,
+                dropped our bags and walked straight to Shibuya. The scramble crossing at rush hour is something that has been photographed ten million times and is still not properly capturable. Six pedestrian streams, all at once, in total silence except for the chirping of the crossing signals. We stood watching it for 20 minutes before crossing ourselves.
+              </p>
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                That evening we found the Nintendo Store in Shibuya Parco and spent far too long inside. We came away with a small Kirby plushie and a lot of dignity intact.
+              </p>
+
+              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 14, overflow: 'hidden', marginTop: '2rem', marginBottom: 8 }}>
+                <Image
+                  src="/blog/Japan-May-2025/hook machines win.jpeg"
+                  alt="Prize machine winnings including plush toys at a Japanese arcade"
+                  fill
+                  style={{ objectFit: 'cover' }}
+                  sizes="700px"
                 />
               </div>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
+                The hook machine haul. We are not ashamed.
+              </p>
 
-              {/* Getting Around */}
-              <div style={{ background: '#fff', borderRadius: 16, padding: '1.5rem', border: '1px solid rgba(0,68,123,0.10)', marginBottom: '1.5rem' }}>
-                <h3 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: '1rem', color: NAVY, marginBottom: '1.2rem', borderBottom: '2px solid rgba(255,130,16,0.2)', paddingBottom: '0.6rem' }}>
-                  Getting Around
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                We ended the night at Centifolia, a bar tucked into one of the Roppongi backstreets. Low lighting, a long whisky list and the kind of quiet that Tokyo hides surprisingly well.
+              </p>
+
+              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 14, overflow: 'hidden', marginTop: '2rem', marginBottom: 8 }}>
+                <Image
+                  src="/blog/Japan-May-2025/centifolia.jpeg"
+                  alt="Dimly lit cocktail bar interior with polished wooden bar and warm amber lighting, Roppongi Tokyo"
+                  fill
+                  style={{ objectFit: 'cover' }}
+                  sizes="700px"
+                />
+              </div>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
+                Centifolia bar, Roppongi. One of the best quiet spots we found in Tokyo.
+              </p>
+
+              {/* DAY: May 7 */}
+              <DayBadge label="Thursday, 7 May" />
+              <SectionH2>Akihabara Electronics and Go-Karts Through Central Tokyo</SectionH2>
+
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                We spent the morning in Akihabara. Several floors of electronics, anime figurines, retro game cartridges and maid cafes. Even with no interest in buying anything, it is visually overwhelming in the best way.
+              </p>
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                In the afternoon we did the go-kart experience through the streets of Tokyo dressed as Mario Kart characters. We booked through{' '}
+                <a href={KLOOK_GOKART} target="_blank" rel="nofollow sponsored noopener" style={{ color: ORANGE, fontWeight: 600 }}>Klook</a>{' '}
+                in advance. You pick your costume, get a safety briefing and follow a guide through real public roads across Akihabara, Akasaka and parts of central Tokyo. It is chaotic, legal and absolutely ridiculous fun. Fatima wore a Princess Peach costume. Wilson was Donkey Kong.
+              </p>
+
+              <div style={{ background: 'rgba(255,189,89,0.15)', border: `1.5px solid rgba(255,130,16,0.3)`, borderRadius: 12, padding: '1.2rem 1.4rem', margin: '2rem 0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <TipIcon />
+                  <span style={{ fontFamily: "'Poppins', sans-serif", fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', color: ORANGE }}>Go-kart tip</span>
+                </div>
+                <p style={{ fontSize: '0.92rem', color: '#4a3000', margin: 0, lineHeight: 1.6 }}>
+                  You must hold a valid international driving permit to drive. Get one before you leave home. Without it, you will follow in a passenger vehicle instead.
+                </p>
+              </div>
+
+              <div className="blog-photo-duo" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, margin: '2rem 0' }}>
+                {[
+                  { src: '/blog/Japan-May-2025/monkey kart.jpeg', alt: 'Go-kart rider in costume driving through Tokyo streets, Japan' },
+                  { src: '/blog/Japan-May-2025/monkeykart2.jpeg', alt: 'Group of go-kart riders in Mario Kart costumes stopped at traffic lights in Tokyo, Japan' },
+                ].map(({ src, alt }) => (
+                  <div key={src} style={{ position: 'relative', aspectRatio: '4/3', borderRadius: 10, overflow: 'hidden' }}>
+                    <Image src={src} alt={alt} fill style={{ objectFit: 'cover' }} sizes="340px" />
+                  </div>
+                ))}
+              </div>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
+                Street go-karting through Tokyo. Completely unhinged. Completely essential.
+              </p>
+
+              {/* DAY: May 8 */}
+              <DayBadge label="Friday, 8 May" />
+              <SectionH2>TeamLab Borderless: Four Hours Was Not Enough</SectionH2>
+
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                <a href={KLOOK_TEAMLAB} target="_blank" rel="nofollow sponsored noopener" style={{ color: ORANGE, fontWeight: 600 }}>TeamLab Borderless</a> is an immersive digital art museum where installations bleed between rooms with no defined paths. You wander. Art follows you, reacts to you, splits around you. We spent four hours inside and still felt like we missed things. The forest room, where thousands of hanging lanterns shift colour in response to touch, was the highlight.
+              </p>
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                Book ahead on Klook and go with no plan: just wander.
+              </p>
+
+              <div className="blog-photo-duo" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, margin: '2rem 0' }}>
+                {[
+                  { src: '/blog/Japan-May-2025/team lab.jpeg', alt: 'Glowing digital art installation with flowing colours and hanging lanterns at TeamLab Borderless Tokyo' },
+                  { src: '/blog/Japan-May-2025/teamlab2.jpeg', alt: 'Visitors standing inside a mirrored room with thousands of suspended lights at TeamLab Borderless' },
+                ].map(({ src, alt }) => (
+                  <div key={src} style={{ position: 'relative', aspectRatio: '4/3', borderRadius: 10, overflow: 'hidden' }}>
+                    <Image src={src} alt={alt} fill style={{ objectFit: 'cover' }} sizes="340px" />
+                  </div>
+                ))}
+              </div>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
+                TeamLab Borderless, Tokyo. Every room is different. Every photo looks like a dream.
+              </p>
+
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                That night we found a robot restaurant-style show bar near Shinjuku, which was exactly as absurd as described: giant robots, neon costumes and enthusiastic audience participation. We also found a karaoke bar in the Shinjuku entertainment district, where we stayed until 2am.
+              </p>
+
+              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 14, overflow: 'hidden', marginTop: '2rem', marginBottom: 8 }}>
+                <Image
+                  src="/blog/Japan-May-2025/karaoke.jpeg"
+                  alt="Private karaoke booth with neon lights and microphones in a Shinjuku karaoke bar, Tokyo Japan"
+                  fill
+                  style={{ objectFit: 'cover' }}
+                  sizes="700px"
+                />
+              </div>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
+                2am karaoke in Shinjuku. We gave it everything.
+              </p>
+
+              {/* MID-ARTICLE CTA */}
+              <div style={{ background: 'linear-gradient(135deg, #00447B 0%, #005fa3 100%)', borderRadius: 16, padding: 32, margin: '40px 0', textAlign: 'center', color: 'white' }}>
+                <h3 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: '1.2rem', marginBottom: 12, color: 'white', lineHeight: 1.3 }}>
+                  Planning your own Japan trip?
                 </h3>
-                <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontFamily: "'Inter', sans-serif", fontSize: '0.88rem', color: '#444', lineHeight: 1.9 }}>
-                  <li><strong style={{ color: NAVY }}>Tokyo metro:</strong> Suica IC card covers all lines</li>
-                  <li><strong style={{ color: NAVY }}>Tokyo to Osaka:</strong> Shinkansen Nozomi, 2h 20min</li>
-                  <li><strong style={{ color: NAVY }}>Fuji day trip:</strong> Highway bus from Shinjuku Bus Terminal</li>
-                  <li><strong style={{ color: NAVY }}>Osaka Expo:</strong> Direct metro to Yumeshima Island</li>
-                  <li><strong style={{ color: NAVY }}>USJ:</strong> JR Sakurajima Line to Universal City</li>
+                <p style={{ fontSize: '0.95rem', color: 'rgba(255,255,255,0.88)', marginBottom: 20, lineHeight: 1.6 }}>
+                  Luna builds personalised Japan itineraries in seconds, balancing cities, temples, theme parks and travel logistics automatically.
+                </p>
+                <a href="/start" style={{ display: 'inline-block', background: '#FF8210', color: 'white', fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: '0.95rem', padding: '14px 28px', borderRadius: 50, textDecoration: 'none' }}>
+                  Plan my Japan trip with Luna
+                </a>
+              </div>
+
+              {/* DAY: May 9 */}
+              <DayBadge label="Saturday, 9 May" />
+              <SectionH2>Roppongi Hills and Breakfast Above Shibuya Crossing</SectionH2>
+
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                A slower morning. We explored the Roppongi Hills complex. The Mori Art Museum on the 53rd floor was showing a thoughtful contemporary exhibition, and the city view from the observation deck made a strong case for Tokyo being one of the most beautiful things humans have ever built.
+              </p>
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                In the afternoon we went to Cafe L&apos;Occitane in Shibuya for breakfast with a window table looking directly down onto the crossing. Watching it from above with coffee in hand is a completely different experience from standing inside it.
+              </p>
+
+              {/* DAY: May 10 */}
+              <DayBadge label="Sunday, 10 May" />
+              <SectionH2>Shibuya Sky at Sunset: The Best View of the Entire Trip</SectionH2>
+
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                <a href={KLOOK_SHIBUYA_SKY} target="_blank" rel="nofollow sponsored noopener" style={{ color: ORANGE, fontWeight: 600 }}>Shibuya Sky</a> is the open-air rooftop observation deck on top of Scramble Square, 230 metres above the city. At sunset, the light catches the sprawl of Tokyo in all directions. On a clear day you can see Mt Fuji on the horizon.
+              </p>
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                This was the single best view of the entire trip. Book the sunset time slot on Klook and arrive slightly early to secure a spot on the open-air section.
+              </p>
+
+              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 14, overflow: 'hidden', marginTop: '2rem', marginBottom: 8 }}>
+                <Image
+                  src="/blog/Japan-May-2025/shibuya scramble square sky tower.jpeg"
+                  alt="Panoramic view from Shibuya Scramble Square sky deck at sunset with Tokyo sprawl and Mt Fuji silhouette, Japan"
+                  fill
+                  style={{ objectFit: 'cover' }}
+                  sizes="700px"
+                />
+              </div>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
+                Shibuya Sky at sunset. Book the sunset slot. Arrive 20 minutes early.
+              </p>
+
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                After sunset we went to Omoide Yokocho (Memory Lane): a cluster of tiny yakitori and ramen stalls in narrow alleys just west of Shinjuku Station. Standing at a counter eating grilled skewers under yellow light with smoke rising around you is one of those Tokyo moments that stays with you.
+              </p>
+
+              {/* DAY: May 11 */}
+              <DayBadge label="Monday, 11 May" />
+              <SectionH2>Day Trip to Mt Fuji and Fuji-Q Highland</SectionH2>
+
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                The day trip to Mt Fuji from Tokyo takes about two hours by coach. Go on a clear day, check the weather the night before, and book transport in advance.
+              </p>
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                Book a{' '}
+                <a href={KLOOK_FUJI} target="_blank" rel="nofollow sponsored noopener" style={{ color: ORANGE, fontWeight: 600 }}>Mt Fuji day trip on Klook</a>{' '}
+                for the easiest round-trip from Tokyo. Mt Fuji completely delivers. We visited the 5th Station on the Fujiyoshida side. The scale of the mountain against the landscape around it is genuinely something.
+              </p>
+
+              <div className="blog-photo-duo" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, margin: '2rem 0' }}>
+                {[
+                  { src: '/blog/Japan-May-2025/Fuji.jpeg', alt: 'Mount Fuji snowcapped peak rising above cloud level, Japan' },
+                  { src: '/blog/Japan-May-2025/Fuji2.jpeg', alt: 'View of Mount Fuji reflected in the calm waters of Lake Kawaguchi, Japan' },
+                ].map(({ src, alt }) => (
+                  <div key={src} style={{ position: 'relative', aspectRatio: '4/3', borderRadius: 10, overflow: 'hidden' }}>
+                    <Image src={src} alt={alt} fill style={{ objectFit: 'cover' }} sizes="340px" />
+                  </div>
+                ))}
+              </div>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
+                Mt Fuji. Everything you imagined. Exactly that.
+              </p>
+
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                <a href={KLOOK_FUJIQ} target="_blank" rel="nofollow sponsored noopener" style={{ color: ORANGE, fontWeight: 600 }}>Fuji-Q Highland</a> is the amusement park at the base of the mountain. The rides are among Japan&apos;s most extreme. Queues in May were 2 to 3 hours per ride. Go on a weekday or arrive at opening time.
+              </p>
+
+              {/* DAY: May 12 */}
+              <DayBadge label="Tuesday, 12 May" />
+              <SectionH2>Osaka Expo 2025: Surprisingly, Genuinely Impressive</SectionH2>
+
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                From Tokyo we returned to Osaka for the final days, staying at the{' '}
+                <a href={HOTEL_ORIENTAL_USJ} target="_blank" rel="nofollow sponsored noopener" style={{ color: ORANGE, fontWeight: 600 }}>Oriental Hotel Universal City</a>,
+                perfectly placed for the Expo and Universal Studios.
+              </p>
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                The 2025 World Expo ran on Yumeshima, an artificial island in Osaka Bay. We went expecting something corporate. We were wrong.
+              </p>
+
+              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 14, overflow: 'hidden', marginTop: '2rem', marginBottom: 8 }}>
+                <Image
+                  src="/blog/Japan-May-2025/OsakaExpo.jpeg"
+                  alt="Osaka Expo 2025 pavilions and the Grand Ring wooden structure on Yumeshima Island, Japan"
+                  fill
+                  style={{ objectFit: 'cover' }}
+                  sizes="700px"
+                />
+              </div>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
+                Osaka Expo 2025. Go early, stay late.
+              </p>
+
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                The pavilions were genuinely ambitious. The Saudi Arabia pavilion with its immersive environments, the Japan pavilion showcasing food and materials technology, smaller country pavilions with real craft and character. Plan a full day and arrive early.
+              </p>
+
+              {/* DAY: May 13 */}
+              <DayBadge label="Wednesday, 13 May" />
+              <SectionH2>Super Nintendo World: The Best Theme Park Experience Either of Us Has Ever Had</SectionH2>
+
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                Book{' '}
+                <a href={KLOOK_USJ} target="_blank" rel="nofollow sponsored noopener" style={{ color: ORANGE, fontWeight: 600 }}>Universal Studios Japan tickets on Klook</a>{' '}
+                in advance. For Super Nintendo World, also book a timed entry reservation alongside your park ticket.
+              </p>
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                Walking through the entry pipe into the Mushroom Kingdom and hearing the music start is one of the most genuinely delightful experiences in the world. Every surface, every sound, every detail has been designed with unreasonable care. The rides are excellent. The interactive wristband challenges are addictive.
+              </p>
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                Wilson, who has played Mario games since childhood, was emotional within approximately four minutes of entering. This is correct behaviour.
+              </p>
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                Donkey Kong Country is spectacular. The mine cart rollercoaster is faithful to the game in all the right ways.
+              </p>
+
+              {/* DAY: May 14 */}
+              <DayBadge label="Thursday, 14 May" />
+              <SectionH2>Umeda Sky Building and Goodbye to Japan</SectionH2>
+
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                The final morning. We went to the Shin-Umeda Sky Building, specifically the Floating Garden Observatory on the 39th floor: an open-air circular walkway connecting two towers, with views across Osaka in all directions.
+              </p>
+
+              <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: 14, overflow: 'hidden', marginTop: '2rem', marginBottom: 8 }}>
+                <Image
+                  src="/blog/Japan-May-2025/umeda.jpeg"
+                  alt="Umeda Sky Building twin towers in Osaka with the city skyline and mountains in the background, Japan"
+                  fill
+                  style={{ objectFit: 'cover' }}
+                  sizes="700px"
+                />
+              </div>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
+                Umeda Sky Building. A good place to say goodbye to an extraordinary country.
+              </p>
+
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                We stood up there for a while without saying much. Japan fills you up with so much food, beauty, kindness and strangeness that by the end you just stand on a rooftop and try to take it in before the flight home.
+              </p>
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                Japan is the kind of place that makes you want to go back before you have even left. We both said it. We will go back.
+              </p>
+
+              {/* FOOD SECTION */}
+              <SectionH2>Eating Your Way Through Japan</SectionH2>
+
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                Food in Japan deserves its own conversation. Across two weeks and four cities, we ate spectacularly well. The combination of extraordinary quality, affordable prices and the density of good options in every neighbourhood makes Japan one of the best countries in the world to eat in.
+              </p>
+
+              <div className="blog-photo-duo" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, margin: '2rem 0' }}>
+                {[
+                  { src: '/blog/Japan-May-2025/Osaka feast food.jpeg', alt: 'Spread of Japanese dishes including sashimi, gyoza and small plates at an Osaka izakaya, Japan' },
+                  { src: '/blog/Japan-May-2025/shinkansen lunch.jpeg', alt: 'Ekiben bento box lunch eaten on the Shinkansen bullet train, Japan' },
+                ].map(({ src, alt }) => (
+                  <div key={src} style={{ position: 'relative', aspectRatio: '4/3', borderRadius: 10, overflow: 'hidden' }}>
+                    <Image src={src} alt={alt} fill style={{ objectFit: 'cover' }} sizes="340px" />
+                  </div>
+                ))}
+              </div>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: GRAY, textAlign: 'center', marginBottom: '2rem', fontStyle: 'italic' }}>
+                Two weeks of this. Zero bad meals.
+              </p>
+
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                Some highlights across the trip: the ekiben (station bento boxes) sold on Shinkansen platforms were excellent meals in themselves. Convenience store onigiri from FamilyMart or 7-Eleven is genuinely good food, not a compromise. Ramen quality is consistently high everywhere, even in cheap side-street spots.
+              </p>
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                Our highest recommendation: do not over-plan food. Walk until something smells good, go in, point at the pictures if there is no English menu. Japan has the lowest food risk of any country we have visited. Everything is clean, fresh and cared about.
+              </p>
+
+              {/* TIPS SECTION */}
+              <SectionH2>Practical Tips for Tokyo and Osaka</SectionH2>
+
+              <div style={{ background: 'rgba(255,189,89,0.15)', border: `1.5px solid rgba(255,130,16,0.3)`, borderRadius: 12, padding: '1.2rem 1.4rem', margin: '2rem 0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <TipIcon />
+                  <span style={{ fontFamily: "'Poppins', sans-serif", fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', color: ORANGE }}>Shoes. Still. Non-negotiable.</span>
+                </div>
+                <p style={{ fontSize: '0.92rem', color: '#4a3000', margin: 0, lineHeight: 1.6 }}>
+                  Tokyo is larger than it looks on a map and walking is how you see it. 20,000 steps on a quiet day, 30,000 on a busy one. Vans are not walking shoes. Bring cushioned walking shoes. Every single day.
+                </p>
+              </div>
+
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                <strong>Book TeamLab and Shibuya Sky in advance.</strong> Both sell out, especially on weekends and during Golden Week. Klook is reliable for both. Book the Shibuya Sky sunset slot specifically.
+              </p>
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                <strong>USJ timed entry for Super Nintendo World</strong> is separate from the Express Pass. Book both ahead. The Mario Kart queue without Express Pass runs to 90 minutes or more.
+              </p>
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                <strong>Fuji-Q Highland on a weekday.</strong> Weekend queues for the big coasters are 2 to 3 hours. A weekday arrival at opening cuts that in half.
+              </p>
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                <strong>Buy your bento at the Shinkansen platform kiosk</strong> before boarding. The ekiben are regional and genuinely excellent. Do not board without one.
+              </p>
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                <strong>Osaka Expo: arrive early.</strong> The most popular pavilions queue from mid-morning. Go straight to the Saudi Arabia or Japan pavilion first, then work outward.
+              </p>
+              <p style={{ fontSize: '1.05rem', lineHeight: 1.85, color: '#2a2a3e', marginBottom: '1.5rem' }}>
+                <strong>Cash for small shops.</strong> Many ramen shops, izakayas and temple stalls do not accept cards. Withdraw from 7-Eleven ATMs, the most reliable for foreign cards, and keep yen handy.
+              </p>
+
+              {/* Luna CTA box */}
+              <div style={{ background: `linear-gradient(135deg, ${NAVY} 0%, #003a6e 100%)`, borderRadius: 16, padding: '2rem', margin: '2.5rem 0', textAlign: 'center' }}>
+                <h3 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: '1.1rem', color: '#fff', marginBottom: '0.75rem' }}>
+                  Planning a Trip to Japan?
+                </h3>
+                <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.95rem', color: 'rgba(255,255,255,0.85)', lineHeight: 1.65, marginBottom: '1.25rem' }}>
+                  Luna builds your personalised Japan itinerary in seconds. Day by day, budget-aware, and fully editable.
+                </p>
+                <Link href="/plan" style={{ display: 'inline-block', background: ORANGE, color: '#fff', fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: 14, padding: '12px 30px', borderRadius: 10, textDecoration: 'none' }}>
+                  Plan My Japan Trip with Luna
+                </Link>
+                <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 10, marginBottom: 0 }}>Free. No credit card required.</p>
+              </div>
+
+              {/* FAQ */}
+              <section style={{ margin: '3rem 0 2rem' }}>
+                <h2 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: '1.4rem', color: NAVY, margin: '0 0 1.5rem', position: 'relative', paddingLeft: '1.1rem' }}>
+                  <span style={{ position: 'absolute', left: 0, top: '0.2em', bottom: '0.2em', width: 4, background: ORANGE, borderRadius: 2 }} />
+                  Frequently Asked Questions
+                </h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {[
+                    { q: 'Is go-karting through Tokyo streets safe?', a: 'Yes, with a licensed operator. You drive street karts on public roads following a guide. You must hold a valid international driving permit. It is loud, chaotic and completely brilliant.' },
+                    { q: 'Do you need to book TeamLab Borderless in advance?', a: 'Yes. TeamLab Borderless Tokyo books out weeks in advance, especially on weekends. Book through Klook or the official TeamLab website as soon as your dates are confirmed.' },
+                    { q: 'Can you do Mt Fuji as a day trip from Tokyo?', a: 'Yes. The journey takes around 2 hours each way from Shinjuku by coach. A full day gives you time at the fifth station, Lake Kawaguchi, and Fuji-Q Highland if you want to add the theme park.' },
+                    { q: 'What is Osaka Expo 2025 like?', a: 'Osaka Expo 2025 runs from April to October 2025 on Yumeshima Island. Pavilions from over 150 countries showcase food, culture and technology. Give yourself a full day and book tickets in advance online.' },
+                    { q: 'Is Super Nintendo World worth it at Universal Studios Japan?', a: 'Absolutely. Super Nintendo World is the most immersive theme park area we have ever seen. Book Express Passes online well in advance as queues can be 90 minutes or more without them.' },
+                    { q: 'Which Tokyo neighbourhood is best to stay in?', a: 'Roppongi puts you between the quiet residential streets and major museums. Shinjuku suits nightlife and quick access to Fuji day trip coaches. Shibuya is great for shopping and people-watching. All are well connected by metro.' },
+                    { q: 'How do you get from Tokyo to Osaka quickly?', a: 'The Shinkansen Nozomi from Tokyo Station to Shin-Osaka takes around 2 hours 20 minutes. Book reserved seats especially during Golden Week.' },
+                  ].map(({ q, a }) => (
+                    <details key={q} style={{ background: '#fff', borderRadius: 12, padding: '1.1rem 1.4rem', border: '1.5px solid rgba(0,68,123,0.08)' }}>
+                      <summary style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: '0.95rem', color: NAVY, cursor: 'pointer', listStyle: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        {q}
+                        <span style={{ fontSize: 18, color: ORANGE, flexShrink: 0, marginLeft: 12 }}>+</span>
+                      </summary>
+                      <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.92rem', color: '#3b3b3b', lineHeight: 1.7, marginTop: 12, marginBottom: 0 }}>
+                        {a}
+                      </p>
+                    </details>
+                  ))}
+                </div>
+              </section>
+
+              {/* Read also */}
+              <div style={{ background: '#f0f5fb', borderRadius: 14, padding: '1.4rem', margin: '2rem 0' }}>
+                <div style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: 13, color: NAVY, marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Read Also</div>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <li><Link href="/blog/japan-may-2025-part-1" style={{ color: ORANGE, fontWeight: 600, fontFamily: "'Inter', sans-serif", fontSize: 14 }}>Japan Part 1: Osaka, Kyoto, Nara and Hiroshima</Link></li>
+                  <li><Link href="/blog/fiji-oct-2024" style={{ color: NAVY, fontFamily: "'Inter', sans-serif", fontSize: 14 }}>Fiji October 2024: Islands, Beach Clubs and a Private Pool</Link></li>
+                  <li><Link href="/blog/rio-de-janeiro-5-days" style={{ color: NAVY, fontFamily: "'Inter', sans-serif", fontSize: 14 }}>5 Days in Rio de Janeiro: Samba, Beaches and Iconic Views</Link></li>
                 </ul>
               </div>
 
-              {/* Luna CTA sidebar */}
-              <div style={{ background: `linear-gradient(135deg, ${ORANGE} 0%, #e07010 100%)`, borderRadius: 16, padding: '1.5rem', textAlign: 'center' }}>
-                <div style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: '1.05rem', color: '#fff', marginBottom: '0.5rem', lineHeight: 1.3 }}>
-                  Plan your Japan trip
+              {/* Final CTA */}
+              <div style={{ background: 'linear-gradient(135deg, #FF8210 0%, #e07010 100%)', borderRadius: 16, padding: '2rem', margin: '2rem 0', textAlign: 'center', color: '#fff' }}>
+                <div style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: '1.2rem', marginBottom: '0.6rem', lineHeight: 1.3 }}>
+                  Japan inspired you. Now make it happen.
                 </div>
-                <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.85rem', color: 'rgba(255,255,255,0.9)', lineHeight: 1.5, marginBottom: '1.2rem' }}>
-                  Luna builds your full itinerary in seconds, from Tokyo to Osaka.
+                <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.9rem', opacity: 0.9, lineHeight: 1.6, marginBottom: '1.4rem' }}>
+                  Luna plans your full Japan trip: from first Shinkansen to last izakaya. Personalised to your travel style, budget and group.
                 </p>
-                <Link href="/start" style={{ display: 'inline-block', background: '#fff', color: ORANGE, fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: 13, padding: '10px 22px', borderRadius: 8, textDecoration: 'none' }}>
-                  Start planning
-                </Link>
+                <a href="/start" style={{ display: 'inline-block', background: '#fff', color: '#FF8210', fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: '14px', padding: '12px 28px', borderRadius: 10, textDecoration: 'none' }}>
+                  Build my Japan itinerary
+                </a>
+              </div>
+
+              {/* Affiliate disclaimer */}
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.78rem', color: '#9CA3AF', lineHeight: 1.6, marginTop: '3rem', paddingTop: '1.5rem', borderTop: '1px solid #f0f0f0', marginBottom: 0 }}>
+                Some links in this post are affiliate links. If you book through them, Luna Let&apos;s Go earns a small commission at no extra cost to you. We only link to experiences and hotels we actually used.
+              </p>
+
+            </article>
+
+            {/* Sidebar */}
+            <aside>
+
+              {/* Trip Snapshot */}
+              <div style={{ background: '#fff', borderRadius: 16, padding: '1.5rem', boxShadow: '0 2px 16px rgba(0,68,123,0.08)', marginBottom: '1.5rem' }}>
+                <div style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: 14, color: NAVY, marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: `2px solid ${ORANGE}` }}>
+                  Trip Snapshot
+                </div>
+                {[
+                  { label: 'Destinations', value: 'Tokyo, Mt Fuji, Osaka' },
+                  { label: 'Duration', value: '9 days' },
+                  { label: 'When', value: 'May 2025' },
+                  { label: 'Dates', value: 'May 6 to May 14' },
+                  { label: 'Travellers', value: 'Couple' },
+                  { label: 'Currency', value: 'Japanese Yen (JPY)' },
+                ].map(({ label, value }) => (
+                  <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: '1px solid #f0f0f0', fontSize: 13 }}>
+                    <span style={{ color: GRAY }}>{label}</span>
+                    <span style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, color: NAVY, textAlign: 'right', maxWidth: '60%' }}>{value}</span>
+                  </div>
+                ))}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '9px 0', fontSize: 13 }}>
+                  <span style={{ color: GRAY, paddingTop: 2 }}>Trip Style</span>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, justifyContent: 'flex-end', maxWidth: '60%' }}>
+                    {['Adventure', 'Culture', 'Theme Parks', 'Food'].map(tag => (
+                      <span key={tag} style={{ background: 'rgba(0,68,123,0.08)', color: NAVY, fontFamily: "'Poppins', sans-serif", fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 10, whiteSpace: 'nowrap' }}>{tag}</span>
+                    ))}
+                  </div>
+                </div>
+                <a href="/start" style={{ display: 'block', background: ORANGE, color: '#fff', textAlign: 'center', padding: '0.85rem', borderRadius: 10, fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: 14, textDecoration: 'none', marginTop: '1.25rem' }}>
+                  Plan your Japan trip
+                </a>
+              </div>
+
+              {/* Don't Miss */}
+              <div style={{ background: '#fff', borderRadius: 16, padding: '1.5rem', boxShadow: '0 2px 16px rgba(0,68,123,0.08)', marginBottom: '1.5rem' }}>
+                <div style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: 14, color: NAVY, marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: `2px solid ${ORANGE}` }}>
+                  Don&apos;t Miss
+                </div>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                  {[
+                    'Shibuya Sky at sunset (book in advance)',
+                    'TeamLab Borderless digital art museum',
+                    'Go-karting through central Tokyo',
+                    'Super Nintendo World at USJ',
+                    'Mt Fuji day trip from Tokyo',
+                    'Osaka Expo 2025',
+                  ].map((item, i, arr) => (
+                    <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '8px 0', borderBottom: i < arr.length - 1 ? '1px solid #f0f0f0' : 'none', fontSize: 13, color: '#2a2a3e' }}>
+                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: ORANGE, marginTop: 5, flexShrink: 0 }} />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Hotels sidebar */}
+              <div style={{ background: '#fff', borderRadius: 16, padding: '1.5rem', boxShadow: '0 2px 16px rgba(0,68,123,0.08)', marginBottom: '1.5rem' }}>
+                <div style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: 14, color: NAVY, marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: `2px solid ${ORANGE}` }}>
+                  Where We Stayed
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div>
+                    <div style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 13, color: NAVY, marginBottom: 4 }}>Act Hotel Roppongi</div>
+                    <div style={{ fontSize: 12, color: GRAY, marginBottom: 8 }}>Tokyo · May 6 to May 11</div>
+                    <a href={HOTEL_ACT_ROPPONGI} target="_blank" rel="nofollow sponsored noopener" style={{ display: 'inline-block', background: ORANGE, color: '#fff', fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: 12, padding: '8px 14px', borderRadius: 8, textDecoration: 'none' }}>
+                      Check on Booking.com
+                    </a>
+                  </div>
+                  <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: 12 }}>
+                    <div style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 13, color: NAVY, marginBottom: 4 }}>Oriental Hotel Universal City</div>
+                    <div style={{ fontSize: 12, color: GRAY, marginBottom: 8 }}>Osaka · May 11 to May 14</div>
+                    <a href={HOTEL_ORIENTAL_USJ} target="_blank" rel="nofollow sponsored noopener" style={{ display: 'inline-block', background: ORANGE, color: '#fff', fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: 12, padding: '8px 14px', borderRadius: 8, textDecoration: 'none' }}>
+                      Check on Booking.com
+                    </a>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(0,100,180,0.08)', borderRadius: 6, padding: '5px 8px', fontFamily: "'Poppins', sans-serif", fontSize: 10, fontWeight: 600, color: '#00448b', marginTop: 12 }}>
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <circle cx="6" cy="6" r="5" stroke="#00448b" strokeWidth="1.2"/>
+                    <path d="M4 6l1.5 1.5L8 4" stroke="#00448b" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  Links open on Booking.com via affiliate
+                </div>
+              </div>
+
+              {/* Getting around */}
+              <div style={{ background: 'rgba(0,68,123,0.04)', border: `1.5px solid rgba(0,68,123,0.12)`, borderRadius: 16, padding: '1.5rem' }}>
+                <div style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: 14, color: NAVY, marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: `2px solid ${ORANGE}` }}>
+                  Getting Around Japan
+                </div>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                  {[
+                    { label: 'Tokyo metro', value: 'Suica IC card covers all lines' },
+                    { label: 'Tokyo to Osaka', value: 'Shinkansen Nozomi, 2h 20min' },
+                    { label: 'Fuji day trip', value: 'Highway bus from Shinjuku Bus Terminal' },
+                    { label: 'Osaka Expo', value: 'Direct metro to Yumeshima Island' },
+                    { label: 'USJ', value: 'JR Sakurajima Line to Universal City Station' },
+                  ].map(({ label, value }, i, arr) => (
+                    <li key={label} style={{ display: 'flex', flexDirection: 'column', padding: '8px 0', borderBottom: i < arr.length - 1 ? '1px solid #f0f0f0' : 'none', fontSize: 13 }}>
+                      <span style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, color: NAVY, marginBottom: 2 }}>{label}</span>
+                      <span style={{ color: GRAY }}>{value}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
 
             </aside>
           </div>
+
         </div>
       </main>
 
       {/* Comments */}
-      <CommentsSection postSlug="japan-may-2025-part-2" />
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 1.5rem 5rem' }}>
+        <CommentsSection postSlug="japan-may-2025-part-2" />
+      </div>
 
-      {/* Responsive styles */}
+      {/* Disclosure bar */}
+      <div style={{ background: '#f0f0f0', padding: '1rem 2rem', textAlign: 'center' }}>
+        <p style={{ fontFamily: "'Poppins', sans-serif", fontSize: '0.72rem', color: GRAY, maxWidth: 700, margin: '0 auto' }}>
+          <strong>Disclosure:</strong> Luna Let&apos;s Go earns a small commission when you book through affiliate links (Booking.com, Klook, GoWithGuide) at no extra cost to you. We only link to places and services we have actually used or genuinely recommend. Thank you for supporting our small team.
+        </p>
+      </div>
+
       <style>{`
-        @media (max-width: 900px) {
-          .blog-grid { grid-template-columns: 1fr !important; }
+        @media (max-width: 768px) {
+          main > div {
+            padding: 1.5rem 1rem 3rem !important;
+          }
+          .blog-hero-img {
+            height: 220px !important;
+            border-radius: 12px !important;
+          }
+          .blog-layout {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 2rem !important;
+          }
+          .blog-layout > article { width: 100%; min-width: 0; }
+          .blog-layout > aside { width: 100%; }
+          .blog-photo-duo { grid-template-columns: 1fr !important; }
         }
-        @media (max-width: 600px) {
-          .blog-hero-img { height: 240px !important; }
+        @media (max-width: 480px) {
+          .blog-photo-duo {
+            display: flex !important;
+            flex-direction: column !important;
+          }
         }
-        details summary::-webkit-details-marker { display: none; }
       `}</style>
     </>
   );
