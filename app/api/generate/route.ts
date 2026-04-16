@@ -3,6 +3,7 @@ import { tripFormSchema } from '@/lib/validators';
 import { getWeather } from '@/lib/weather';
 import { buildTravelPrompt, SYSTEM_PROMPT, getLanguageInstruction } from '@/lib/ai';
 import { streamCompletion } from '@/lib/ai-stream';
+import { createClient } from '@/lib/supabase/server';
 
 export const maxDuration = 60;
 
@@ -35,6 +36,12 @@ async function collectStream(stream: ReadableStream<Uint8Array>): Promise<string
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
 
     const locale = (body.locale as string) || 'en';
@@ -71,9 +78,10 @@ Make each section specific, practical and engaging. Use bullet points and bold t
           { role: 'system', content: systemPromptWithLang },
           { role: 'user', content: structuredPrompt },
         ]);
-      } catch (err: any) {
+      } catch (err: unknown) {
+        console.error('[generate] stream error:', err);
         return new Response(
-          JSON.stringify({ error: err.message }),
+          JSON.stringify({ error: 'Something went wrong. Please try again.' }),
           { status: 502, headers: { 'Content-Type': 'application/json' } }
         );
       }
@@ -87,8 +95,9 @@ Make each section specific, practical and engaging. Use bullet points and bold t
     /* ── Structured form mode (legacy) ── */
     const validationResult = tripFormSchema.safeParse(body);
     if (!validationResult.success) {
+      console.error('[generate] validation error:', validationResult.error.issues);
       return new Response(
-        JSON.stringify({ error: 'Invalid form data', details: validationResult.error.issues }),
+        JSON.stringify({ error: 'Invalid form data. Please check your inputs and try again.' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
@@ -103,9 +112,10 @@ Make each section specific, practical and engaging. Use bullet points and bold t
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: userPrompt },
       ]);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      console.error('[generate] stream error:', err);
       return new Response(
-        JSON.stringify({ error: err.message }),
+        JSON.stringify({ error: 'Something went wrong. Please try again.' }),
         { status: 502, headers: { 'Content-Type': 'application/json' } }
       );
     }

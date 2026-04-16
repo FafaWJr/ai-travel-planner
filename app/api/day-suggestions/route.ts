@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { streamCompletion } from '@/lib/ai-stream';
 import { getLanguageInstruction } from '@/lib/ai';
+import { createClient } from '@/lib/supabase/server';
 
 export const maxDuration = 30;
 
@@ -30,6 +31,12 @@ async function collectStream(stream: ReadableStream<Uint8Array>): Promise<string
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { tripPrompt, dayNumber, dayTitle, destination, existingActivities, allDaysContext = '', locale = 'en' } = await request.json();
     const langInstruction = getLanguageInstruction(locale);
 

@@ -3,11 +3,18 @@ import type { ChatMessage } from '@/types';
 import { streamCompletion } from '@/lib/ai-stream';
 import { BOOKING_AFFILIATE, ACTIVITY_AFFILIATE } from '@/lib/affiliate';
 import { getLanguageInstruction } from '@/lib/ai';
+import { createClient } from '@/lib/supabase/server';
 
 export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { messages, tripContext, userName, locale } = body as { messages: ChatMessage[]; tripContext: string; userName?: string; locale?: string };
 
@@ -200,9 +207,10 @@ ${userName
         { role: 'system', content: systemMessage },
         ...messages.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
       ], 2500);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      console.error('[chat] stream error:', err);
       return new Response(
-        JSON.stringify({ error: err.message }),
+        JSON.stringify({ error: 'Something went wrong. Please try again.' }),
         { status: 502, headers: { 'Content-Type': 'application/json' } }
       );
     }

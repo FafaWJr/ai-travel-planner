@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { streamCompletion } from '@/lib/ai-stream';
 import { ACTIVITY_AFFILIATE } from '@/lib/affiliate';
 import { getLanguageInstruction } from '@/lib/ai';
+import { createClient } from '@/lib/supabase/server';
 
 export const maxDuration = 30;
 
@@ -32,6 +33,12 @@ async function collectStream(stream: ReadableStream<Uint8Array>): Promise<string
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { prompt, existingActivities = [], seenIdeas = [], itineraryContext = '', locale = 'en' } = await request.json();
     const langInstruction = getLanguageInstruction(locale);
     if (!prompt) {
@@ -61,8 +68,9 @@ Only the list. Nothing else.`;
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
       ], 600);
-    } catch (err: any) {
-      return new Response(JSON.stringify({ error: err.message }), { status: 502 });
+    } catch (err: unknown) {
+      console.error('[extra-ideas] stream error:', err);
+      return new Response(JSON.stringify({ error: 'Something went wrong. Please try again.' }), { status: 502 });
     }
 
     const ideas = await collectStream(stream);

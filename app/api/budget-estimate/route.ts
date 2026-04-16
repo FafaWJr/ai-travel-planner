@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { streamCompletion } from '@/lib/ai-stream';
+import { createClient } from '@/lib/supabase/server';
 
 export const maxDuration = 60;
 
@@ -55,6 +56,12 @@ Keep notes short (e.g. "2×$45"). Skip days that have zero items.`;
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { destination, startDate, endDate, nights, travelers, hotel, days, budgetLevel } = await request.json();
 
     const hotelNote = hotel
@@ -95,8 +102,8 @@ Estimate the full budget. Use USD. Return only the JSON object.`;
     const data = JSON.parse(jsonMatch[0]);
 
     return Response.json(data);
-  } catch (err: any) {
-    console.error('budget-estimate error:', err);
-    return Response.json({ error: err.message || 'Failed' }, { status: 500 });
+  } catch (err: unknown) {
+    console.error('[budget-estimate] error:', err);
+    return Response.json({ error: 'Something went wrong. Please try again.' }, { status: 500 });
   }
 }

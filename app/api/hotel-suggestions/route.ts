@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { streamCompletion } from '@/lib/ai-stream';
+import { createClient } from '@/lib/supabase/server';
 
 export const maxDuration = 60;
 
@@ -163,6 +164,12 @@ async function hotelsForSegment(
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const {
       prompt = '',
       destination = '',
@@ -203,8 +210,7 @@ export async function POST(request: NextRequest) {
 
     return Response.json({ segments: segmentsWithHotels });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Could not generate hotel suggestions. Please try again.';
-    console.error('hotel-suggestions error:', message);
-    return Response.json({ error: message }, { status: 500 });
+    console.error('[hotel-suggestions] error:', err);
+    return Response.json({ error: 'Could not generate hotel suggestions. Please try again.' }, { status: 500 });
   }
 }
