@@ -117,17 +117,6 @@ const PLACEHOLDER_POSTS = [
     gradient: 'linear-gradient(135deg, #00447B 0%, #679AC1 100%)',
     date: 'Coming soon',
   },
-  {
-    id: 2,
-    category: 'Travel Tips',
-    categoryColor: '#00447B',
-    title: 'How to Plan a 2-Week Japan Trip on a Midrange Budget',
-    excerpt: 'Tokyo, Kyoto, and Osaka without breaking the bank — the ultimate guide to JR passes, capsule hotels, and the best ¥500 lunches of your life.',
-    destination: 'Japan',
-    readTimeNum: 12,
-    gradient: 'linear-gradient(135deg, #FF8210 0%, #FFBD59 100%)',
-    date: 'Coming soon',
-  },
 ];
 
 
