@@ -549,6 +549,27 @@ function PlanContent() {
   useEffect(() => {
     if (authLoading) return;
 
+    // Auto-generate after login redirect from login gate on /start
+    if (typeof window !== 'undefined') {
+      const shouldAutoGenerate = new URLSearchParams(window.location.search).get('autoGenerate') === 'true';
+      if (shouldAutoGenerate && user && !plan) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('autoGenerate');
+        window.history.replaceState({}, '', url.toString());
+        try {
+          const draftStr = localStorage.getItem('luna_trip_draft');
+          if (draftStr) {
+            const draft = JSON.parse(draftStr);
+            if (draft.prompt) {
+              localStorage.removeItem('luna_trip_draft');
+              generatePlan(draft.prompt);
+              return;
+            }
+          }
+        } catch {}
+      }
+    }
+
     const draftStr = typeof window !== 'undefined' ? localStorage.getItem('guest_trip_draft') : null;
 
     // Restore guest draft after login
