@@ -1,5 +1,32 @@
 import type { TripFormData, TripStyle, BudgetLevel, WeatherData } from '@/types';
 
+// ─── Luna AI model configuration ───────────────────────────────────────────
+// Single source of truth for model IDs and generation config.
+// Upgrading Sonnet 4.6 to a future version is a one-line change here.
+
+export const AI_MODELS = {
+  /** Primary model for all Luna routes: best balance of quality + cost + speed */
+  primary: 'claude-sonnet-4-6',
+  /** Fallback model used when primary fails before any token streams */
+  fallback: 'claude-haiku-4-5-20251001',
+} as const;
+
+export const AI_CONFIG = {
+  /** Max output tokens per route. Keep conservative to avoid runaway costs. */
+  maxTokens: {
+    generate: 8000,        // Full 7-section initial itinerary
+    chat: 2500,            // Luna conversational replies
+    daySuggestion: 1500,
+    extraIdeas: 1500,
+    hotelSuggestions: 2000,
+    budgetEstimate: 1500,
+  },
+  /** Temperature shared across all routes. Tune here if Luna ever drifts. */
+  temperature: 0.7,
+} as const;
+
+export type AIRouteName = keyof typeof AI_CONFIG.maxTokens;
+
 export const TRIP_STYLE_LABELS: Record<TripStyle, string> = {
   'cultural-history': 'Cultural & History',
   'gastronomy-food': 'Gastronomy & Food',

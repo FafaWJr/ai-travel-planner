@@ -1,53 +1,108 @@
 // /lib/ai-stream.ts
-// Unified streaming helper. Tries OpenRouter first, falls back to Anthropic.
-// Always emits OpenAI-compatible SSE format: data: {"choices":[{"delta":{"content":"..."}}]}
+// Streaming helper for Luna. Primary: Anthropic Sonnet 4.6.
+// Fallback: Anthropic Haiku 4.5, triggered only on pre-stream errors
+// when NEXT_PUBLIC_AI_FALLBACK_ENABLED is not explicitly 'false'.
+//
+// Always emits OpenAI-compatible SSE format so client code (SSE parser)
+// continues to work without modification:
+//   data: {"choices":[{"delta":{"content":"..."}}]}
+//   data: [DONE]
+
+import { AI_MODELS, AI_CONFIG, type AIRouteName } from './ai';
 
 type Message = { role: 'system' | 'user' | 'assistant'; content: string };
 
-/** Returns a ReadableStream of OpenAI-format SSE chunks */
+interface StreamOptions {
+  /** Which route is calling. Used to pick max_tokens and for logging. */
+  routeName?: AIRouteName;
+  /** Override max_tokens. If omitted, uses AI_CONFIG.maxTokens[routeName]. */
+  maxTokens?: number;
+}
+
+/**
+ * Returns a ReadableStream of OpenAI-format SSE chunks.
+ *
+ * Fallback behavior (Option A):
+ *   - If the primary model 5xx's or network-errors BEFORE any token streams,
+ *     we silently retry once on Haiku 4.5 and stream that instead.
+ *   - If the primary fails AFTER tokens have started streaming, the error
+ *     surfaces to the client. The user sees a half-written message and the
+ *     client's retry button. Fallback cannot take over a partially-started
+ *     stream because the client has already rendered content.
+ *   - Setting NEXT_PUBLIC_AI_FALLBACK_ENABLED=false disables fallback entirely.
+ */
 export async function streamCompletion(
   messages: Message[],
-  maxTokens = 4000
+  maxTokensOrRoute: number | AIRouteName = 4000,
 ): Promise<ReadableStream<Uint8Array>> {
-  if (process.env.OPENROUTER_API_KEY) {
+  // Back-compat: old callers pass a number (legacy maxTokens arg).
+  // New callers pass a route name string and we look up the config.
+  let opts: StreamOptions;
+  if (typeof maxTokensOrRoute === 'number') {
+    opts = { maxTokens: maxTokensOrRoute };
+  } else {
+    opts = { routeName: maxTokensOrRoute };
+  }
+
+  const routeName = opts.routeName;
+  const maxTokens =
+    opts.maxTokens ??
+    (routeName ? AI_CONFIG.maxTokens[routeName] : 4000);
+
+  if (!process.env.ANTHROPIC_API_KEY) {
+    throw new Error(
+      'ANTHROPIC_API_KEY is not set. Add it to Vercel env vars for all environments.',
+    );
+  }
+
+  const fallbackEnabled =
+    process.env.NEXT_PUBLIC_AI_FALLBACK_ENABLED !== 'false';
+
+  // Try primary (Sonnet 4.6).
+  try {
+    return await streamAnthropic(
+      AI_MODELS.primary,
+      messages,
+      maxTokens,
+      routeName,
+    );
+  } catch (primaryErr) {
+    const label = routeName ? `[ai/${routeName}]` : '[ai]';
+    console.warn(
+      `${label} primary model (${AI_MODELS.primary}) failed pre-stream:`,
+      primaryErr,
+    );
+
+    if (!fallbackEnabled) {
+      throw primaryErr;
+    }
+
+    // Retry once on Haiku 4.5. Same streaming shape so the client sees no difference.
     try {
-      return await streamOpenRouter(messages, maxTokens);
-    } catch (e) {
-      console.warn('OpenRouter failed, trying Anthropic:', e);
+      console.warn(`${label} falling back to ${AI_MODELS.fallback}`);
+      return await streamAnthropic(
+        AI_MODELS.fallback,
+        messages,
+        maxTokens,
+        routeName,
+      );
+    } catch (fallbackErr) {
+      console.error(
+        `${label} fallback model (${AI_MODELS.fallback}) also failed:`,
+        fallbackErr,
+      );
+      throw fallbackErr;
     }
   }
-  if (process.env.ANTHROPIC_API_KEY) {
-    return streamAnthropic(messages, maxTokens);
-  }
-  throw new Error('No AI API key configured (set OPENROUTER_API_KEY or ANTHROPIC_API_KEY)');
 }
 
-// ─── OpenRouter (forwards raw SSE — already OpenAI-compatible) ────────────────
-async function streamOpenRouter(messages: Message[], maxTokens: number): Promise<ReadableStream<Uint8Array>> {
-  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-      'HTTP-Referer': process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3001',
-      'X-Title': 'AI Travel Planner',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: process.env.OPENROUTER_MODEL || 'google/gemini-2.0-flash-001',
-      messages,
-      stream: true,
-      max_tokens: maxTokens,
-    }),
-  });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`OpenRouter ${res.status}: ${err}`);
-  }
-  return res.body!;
-}
-
-// ─── Anthropic streaming → converted to OpenAI SSE format ────────────────────
-async function streamAnthropic(messages: Message[], maxTokens: number): Promise<ReadableStream<Uint8Array>> {
+// ─── Anthropic streaming → converted to OpenAI-compatible SSE ──────────────
+async function streamAnthropic(
+  model: string,
+  messages: Message[],
+  maxTokens: number,
+  routeName?: AIRouteName,
+): Promise<ReadableStream<Uint8Array>> {
   // Separate system message from conversation
   const system = messages.find(m => m.role === 'system')?.content || '';
   const conversation = messages.filter(m => m.role !== 'system');
@@ -60,8 +115,9 @@ async function streamAnthropic(messages: Message[], maxTokens: number): Promise<
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5-20251001',
+      model,
       max_tokens: maxTokens,
+      temperature: AI_CONFIG.temperature,
       stream: true,
       system,
       messages: conversation,
@@ -69,13 +125,17 @@ async function streamAnthropic(messages: Message[], maxTokens: number): Promise<
   });
 
   if (!res.ok) {
+    // Pre-stream error (4xx/5xx). Caller's try/catch will handle fallback.
     const err = await res.text();
-    throw new Error(`Anthropic ${res.status}: ${err}`);
+    throw new Error(
+      `Anthropic ${res.status} (${model}${routeName ? `, ${routeName}` : ''}): ${err}`,
+    );
   }
 
   const encoder = new TextEncoder();
 
-  // Transform Anthropic SSE → OpenAI SSE
+  // Transform Anthropic SSE → OpenAI-compatible SSE so existing client
+  // SSE parsers keep working without changes.
   return new ReadableStream<Uint8Array>({
     async start(controller) {
       const reader = res.body!.getReader();
@@ -102,17 +162,26 @@ async function streamAnthropic(messages: Message[], maxTokens: number): Promise<
             if (!jsonStr || jsonStr === '[DONE]') continue;
             try {
               const event = JSON.parse(jsonStr);
-              if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
+              if (
+                event.type === 'content_block_delta' &&
+                event.delta?.type === 'text_delta'
+              ) {
                 emit(event.delta.text);
               } else if (event.type === 'message_stop') {
                 controller.enqueue(encoder.encode('data: [DONE]\n\n'));
               }
-            } catch { /* skip malformed lines */ }
+            } catch {
+              /* skip malformed lines */
+            }
           }
         }
         controller.enqueue(encoder.encode('data: [DONE]\n\n'));
       } catch (err) {
-        console.error('Anthropic stream error:', err);
+        // Mid-stream error. Surface to client (Option A).
+        console.error(
+          `[ai${routeName ? `/${routeName}` : ''}] mid-stream error (${model}):`,
+          err,
+        );
       } finally {
         controller.close();
       }
