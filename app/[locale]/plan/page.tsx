@@ -688,22 +688,63 @@ function PlanContent() {
     return () => { if (chatSyncTimer.current) clearTimeout(chatSyncTimer.current); };
   }, [chatMessages]); // eslint-disable-line
 
-  const generatePlan = async (p: string) => {
-    setLoading(true); setError('');
+  const loadDestinationPhotos = async (prompt: string) => {
+    const dest = prompt.replace(/^plan a (trip to |)?/i,'').replace(/\b(from \d{4}-\d{2}-\d{2}.*)/i,'').trim().split(' ').slice(0,5).join(' ');
+    setIsLoadingPhotos(true);
     try {
-      const res  = await fetch('/api/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({prompt:p, locale}) });
+      const pr = await fetch(`/api/destination-photos?city=${encodeURIComponent(dest)}`);
+      if (pr.ok) { const pd = await pr.json(); setPhotos(pd.photos||[]); }
+    } catch {}
+    finally { setIsLoadingPhotos(false); }
+  };
+
+  const generatePlan = async (p: string) => {
+    setLoading(true); setError(''); setPlan('');
+    try {
+      const res = await fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: p, locale }) });
       if (!res.ok) throw new Error('Failed');
-      const data = await res.json();
-      setPlan(data.plan || data.content || '');
-      setIsDirty(true); // new trip exists but hasn't been saved yet
+
+      const reader = res.body!.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let accumulated = '';
+      let lastFlush = 0;
+      const FLUSH_INTERVAL = 120; // ms
+
+      const flush = (text: string) => {
+        accumulated = text;
+        setPlan(accumulated);
+        lastFlush = Date.now();
+      };
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() ?? '';
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const jsonStr = line.slice(6).trim();
+          if (!jsonStr || jsonStr === '[DONE]') continue;
+          try {
+            const event = JSON.parse(jsonStr);
+            const token = event?.choices?.[0]?.delta?.content;
+            if (typeof token === 'string') {
+              accumulated += token;
+              const now = Date.now();
+              if (now - lastFlush >= FLUSH_INTERVAL) flush(accumulated);
+            }
+          } catch { /* skip malformed lines */ }
+        }
+      }
+      // Final flush — ensure full content is set
+      if (accumulated) setPlan(accumulated);
+
+      setIsDirty(true);
       const dest = p.replace(/^plan a (trip to |)?/i,'').replace(/\b(from \d{4}-\d{2}-\d{2}.*)/i,'').trim().split(' ').slice(0,5).join(' ');
       trackTripPlanGenerated(dest);
-      setIsLoadingPhotos(true);
-      try {
-        const pr = await fetch(`/api/destination-photos?city=${encodeURIComponent(dest)}`);
-        if (pr.ok) { const pd = await pr.json(); setPhotos(pd.photos||[]); }
-      } catch {}
-      finally { setIsLoadingPhotos(false); }
+      void loadDestinationPhotos(p);
     } catch { setError('Failed to generate your travel plan. Please try again.'); }
     finally  { setLoading(false); }
   };
