@@ -31,6 +31,21 @@ import { CSS } from '@dnd-kit/utilities';
 export type Status   = 'pending' | 'accepted' | 'declined';
 export type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'night';
 
+/**
+ * Hydration mode governs whether incoming itineraryMd prop changes should
+ * trigger a re-parse that overwrites current days state.
+ *
+ * - 'parsing-from-stream': stream is still writing. Re-parse on each update.
+ * - 'hydrated-complete': stream done, no user edits. Frozen.
+ * - 'user-owned': user or Luna mutated days. Frozen.
+ * - 'saved-trip-restored': initialDays used at mount. Frozen.
+ */
+type HydrationMode =
+  | 'parsing-from-stream'
+  | 'hydrated-complete'
+  | 'user-owned'
+  | 'saved-trip-restored';
+
 export interface Activity {
   id: string;
   text: string;
@@ -206,6 +221,11 @@ interface Props {
   initialDays?: Day[];
   startDate?: string;
   locale?: string;
+  /** True while the parent is actively streaming plan content. When this
+      flips from true to false, EditableItinerary transitions out of
+      'parsing-from-stream' mode into 'hydrated-complete'. Undefined is
+      treated as false (for saved trip loads and other non-streaming contexts). */
+  isStreaming?: boolean;
 }
 
 export interface ItineraryHandle {
@@ -223,13 +243,37 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
   isGuest = false, onGateRequired,
   initialDays, startDate,
   locale: localeProp,
+  isStreaming = false,
 }, ref) {
   const localeFromHook = useLocale();
   const locale = localeProp ?? localeFromHook;
   const t = useTranslations('plan');
-  const [days, setDays] = useState<Day[]>(() =>
-    (initialDays && initialDays.length > 0) ? initialDays : parseItinerary(itineraryMd)
+  // Underlying days state. Do not use _setDays directly outside the parse
+  // effect. Use the setDays wrapper below, which keeps hydrationMode in sync.
+  const [days, _setDays] = useState<Day[]>(() =>
+    (initialDays && initialDays.length > 0) ? initialDays : []
   );
+
+  // Hydration state machine. See HydrationMode type definition above.
+  const [hydrationMode, setHydrationMode] = useState<HydrationMode>(() =>
+    (initialDays && initialDays.length > 0) ? 'saved-trip-restored' : 'parsing-from-stream'
+  );
+
+  /**
+   * Public setter. Every user-facing mutation (drag, accept, decline, notes,
+   * toggles, addActivity, removeActivitiesMatching) goes through this. It
+   * flips hydrationMode out of stream-sensitive modes into 'user-owned' so
+   * later stream flushes cannot clobber user edits.
+   */
+  const setDays = (updater: React.SetStateAction<Day[]>) => {
+    setHydrationMode(prev => {
+      if (prev === 'parsing-from-stream' || prev === 'hydrated-complete') {
+        return 'user-owned';
+      }
+      return prev;
+    });
+    _setDays(updater);
+  };
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [showFinalModal, setShowFinalModal] = useState(false);
   const instanceId = useId();
@@ -256,22 +300,41 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
     (d.activities.length > 0 && d.activities.every(a => a.status !== 'pending'))
   );
 
-  // Re-parse itineraryMd when new streaming content arrives.
-  // Only re-parses when local days state is still empty (which means either
-  // nothing was parseable at mount, or the stream had not yet written the
-  // "## Personalised Itinerary" section). Once any days exist in state,
-  // this becomes a no-op to prevent late stream flushes from clobbering
-  // user edits.
+  /**
+   * Parse effect. Runs whenever itineraryMd changes, but only actually
+   * updates state when we're still in parsing-from-stream mode. Uses
+   * _setDays directly (bypassing the wrapped setDays) because a parse is
+   * NOT a user mutation and must not flip hydrationMode to 'user-owned'.
+   *
+   * Also handles the regenerate case: if itineraryMd goes to empty (user
+   * clicked Try Again), reset back to parsing-from-stream and clear days.
+   */
   useEffect(() => {
-    if (!itineraryMd) return;
-    if (days.length > 0) return; // user edits or earlier parse won; do not overwrite
-    if (initialDays && initialDays.length > 0) return; // saved trip, do not touch
+    if (!itineraryMd) {
+      if (hydrationMode !== 'saved-trip-restored') {
+        setHydrationMode('parsing-from-stream');
+        _setDays([]);
+      }
+      return;
+    }
+    if (hydrationMode !== 'parsing-from-stream') return;
     const parsed = parseItinerary(itineraryMd);
     if (parsed.length > 0) {
-      setDays(parsed);
+      _setDays(parsed);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [itineraryMd]);
+  }, [itineraryMd, hydrationMode]);
+
+  /**
+   * Stream-end transition. When parent signals streaming is done and we are
+   * still in parsing-from-stream mode, flip to hydrated-complete. After
+   * this, itineraryMd changes no longer trigger re-parses.
+   */
+  useEffect(() => {
+    if (isStreaming === false && hydrationMode === 'parsing-from-stream') {
+      setHydrationMode('hydrated-complete');
+    }
+  }, [isStreaming, hydrationMode]);
 
   /* Expose handle to parent via ref */
   useImperativeHandle(ref, () => ({

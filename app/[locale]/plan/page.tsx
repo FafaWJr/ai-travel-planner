@@ -385,6 +385,7 @@ function PlanContent() {
   const [saveLoading, setSaveLoading] = useState(false);
   const [savedTripId, setSavedTripId] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [unsavedModal, setUnsavedModal] = useState<{ isOpen: boolean; pendingDestination: string; pendingType: 'link' | 'popstate'; isSaving: boolean }>({ isOpen: false, pendingDestination: '', pendingType: 'link', isSaving: false });
   const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'assistant'; content: string; planUpdated?: boolean; isWelcome?: boolean }[]>([]);
   const chatSyncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -700,6 +701,7 @@ function PlanContent() {
 
   const generatePlan = async (p: string) => {
     setLoading(true); setError(''); setPlan('');
+    setIsStreaming(true);
     // Kick off destination photos in parallel with the AI stream. Photos only
     // depend on the destination string (known immediately), not on plan content.
     const dest = p.replace(/^plan a (trip to |)?/i,'').replace(/\b(from \d{4}-\d{2}-\d{2}.*)/i,'').trim().split(' ').slice(0,5).join(' ');
@@ -755,7 +757,10 @@ function PlanContent() {
       setIsDirty(true);
       trackTripPlanGenerated(dest);
     } catch { setError('Failed to generate your travel plan. Please try again.'); }
-    finally  { setLoading(false); }
+    finally  {
+      setLoading(false);
+      setIsStreaming(false);
+    }
   };
 
   const handlePlaceMouseOver = async (e: React.MouseEvent) => {
@@ -1003,6 +1008,7 @@ function PlanContent() {
                   initialDays={initialItineraryDays}
                   startDate={prompt.match(/from (\d{4}-\d{2}-\d{2})/)?.[1]}
                   locale={locale}
+                  isStreaming={isStreaming}
                 />
               </div>
               {/* StayTab — always mounted to preserve state, hidden when not active */}
