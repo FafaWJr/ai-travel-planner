@@ -10,7 +10,29 @@
 
 import { AI_MODELS, AI_CONFIG, type AIRouteName } from './ai';
 
-type Message = { role: 'system' | 'user' | 'assistant'; content: string };
+/**
+ * Anthropic content block. When a `cache_control` marker is set on a block,
+ * Anthropic caches the ENTIRE PREFIX (tools + system + messages) up to and
+ * including that block. Subsequent requests within the 5-minute TTL window
+ * that hit an identical prefix read from cache at 0.1x input price.
+ *
+ * See: https://platform.claude.com/docs/en/build-with-claude/prompt-caching
+ */
+export type SystemContentBlock = {
+  type: 'text';
+  text: string;
+  cache_control?: { type: 'ephemeral' };
+};
+
+/**
+ * Messages sent to the AI. The system role accepts either a plain string
+ * (for routes without caching) or an array of content blocks (to enable
+ * prompt caching via cache_control markers). User/assistant roles take
+ * strings only.
+ */
+export type Message =
+  | { role: 'system'; content: string | SystemContentBlock[] }
+  | { role: 'user' | 'assistant'; content: string };
 
 /**
  * Type alias for AI route keys. The union resolves to the exact set of keys
@@ -88,9 +110,14 @@ async function streamAnthropic(
   maxTokens: number,
   route: AIRoute,
 ): Promise<ReadableStream<Uint8Array>> {
-  // Separate system message from conversation
-  const system = messages.find(m => m.role === 'system')?.content || '';
-  const conversation = messages.filter(m => m.role !== 'system');
+  // Separate system message from conversation. The `system` content may be
+  // a plain string (no caching) or an array of content blocks (with optional
+  // cache_control markers). Anthropic's API accepts both forms.
+  const systemMsg = messages.find(m => m.role === 'system');
+  const system: string | SystemContentBlock[] = systemMsg?.content ?? '';
+  const conversation = messages.filter(
+    (m): m is { role: 'user' | 'assistant'; content: string } => m.role !== 'system'
+  );
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -145,7 +172,18 @@ async function streamAnthropic(
             if (!jsonStr || jsonStr === '[DONE]') continue;
             try {
               const event = JSON.parse(jsonStr);
-              if (
+
+              if (event.type === 'message_start' && event.message?.usage) {
+                // Log cache telemetry on every request. Format is greppable for
+                // Vercel log analysis: `[ai/<route>] cache: hit=<N> write=<N> uncached=<N> model=<...>`
+                const u = event.message.usage;
+                const cacheRead = u.cache_read_input_tokens ?? 0;
+                const cacheWrite = u.cache_creation_input_tokens ?? 0;
+                const uncached = u.input_tokens ?? 0;
+                console.log(
+                  `[ai/${route}] cache: hit=${cacheRead} write=${cacheWrite} uncached=${uncached} model=${model}`
+                );
+              } else if (
                 event.type === 'content_block_delta' &&
                 event.delta?.type === 'text_delta'
               ) {
