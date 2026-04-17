@@ -700,6 +700,10 @@ function PlanContent() {
 
   const generatePlan = async (p: string) => {
     setLoading(true); setError(''); setPlan('');
+    // Kick off destination photos in parallel with the AI stream. Photos only
+    // depend on the destination string (known immediately), not on plan content.
+    const dest = p.replace(/^plan a (trip to |)?/i,'').replace(/\b(from \d{4}-\d{2}-\d{2}.*)/i,'').trim().split(' ').slice(0,5).join(' ');
+    void loadDestinationPhotos(dest);
     try {
       const res = await fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: p, locale }) });
       if (!res.ok) throw new Error('Failed');
@@ -749,9 +753,7 @@ function PlanContent() {
       if (accumulated) setPlan(accumulated);
 
       setIsDirty(true);
-      const dest = p.replace(/^plan a (trip to |)?/i,'').replace(/\b(from \d{4}-\d{2}-\d{2}.*)/i,'').trim().split(' ').slice(0,5).join(' ');
       trackTripPlanGenerated(dest);
-      void loadDestinationPhotos(p);
     } catch { setError('Failed to generate your travel plan. Please try again.'); }
     finally  { setLoading(false); }
   };

@@ -256,6 +256,23 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
     (d.activities.length > 0 && d.activities.every(a => a.status !== 'pending'))
   );
 
+  // Re-parse itineraryMd when new streaming content arrives.
+  // Only re-parses when local days state is still empty (which means either
+  // nothing was parseable at mount, or the stream had not yet written the
+  // "## Personalised Itinerary" section). Once any days exist in state,
+  // this becomes a no-op to prevent late stream flushes from clobbering
+  // user edits.
+  useEffect(() => {
+    if (!itineraryMd) return;
+    if (days.length > 0) return; // user edits or earlier parse won; do not overwrite
+    if (initialDays && initialDays.length > 0) return; // saved trip, do not touch
+    const parsed = parseItinerary(itineraryMd);
+    if (parsed.length > 0) {
+      setDays(parsed);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itineraryMd]);
+
   /* Expose handle to parent via ref */
   useImperativeHandle(ref, () => ({
     addActivity(text: string, dayNum: number, slot: TimeSlot, manuallyAdded?: boolean, lunaAdded?: boolean) {
