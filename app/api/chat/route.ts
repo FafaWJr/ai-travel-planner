@@ -204,10 +204,13 @@ ${userName
 
     let stream: ReadableStream<Uint8Array>;
     try {
-      stream = await streamCompletion([
-        { role: 'system', content: systemMessage },
-        ...messages.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
-      ], 2500);
+      stream = await streamCompletion(
+        [
+          { role: 'system', content: systemMessage },
+          ...messages.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+        ],
+        'chat'
+      );
     } catch (err: unknown) {
       console.error('[chat] stream error:', err);
       return new Response(

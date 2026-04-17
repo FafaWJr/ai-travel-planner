@@ -12,15 +12,23 @@ import { AI_MODELS, AI_CONFIG, type AIRouteName } from './ai';
 
 type Message = { role: 'system' | 'user' | 'assistant'; content: string };
 
-interface StreamOptions {
-  /** Which route is calling. Used to pick max_tokens and for logging. */
-  routeName?: AIRouteName;
-  /** Override max_tokens. If omitted, uses AI_CONFIG.maxTokens[routeName]. */
-  maxTokens?: number;
-}
+/**
+ * Type alias for AI route keys. The union resolves to the exact set of keys
+ * in AI_CONFIG.maxTokens, so TypeScript rejects typos at compile time.
+ * Adding a new route to AI_CONFIG.maxTokens automatically extends this type.
+ */
+export type AIRoute = AIRouteName;
 
 /**
- * Returns a ReadableStream of OpenAI-format SSE chunks.
+ * Stream an AI completion to the client as SSE.
+ *
+ * The `route` argument is a typed key into AI_CONFIG.maxTokens. This
+ * guarantees that each call site gets the correct max_tokens for its route,
+ * and that adding a new route requires an explicit config entry.
+ *
+ * Do NOT re-introduce a default value for this parameter. Silent defaults
+ * are how we shipped the 4000-token truncation bug. TypeScript enforces that
+ * every caller declares its route.
  *
  * Fallback behavior (Option A):
  *   - If the primary model 5xx's or network-errors BEFORE any token streams,
@@ -33,21 +41,9 @@ interface StreamOptions {
  */
 export async function streamCompletion(
   messages: Message[],
-  maxTokensOrRoute: number | AIRouteName = 4000,
+  route: AIRoute,
 ): Promise<ReadableStream<Uint8Array>> {
-  // Back-compat: old callers pass a number (legacy maxTokens arg).
-  // New callers pass a route name string and we look up the config.
-  let opts: StreamOptions;
-  if (typeof maxTokensOrRoute === 'number') {
-    opts = { maxTokens: maxTokensOrRoute };
-  } else {
-    opts = { routeName: maxTokensOrRoute };
-  }
-
-  const routeName = opts.routeName;
-  const maxTokens =
-    opts.maxTokens ??
-    (routeName ? AI_CONFIG.maxTokens[routeName] : 4000);
+  const maxTokens = AI_CONFIG.maxTokens[route];
 
   if (!process.env.ANTHROPIC_API_KEY) {
     throw new Error(
@@ -60,16 +56,10 @@ export async function streamCompletion(
 
   // Try primary (Sonnet 4.6).
   try {
-    return await streamAnthropic(
-      AI_MODELS.primary,
-      messages,
-      maxTokens,
-      routeName,
-    );
+    return await streamAnthropic(AI_MODELS.primary, messages, maxTokens, route);
   } catch (primaryErr) {
-    const label = routeName ? `[ai/${routeName}]` : '[ai]';
     console.warn(
-      `${label} primary model (${AI_MODELS.primary}) failed pre-stream:`,
+      `[ai/${route}] primary model (${AI_MODELS.primary}) failed pre-stream:`,
       primaryErr,
     );
 
@@ -79,16 +69,11 @@ export async function streamCompletion(
 
     // Retry once on Haiku 4.5. Same streaming shape so the client sees no difference.
     try {
-      console.warn(`${label} falling back to ${AI_MODELS.fallback}`);
-      return await streamAnthropic(
-        AI_MODELS.fallback,
-        messages,
-        maxTokens,
-        routeName,
-      );
+      console.warn(`[ai/${route}] falling back to ${AI_MODELS.fallback}`);
+      return await streamAnthropic(AI_MODELS.fallback, messages, maxTokens, route);
     } catch (fallbackErr) {
       console.error(
-        `${label} fallback model (${AI_MODELS.fallback}) also failed:`,
+        `[ai/${route}] fallback model (${AI_MODELS.fallback}) also failed:`,
         fallbackErr,
       );
       throw fallbackErr;
@@ -101,7 +86,7 @@ async function streamAnthropic(
   model: string,
   messages: Message[],
   maxTokens: number,
-  routeName?: AIRouteName,
+  route: AIRoute,
 ): Promise<ReadableStream<Uint8Array>> {
   // Separate system message from conversation
   const system = messages.find(m => m.role === 'system')?.content || '';
@@ -127,9 +112,7 @@ async function streamAnthropic(
   if (!res.ok) {
     // Pre-stream error (4xx/5xx). Caller's try/catch will handle fallback.
     const err = await res.text();
-    throw new Error(
-      `Anthropic ${res.status} (${model}${routeName ? `, ${routeName}` : ''}): ${err}`,
-    );
+    throw new Error(`Anthropic ${res.status} (${model}, ${route}): ${err}`);
   }
 
   const encoder = new TextEncoder();
@@ -178,10 +161,7 @@ async function streamAnthropic(
         controller.enqueue(encoder.encode('data: [DONE]\n\n'));
       } catch (err) {
         // Mid-stream error. Surface to client (Option A).
-        console.error(
-          `[ai${routeName ? `/${routeName}` : ''}] mid-stream error (${model}):`,
-          err,
-        );
+        console.error(`[ai/${route}] mid-stream error (${model}):`, err);
       } finally {
         controller.close();
       }

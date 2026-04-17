@@ -67,10 +67,13 @@ ${daysText}
 
 Estimate the full budget. Use USD. Return only the JSON object.`;
 
-    const stream = await streamCompletion([
-      { role: 'system', content: SYSTEM_PROMPT },
-      { role: 'user',   content: userMessage },
-    ], 6000);
+    const stream = await streamCompletion(
+      [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user',   content: userMessage },
+      ],
+      'budgetEstimate'
+    );
 
     const raw = await collectText(stream);
     // Strip markdown code fences if present, then extract the outermost JSON object

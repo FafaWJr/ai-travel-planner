@@ -42,10 +42,13 @@ Respond with ONLY a JSON array in this exact shape:
   }
 ]`;
 
-    const stream = await streamCompletion([
-      { role: 'system', content: systemPrompt },
-      { role: 'user',   content: userPrompt   },
-    ], 800);
+    const stream = await streamCompletion(
+      [
+        { role: 'system', content: systemPrompt },
+        { role: 'user',   content: userPrompt   },
+      ],
+      'daySuggestion'
+    );
 
     const raw = await collectStream(stream);
 

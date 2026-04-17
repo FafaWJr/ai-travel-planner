@@ -46,10 +46,13 @@ Only the list. Nothing else.`;
 
     let stream: ReadableStream<Uint8Array>;
     try {
-      stream = await streamCompletion([
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ], 600);
+      stream = await streamCompletion(
+        [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        'extraIdeas'
+      );
     } catch (err: unknown) {
       console.error('[extra-ideas] stream error:', err);
       return new Response(JSON.stringify({ error: 'Something went wrong. Please try again.' }), { status: 502 });

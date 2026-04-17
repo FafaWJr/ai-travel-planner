@@ -51,10 +51,13 @@ Make each section specific, practical and engaging. Use bullet points and bold t
 
       let stream: ReadableStream<Uint8Array>;
       try {
-        stream = await streamCompletion([
-          { role: 'system', content: systemPromptWithLang },
-          { role: 'user', content: structuredPrompt },
-        ]);
+        stream = await streamCompletion(
+          [
+            { role: 'system', content: systemPromptWithLang },
+            { role: 'user', content: structuredPrompt },
+          ],
+          'generate'
+        );
       } catch (err: unknown) {
         console.error('[generate] stream error:', err);
         return new Response(
@@ -87,10 +90,13 @@ Make each section specific, practical and engaging. Use bullet points and bold t
 
     let stream: ReadableStream<Uint8Array>;
     try {
-      stream = await streamCompletion([
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: userPrompt },
-      ]);
+      stream = await streamCompletion(
+        [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: userPrompt },
+        ],
+        'generate'
+      );
     } catch (err: unknown) {
       console.error('[generate] stream error:', err);
       return new Response(

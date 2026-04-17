@@ -63,7 +63,7 @@ async function detectSegments(
           `{"segments":[{"location":"city name","label":"City — Days X–Y","checkIn":"YYYY-MM-DD","checkOut":"YYYY-MM-DD","dayRange":[1,3]}]}`,
       },
     ],
-    1000, // segment metadata is tiny — 1000 tokens is enough even for 30-day trips
+    'hotelSuggestions'
   );
 
   const raw = await collectText(stream);
@@ -119,7 +119,7 @@ async function hotelsForSegment(
         },
         { role: 'user', content: prompt },
       ],
-      2500, // 5 hotels × ~500 tokens — sufficient for full descriptions
+      'hotelSuggestions'
     );
 
     const raw = await collectText(stream);
