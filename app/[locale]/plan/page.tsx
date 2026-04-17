@@ -714,6 +714,13 @@ function PlanContent() {
       const flush = (text: string) => {
         accumulated = text;
         setPlan(accumulated);
+        // Flip loading off the first time we have meaningful content so the
+        // plan UI mounts and sections populate as tokens arrive. 100 chars is
+        // roughly the Destination Overview H2 header plus a sentence — enough
+        // to avoid a flash of near-empty content.
+        if (accumulated.length > 100) {
+          setLoading(false);
+        }
         lastFlush = Date.now();
       };
 
