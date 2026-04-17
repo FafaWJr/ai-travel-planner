@@ -6,7 +6,12 @@ import { streamCompletion } from '@/lib/ai-stream';
 import { createClient } from '@/lib/supabase/server';
 import { collectStream } from '@/lib/stream-utils';
 
-export const maxDuration = 60;
+// Sonnet 4.6 is substantially stronger than the previous Gemini 2.0 Flash model
+// but generates more slowly (~50-80 tok/s vs ~300 tok/s). A full 7-section
+// itinerary can take 45-90s. Extended to 180s to provide safe headroom.
+// TODO: Refactor simple-prompt mode to stream tokens to client (see Option B plan)
+//       which eliminates the timeout constraint entirely. Tracked separately.
+export const maxDuration = 180;
 
 export async function POST(request: NextRequest) {
   try {
