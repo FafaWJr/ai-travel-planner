@@ -3,7 +3,9 @@ import { useState, useId, useRef, useEffect, forwardRef, useImperativeHandle } f
 import { useTranslations, useLocale } from 'next-intl';
 import FinalItineraryModal from './FinalItineraryModal';
 import DayNotes from './itinerary/DayNotes';
+import PhaseCard from './PhaseCard';
 import type { AcceptedHotel } from './StayTab';
+import type { Phase } from '@/types';
 import {
   DndContext,
   DragOverlay,
@@ -35,13 +37,16 @@ export type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'night';
  * Hydration mode governs whether incoming itineraryMd prop changes should
  * trigger a re-parse that overwrites current days state.
  *
- * - 'parsing-from-stream': stream is still writing. Re-parse on each update.
- * - 'hydrated-complete': stream done, no user edits. Frozen.
- * - 'user-owned': user or Luna mutated days. Frozen.
- * - 'saved-trip-restored': initialDays used at mount. Frozen.
+ * - 'parsing-from-stream':   stream is still writing markdown. Re-parse on each update.
+ * - 'structured-from-stream': stream is writing structured tool calls. Days are set
+ *   incrementally via setStructuredDays(); markdown re-parsing is disabled.
+ * - 'hydrated-complete':     stream done, no user edits. Frozen.
+ * - 'user-owned':            user or Luna mutated days. Frozen.
+ * - 'saved-trip-restored':   initialDays used at mount. Frozen.
  */
 type HydrationMode =
   | 'parsing-from-stream'
+  | 'structured-from-stream'
   | 'hydrated-complete'
   | 'user-owned'
   | 'saved-trip-restored';
@@ -219,13 +224,17 @@ interface Props {
   isGuest?: boolean;
   onGateRequired?: () => void;
   initialDays?: Day[];
+  initialPhases?: Phase[];
   startDate?: string;
   locale?: string;
   /** True while the parent is actively streaming plan content. When this
       flips from true to false, EditableItinerary transitions out of
-      'parsing-from-stream' mode into 'hydrated-complete'. Undefined is
-      treated as false (for saved trip loads and other non-streaming contexts). */
+      'parsing-from-stream' / 'structured-from-stream' mode into 'hydrated-complete'.
+      Undefined is treated as false (for saved trip loads and other non-streaming contexts). */
   isStreaming?: boolean;
+  /** Called when the user clicks "Plan these days" on a PhaseCard.
+      The parent sends the prompt to FloatingChat to trigger day-by-day generation. */
+  onPlanPhase?: (phase: Phase) => void;
 }
 
 export interface ItineraryHandle {
@@ -233,7 +242,17 @@ export interface ItineraryHandle {
   removeActivitiesMatching: (pattern: string) => void;
   getDays: () => { number: number; title: string }[];
   getDaysSnapshot: () => Day[];
+  getPhases: () => Phase[];
   restoreDays: (days: Day[]) => void;
+  /** Stage 4: incrementally add a structured day (from define_day tool call). */
+  setStructuredDay: (day: Day) => void;
+  /** Stage 4: add or update a phase (from define_phase tool call). */
+  upsertPhase: (phase: Phase) => void;
+  /** Stage 4: set all structured days at once (e.g. after full stream). */
+  setStructuredDays: (days: Day[]) => void;
+  /** Stage 4: signal that the stream is delivering structured tool calls
+      (disables markdown re-parsing). */
+  beginStructuredStream: () => void;
 }
 
 const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableItinerary({
@@ -241,9 +260,11 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
   onActivityStatusChange,
   onPlaceHover, onPlaceLeave,
   isGuest = false, onGateRequired,
-  initialDays, startDate,
+  initialDays, initialPhases,
+  startDate,
   locale: localeProp,
   isStreaming = false,
+  onPlanPhase,
 }, ref) {
   const localeFromHook = useLocale();
   const locale = localeProp ?? localeFromHook;
@@ -252,6 +273,11 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
   // effect. Use the setDays wrapper below, which keeps hydrationMode in sync.
   const [days, _setDays] = useState<Day[]>(() =>
     (initialDays && initialDays.length > 0) ? initialDays : []
+  );
+
+  // Phase state for 15+ day trips (Stage 4). Empty for shorter trips.
+  const [phases, setPhases] = useState<Phase[]>(() =>
+    (initialPhases && initialPhases.length > 0) ? initialPhases : []
   );
 
   // Hydration state machine. See HydrationMode type definition above.
@@ -327,11 +353,15 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
 
   /**
    * Stream-end transition. When parent signals streaming is done and we are
-   * still in parsing-from-stream mode, flip to hydrated-complete. After
-   * this, itineraryMd changes no longer trigger re-parses.
+   * still in parsing-from-stream or structured-from-stream mode, flip to
+   * hydrated-complete. After this, itineraryMd changes no longer trigger
+   * re-parses and structured day mutations are locked in.
    */
   useEffect(() => {
-    if (isStreaming === false && hydrationMode === 'parsing-from-stream') {
+    if (
+      isStreaming === false &&
+      (hydrationMode === 'parsing-from-stream' || hydrationMode === 'structured-from-stream')
+    ) {
       setHydrationMode('hydrated-complete');
     }
   }, [isStreaming, hydrationMode]);
@@ -365,8 +395,51 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
     getDaysSnapshot() {
       return days;
     },
+    getPhases() {
+      return phases;
+    },
     restoreDays(savedDays: Day[]) {
       setDays(savedDays);
+    },
+    // ── Stage 4: structured generation methods ──────────────────────
+    beginStructuredStream() {
+      // Switch to structured mode so markdown re-parsing is suppressed.
+      setHydrationMode('structured-from-stream');
+      _setDays([]);
+      setPhases([]);
+    },
+    setStructuredDay(day: Day) {
+      // Called incrementally as each define_day tool call arrives.
+      // Only active in structured-from-stream mode.
+      _setDays(prev => {
+        const existing = prev.findIndex(d => d.number === day.number);
+        if (existing >= 0) {
+          const updated = [...prev];
+          updated[existing] = day;
+          return updated;
+        }
+        // Insert in order
+        const insertAt = prev.findIndex(d => d.number > day.number);
+        if (insertAt === -1) return [...prev, day];
+        const arr = [...prev];
+        arr.splice(insertAt, 0, day);
+        return arr;
+      });
+    },
+    upsertPhase(phase: Phase) {
+      setPhases(prev => {
+        const existing = prev.findIndex(p => p.id === phase.id);
+        if (existing >= 0) {
+          const updated = [...prev];
+          updated[existing] = phase;
+          return updated;
+        }
+        return [...prev, phase];
+      });
+    },
+    setStructuredDays(newDays: Day[]) {
+      // Set all structured days at once (used after full stream completion).
+      _setDays(newDays);
     },
   }));
 
@@ -601,6 +674,23 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
           </button>
         </div>
       </div>
+
+      {/* ── Phase cards (15+ day trips only) ── */}
+      {phases.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16 }}>
+          {phases.map(phase => {
+            const phaseDays = days.filter(d => d.number >= phase.dayFrom && d.number <= phase.dayTo);
+            return (
+              <PhaseCard
+                key={phase.id}
+                phase={phase}
+                plannedDaysCount={phaseDays.length}
+                onPlanPhase={onPlanPhase ? () => onPlanPhase(phase) : undefined}
+              />
+            );
+          })}
+        </div>
+      )}
 
       {/* ── DnD context wraps all day cards ── */}
       <DndContext

@@ -16,7 +16,10 @@ export const AI_MODELS = {
 export const AI_CONFIG = {
   /** Max output tokens per route. Keep conservative to avoid runaway costs. */
   maxTokens: {
-    generate: 8000,        // Full 7-section initial itinerary
+    // Stage 4: raised to 64000 to support long-trip structured generation.
+    // define_day tool calls for 20+ days can exceed 8000 tokens when combined
+    // with the 6 narrative sections. 64000 is the Sonnet 4.6 max.
+    generate: 64000,
     chat: 2500,            // Luna conversational replies
     daySuggestion: 1500,
     extraIdeas: 1500,
@@ -202,7 +205,12 @@ CRITICAL INSTRUCTIONS — you MUST follow these without exception:
 4. If the user describes their ideal trip in their own words, treat that description as the highest-priority instruction — it overrides generic suggestions.
 5. If ages of children are given, tailor ALL activities to be family-friendly and age-appropriate for those specific ages.
 6. Honour the travel style (relaxed/adventure/cultural/etc.) in the pacing and choice of activities throughout every single day.
-7. Never suggest activities that contradict or ignore what the user has explicitly told you.`;
+7. Never suggest activities that contradict or ignore what the user has explicitly told you.
+
+TOOL USE FOR ITINERARY (when define_day tool is available):
+When you are provided with the define_day tool, you MUST use it for every single day of the itinerary section. Do NOT write the day-by-day itinerary as markdown text — call define_day() for each day in order.
+For trips of 15 or more days, also call define_phase() to group the days into logical phases BEFORE calling define_day() for the days in that phase.
+The other 5 sections (Destination Overview, Travel Season & Weather, Where to Stay, Getting Around, Budget Estimator, Practical Tips) should still be written as markdown text.`;
 
 // ─── Luna Chat System Prompt ──────────────────────────────────────────────────
 // Split into STATIC (cacheable) and DYNAMIC (per-request) content blocks.
@@ -620,3 +628,130 @@ export const LUNA_CHAT_TOOLS: AnthropicTool[] = [
  * Tool name union. Exported for use in the client-side dispatcher.
  */
 export type LunaChatToolName = (typeof LUNA_CHAT_TOOLS)[number]['name'];
+
+// ─── Stage-4 Generate Tools ────────────────────────────────────────────────
+// define_phase and define_day replace the markdown ## Personalised Itinerary
+// section for structured generation. The frontend reads tool_use events from
+// the SSE stream and builds Day[] / Phase[] directly without parsing markdown.
+
+/**
+ * define_phase: groups days into named thematic segments.
+ * Only included in the tool array for trips of 15+ days.
+ * Must be called BEFORE the define_day calls for that phase's days.
+ */
+export const DEFINE_PHASE_TOOL: AnthropicTool = {
+  name: 'define_phase',
+  description:
+    'For trips of 15 or more days: define a named phase of the trip BEFORE calling ' +
+    'define_day for the days in that phase. A phase is a thematic segment such as ' +
+    '"Days 1-5: Coastal Escape" or "Days 6-10: City Exploration". ' +
+    'Call define_phase once per phase, in order, then follow with define_day calls ' +
+    'for each day in that phase. Each phase should cover 3-7 days.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      phase_id: {
+        type: 'string',
+        description: 'Unique identifier for this phase (e.g. "phase-1", "phase-2")',
+      },
+      label: {
+        type: 'string',
+        description: 'Short thematic name (e.g. "Coastal Escape", "City Exploration", "Mountain Retreat")',
+      },
+      day_from: {
+        type: 'integer',
+        description: 'First day number of this phase (1-indexed)',
+      },
+      day_to: {
+        type: 'integer',
+        description: 'Last day number of this phase (1-indexed)',
+      },
+      summary: {
+        type: 'string',
+        description: 'Two or three sentences describing what this phase is about and what the traveller will experience',
+      },
+      highlights: {
+        type: 'array',
+        items: { type: 'string' },
+        description: '3 to 5 key highlight experiences or activities for this phase',
+      },
+    },
+    required: ['phase_id', 'label', 'day_from', 'day_to', 'summary', 'highlights'],
+  },
+};
+
+/**
+ * define_day: defines a single day's structured itinerary.
+ * Always included. Must be called once per day, in order from Day 1 to Day N.
+ * For 15+ day trips, each call should include the phase_id it belongs to.
+ */
+export const DEFINE_DAY_TOOL: AnthropicTool = {
+  name: 'define_day',
+  description:
+    'Define a single day of the itinerary as structured data. ' +
+    'Call ONCE per day, in ascending order (Day 1, Day 2, ... Day N). ' +
+    'IMPORTANT: Do NOT write itinerary days as markdown text — use this tool instead. ' +
+    'Include at least one activity per time slot. Keep activity descriptions ' +
+    'specific and actionable (under 200 characters each). ' +
+    'For 15+ day trips, always include the phase_id this day belongs to.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      day: {
+        type: 'integer',
+        description: 'Day number (1-indexed)',
+      },
+      title: {
+        type: 'string',
+        description: 'Short, catchy title for this day (e.g. "Arrival & First Impressions", "Into the Jungle")',
+      },
+      morning: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Morning activities. At least 1, max 3. Each under 200 characters.',
+      },
+      afternoon: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Afternoon activities. At least 1, max 3. Each under 200 characters.',
+      },
+      evening: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Evening activities. At least 1, max 2. Each under 200 characters.',
+      },
+      night: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Night activities. At least 1, max 2. Each under 200 characters.',
+      },
+      phase_id: {
+        type: 'string',
+        description: 'The phase_id this day belongs to. Required for 15+ day trips.',
+      },
+    },
+    required: ['day', 'title', 'morning', 'afternoon', 'evening', 'night'],
+  },
+};
+
+/**
+ * Builds the tool array for the /api/generate route.
+ *
+ * For trips under 15 days: [ define_day ] (with cache_control on it)
+ * For trips 15+ days:      [ define_phase, define_day ] (cache_control on last = define_day)
+ *
+ * The cache_control marker goes on the LAST tool to cache the full tools array.
+ */
+export function buildGenerateTools(tripDays: number): AnthropicTool[] {
+  const dayTool: AnthropicTool = {
+    ...DEFINE_DAY_TOOL,
+    cache_control: { type: 'ephemeral' },
+  };
+
+  if (tripDays >= 15) {
+    return [DEFINE_PHASE_TOOL, dayTool];
+  }
+  return [dayTool];
+}
+
+export type GenerateToolName = 'define_day' | 'define_phase';
