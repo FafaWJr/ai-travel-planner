@@ -102,12 +102,17 @@ export function buildTravelPrompt(form: TripFormData, weather: WeatherData | nul
     weatherContext = `
 ## Weather Information
 - Type: ${weather.isForecast ? '14-day forecast' : 'Climate average for this season'}
-- Temperature: ${weather.temperature.min}°C – ${weather.temperature.max}°C (avg ${weather.temperature.avg}°C)
+- Temperature: ${weather.temperature.min}°C to ${weather.temperature.max}°C (avg ${weather.temperature.avg}°C)
 - Conditions: ${weather.description}
 - Rainfall: ${weather.rainfall}
 ${weather.humidity !== undefined ? `- Humidity: ${weather.humidity}%` : ''}
 `;
   }
+
+  const isLongTrip = tripDays >= 15;
+  const phaseInstruction = isLongTrip
+    ? `This is a ${tripDays}-day trip (15+ days), so FIRST call define_phase 2 to 6 times to group the days into named thematic or geographic phases, THEN call define_day for every single day (Day 1 through Day ${tripDays}), including the phase_id each day belongs to.`
+    : `This is a ${tripDays}-day trip (under 15 days), so DO NOT call define_phase. Just call define_day once per day, from Day 1 through Day ${tripDays}.`;
 
   const userPrompt = `Please create a comprehensive travel plan for the following trip:
 
@@ -128,46 +133,51 @@ ${weatherContext}
 
 ---
 
-Please provide a detailed, personalised travel plan in Markdown format with exactly these 7 sections as H2 headers:
+YOUR RESPONSE MUST FOLLOW THIS TWO-PHASE STRUCTURE IN STRICT ORDER.
+
+============================================================
+PHASE 1 — NARRATIVE MARKDOWN (COMPLETE ALL SIX SECTIONS FIRST)
+============================================================
+
+You MUST write ALL SIX of the sections below as markdown text, in this exact order, BEFORE calling any tool. Every section is REQUIRED. Do not skip any. Do not shorten any to a stub. Do not emit any define_day or define_phase tool call until all six sections are fully written.
 
 ## Destination Overview
-Provide a compelling overview of ${form.destination}: what makes it special, highlights, best areas to explore, and what type of traveller it suits.
+Write a compelling overview of ${form.destination}: what makes it special, highlights, best areas to explore, and what type of traveller it suits. 4 to 8 sentences.
 
 ## Travel Season & Weather
-Describe what to expect weather-wise during the travel dates, what to pack, seasonal events or festivals, and any weather-related tips.
-
-## Personalised Itinerary
-Create a detailed day-by-day itinerary for all ${tripDays} days, tailored to the travellers' styles (${styleLabels}) and budget (${budgetLabel}).
-
-IMPORTANT formatting rules for this section:
-- Use "### Day N: Title" as the header for each day.
-- Inside each day, include EXACTLY these four sub-headers in order: **Morning:**, **Afternoon:**, **Evening:**, **Night:**
-- Under each sub-header, list at least one activity as a bullet point.
-- Do NOT include the time-of-day word inside the bullet text itself — the sub-header already communicates that.
-- Example structure:
-  ### Day 1: Arrival & First Impressions
-  **Morning:**
-  - Check in to your hotel and freshen up
-  **Afternoon:**
-  - Explore the old town on foot
-  **Evening:**
-  - Dinner at a local restaurant
-  **Night:**
-  - Stroll along the waterfront
+Describe what to expect weather-wise during the travel dates, what to pack, any seasonal events or festivals, and weather-related tips. 4 to 8 sentences plus a short packing list.
 
 ## Where to Stay
-Recommend 3-5 specific accommodation options that match the ${budgetLabel} budget and the group's needs. Include neighbourhood, why it suits this group, and approximate price range per night.
+Recommend 3 to 5 specific accommodation options that match the ${budgetLabel} budget and the group's needs. For each, include neighbourhood, why it suits this group, and approximate price range per night.
 
 ## Getting Around
-Cover airport transfers, local transport options, getting between attractions, and any transport passes or apps to download. Include estimated costs.
+Cover airport transfers from the airport to the city, local transport options (metro, bus, taxi, rideshare, walking), getting between attractions, and any transport passes or apps worth downloading. Include estimated costs. This section is REQUIRED — do not skip it.
 
 ## Budget Estimator
-Break down estimated total costs per person for: accommodation, food & dining, activities & entrance fees, transport, and extras. Provide a total range in both local currency and USD/EUR. Tailor to the ${budgetLabel} level.
+Break down estimated total costs per person for: accommodation, food and dining, activities and entrance fees, transport, and extras. Provide a total range in both local currency and USD. Tailor to the ${budgetLabel} level.
 
 ## Practical Tips
-Provide 8-10 specific tips for this destination covering: visa requirements, safety, cultural customs, must-try local dishes, best apps to download, language basics (if applicable), and any destination-specific advice.
+Provide 8 to 10 specific tips for this destination covering: visa requirements, safety, cultural customs, must-try local dishes, best apps to download, language basics (if applicable), and any destination-specific advice. This section is REQUIRED — do not skip it.
 
-Make the plan engaging, specific, and genuinely helpful. Use bullet points, bold text, and clear formatting throughout.`;
+VERIFY BEFORE MOVING TO PHASE 2: Have you written all six sections with full content (Destination Overview, Travel Season & Weather, Where to Stay, Getting Around, Budget Estimator, Practical Tips)? If any are missing or stub-length, complete them now. Getting Around and Practical Tips are especially important and must not be skipped.
+
+============================================================
+PHASE 2 — STRUCTURED ITINERARY (TOOLS, AFTER PHASE 1 IS COMPLETE)
+============================================================
+
+Only after all six Phase 1 sections are fully written, emit the structured itinerary using the tools provided.
+
+${phaseInstruction}
+
+Formatting rules for define_day:
+- Call define_day ONCE PER DAY, in ascending order (Day 1, Day 2, ... Day ${tripDays}).
+- Each day's title should be short and evocative (e.g. "Arrival & First Impressions", "Into the Jungle").
+- Each time slot (morning, afternoon, evening, night) needs at least one activity. Keep each activity description under 200 characters.
+- Tailor the pace, choice of activities, and tone to the travel styles: ${styleLabels}. Budget level: ${budgetLabel}.
+${form.arrivalTime ? `- Day 1 starts from the arrival time (${form.arrivalTime}). Do NOT schedule activities before the user arrives.` : ''}
+${form.departureTime ? `- The final day must end all activities in time for departure at ${form.departureTime}.` : ''}
+
+Make the plan engaging, specific, and genuinely helpful.`;
 
   return userPrompt;
 }
@@ -200,17 +210,24 @@ export const SYSTEM_PROMPT = `You are an expert travel planner with deep knowled
 
 CRITICAL INSTRUCTIONS — you MUST follow these without exception:
 1. Read and respect ALL user preferences provided, including every optional field.
-2. If an arrival time is mentioned, the FIRST DAY's schedule must start from that arrival time. Do NOT schedule activities before the user arrives. If they arrive at 9pm, only include check-in and dinner for that evening — never morning or afternoon activities on arrival day.
+2. If an arrival time is mentioned, the FIRST DAY's schedule must start from that arrival time. Do NOT schedule activities before the user arrives. If they arrive at 9pm, only include check-in and dinner for that evening, never morning or afternoon activities on arrival day.
 3. If a departure time is mentioned, the LAST DAY must end all activities in time for departure.
-4. If the user describes their ideal trip in their own words, treat that description as the highest-priority instruction — it overrides generic suggestions.
+4. If the user describes their ideal trip in their own words, treat that description as the highest-priority instruction. It overrides generic suggestions.
 5. If ages of children are given, tailor ALL activities to be family-friendly and age-appropriate for those specific ages.
-6. Honour the travel style (relaxed/adventure/cultural/etc.) in the pacing and choice of activities throughout every single day.
+6. Honour the travel style (relaxed, adventure, cultural, etc.) in the pacing and choice of activities throughout every single day.
 7. Never suggest activities that contradict or ignore what the user has explicitly told you.
 
 TOOL USE FOR ITINERARY (when define_day tool is available):
-When you are provided with the define_day tool, you MUST use it for every single day of the itinerary section. Do NOT write the day-by-day itinerary as markdown text — call define_day() for each day in order.
-For trips of 15 or more days, also call define_phase() to group the days into logical phases BEFORE calling define_day() for the days in that phase.
-The other 5 sections (Destination Overview, Travel Season & Weather, Where to Stay, Getting Around, Budget Estimator, Practical Tips) should still be written as markdown text.`;
+
+When the define_day tool is available, the user prompt will ask you to follow a strict two-phase structure:
+- PHASE 1: Write six narrative sections as markdown text (Destination Overview, Travel Season & Weather, Where to Stay, Getting Around, Budget Estimator, Practical Tips). All six are REQUIRED. Do not skip any.
+- PHASE 2: Only after all six narrative sections are complete, call define_day (and define_phase for trips of 15+ days) for the structured itinerary.
+
+Absolute rules:
+- Do NOT write the day-by-day itinerary as markdown text. Use define_day for every day.
+- Do NOT emit any tool call until all six narrative sections are fully written.
+- Do NOT skip the Getting Around section. Do NOT skip the Practical Tips section. Both are required.
+- Do NOT include a "## Personalised Itinerary" markdown section. Days are emitted via tools only.`;
 
 // ─── Luna Chat System Prompt ──────────────────────────────────────────────────
 // Split into STATIC (cacheable) and DYNAMIC (per-request) content blocks.
