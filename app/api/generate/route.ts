@@ -5,9 +5,9 @@ import { buildTravelPrompt, SYSTEM_PROMPT, getLanguageInstruction, buildGenerate
 import { streamCompletion } from '@/lib/ai-stream';
 import { createClient } from '@/lib/supabase/server';
 
-// Stage 4: maxDuration raised to 600s (10 min, Vercel Pro limit) to accommodate
-// 20+ day trips where define_day tool calls can take much longer than 8-section markdown.
-export const maxDuration = 600;
+// Stage 4: capped at 300s (Vercel Hobby plan max). Structured tool-call generation
+// streams incrementally so the client sees output well before timeout.
+export const maxDuration = 300;
 
 /**
  * Extract approximate trip day count from a natural-language prompt string.
