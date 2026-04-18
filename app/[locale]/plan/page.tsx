@@ -228,7 +228,7 @@ const SECTION_KEYWORDS: Record<string, string[]> = {
 };
 
 /* ── Extract one section from the plan markdown ── */
-function extractSection(plan: string, sectionId: string): string {
+function extractSection(plan: string, sectionId: string, isStreaming: boolean = false): string {
   if (!plan) return '';
 
   // Parse all ## sections into an array, stripping emojis from headers for matching
@@ -264,6 +264,11 @@ function extractSection(plan: string, sectionId: string): string {
   if (sectionId === 'overview') return allSections[0]?.content.join('\n').trim() || plan;
 
   const label = SECTIONS.find(s => s.id === sectionId)?.label || sectionId;
+
+  // During streaming: section hasn't arrived yet. Return sentinel for loading UI.
+  if (isStreaming) return `__STREAMING_PLACEHOLDER__${label}`;
+
+  // After streaming: genuine fallback for a section Luna skipped.
   return `## ${label}\n\n*This section wasn't included in the generated plan. Use the AI chat on the right to ask for ${label.toLowerCase()} details!*`;
 }
 
@@ -893,7 +898,7 @@ function PlanContent() {
     fetchExtraIdeas();
   };
 
-  const sectionContent = plan ? extractSection(plan, activeSection) : '';
+  const sectionContent = plan ? extractSection(plan, activeSection, loading) : '';
 
   return (
     <div style={{ background:'#F4F7FB', minHeight:'100vh', fontFamily:"'Inter',sans-serif" }}>
@@ -1257,11 +1262,42 @@ function PlanContent() {
               </div>
               {activeSection !== 'itinerary' && activeSection !== 'accommodation' && activeSection !== 'budget' && (
                 <div className="plan-section" style={{ background:'#fff', borderRadius:'0 0 16px 16px', padding:'32px 36px', boxShadow:'0 2px 20px rgba(0,68,123,0.07)', border:'1px solid rgba(0,68,123,0.08)', borderTop:'none' }}>
-                  <div
-                    onMouseOver={handlePlaceMouseOver}
-                    onMouseLeave={handlePlaneMouseLeave}
-                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(markdownToHtml(sectionContent)) }}
-                  />
+                  {sectionContent.startsWith('__STREAMING_PLACEHOLDER__') ? (
+                    <div style={{ padding: '24px 0', textAlign: 'center' }}>
+                      <div style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: '50%',
+                        border: '3px solid rgba(0,68,123,0.12)',
+                        borderTop: '3px solid #FF8210',
+                        animation: 'spin 1s linear infinite',
+                        margin: '0 auto 18px',
+                      }} />
+                      <p style={{
+                        fontFamily: "'Poppins',sans-serif",
+                        fontWeight: 700,
+                        fontSize: 17,
+                        color: '#00447B',
+                        margin: '0 0 6px',
+                      }}>
+                        {sectionContent.replace('__STREAMING_PLACEHOLDER__', '')} is being written
+                      </p>
+                      <p style={{
+                        fontFamily: "'Inter',sans-serif",
+                        fontSize: 13,
+                        color: '#6C6D6F',
+                        lineHeight: 1.6,
+                      }}>
+                        Luna is working through the sections one at a time. This one will appear in a moment.
+                      </p>
+                    </div>
+                  ) : (
+                    <div
+                      onMouseOver={handlePlaceMouseOver}
+                      onMouseLeave={handlePlaneMouseLeave}
+                      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(markdownToHtml(sectionContent)) }}
+                    />
+                  )}
                 </div>
               )}
 
