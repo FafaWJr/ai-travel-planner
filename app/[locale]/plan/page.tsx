@@ -898,7 +898,7 @@ function PlanContent() {
     fetchExtraIdeas();
   };
 
-  const sectionContent = plan ? extractSection(plan, activeSection, loading) : '';
+  const sectionContent = plan ? extractSection(plan, activeSection, isStreaming) : '';
 
   return (
     <div style={{ background:'#F4F7FB', minHeight:'100vh', fontFamily:"'Inter',sans-serif" }}>
