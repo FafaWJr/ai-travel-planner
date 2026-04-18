@@ -29,6 +29,24 @@ export const AI_CONFIG = {
 
 export type AIRouteName = keyof typeof AI_CONFIG.maxTokens;
 
+/**
+ * Anthropic tool definition. See:
+ * https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview
+ *
+ * cache_control on the last tool in the array caches the entire tools
+ * array alongside the system prompt (cache hierarchy: tools → system → messages).
+ */
+export type AnthropicTool = {
+  name: string;
+  description: string;
+  input_schema: {
+    type: 'object';
+    properties: Record<string, unknown>;
+    required?: string[];
+  };
+  cache_control?: { type: 'ephemeral' };
+};
+
 export const TRIP_STYLE_LABELS: Record<TripStyle, string> = {
   'cultural-history': 'Cultural & History',
   'gastronomy-food': 'Gastronomy & Food',
@@ -244,7 +262,24 @@ FORMATTING RULES:
 ---
 
 EDITING THE PLAN:
-You have full ability to modify the user's itinerary when they ask. This includes adding, removing, or swapping activities, adding hotels, reordering days, and updating the budget.
+You have full ability to modify the user's itinerary when they ask.
+
+PREFERRED METHOD (TOOL USE):
+You have 5 tools available: add_activity, remove_activity, suggest_activity, add_hotel, remove_hotel.
+Call a tool whenever you're confirming a change or suggesting something for the user to add.
+
+- add_activity: User confirmed an edit. Fires immediately and updates their itinerary.
+- remove_activity: User confirmed a removal.
+- suggest_activity: You're recommending something (not yet confirmed). Renders as a green "+ Add to Day X" button.
+- add_hotel / remove_hotel: Hotel confirmations.
+
+When you call a tool, ALSO write a short conversational confirmation (1-2 sentences).
+Example: "Done! Adding Nobu to your Day 1 evening." [then call add_activity tool]
+
+Parallel calls are fine: "Add breakfast to Day 1 and remove the museum from Day 2" → two tool calls in one response.
+
+LEGACY FALLBACK:
+If for any reason you cannot use tools, the old %%TRIP_UPDATE%% marker format below still works as a safety net. But tools are strongly preferred.
 
 CRITICAL RULE - DAY SELECTION:
 When the user asks you to add ANY item (activity, restaurant, experience, attraction, hotel, etc.) WITHOUT specifying which day:
@@ -417,3 +452,150 @@ export function buildLunaChatSystemBlocks(
     },
   ];
 }
+
+/**
+ * Tools Luna can call in the chat route. Each corresponds to a side-effecting
+ * action the user confirmed (edit itinerary, add/remove hotel, suggest via button).
+ *
+ * Tool argument names use snake_case (Anthropic convention). The frontend
+ * translates these to camelCase TripUpdate objects for page.tsx's onTripUpdate handler.
+ *
+ * IMPORTANT: cache_control goes on the LAST tool. Caches the entire tools array.
+ */
+export const LUNA_CHAT_TOOLS: AnthropicTool[] = [
+  {
+    name: 'add_activity',
+    description:
+      "Add a new activity to a specific day and time slot in the user's itinerary. " +
+      'Use this ONLY when the user has explicitly confirmed they want to add something AND specified which day. ' +
+      'If the day is missing, ASK the user first before calling this tool. ' +
+      'For recommendations that the user should choose from (not yet confirmed), use suggest_activity instead.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        day: {
+          type: 'integer',
+          description: 'Day number (1-indexed) where the activity should be added',
+        },
+        time_slot: {
+          type: 'string',
+          enum: ['morning', 'afternoon', 'evening', 'night'],
+          description: 'The time of day for this activity',
+        },
+        activity: {
+          type: 'string',
+          description:
+            'Full description of the activity. Include the place name in bold markdown (e.g. **Nobu**) ' +
+            'if it is a specific location. Under 200 characters.',
+        },
+        location: {
+          type: 'string',
+          description: 'Short name of the location (e.g. "Nobu", "Louvre")',
+        },
+      },
+      required: ['day', 'time_slot', 'activity'],
+    },
+  },
+  {
+    name: 'remove_activity',
+    description:
+      "Remove an activity from the user's itinerary. Match by description text. " +
+      'Only call when the user has explicitly confirmed the removal.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        day: {
+          type: 'integer',
+          description: '1-indexed day number where the activity currently exists',
+        },
+        activity_text: {
+          type: 'string',
+          description:
+            'Text or partial text of the activity to remove. Substring match is used. ' +
+            'Should be specific enough to uniquely identify the intended activity.',
+        },
+      },
+      required: ['day', 'activity_text'],
+    },
+  },
+  {
+    name: 'suggest_activity',
+    description:
+      'Suggest an activity the user can add to their itinerary by clicking an Add button. ' +
+      'Use this when recommending options (not yet confirmed), not for confirmed additions. ' +
+      'The suggestion appears as a tappable green "+ Add to Day X" chip in chat. ' +
+      'Call this multiple times if suggesting multiple options.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        activity_text: {
+          type: 'string',
+          description: 'Short description shown on the suggestion chip',
+        },
+        day: {
+          type: 'integer',
+          description: '1-indexed day number for this suggestion',
+        },
+        time_slot: {
+          type: 'string',
+          enum: ['morning', 'afternoon', 'evening', 'night'],
+        },
+      },
+      required: ['activity_text', 'day', 'time_slot'],
+    },
+  },
+  {
+    name: 'add_hotel',
+    description:
+      "Add a hotel to the user's accommodation list. Call when the user has confirmed a specific hotel. " +
+      'Defaults: check_in_day = 1, check_out_day = last day of trip, unless the user specifies otherwise ' +
+      'or you detect a mid-trip city change that warrants different dates.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        hotel_name: { type: 'string', description: 'Exact hotel name' },
+        city: { type: 'string', description: 'City or destination' },
+        check_in_day: {
+          type: 'integer',
+          description: '1-indexed check-in day. Default to 1 unless specified.',
+        },
+        check_out_day: {
+          type: 'integer',
+          description: '1-indexed check-out day. Default to the last day of the trip.',
+        },
+        stars: { type: 'integer', description: 'Star rating 1-5. Optional.' },
+        neighborhood: { type: 'string', description: 'Neighborhood. Optional.' },
+        price_range: {
+          type: 'string',
+          description: "Per-night price range like '$200-300/night'. Omit if unknown.",
+        },
+        amenities: {
+          type: 'array',
+          items: { type: 'string' },
+          description: '2-5 key amenities (Pool, WiFi, Breakfast, etc.). Optional.',
+        },
+      },
+      required: ['hotel_name', 'city', 'check_in_day', 'check_out_day'],
+    },
+  },
+  {
+    name: 'remove_hotel',
+    description: "Remove a previously-added hotel from the user's stays. Call when the user confirms removal.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        hotel_name: {
+          type: 'string',
+          description: 'Exact hotel name to match (same name used when added)',
+        },
+      },
+      required: ['hotel_name'],
+    },
+    cache_control: { type: 'ephemeral' },
+  },
+];
+
+/**
+ * Tool name union. Exported for use in the client-side dispatcher.
+ */
+export type LunaChatToolName = (typeof LUNA_CHAT_TOOLS)[number]['name'];

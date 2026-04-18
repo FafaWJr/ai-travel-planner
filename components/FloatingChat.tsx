@@ -50,6 +50,45 @@ interface Props {
   onMessagesChange?: (messages: Msg[]) => void;
 }
 
+interface ToolUseEvent {
+  id: string;
+  name: string;
+  input: Record<string, unknown>;
+}
+
+async function collectSSEWithTools(res: Response): Promise<{
+  text: string;
+  toolCalls: ToolUseEvent[];
+}> {
+  const reader = res.body!.getReader();
+  const decoder = new TextDecoder();
+  let text = '', buffer = '';
+  const toolCalls: ToolUseEvent[] = [];
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() ?? '';
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue;
+      const json = line.slice(6).trim();
+      if (!json || json === '[DONE]') continue;
+      try {
+        const d = JSON.parse(json);
+        // Text delta (existing path)
+        const t = d?.choices?.[0]?.delta?.content;
+        if (typeof t === 'string') text += t;
+        // Tool use event (Stage 3 — buffered server-side, arrives pre-parsed)
+        if (d?.tool_use) toolCalls.push(d.tool_use as ToolUseEvent);
+      } catch { /* skip malformed lines */ }
+    }
+  }
+
+  return { text, toolCalls };
+}
+
 async function collectSSE(res: Response): Promise<string> {
   const reader = res.body!.getReader();
   const decoder = new TextDecoder();
@@ -110,6 +149,56 @@ function parseAddables(text: string): Addable[] {
     results.push({ text: m[1].trim(), dayNum: parseInt(m[2], 10), slot: m[3].toLowerCase() as TimeSlot });
   }
   return results;
+}
+
+/**
+ * Dispatch a Luna tool call to the appropriate handler.
+ * Translates snake_case tool arguments to camelCase TripUpdate / Addable shapes.
+ */
+function dispatchToolUse(
+  tc: ToolUseEvent,
+  onTripUpdate: ((u: TripUpdate) => void) | undefined,
+): { planUpdated: boolean; addable: Addable | null } {
+  switch (tc.name) {
+    case 'add_activity': {
+      const i = tc.input as { day: number; time_slot: TimeSlot; activity: string; location?: string };
+      onTripUpdate?.({ type: 'add_activity', day: i.day, timeSlot: i.time_slot, activity: i.activity, location: i.location });
+      return { planUpdated: true, addable: null };
+    }
+    case 'remove_activity': {
+      const i = tc.input as { day: number; activity_text: string };
+      onTripUpdate?.({ type: 'remove_activity', day: i.day, activity: i.activity_text });
+      return { planUpdated: true, addable: null };
+    }
+    case 'suggest_activity': {
+      const i = tc.input as { activity_text: string; day: number; time_slot: TimeSlot };
+      return { planUpdated: false, addable: { text: i.activity_text, dayNum: i.day, slot: i.time_slot } };
+    }
+    case 'add_hotel': {
+      const i = tc.input as {
+        hotel_name: string; city: string; check_in_day: number; check_out_day: number;
+        stars?: number; neighborhood?: string; price_range?: string; amenities?: string[];
+      };
+      onTripUpdate?.({
+        type: 'stays', action: 'add',
+        data: {
+          hotelName: i.hotel_name, city: i.city,
+          checkInDay: i.check_in_day, checkOutDay: i.check_out_day,
+          stars: i.stars, neighborhood: i.neighborhood,
+          priceRange: i.price_range, amenities: i.amenities,
+        },
+      });
+      return { planUpdated: true, addable: null };
+    }
+    case 'remove_hotel': {
+      const i = tc.input as { hotel_name: string };
+      onTripUpdate?.({ type: 'stays', action: 'remove', data: { hotelName: i.hotel_name } });
+      return { planUpdated: true, addable: null };
+    }
+    default:
+      console.warn('[Luna] Unknown tool name:', tc.name);
+      return { planUpdated: false, addable: null };
+  }
 }
 
 function renderInline(text: string): React.ReactNode {
@@ -229,29 +318,44 @@ export default function FloatingChat({ plan, destination, hotelContext, currentA
           locale,
         }),
       });
-      const raw = await collectSSE(res);
+      const { text: raw, toolCalls } = await collectSSEWithTools(res);
 
-      // Step 1: Extract structured trip update block (hotel/activity/budget changes)
-      const { update: tripUpdate, cleanText: afterTripUpdate } = parseTripUpdate(raw);
-
-      // Step 2: Extract JSON plan block (full plan markdown update)
-      const { json, cleanText } = extractJsonBlock(afterTripUpdate);
-      let displayContent = cleanText || afterTripUpdate;
+      // Step 1: Dispatch tool calls (Stage 3 — preferred path)
       let planUpdated = false;
+      const toolAddables: Addable[] = [];
+      for (const tc of toolCalls) {
+        const result = dispatchToolUse(tc, onTripUpdate);
+        if (result.planUpdated) planUpdated = true;
+        if (result.addable) toolAddables.push(result.addable);
+      }
 
-      // Apply structured trip update (hotel additions etc.) - real data write
-      if (tripUpdate && onTripUpdate) {
-        onTripUpdate(tripUpdate);
+      // Step 2: Fallback — legacy %%TRIP_UPDATE%% markers
+      const { update: legacyUpdate, cleanText: afterTripUpdate } = parseTripUpdate(raw);
+      if (legacyUpdate && onTripUpdate) {
+        console.warn('[Luna] Legacy %%TRIP_UPDATE%% fallback triggered');
+        onTripUpdate(legacyUpdate);
         planUpdated = true;
       }
 
-      // Apply full plan markdown update if present
+      // Step 3: Fallback — full JSON plan rewrite (rare legacy path)
+      const { json, cleanText } = extractJsonBlock(afterTripUpdate);
+      let displayContent = cleanText || afterTripUpdate;
       if (json) {
+        console.warn('[Luna] Legacy JSON block fallback triggered');
         const updatedPlan = (json.plan ?? json.tripContext ?? json.content) as string | undefined;
         if (updatedPlan && typeof updatedPlan === 'string' && onPlanUpdate) {
           onPlanUpdate(updatedPlan);
           planUpdated = true;
         }
+      }
+
+      // Step 4: Inject suggest_activity tool calls as [[ADD:]] markers so existing
+      // chip rendering pipeline works without duplication.
+      if (toolAddables.length > 0) {
+        const markers = toolAddables
+          .map(a => `[[ADD: ${a.text} | day: ${a.dayNum} | slot: ${a.slot}]]`)
+          .join('\n');
+        displayContent = displayContent.trim() ? `${displayContent}\n\n${markers}` : markers;
       }
 
       setMsgs(prev => [...prev, { role: 'assistant', content: displayContent || 'No response received.', planUpdated }]);

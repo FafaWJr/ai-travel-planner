@@ -8,7 +8,7 @@
 //   data: {"choices":[{"delta":{"content":"..."}}]}
 //   data: [DONE]
 
-import { AI_MODELS, AI_CONFIG, type AIRouteName } from './ai';
+import { AI_MODELS, AI_CONFIG, type AIRouteName, type AnthropicTool } from './ai';
 
 /**
  * Anthropic content block. When a `cache_control` marker is set on a block,
@@ -64,6 +64,7 @@ export type AIRoute = AIRouteName;
 export async function streamCompletion(
   messages: Message[],
   route: AIRoute,
+  tools?: AnthropicTool[],
 ): Promise<ReadableStream<Uint8Array>> {
   const maxTokens = AI_CONFIG.maxTokens[route];
 
@@ -78,7 +79,7 @@ export async function streamCompletion(
 
   // Try primary (Sonnet 4.6).
   try {
-    return await streamAnthropic(AI_MODELS.primary, messages, maxTokens, route);
+    return await streamAnthropic(AI_MODELS.primary, messages, maxTokens, route, tools);
   } catch (primaryErr) {
     console.warn(
       `[ai/${route}] primary model (${AI_MODELS.primary}) failed pre-stream:`,
@@ -92,7 +93,7 @@ export async function streamCompletion(
     // Retry once on Haiku 4.5. Same streaming shape so the client sees no difference.
     try {
       console.warn(`[ai/${route}] falling back to ${AI_MODELS.fallback}`);
-      return await streamAnthropic(AI_MODELS.fallback, messages, maxTokens, route);
+      return await streamAnthropic(AI_MODELS.fallback, messages, maxTokens, route, tools);
     } catch (fallbackErr) {
       console.error(
         `[ai/${route}] fallback model (${AI_MODELS.fallback}) also failed:`,
@@ -109,6 +110,7 @@ async function streamAnthropic(
   messages: Message[],
   maxTokens: number,
   route: AIRoute,
+  tools?: AnthropicTool[],
 ): Promise<ReadableStream<Uint8Array>> {
   // Separate system message from conversation. The `system` content may be
   // a plain string (no caching) or an array of content blocks (with optional
@@ -133,6 +135,7 @@ async function streamAnthropic(
       stream: true,
       system,
       messages: conversation,
+      ...(tools && tools.length > 0 ? { tools, tool_choice: { type: 'auto' } } : {}),
     }),
   });
 
@@ -157,6 +160,16 @@ async function streamAnthropic(
         controller.enqueue(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`));
       };
 
+      // Closure-scoped state for this request. Each streamAnthropic invocation
+      // gets its own closure, so concurrent requests do not clobber each other.
+      let pendingCacheStats: { cacheRead: number; cacheWrite: number; uncached: number } | null = null;
+
+      // Tool-use buffering state. Keyed by content block index because
+      // Anthropic can emit multiple tool_use blocks per response.
+      const toolBuffers = new Map<number, { id: string; name: string; partialJson: string }>();
+      let stopReason = 'unknown';
+      let toolsEmitted = 0;
+
       try {
         while (true) {
           const { done, value } = await reader.read();
@@ -170,25 +183,65 @@ async function streamAnthropic(
             if (!line.startsWith('data: ')) continue;
             const jsonStr = line.slice(6).trim();
             if (!jsonStr || jsonStr === '[DONE]') continue;
+
             try {
               const event = JSON.parse(jsonStr);
 
               if (event.type === 'message_start' && event.message?.usage) {
-                // Log cache telemetry on every request. Format is greppable for
-                // Vercel log analysis: `[ai/<route>] cache: hit=<N> write=<N> uncached=<N> model=<...>`
+                // Cache usage deferred until message_stop so we can attach stop_reason + tools.
                 const u = event.message.usage;
-                const cacheRead = u.cache_read_input_tokens ?? 0;
-                const cacheWrite = u.cache_creation_input_tokens ?? 0;
-                const uncached = u.input_tokens ?? 0;
-                console.log(
-                  `[ai/${route}] cache: hit=${cacheRead} write=${cacheWrite} uncached=${uncached} model=${model}`
-                );
-              } else if (
-                event.type === 'content_block_delta' &&
-                event.delta?.type === 'text_delta'
-              ) {
+                pendingCacheStats = {
+                  cacheRead: u.cache_read_input_tokens ?? 0,
+                  cacheWrite: u.cache_creation_input_tokens ?? 0,
+                  uncached: u.input_tokens ?? 0,
+                };
+              } else if (event.type === 'content_block_start' &&
+                         event.content_block?.type === 'tool_use') {
+                // Begin buffering this tool call
+                toolBuffers.set(event.index, {
+                  id: event.content_block.id,
+                  name: event.content_block.name,
+                  partialJson: '',
+                });
+              } else if (event.type === 'content_block_delta' &&
+                         event.delta?.type === 'input_json_delta') {
+                // Accumulate partial tool input JSON
+                const tb = toolBuffers.get(event.index);
+                if (tb) tb.partialJson += event.delta.partial_json ?? '';
+              } else if (event.type === 'content_block_stop') {
+                // If this was a tool_use block, emit the complete tool call
+                const tb = toolBuffers.get(event.index);
+                if (tb) {
+                  try {
+                    const input = tb.partialJson.trim() ? JSON.parse(tb.partialJson) : {};
+                    const toolEvent = { tool_use: { id: tb.id, name: tb.name, input } };
+                    controller.enqueue(
+                      encoder.encode(`data: ${JSON.stringify(toolEvent)}\n\n`),
+                    );
+                    toolsEmitted++;
+                  } catch (err) {
+                    console.error(
+                      `[ai/${route}] tool_use JSON parse failed for ${tb.name}:`,
+                      tb.partialJson, err,
+                    );
+                  }
+                  toolBuffers.delete(event.index);
+                }
+              } else if (event.type === 'content_block_delta' &&
+                         event.delta?.type === 'text_delta') {
                 emit(event.delta.text);
+              } else if (event.type === 'message_delta' && event.delta?.stop_reason) {
+                stopReason = event.delta.stop_reason;
               } else if (event.type === 'message_stop') {
+                // Final telemetry log including stop_reason and tool count.
+                if (pendingCacheStats) {
+                  console.log(
+                    `[ai/${route}] cache: hit=${pendingCacheStats.cacheRead} ` +
+                    `write=${pendingCacheStats.cacheWrite} ` +
+                    `uncached=${pendingCacheStats.uncached} ` +
+                    `model=${model} stop=${stopReason} tools=${toolsEmitted}`,
+                  );
+                }
                 controller.enqueue(encoder.encode('data: [DONE]\n\n'));
               }
             } catch {
@@ -196,9 +249,9 @@ async function streamAnthropic(
             }
           }
         }
-        controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+        // [DONE] is emitted inside the message_stop handler above.
+        // Do NOT emit it again here.
       } catch (err) {
-        // Mid-stream error. Surface to client (Option A).
         console.error(`[ai/${route}] mid-stream error (${model}):`, err);
       } finally {
         controller.close();
