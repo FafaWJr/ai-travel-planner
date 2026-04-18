@@ -378,6 +378,7 @@ function PlanContent() {
   const [acceptedHotels,  setAcceptedHotels]  = useState<AcceptedHotel[]>([]);
   const [seenIdeaNames,   setSeenIdeaNames]   = useState<string[]>([]);
   const [itineraryVersion, setItineraryVersion] = useState(0);
+  const [streamedDayCount, setStreamedDayCount] = useState(0);
   const itineraryRef = useRef<ItineraryHandle>(null);
 
   const { user, loading: authLoading } = useAuth();
@@ -718,6 +719,7 @@ function PlanContent() {
     // events arrive. This clears days/phases and suppresses the legacy
     // markdown re-parse effect.
     itineraryRef.current?.beginStructuredStream();
+    setStreamedDayCount(0);
 
     // Kick off destination photos in parallel with the AI stream.
     const dest = p
@@ -789,6 +791,7 @@ function PlanContent() {
                   if (normalized) {
                     const day = defineDayInputToDay(normalized);
                     itineraryRef.current?.setStructuredDay(day);
+                    setStreamedDayCount(c => c + 1);
                   }
                 } catch (err) {
                   console.error('[plan] failed to apply define_day:', err, toolUse.input);
@@ -1056,6 +1059,48 @@ function PlanContent() {
                   );
                 })}
               </div>
+
+              {/* Phase 1 streaming placeholder — shows while narrative sections stream but no day cards have arrived yet */}
+              {activeSection === 'itinerary' && isStreaming && streamedDayCount === 0 && (
+                <div style={{
+                  background: '#fff',
+                  borderRadius: 16,
+                  padding: '40px 32px',
+                  textAlign: 'center',
+                  border: '1px solid rgba(0,68,123,0.08)',
+                  boxShadow: '0 2px 12px rgba(0,68,123,0.06)',
+                  marginBottom: 16,
+                }}>
+                  <div style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: '50%',
+                    border: '3px solid rgba(0,68,123,0.12)',
+                    borderTop: '3px solid #FF8210',
+                    animation: 'spin 1s linear infinite',
+                    margin: '0 auto 20px',
+                  }} />
+                  <p style={{
+                    fontFamily: "'Poppins',sans-serif",
+                    fontWeight: 700,
+                    fontSize: 18,
+                    color: '#00447B',
+                    marginBottom: 8,
+                  }}>
+                    Luna is drafting your trip
+                  </p>
+                  <p style={{
+                    fontFamily: "'Inter',sans-serif",
+                    fontSize: 14,
+                    color: '#6C6D6F',
+                    lineHeight: 1.6,
+                  }}>
+                    Writing the overview, weather tips, stays, transport, budget, and practical advice first.
+                    <br />
+                    Your day-by-day itinerary will appear here in a moment.
+                  </p>
+                </div>
+              )}
 
               {/* Rendered plan section */}
               {/* EditableItinerary always stays mounted to preserve user changes */}

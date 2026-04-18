@@ -24,7 +24,9 @@ export const AI_CONFIG = {
     daySuggestion: 1500,
     extraIdeas: 1500,
     hotelSuggestions: 2000,
-    budgetEstimate: 1500,
+    // Raised from 1500: Sonnet 4.5 hit the cap before completing the JSON
+    // for trips with many activities. 4000 fits trips up to 14 days.
+    budgetEstimate: 4000,
   },
   /** Temperature shared across all routes. Tune here if Luna ever drifts. */
   temperature: 0.7,
