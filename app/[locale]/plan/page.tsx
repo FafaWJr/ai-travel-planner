@@ -379,6 +379,7 @@ function PlanContent() {
   const [seenIdeaNames,   setSeenIdeaNames]   = useState<string[]>([]);
   const [itineraryVersion, setItineraryVersion] = useState(0);
   const [streamedDayCount, setStreamedDayCount] = useState(0);
+  const [pendingChatPrompt, setPendingChatPrompt] = useState<{ text: string; nonce: number } | null>(null);
   const itineraryRef = useRef<ItineraryHandle>(null);
 
   const { user, loading: authLoading } = useAuth();
@@ -1123,13 +1124,11 @@ function PlanContent() {
                   locale={locale}
                   isStreaming={isStreaming}
                   onPlanPhase={(phase: Phase) => {
-                    // "Plan these days" — send a pre-filled message to Luna chat
-                    // to trigger day-by-day generation for the selected phase.
-                    // The message is injected as a user message in FloatingChat via
-                    // a future sendMessage imperative (wired in Stage 4 follow-up).
-                    // For now, just scroll to the chat panel.
-                    const chatPanel = document.getElementById('luna-chat-panel');
-                    if (chatPanel) chatPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    const dayRange = phase.dayFrom === phase.dayTo
+                      ? `Day ${phase.dayFrom}`
+                      : `Days ${phase.dayFrom} to ${phase.dayTo}`;
+                    const text = `Plan ${dayRange} for me — the "${phase.label}" phase. Use the phase summary and highlights as your guide. Add full morning, afternoon, evening, and night activities for each day. Feel free to suggest any tweaks before you start.`;
+                    setPendingChatPrompt({ text, nonce: Date.now() });
                   }}
                 />
               </div>
@@ -1375,6 +1374,8 @@ function PlanContent() {
             initialMessages={chatMessages.length > 0 ? chatMessages : undefined}
             savedTripId={savedTripId}
             onMessagesChange={setChatMessages}
+            pendingPrompt={pendingChatPrompt}
+            onPendingPromptConsumed={() => setPendingChatPrompt(null)}
           />
           {gateOpen && <GateOverlay onClose={() => setGateOpen(false)} tripSnapshot={plan ? { plan, photos, acceptedHotels, itineraryDays: itineraryRef.current?.getDaysSnapshot() ?? [], prompt } : undefined} />}
           </>

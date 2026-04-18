@@ -48,6 +48,8 @@ interface Props {
   initialMessages?: Msg[];
   savedTripId?: string | null;
   onMessagesChange?: (messages: Msg[]) => void;
+  pendingPrompt?: { text: string; nonce: number } | null;
+  onPendingPromptConsumed?: () => void;
 }
 
 interface ToolUseEvent {
@@ -283,7 +285,7 @@ function renderContent(text: string): React.ReactNode {
   });
 }
 
-export default function FloatingChat({ plan, destination, hotelContext, currentActivities, onAddToItinerary, onPlanUpdate, onTripUpdate, isGuest = false, onGateRequired, initialMessages, savedTripId, onMessagesChange }: Props) {
+export default function FloatingChat({ plan, destination, hotelContext, currentActivities, onAddToItinerary, onPlanUpdate, onTripUpdate, isGuest = false, onGateRequired, initialMessages, savedTripId, onMessagesChange, pendingPrompt, onPendingPromptConsumed }: Props) {
   const locale = useLocale();
   const t = useTranslations('plan');
 
@@ -342,6 +344,24 @@ export default function FloatingChat({ plan, destination, hotelContext, currentA
   }, [msgs]); // eslint-disable-line
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [msgs, loading]);
+
+  // When "Plan these days" fires from a PhaseCard, open the chat and prefill
+  // the input so the user can review/edit before sending.
+  useEffect(() => {
+    if (!pendingPrompt) return;
+    if (isGuest) {
+      onGateRequired?.();
+      return;
+    }
+    setOpen(true);
+    setInput(pendingPrompt.text);
+    setTimeout(() => {
+      inputRef.current?.focus();
+      const len = pendingPrompt.text.length;
+      inputRef.current?.setSelectionRange(len, len);
+    }, 50);
+    onPendingPromptConsumed?.();
+  }, [pendingPrompt]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const guestMsgCount = msgs.filter(m => m.role === 'user').length;
 

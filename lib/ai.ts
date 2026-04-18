@@ -113,8 +113,19 @@ ${weather.humidity !== undefined ? `- Humidity: ${weather.humidity}%` : ''}
 
   const isLongTrip = tripDays >= 15;
   const phaseInstruction = isLongTrip
-    ? `This is a ${tripDays}-day trip (15+ days), so FIRST call define_phase 2 to 6 times to group the days into named thematic or geographic phases, THEN call define_day for every single day (Day 1 through Day ${tripDays}), including the phase_id each day belongs to.`
-    : `This is a ${tripDays}-day trip (under 15 days), so DO NOT call define_phase. Just call define_day once per day, from Day 1 through Day ${tripDays}.`;
+    ? `This is a ${tripDays}-day trip (15+ days). Use ON-DEMAND PHASE PLANNING:
+
+1. FIRST: call define_phase 2 to 6 times to cover ALL ${tripDays} days with named thematic or geographic phases. Every day from Day 1 to Day ${tripDays} must belong to exactly one phase. Phase boundaries should be 5 to 10 days each. Choose phases that match the destination's natural geography (e.g. "Coastal Days", "Hinterland Escape", "Southern Beaches") OR temporal flow (e.g. "Settling In", "Big Hits", "Slow Beach Living"). Each phase needs a phase_id, label, day_from, day_to, summary (2-3 sentences), and 3-5 highlights.
+
+2. SECOND: call define_day with FULL activity content for the days in PHASE 1 ONLY. Each define_day call must include realistic morning/afternoon/evening/night activities — at least 1 per slot, max 3. Include the phase_id matching Phase 1.
+
+3. CRITICAL: do NOT call define_day for any day in Phase 2, Phase 3, Phase 4, or beyond. Those phases are intentionally left as expandable cards. The user will click "Plan these days" on each later phase to expand it on demand. Emitting define_day for those days creates empty cards and breaks the experience.
+
+Example for a 30-day trip with 4 phases of Days 1-7, Days 8-14, Days 15-21, Days 22-30:
+- 4 define_phase calls (one per phase)
+- 7 define_day calls (Days 1 through 7, all with full activities and phase_id matching Phase 1)
+- That is the entire structured output. Total: 11 tool calls. The user will request Phase 2-4 days separately.`
+    : `This is a ${tripDays}-day trip (under 15 days), so DO NOT call define_phase. Just call define_day once per day with full activities, from Day 1 through Day ${tripDays}.`;
 
   const userPrompt = `Please create a comprehensive travel plan for the following trip:
 

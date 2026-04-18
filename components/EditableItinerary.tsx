@@ -679,7 +679,13 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
       {phases.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16 }}>
           {phases.map(phase => {
-            const phaseDays = days.filter(d => d.number >= phase.dayFrom && d.number <= phase.dayTo);
+            // Count only days with actual activity content — empty placeholder
+            // days (zero activities) do not count as planned.
+            const phaseDays = days.filter(d =>
+              d.number >= phase.dayFrom &&
+              d.number <= phase.dayTo &&
+              d.activities.length > 0
+            );
             return (
               <PhaseCard
                 key={phase.id}
