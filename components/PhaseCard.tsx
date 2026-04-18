@@ -1,26 +1,40 @@
 'use client';
 
-/**
- * PhaseCard — shown for each thematic phase on 15+ day trips.
- *
- * Displays the phase name, day range, summary, and key highlights.
- * The "Plan these days" button triggers day-by-day generation for
- * this phase via the chat (onPlanPhase callback).
- */
-
+import { useState } from 'react';
 import type { Phase } from '@/types';
 
 interface PhaseCardProps {
   phase: Phase;
-  /** How many days in this phase already have full day plans */
   plannedDaysCount: number;
-  /** Called when user taps "Plan these days" */
-  onPlanPhase?: () => void;
+  /** Returns a promise that resolves when expansion is complete (success or failure). */
+  onPlanPhase?: () => Promise<void>;
 }
 
 export default function PhaseCard({ phase, plannedDaysCount, onPlanPhase }: PhaseCardProps) {
   const totalDays = phase.dayTo - phase.dayFrom + 1;
   const isFullyPlanned = plannedDaysCount >= totalDays;
+  const [isPlanning, setIsPlanning] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleClick = async () => {
+    if (!onPlanPhase || isPlanning) return;
+    setIsPlanning(true);
+    setError(null);
+    try {
+      await onPlanPhase();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Could not plan these days. Please try again.';
+      setError(msg);
+    } finally {
+      setIsPlanning(false);
+    }
+  };
+
+  const headerBg = isFullyPlanned
+    ? 'linear-gradient(135deg,#16A34A,#15803D)'
+    : isPlanning
+      ? 'linear-gradient(135deg,#FF8210,#E66F00)'
+      : 'linear-gradient(135deg,#00447B,#0369A1)';
 
   return (
     <div style={{
@@ -28,16 +42,15 @@ export default function PhaseCard({ phase, plannedDaysCount, onPlanPhase }: Phas
       borderRadius: 16,
       border: isFullyPlanned
         ? '1.5px solid rgba(22,163,74,0.30)'
-        : '1.5px solid rgba(0,68,123,0.12)',
+        : isPlanning
+          ? '1.5px solid rgba(255,130,16,0.40)'
+          : '1.5px solid rgba(0,68,123,0.12)',
       boxShadow: '0 2px 12px rgba(0,68,123,0.06)',
       overflow: 'hidden',
-      transition: 'border-color 0.2s',
+      transition: 'border-color 0.2s, opacity 0.2s',
     }}>
-      {/* Phase header strip */}
       <div style={{
-        background: isFullyPlanned
-          ? 'linear-gradient(135deg,#16A34A,#15803D)'
-          : 'linear-gradient(135deg,#00447B,#0369A1)',
+        background: headerBg,
         padding: '14px 18px 12px',
         display: 'flex',
         alignItems: 'center',
@@ -56,7 +69,7 @@ export default function PhaseCard({ phase, plannedDaysCount, onPlanPhase }: Phas
               borderRadius: 100,
               letterSpacing: 0.3,
             }}>
-              {`Days ${phase.dayFrom}–${phase.dayTo}`}
+              {`Days ${phase.dayFrom}-${phase.dayTo}`}
             </span>
             {isFullyPlanned && (
               <span style={{
@@ -68,7 +81,29 @@ export default function PhaseCard({ phase, plannedDaysCount, onPlanPhase }: Phas
                 padding: '2px 8px',
                 borderRadius: 100,
               }}>
-                ✓ Planned
+                Planned
+              </span>
+            )}
+            {isPlanning && (
+              <span style={{
+                background: 'rgba(255,255,255,0.20)',
+                color: '#fff',
+                fontSize: 10,
+                fontFamily: "'Inter',sans-serif",
+                fontWeight: 700,
+                padding: '2px 8px',
+                borderRadius: 100,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+              }}>
+                <span style={{
+                  width: 8, height: 8, borderRadius: '50%',
+                  border: '1.5px solid rgba(255,255,255,0.4)',
+                  borderTop: '1.5px solid #fff',
+                  animation: 'phaseSpin 0.7s linear infinite',
+                }} />
+                Planning
               </span>
             )}
           </div>
@@ -84,13 +119,13 @@ export default function PhaseCard({ phase, plannedDaysCount, onPlanPhase }: Phas
           </h3>
         </div>
 
-        {/* Plan button — only shown if not fully planned and callback provided */}
         {!isFullyPlanned && onPlanPhase && (
           <button
-            onClick={onPlanPhase}
+            onClick={handleClick}
+            disabled={isPlanning}
             style={{
               flexShrink: 0,
-              background: '#FF8210',
+              background: isPlanning ? 'rgba(255,255,255,0.20)' : '#FF8210',
               color: '#fff',
               border: 'none',
               borderRadius: 100,
@@ -98,22 +133,36 @@ export default function PhaseCard({ phase, plannedDaysCount, onPlanPhase }: Phas
               fontFamily: "'Poppins',sans-serif",
               fontWeight: 700,
               fontSize: 12,
-              cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(255,130,16,0.35)',
+              cursor: isPlanning ? 'default' : 'pointer',
+              boxShadow: isPlanning ? 'none' : '0 2px 8px rgba(255,130,16,0.35)',
               transition: 'opacity 0.15s, transform 0.1s',
               whiteSpace: 'nowrap',
+              opacity: isPlanning ? 0.7 : 1,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
             }}
-            onMouseEnter={e => { e.currentTarget.style.opacity = '0.9'; }}
-            onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
+            onMouseEnter={e => { if (!isPlanning) e.currentTarget.style.opacity = '0.9'; }}
+            onMouseLeave={e => { if (!isPlanning) e.currentTarget.style.opacity = '1'; }}
           >
-            Plan these days
+            {isPlanning ? (
+              <>
+                <span style={{
+                  width: 10, height: 10, borderRadius: '50%',
+                  border: '1.5px solid rgba(255,255,255,0.4)',
+                  borderTop: '1.5px solid #fff',
+                  animation: 'phaseSpin 0.7s linear infinite',
+                }} />
+                Planning...
+              </>
+            ) : (
+              'Plan these days'
+            )}
           </button>
         )}
       </div>
 
-      {/* Body */}
       <div style={{ padding: '14px 18px 16px' }}>
-        {/* Summary */}
         <p style={{
           fontFamily: "'Inter',sans-serif",
           fontSize: 14,
@@ -124,7 +173,6 @@ export default function PhaseCard({ phase, plannedDaysCount, onPlanPhase }: Phas
           {phase.summary}
         </p>
 
-        {/* Highlights */}
         {phase.highlights.length > 0 && (
           <div>
             <p style={{
@@ -160,7 +208,21 @@ export default function PhaseCard({ phase, plannedDaysCount, onPlanPhase }: Phas
           </div>
         )}
 
-        {/* Progress indicator */}
+        {error && (
+          <div style={{
+            marginTop: 12,
+            padding: '10px 12px',
+            background: 'rgba(220,38,38,0.06)',
+            border: '1px solid rgba(220,38,38,0.20)',
+            borderRadius: 8,
+            color: '#B91C1C',
+            fontFamily: "'Inter',sans-serif",
+            fontSize: 13,
+          }}>
+            {error}
+          </div>
+        )}
+
         {totalDays > 0 && (
           <div style={{ marginTop: 12 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
@@ -195,6 +257,8 @@ export default function PhaseCard({ phase, plannedDaysCount, onPlanPhase }: Phas
           </div>
         )}
       </div>
+
+      <style>{`@keyframes phaseSpin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

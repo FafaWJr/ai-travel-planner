@@ -380,6 +380,7 @@ function PlanContent() {
   const [itineraryVersion, setItineraryVersion] = useState(0);
   const [streamedDayCount, setStreamedDayCount] = useState(0);
   const [pendingChatPrompt, setPendingChatPrompt] = useState<{ text: string; nonce: number } | null>(null);
+  const [injectedChatMessage, setInjectedChatMessage] = useState<{ content: string; nonce: number } | null>(null);
   const itineraryRef = useRef<ItineraryHandle>(null);
 
   const { user, loading: authLoading } = useAuth();
@@ -1123,12 +1124,96 @@ function PlanContent() {
                   startDate={prompt.match(/from (\d{4}-\d{2}-\d{2})/)?.[1]}
                   locale={locale}
                   isStreaming={isStreaming}
-                  onPlanPhase={(phase: Phase) => {
+                  onPlanPhase={async (phase: Phase): Promise<void> => {
+                    if (!user) { openGate('Plan phase days'); throw new Error('Login required'); }
+
+                    const ciM = prompt.match(/from (\d{4}-\d{2}-\d{2})/);
+                    const coM = prompt.match(/to (\d{4}-\d{2}-\d{2})/);
+                    const dest = prompt
+                      .replace(/^plan a (trip to |)?/i, '')
+                      .replace(/\b(from \d{4}-\d{2}-\d{2}.*)$/i, '')
+                      .trim().split(' ').slice(0, 5).join(' ');
+
+                    const allDays = itineraryRef.current?.getDaysSnapshot() ?? [];
+                    const earlierDays = allDays.filter(d => d.number < phase.dayFrom && d.activities.length > 0);
+                    const alreadyPlannedSummary = earlierDays.length > 0
+                      ? earlierDays.map(d =>
+                          `Day ${d.number} (${d.title}): ${d.activities
+                            .filter(a => a.status !== 'declined')
+                            .map(a => a.text.replace(/\*\*/g, '').slice(0, 80))
+                            .join('; ')}`
+                        ).join('\n')
+                      : undefined;
+
+                    const res = await fetch('/api/expand-phase', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        phase: {
+                          id: phase.id,
+                          label: phase.label,
+                          day_from: phase.dayFrom,
+                          day_to: phase.dayTo,
+                          summary: phase.summary,
+                          highlights: phase.highlights,
+                        },
+                        destination: dest,
+                        startDate: ciM?.[1],
+                        endDate: coM?.[1],
+                        alreadyPlannedSummary,
+                        locale,
+                      }),
+                    });
+
+                    if (!res.ok) {
+                      const err = await res.json().catch(() => ({}));
+                      throw new Error((err as { error?: string }).error || 'Could not plan these days. Please try again.');
+                    }
+
+                    const reader = res.body!.getReader();
+                    const decoder = new TextDecoder();
+                    let buf = '';
+                    let dayCount = 0;
+
+                    while (true) {
+                      const { done, value } = await reader.read();
+                      if (done) break;
+                      buf += decoder.decode(value, { stream: true });
+
+                      const lines = buf.split('\n');
+                      buf = lines.pop() ?? '';
+
+                      for (const line of lines) {
+                        if (!line.startsWith('data: ')) continue;
+                        const jsonStr = line.slice(6).trim();
+                        if (!jsonStr || jsonStr === '[DONE]') continue;
+                        try {
+                          const event = JSON.parse(jsonStr);
+                          const toolUse = event?.tool_use;
+                          if (toolUse?.name === 'define_day') {
+                            const normalized = normalizeDefineDayInput((toolUse.input ?? {}) as Record<string, unknown>);
+                            if (normalized) {
+                              itineraryRef.current?.setStructuredDay(defineDayInputToDay(normalized));
+                              dayCount++;
+                            }
+                          }
+                        } catch { /* skip malformed */ }
+                      }
+                    }
+
+                    if (dayCount === 0) throw new Error('No days were planned. Please try again.');
+
                     const dayRange = phase.dayFrom === phase.dayTo
                       ? `Day ${phase.dayFrom}`
                       : `Days ${phase.dayFrom} to ${phase.dayTo}`;
-                    const text = `Plan ${dayRange} for me — the "${phase.label}" phase. Use the phase summary and highlights as your guide. Add full morning, afternoon, evening, and night activities for each day. Feel free to suggest any tweaks before you start.`;
-                    setPendingChatPrompt({ text, nonce: Date.now() });
+                    const ackMessages = [
+                      `Done! I just planned ${dayRange} for the "${phase.label}" phase. Have a look below, let me know if you want to swap an activity, slow it down, or add more nightlife.`,
+                      `${dayRange} are ready! I built out the "${phase.label}" phase based on the summary and highlights. Take a look, happy to tweak anything.`,
+                      `Just planned ${dayRange} for "${phase.label}". Scroll down to see them. If anything doesn't feel right, just tell me what to change.`,
+                    ];
+                    setInjectedChatMessage({ content: ackMessages[Math.floor(Math.random() * ackMessages.length)], nonce: Date.now() });
+                    setItineraryVersion(v => v + 1);
+                    markDirty();
                   }}
                 />
               </div>
@@ -1376,6 +1461,8 @@ function PlanContent() {
             onMessagesChange={setChatMessages}
             pendingPrompt={pendingChatPrompt}
             onPendingPromptConsumed={() => setPendingChatPrompt(null)}
+            injectedAssistantMessage={injectedChatMessage}
+            onInjectedMessageConsumed={() => setInjectedChatMessage(null)}
           />
           {gateOpen && <GateOverlay onClose={() => setGateOpen(false)} tripSnapshot={plan ? { plan, photos, acceptedHotels, itineraryDays: itineraryRef.current?.getDaysSnapshot() ?? [], prompt } : undefined} />}
           </>

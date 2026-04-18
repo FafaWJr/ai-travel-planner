@@ -27,6 +27,8 @@ export const AI_CONFIG = {
     // Raised from 1500: Sonnet 4.5 hit the cap before completing the JSON
     // for trips with many activities. 4000 fits trips up to 14 days.
     budgetEstimate: 4000,
+    // Per-phase expansion: 7 days × ~400 tokens each = ~2800, 8000 gives headroom.
+    expandPhase: 8000,
   },
   /** Temperature shared across all routes. Tune here if Luna ever drifts. */
   temperature: 0.7,
@@ -113,18 +115,18 @@ ${weather.humidity !== undefined ? `- Humidity: ${weather.humidity}%` : ''}
 
   const isLongTrip = tripDays >= 15;
   const phaseInstruction = isLongTrip
-    ? `This is a ${tripDays}-day trip (15+ days). Use ON-DEMAND PHASE PLANNING:
+    ? `This is a ${tripDays}-day trip (15+ days). Use ON-DEMAND PHASE EXPANSION:
 
-1. FIRST: call define_phase 2 to 6 times to cover ALL ${tripDays} days with named thematic or geographic phases. Every day from Day 1 to Day ${tripDays} must belong to exactly one phase. Phase boundaries should be 5 to 10 days each. Choose phases that match the destination's natural geography (e.g. "Coastal Days", "Hinterland Escape", "Southern Beaches") OR temporal flow (e.g. "Settling In", "Big Hits", "Slow Beach Living"). Each phase needs a phase_id, label, day_from, day_to, summary (2-3 sentences), and 3-5 highlights.
+STEP A: Call define_phase 2 to 6 times to cover ALL ${tripDays} days. Every day from Day 1 to Day ${tripDays} must belong to exactly one phase. Phase boundaries should be 5 to 10 days each. Choose phases that match the destination's natural geography (e.g. "Coastal Days", "Hinterland Escape", "Southern Beaches") OR temporal flow (e.g. "Settling In", "Big Hits", "Slow Beach Living"). Each phase needs a phase_id, label, day_from, day_to, summary (2-3 sentences), and 3-5 highlights.
 
-2. SECOND: call define_day with FULL activity content for the days in PHASE 1 ONLY. Each define_day call must include realistic morning/afternoon/evening/night activities — at least 1 per slot, max 3. Include the phase_id matching Phase 1.
+STEP B: Call define_day with FULL activity content for ONLY the days in PHASE 1 (the very first phase). Each define_day call must include realistic morning/afternoon/evening/night activities, at least 1 per slot, max 3. Include the phase_id matching Phase 1.
 
-3. CRITICAL: do NOT call define_day for any day in Phase 2, Phase 3, Phase 4, or beyond. Those phases are intentionally left as expandable cards. The user will click "Plan these days" on each later phase to expand it on demand. Emitting define_day for those days creates empty cards and breaks the experience.
+CRITICAL: do NOT call define_day for any day in Phase 2, Phase 3, Phase 4, or beyond. Those phases are intentionally left as expandable cards. The user will trigger expansion of each later phase by tapping a "Plan these days" button, which calls a separate API. Emitting define_day for those days creates empty cards and breaks the experience.
 
 Example for a 30-day trip with 4 phases of Days 1-7, Days 8-14, Days 15-21, Days 22-30:
-- 4 define_phase calls (one per phase)
-- 7 define_day calls (Days 1 through 7, all with full activities and phase_id matching Phase 1)
-- That is the entire structured output. Total: 11 tool calls. The user will request Phase 2-4 days separately.`
+- 4 define_phase calls (one per phase, covering all 30 days)
+- 7 define_day calls (Days 1 through 7, all with full activities, phase_id matches Phase 1)
+- Total: 11 tool calls. Phases 2, 3, 4 are deliberately left empty for on-demand expansion.`
     : `This is a ${tripDays}-day trip (under 15 days), so DO NOT call define_phase. Just call define_day once per day with full activities, from Day 1 through Day ${tripDays}.`;
 
   const userPrompt = `Please create a comprehensive travel plan for the following trip:

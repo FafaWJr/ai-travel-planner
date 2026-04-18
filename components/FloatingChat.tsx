@@ -50,6 +50,8 @@ interface Props {
   onMessagesChange?: (messages: Msg[]) => void;
   pendingPrompt?: { text: string; nonce: number } | null;
   onPendingPromptConsumed?: () => void;
+  injectedAssistantMessage?: { content: string; nonce: number } | null;
+  onInjectedMessageConsumed?: () => void;
 }
 
 interface ToolUseEvent {
@@ -285,7 +287,7 @@ function renderContent(text: string): React.ReactNode {
   });
 }
 
-export default function FloatingChat({ plan, destination, hotelContext, currentActivities, onAddToItinerary, onPlanUpdate, onTripUpdate, isGuest = false, onGateRequired, initialMessages, savedTripId, onMessagesChange, pendingPrompt, onPendingPromptConsumed }: Props) {
+export default function FloatingChat({ plan, destination, hotelContext, currentActivities, onAddToItinerary, onPlanUpdate, onTripUpdate, isGuest = false, onGateRequired, initialMessages, savedTripId, onMessagesChange, pendingPrompt, onPendingPromptConsumed, injectedAssistantMessage, onInjectedMessageConsumed }: Props) {
   const locale = useLocale();
   const t = useTranslations('plan');
 
@@ -362,6 +364,14 @@ export default function FloatingChat({ plan, destination, hotelContext, currentA
     }, 50);
     onPendingPromptConsumed?.();
   }, [pendingPrompt]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Push a Luna acknowledgment message into chat after phase expansion completes.
+  useEffect(() => {
+    if (!injectedAssistantMessage) return;
+    setMsgs(prev => [...prev, { role: 'assistant', content: injectedAssistantMessage.content }]);
+    setOpen(true);
+    onInjectedMessageConsumed?.();
+  }, [injectedAssistantMessage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const guestMsgCount = msgs.filter(m => m.role === 'user').length;
 

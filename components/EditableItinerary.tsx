@@ -233,8 +233,8 @@ interface Props {
       Undefined is treated as false (for saved trip loads and other non-streaming contexts). */
   isStreaming?: boolean;
   /** Called when the user clicks "Plan these days" on a PhaseCard.
-      The parent sends the prompt to FloatingChat to trigger day-by-day generation. */
-  onPlanPhase?: (phase: Phase) => void;
+      Returns a Promise so PhaseCard can show its loading state until expansion completes. */
+  onPlanPhase?: (phase: Phase) => Promise<void>;
 }
 
 export interface ItineraryHandle {
