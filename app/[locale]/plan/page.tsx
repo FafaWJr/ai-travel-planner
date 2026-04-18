@@ -6,7 +6,6 @@ import { useTranslations, useLocale } from 'next-intl';
 import EditableItinerary, { type ItineraryHandle, type Day } from '@/components/EditableItinerary';
 import type { Phase } from '@/types';
 import { normalizeDefineDayInput, normalizeDefinePhaseInput, defineDayInputToDay, definePhaseInputToPhase } from '@/lib/normalizeToolInput';
-import { serializeDaysToMarkdown } from '@/lib/serializeDays';
 import { BOOKING_AFFILIATE } from '@/lib/affiliate';
 import FloatingChat, { type TripUpdate } from '@/components/FloatingChat';
 import Toast from '@/components/Toast';
@@ -714,38 +713,42 @@ function PlanContent() {
   const generatePlan = async (p: string) => {
     setLoading(true); setError(''); setPlan('');
     setIsStreaming(true);
-    // Kick off destination photos in parallel with the AI stream. Photos only
-    // depend on the destination string (known immediately), not on plan content.
-    const dest = p.replace(/^plan a (trip to |)?/i,'').replace(/\b(from \d{4}-\d{2}-\d{2}.*)/i,'').trim().split(' ').slice(0,5).join(' ');
+
+    // Switch EditableItinerary into structured-from-stream mode BEFORE any
+    // events arrive. This clears days/phases and suppresses the legacy
+    // markdown re-parse effect.
+    itineraryRef.current?.beginStructuredStream();
+
+    // Kick off destination photos in parallel with the AI stream.
+    const dest = p
+      .replace(/^plan a (trip to |)?/i, '')
+      .replace(/\b(from \d{4}-\d{2}-\d{2}.*)/i, '')
+      .trim()
+      .split(' ')
+      .slice(0, 5)
+      .join(' ');
     void loadDestinationPhotos(dest);
 
-    // Stage 4: accumulators for structured tool call responses.
-    // structuredDays and structuredPhases are populated incrementally as
-    // define_day / define_phase tool events arrive in the SSE stream.
-    const structuredDays: Day[] = [];
-    const structuredPhases: Phase[] = [];
-    let hasStructuredDays = false;
-    let streamSignaledStructured = false;
-
     try {
-      const res = await fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: p, locale }) });
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: p, locale }),
+      });
       if (!res.ok) throw new Error('Failed');
+      if (!res.body) throw new Error('No response body');
 
-      const reader = res.body!.getReader();
+      const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
       let accumulated = '';
       let lastFlush = 0;
       const FLUSH_INTERVAL = 120; // ms
 
-      const flush = (text: string) => {
-        accumulated = text;
+      const flushText = () => {
         setPlan(accumulated);
-        // Flip loading off the first time we have meaningful content.
-        // 100 chars ≈ the Destination Overview H2 plus a sentence.
-        if (accumulated.length > 100) {
-          setLoading(false);
-        }
+        // Flip loading off once we have meaningful narrative content.
+        if (accumulated.length > 100) setLoading(false);
         lastFlush = Date.now();
       };
 
@@ -753,87 +756,75 @@ function PlanContent() {
         const { done, value } = await reader.read();
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
+
         const lines = buffer.split('\n');
         buffer = lines.pop() ?? '';
+
         for (const line of lines) {
           if (!line.startsWith('data: ')) continue;
           const jsonStr = line.slice(6).trim();
           if (!jsonStr || jsonStr === '[DONE]') continue;
+
           try {
             const event = JSON.parse(jsonStr);
 
-            // ── Text tokens (6 narrative sections) ──────────────────
+            // ── Text tokens (6 narrative sections) ──────────────────────
             const token = event?.choices?.[0]?.delta?.content;
             if (typeof token === 'string') {
               accumulated += token;
               const now = Date.now();
-              if (now - lastFlush >= FLUSH_INTERVAL) flush(accumulated);
+              if (now - lastFlush >= FLUSH_INTERVAL) flushText();
               continue;
             }
 
-            // ── Tool call events (structured itinerary) ───────────────
+            // ── Tool_use events (structured itinerary) ───────────────────
+            // Emitted by lib/ai-stream.ts when a content_block_stop closes
+            // a tool_use block. Shape: { tool_use: { id, name, input } }
             const toolUse = event?.tool_use;
-            if (toolUse && typeof toolUse.name === 'string') {
-              const toolName: string = toolUse.name;
-              const input = (toolUse.input ?? {}) as Record<string, unknown>;
-
-              if (toolName === 'define_phase') {
-                const normalized = normalizeDefinePhaseInput(input);
-                if (normalized) {
-                  const phase = definePhaseInputToPhase(normalized);
-                  structuredPhases.push(phase);
-                  itineraryRef.current?.upsertPhase(phase);
-                }
-              } else if (toolName === 'define_day') {
-                const normalized = normalizeDefineDayInput(input);
-                if (normalized) {
-                  // First define_day: switch itinerary into structured mode
-                  if (!streamSignaledStructured) {
-                    streamSignaledStructured = true;
-                    hasStructuredDays = true;
-                    itineraryRef.current?.beginStructuredStream();
-                    // Also flip loading off — structured days are arriving
-                    setLoading(false);
+            if (toolUse && typeof toolUse === 'object' && toolUse.name) {
+              if (toolUse.name === 'define_day') {
+                try {
+                  const input = (toolUse.input ?? {}) as Record<string, unknown>;
+                  const normalized = normalizeDefineDayInput(input);
+                  if (normalized) {
+                    const day = defineDayInputToDay(normalized);
+                    itineraryRef.current?.setStructuredDay(day);
                   }
-                  const day = defineDayInputToDay(normalized);
-                  structuredDays.push(day);
-                  // Push incrementally so cards appear as they arrive
-                  itineraryRef.current?.setStructuredDay(day);
+                } catch (err) {
+                  console.error('[plan] failed to apply define_day:', err, toolUse.input);
                 }
+                continue;
               }
+              if (toolUse.name === 'define_phase') {
+                try {
+                  const input = (toolUse.input ?? {}) as Record<string, unknown>;
+                  const normalized = normalizeDefinePhaseInput(input);
+                  if (normalized) {
+                    const phase = definePhaseInputToPhase(normalized);
+                    itineraryRef.current?.upsertPhase(phase);
+                  }
+                } catch (err) {
+                  console.error('[plan] failed to apply define_phase:', err, toolUse.input);
+                }
+                continue;
+              }
+              console.warn('[plan] unexpected tool_use name:', toolUse.name);
             }
-          } catch { /* skip malformed lines */ }
+          } catch {
+            /* skip malformed SSE lines */
+          }
         }
       }
 
-      // Final flush of any remaining text tokens
-      if (accumulated) flush(accumulated);
-
-      // If we received structured days, synthesize the itinerary section
-      // from tool call data and append it to the narrative plan text.
-      // This ensures:
-      // 1. The "Personalised Itinerary" section exists in `plan` state
-      //    (used by section extraction, Luna chat context, saved trips)
-      // 2. EditableItinerary already has structured Day[] from incremental updates
-      if (hasStructuredDays && structuredDays.length > 0) {
-        const sortedDays = [...structuredDays].sort((a, b) => a.number - b.number);
-        const itineraryMd = serializeDaysToMarkdown(sortedDays, structuredPhases);
-        // Splice after the Weather section and before Where to Stay
-        // (or just append if section markers aren't present)
-        const planWithItinerary = accumulated.includes('## Where to Stay')
-          ? accumulated.replace(
-              /## Where to Stay/,
-              `${itineraryMd}\n\n## Where to Stay`,
-            )
-          : `${accumulated}\n\n${itineraryMd}`;
-        setPlan(planWithItinerary);
-        accumulated = planWithItinerary;
-      }
+      // Final flush — captures any trailing text since the last throttled flush.
+      flushText();
 
       setIsDirty(true);
       trackTripPlanGenerated(dest);
-    } catch { setError('Failed to generate your travel plan. Please try again.'); }
-    finally  {
+    } catch (err) {
+      console.error('[plan] generatePlan failed:', err);
+      setError('Failed to generate your travel plan. Please try again.');
+    } finally {
       setLoading(false);
       setIsStreaming(false);
     }
