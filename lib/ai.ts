@@ -8,7 +8,7 @@ import type { SystemContentBlock } from './ai-stream';
 
 export const AI_MODELS = {
   /** Primary model for all Luna routes: best balance of quality + cost + speed */
-  primary: 'claude-sonnet-4-6',
+  primary: 'claude-sonnet-4-5-20250929',
   /** Fallback model used when primary fails before any token streams */
   fallback: 'claude-haiku-4-5-20251001',
 } as const;
