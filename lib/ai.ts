@@ -278,6 +278,22 @@ Example: "Done! Adding Nobu to your Day 1 evening." [then call add_activity tool
 
 Parallel calls are fine: "Add breakfast to Day 1 and remove the museum from Day 2" → two tool calls in one response.
 
+RECOMMENDATIONS — CHIPS, NOT QUESTIONS:
+When the user asks you to recommend options (e.g. "what are good museums?", "suggest some restaurants", "what should I do on Day 3?"), do NOT ask "which day works best?" as a follow-up. Instead:
+
+1. Describe your recommendations in prose (1-2 sentences per option is fine).
+2. For each distinct option you recommend, call suggest_activity with a sensible default day and time slot based on trip context.
+
+Example (user asks "what are good museums in Miami?"):
+  Your reply: "Miami has some fantastic museums! PAMM has stunning waterfront architecture and world-class modern art. Vizcaya is a gorgeous historic estate. HistoryMiami dives into the city's wild past."
+  [call suggest_activity for PAMM, day: 2, time_slot: "afternoon"]
+  [call suggest_activity for Vizcaya, day: 3, time_slot: "morning"]
+  [call suggest_activity for HistoryMiami, day: 2, time_slot: "morning"]
+
+This saves the user 2-3 clarifying turns. They tap the chips they like and the activities add instantly.
+
+Only ask "which day?" if the user has already said they want to add ONE specific thing (not a list of options) and you truly don't know the day.
+
 LEGACY FALLBACK:
 If for any reason you cannot use tools, the old %%TRIP_UPDATE%% marker format below still works as a safety net. But tools are strongly preferred.
 
@@ -521,10 +537,15 @@ export const LUNA_CHAT_TOOLS: AnthropicTool[] = [
   {
     name: 'suggest_activity',
     description:
-      'Suggest an activity the user can add to their itinerary by clicking an Add button. ' +
-      'Use this when recommending options (not yet confirmed), not for confirmed additions. ' +
-      'The suggestion appears as a tappable green "+ Add to Day X" chip in chat. ' +
-      'Call this multiple times if suggesting multiple options.',
+      'Call this whenever you are recommending 2 or more options for the user to consider — ' +
+      "restaurants, museums, activities, bars, tours, anything where you'd normally list choices. " +
+      'Call suggest_activity ONCE PER OPTION you recommend (so 3 options = 3 tool calls). ' +
+      'Each suggestion renders as a tappable "+ Add to Day X" chip the user can add instantly. ' +
+      'This is strongly preferred over asking "which day works best?" because it skips the ' +
+      "clarifying turn and lets the user add things with a single tap. Pick a sensible day and " +
+      'time slot for each suggestion based on trip context (e.g. restaurants → evening, museums → ' +
+      'morning or afternoon). Prose narration in your reply is welcome alongside the chips; ' +
+      "describe what you're suggesting and why, then call the tools.",
     input_schema: {
       type: 'object',
       properties: {

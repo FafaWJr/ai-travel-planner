@@ -201,6 +201,56 @@ function dispatchToolUse(
   }
 }
 
+/**
+ * Synthesize a minimal conversational confirmation from the tool calls Luna
+ * executed. Used as a fallback when Luna emits tool calls but no accompanying
+ * text. Keeps the user from seeing "No response received" on a successful operation.
+ */
+function summarizeToolCalls(toolCalls: ToolUseEvent[]): string {
+  if (toolCalls.length === 0) return '';
+  const slotLabel = (s: unknown): string =>
+    typeof s === 'string' ? s.toLowerCase() : '';
+
+  const parts: string[] = [];
+  for (const tc of toolCalls) {
+    const i = tc.input as Record<string, unknown>;
+    switch (tc.name) {
+      case 'add_activity': {
+        const day = i.day;
+        const slot = slotLabel(i.time_slot);
+        const activity = typeof i.activity === 'string' ? i.activity : 'the activity';
+        const cleaned = activity.replace(/\*\*/g, '').slice(0, 80);
+        parts.push(`Added ${cleaned} to Day ${day}${slot ? ` ${slot}` : ''}.`);
+        break;
+      }
+      case 'remove_activity': {
+        const day = i.day;
+        const what = typeof i.activity_text === 'string' ? i.activity_text : 'that activity';
+        const cleaned = what.replace(/\*\*/g, '').slice(0, 60);
+        parts.push(`Removed ${cleaned} from Day ${day}.`);
+        break;
+      }
+      case 'add_hotel': {
+        const name = typeof i.hotel_name === 'string' ? i.hotel_name : 'the hotel';
+        parts.push(`Added ${name} to your stays.`);
+        break;
+      }
+      case 'remove_hotel': {
+        const name = typeof i.hotel_name === 'string' ? i.hotel_name : 'that hotel';
+        parts.push(`Removed ${name} from your stays.`);
+        break;
+      }
+      case 'suggest_activity':
+        // Suggestions become chips; no narration needed in the bubble
+        break;
+      default:
+        break;
+    }
+  }
+
+  return parts.length > 0 ? `Done! ${parts.join(' ')}` : '';
+}
+
 function renderInline(text: string): React.ReactNode {
   const parts = text.split(/\*\*([^*]+)\*\*/g);
   return parts.map((part, i) => i % 2 === 1 ? <strong key={i}>{part}</strong> : part);
@@ -358,7 +408,19 @@ export default function FloatingChat({ plan, destination, hotelContext, currentA
         displayContent = displayContent.trim() ? `${displayContent}\n\n${markers}` : markers;
       }
 
-      setMsgs(prev => [...prev, { role: 'assistant', content: displayContent || 'No response received.', planUpdated }]);
+      // Prefer Luna's conversational text. If she emitted only tool calls with
+      // no surrounding text (valid per Anthropic API), synthesize a minimal
+      // confirmation so the user doesn't see "No response received" on a
+      // successful operation.
+      let finalContent = displayContent;
+      if (!finalContent.trim() && toolCalls.length > 0) {
+        finalContent = summarizeToolCalls(toolCalls);
+      }
+      if (!finalContent.trim()) {
+        finalContent = 'Sorry, I had trouble with that. Can you try rephrasing?';
+      }
+
+      setMsgs(prev => [...prev, { role: 'assistant', content: finalContent, planUpdated }]);
     } catch {
       setMsgs(prev => [...prev, { role: 'assistant', content: 'Sorry, something went wrong. Please try again.' }]);
     } finally {
