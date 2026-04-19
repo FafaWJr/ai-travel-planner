@@ -37,6 +37,27 @@ export const AI_CONFIG = {
 export type AIRouteName = keyof typeof AI_CONFIG.maxTokens;
 
 /**
+ * Slot hour definitions per LUNA-UPGRADE-PLAN.pdf Section 5.
+ * Single source of truth for time-of-day slot boundaries.
+ */
+export const SLOT_HOURS = {
+  morning:   { label: 'Morning',   startHour: 6,  endHour: 12, character: 'Breakfast, active sightseeing, museums opening early' },
+  afternoon: { label: 'Afternoon', startHour: 12, endHour: 18, character: 'Lunch, main attractions, shopping, parks' },
+  evening:   { label: 'Evening',   startHour: 18, endHour: 21, character: 'Dinner, sunset views, early shows, casual walks' },
+  night:     { label: 'Night',     startHour: 21, endHour: 26, character: 'Bars, clubs, late shows, night markets' },
+} as const;
+
+export type SlotName = keyof typeof SLOT_HOURS;
+
+/**
+ * R1 Stage 4 Rules feature flag.
+ * Default true. Disable by setting NEXT_PUBLIC_STAGE4_RULES_ENABLED=false.
+ */
+export function stage4RulesEnabled(): boolean {
+  return process.env.NEXT_PUBLIC_STAGE4_RULES_ENABLED !== 'false';
+}
+
+/**
  * Anthropic tool definition. See:
  * https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview
  *
@@ -113,6 +134,18 @@ ${weather.humidity !== undefined ? `- Humidity: ${weather.humidity}%` : ''}
 `;
   }
 
+  // ── R1 Stage 4 Rules ────────────────────────────────────────────────────
+  const rulesBlock = buildStage4RulesBlock({
+    adultAges:     form.adultAges,
+    childrenAges:  form.childrenAges,
+    children:      form.children,
+    tripStyles:    form.tripStyles as string[],
+    notes:         form.notes,
+    arrivalTime:   form.arrivalTime,
+    departureTime: form.departureTime,
+    styleLabels,
+  });
+
   const isLongTrip = tripDays >= 15;
   const phaseInstruction = isLongTrip
     ? `This is a ${tripDays}-day trip (15+ days). Use ON-DEMAND PHASE EXPANSION:
@@ -145,6 +178,7 @@ ${form.departureTime ? `- **Departure Time:** ${form.departureTime}` : ''}
 - **Budget Level:** ${budgetLabel}
 ${form.notes ? `\n## Special Requests\n${form.notes}` : ''}
 ${weatherContext}
+${rulesBlock}
 
 ---
 
@@ -219,6 +253,151 @@ export function sanitizePromptInput(input: unknown, maxLength = 8000): string {
     .replace(/\n{4,}/g, '\n\n')  // collapse excessive newlines
     .replace(/\r/g, '')           // strip carriage returns
     .trim();
+}
+
+// ─── R1 Stage 4 Rules (LUNA-UPGRADE-PLAN.pdf Section 10) ──────────────────
+
+export type DefineDayInputForRules = {
+  day?: number;
+  title?: string;
+  phase_id?: string;
+  morning?: Array<string | { text: string; location?: string }>;
+  afternoon?: Array<string | { text: string; location?: string }>;
+  evening?: Array<string | { text: string; location?: string }>;
+  night?: Array<string | { text: string; location?: string }>;
+};
+
+export type TripRulesContext = {
+  adultAges?: string[];
+  childrenAges?: string[];
+  children?: number;
+  tripStyles?: string[];
+  notes?: string;
+};
+
+/** Extract activity text from either a plain string or an object with a text field. */
+function getRuleText(a: unknown): string {
+  if (typeof a === 'string') return a;
+  if (a && typeof a === 'object' && 'text' in a && typeof (a as { text: string }).text === 'string') {
+    return (a as { text: string }).text;
+  }
+  return '';
+}
+
+/**
+ * Build the audience safety rules block for prompt injection.
+ * Returns empty string when the feature flag is off.
+ */
+export function buildStage4RulesBlock(ctx: TripRulesContext & { arrivalTime?: string; departureTime?: string; styleLabels?: string }): string {
+  if (!stage4RulesEnabled()) return '';
+
+  const parsedAdultAges = (ctx.adultAges ?? []).map(a => parseInt(a, 10)).filter(n => Number.isFinite(n) && n > 0);
+  const parsedChildrenAges = (ctx.childrenAges ?? []).map(a => parseInt(a, 10)).filter(n => Number.isFinite(n) && n >= 0);
+  const hasChildren = parsedChildrenAges.length > 0 || (ctx.children ?? 0) > 0;
+  const allAdultsUnder21 = parsedAdultAges.length > 0 && parsedAdultAges.every(a => a < 21);
+  const styles = ctx.tripStyles ?? [];
+  const hasPartyNightlife = styles.includes('party-nightlife');
+  const hasWellnessOrRelax = styles.includes('wellness-spa') || styles.includes('beach-relaxation');
+  const hasAdventureOrSports = styles.includes('adventure-outdoors') || styles.includes('sports-activities');
+  const activeHoursCap = hasWellnessOrRelax ? 8 : hasAdventureOrSports ? 12 : 10;
+
+  const arrivalRule = ctx.arrivalTime
+    ? `- Arrival time: **${ctx.arrivalTime}**. Day 1 activities before this time MUST be empty.\n  - At/after 09:00: Morning slot empty on Day 1\n  - At/after 13:00: Morning and afternoon empty on Day 1\n  - At/after 19:00: Morning, afternoon, and evening empty on Day 1\n  - At/after 22:00: All slots empty Day 1 except a "Check in" in the night slot`
+    : '- No arrival time specified — fill Day 1 normally.';
+  const departureRule = ctx.departureTime
+    ? `- Departure time: **${ctx.departureTime}**. Last day activities MUST end before this time.`
+    : '- No departure time specified — fill last day normally.';
+
+  const childrenRule = hasChildren
+    ? `- **Children present (${parsedChildrenAges.length > 0 ? 'ages ' + parsedChildrenAges.join(', ') : 'count given but ages unspecified'}):** Night slot EMPTY every day unless Special Requests explicitly mention a late activity. NO nightlife, bars, clubs. Activities must be age-appropriate for the youngest child.`
+    : '';
+  const under21Rule = allAdultsUnder21
+    ? `- **All adults under 21 (ages ${parsedAdultAges.join(', ')}):** NO wine tasting, brewery tours, vineyard visits, bar-centric activities, cellar tours, cocktail experiences.`
+    : '';
+  const relaxedRule = hasWellnessOrRelax && !hasPartyNightlife
+    ? `- **Relaxed/wellness trip without party-nightlife:** Evening activities must end by 20:00. Night slot EMPTY every day.`
+    : '';
+  const noConstraints = !hasChildren && !allAdultsUnder21 && !(hasWellnessOrRelax && !hasPartyNightlife)
+    ? '- No special audience constraints for this trip.'
+    : '';
+
+  return `
+
+## Itinerary rules (STRICT — do not violate)
+
+### Slot hour definitions
+- **Morning:** 06:00–12:00 (breakfast, early sightseeing, museums opening)
+- **Afternoon:** 12:00–18:00 (lunch, main attractions, shopping, parks)
+- **Evening:** 18:00–21:00 (dinner, sunset views, early shows)
+- **Night:** 21:00+ (bars, clubs, late shows, night markets)
+
+### Activity count cap
+Maximum **3 activities per slot** per day. Enforced by the tool schema — emitting more will cause the call to fail.
+
+### Daily active hours cap
+Keep total active hours per day under **${activeHoursCap}h** for this trip (styles: ${ctx.styleLabels ?? (styles.join(', ') || 'general')}). Estimates: breakfast 1h, museum 2h, major attraction 3h, show 2h, dinner 1.5h, café stop 1h. Do not overpack.
+
+### Arrival and departure time rules
+${arrivalRule}
+${departureRule}
+
+### Audience safety rules (NO exceptions)
+${childrenRule}${under21Rule}${relaxedRule}${noConstraints}
+These rules are safety-critical and override stylistic preferences.
+`;
+}
+
+/**
+ * Apply R1 audience safety rules client-side to a define_day tool input.
+ * Strips rule-violating activities before dispatching to the itinerary.
+ * Mirrors the prompt rules to catch any slippage.
+ */
+export function applyStage4Rules(
+  input: DefineDayInputForRules,
+  ctx: TripRulesContext,
+): DefineDayInputForRules {
+  if (!stage4RulesEnabled()) return input;
+
+  const parsedAdultAges = (ctx.adultAges ?? []).map(a => parseInt(a, 10)).filter(n => Number.isFinite(n) && n > 0);
+  const parsedChildrenAges = (ctx.childrenAges ?? []).map(a => parseInt(a, 10)).filter(n => Number.isFinite(n) && n >= 0);
+  const hasChildren = parsedChildrenAges.length > 0 || (ctx.children ?? 0) > 0;
+  const allAdultsUnder21 = parsedAdultAges.length > 0 && parsedAdultAges.every(a => a < 21);
+  const styles = ctx.tripStyles ?? [];
+  const hasPartyNightlife = styles.includes('party-nightlife');
+  const hasWellnessOrRelax = styles.includes('wellness-spa') || styles.includes('beach-relaxation');
+  const notesRequestLateNight = /\b(night|late|club|bar|nightlife|nightcap|party)/i.test(ctx.notes ?? '');
+
+  const day = input.day ?? 0;
+  const stripped: DefineDayInputForRules = { ...input };
+
+  // Rule 1: children present, no late-request in notes → strip night slot
+  if (hasChildren && !notesRequestLateNight && stripped.night && stripped.night.length > 0) {
+    console.log(`[rules/stage4] stripped_night_slot day=${day} reason=children_present`);
+    stripped.night = [];
+  }
+
+  // Rule 2: all adults < 21 → strip alcohol-centric activities
+  if (allAdultsUnder21) {
+    const alcoholPattern = /\b(wine|winery|brewery|bar\b|pub\b|cocktail|cellar|vineyard|distillery|tasting room)/i;
+    for (const slot of ['morning', 'afternoon', 'evening', 'night'] as const) {
+      const arr = stripped[slot];
+      if (!arr) continue;
+      stripped[slot] = arr.filter(activity => {
+        const text = getRuleText(activity);
+        const isAlcohol = alcoholPattern.test(text);
+        if (isAlcohol) console.log(`[rules/stage4] stripped_activity day=${day} slot=${slot} reason=adult_under_21 match="${text.slice(0, 60)}"`);
+        return !isAlcohol;
+      });
+    }
+  }
+
+  // Rule 3: relaxed/wellness without party-nightlife → strip night slot
+  if (hasWellnessOrRelax && !hasPartyNightlife && stripped.night && stripped.night.length > 0) {
+    console.log(`[rules/stage4] stripped_night_slot day=${day} reason=relaxed_style`);
+    stripped.night = [];
+  }
+
+  return stripped;
 }
 
 export const SYSTEM_PROMPT = `You are an expert travel planner with deep knowledge of destinations worldwide. You create personalised, detailed, and genuinely helpful travel itineraries. Your plans are specific (not generic), practical, and tailored to the traveller's preferences and budget. You write in an engaging, friendly tone while remaining professional and informative. Always use Markdown formatting with clear headers, bullet points, and bold text for key information.
@@ -575,6 +754,42 @@ export const LUNA_CHAT_TOOLS: AnthropicTool[] = [
     },
   },
   {
+    name: 'replace_activity',
+    description:
+      "Swap an existing activity in a specific day and slot with a new one. " +
+      "Use when the user wants to change an activity (e.g. 'swap the museum for a garden walk'), " +
+      "rather than adding or removing separately. " +
+      "Match the old activity by a text fragment (case-insensitive partial match).",
+    input_schema: {
+      type: 'object',
+      properties: {
+        day: {
+          type: 'integer',
+          minimum: 1,
+          description: 'Which day number to edit (1-indexed).',
+        },
+        timeSlot: {
+          type: 'string',
+          enum: ['morning', 'afternoon', 'evening', 'night'],
+          description: 'Which slot contains the activity to replace.',
+        },
+        oldActivity: {
+          type: 'string',
+          description: 'A text fragment matching the CURRENT activity to replace. Case-insensitive partial match. Be specific enough to uniquely identify it in that slot.',
+        },
+        newActivity: {
+          type: 'string',
+          description: 'The replacement activity description.',
+        },
+        newLocation: {
+          type: 'string',
+          description: 'Optional location/neighborhood for the new activity.',
+        },
+      },
+      required: ['day', 'timeSlot', 'oldActivity', 'newActivity'],
+    },
+  },
+  {
     name: 'suggest_activity',
     description:
       'Call this whenever you are recommending 2 or more options for the user to consider — ' +
@@ -739,23 +954,27 @@ export const DEFINE_DAY_TOOL: AnthropicTool = {
       },
       morning: {
         type: 'array',
+        maxItems: 3,
         items: { type: 'string' },
-        description: 'Morning activities. At least 1, max 3. Each under 200 characters.',
+        description: 'Morning activities (06:00-12:00). At least 1, max 3. Each under 200 characters.',
       },
       afternoon: {
         type: 'array',
+        maxItems: 3,
         items: { type: 'string' },
-        description: 'Afternoon activities. At least 1, max 3. Each under 200 characters.',
+        description: 'Afternoon activities (12:00-18:00). At least 1, max 3. Each under 200 characters.',
       },
       evening: {
         type: 'array',
+        maxItems: 3,
         items: { type: 'string' },
-        description: 'Evening activities. At least 1, max 2. Each under 200 characters.',
+        description: 'Evening activities (18:00-21:00). At least 1, max 3. Each under 200 characters.',
       },
       night: {
         type: 'array',
+        maxItems: 3,
         items: { type: 'string' },
-        description: 'Night activities. At least 1, max 2. Each under 200 characters.',
+        description: 'Night activities (21:00+). At least 1, max 3. Each under 200 characters.',
       },
       phase_id: {
         type: 'string',

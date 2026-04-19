@@ -6,6 +6,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import EditableItinerary, { type ItineraryHandle, type Day } from '@/components/EditableItinerary';
 import type { Phase } from '@/types';
 import { normalizeDefineDayInput, normalizeDefinePhaseInput, defineDayInputToDay, definePhaseInputToPhase } from '@/lib/normalizeToolInput';
+import { applyStage4Rules, type TripRulesContext } from '@/lib/ai';
 import { BOOKING_AFFILIATE } from '@/lib/affiliate';
 import FloatingChat, { type TripUpdate } from '@/components/FloatingChat';
 import Toast from '@/components/Toast';
@@ -796,7 +797,18 @@ function PlanContent() {
                   const input = (toolUse.input ?? {}) as Record<string, unknown>;
                   const normalized = normalizeDefineDayInput(input);
                   if (normalized) {
-                    const day = defineDayInputToDay(normalized);
+                    const rulesCtx: TripRulesContext = {
+                      tripStyles: prompt.match(/\b(cultural-history|gastronomy-food|party-nightlife|shopping|family-friendly|adventure-outdoors|beach-relaxation|wellness-spa|romance-couples|nature-eco|sports-activities|photography-art)\b/g) ?? [],
+                    };
+                    const safeInput = applyStage4Rules(normalized as import('@/lib/ai').DefineDayInputForRules, rulesCtx);
+                    const safeNormalized = {
+                      ...normalized,
+                      morning:   (safeInput.morning   ?? normalized.morning)   as string[],
+                      afternoon: (safeInput.afternoon ?? normalized.afternoon) as string[],
+                      evening:   (safeInput.evening   ?? normalized.evening)   as string[],
+                      night:     (safeInput.night     ?? normalized.night)     as string[],
+                    };
+                    const day = defineDayInputToDay(safeNormalized);
                     itineraryRef.current?.setStructuredDay(day);
                     setStreamedDayCount(c => c + 1);
                   }
@@ -1426,6 +1438,18 @@ function PlanContent() {
                 const text = update.activity || update.location || '';
                 if (text) itineraryRef.current?.removeActivitiesMatching(text);
                 setToast(`Activity removed from Day ${dayNum}`);
+                markDirty();
+                return;
+              }
+              if (update.type === 'replace_activity') {
+                const dayNum = update.day ?? 1;
+                const slot = (update.timeSlot?.toLowerCase() ?? 'afternoon') as TimeSlot;
+                if (update.activity) itineraryRef.current?.removeActivitiesMatching(update.activity);
+                const text = update.location
+                  ? `${update.newActivity} (${update.location})`
+                  : (update.newActivity ?? '');
+                if (text) itineraryRef.current?.addActivity(text, dayNum, slot, false, true);
+                setToast(`Swapped activity on Day ${dayNum}`);
                 markDirty();
                 return;
               }

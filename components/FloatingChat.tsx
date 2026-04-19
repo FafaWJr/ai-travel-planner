@@ -30,7 +30,8 @@ export interface TripUpdate {
   // Activity updates (type === 'add_activity' | 'remove_activity' | 'replace_activity')
   day?: number;
   timeSlot?: string;
-  activity?: string;
+  activity?: string;     // add_activity: new text; remove_activity: text to match; replace_activity: old text to match
+  newActivity?: string;  // replace_activity: replacement text
   location?: string;
   activityIndex?: number;
 }
@@ -172,6 +173,11 @@ function dispatchToolUse(
     case 'remove_activity': {
       const i = tc.input as { day: number; activity_text: string };
       onTripUpdate?.({ type: 'remove_activity', day: i.day, activity: i.activity_text });
+      return { planUpdated: true, addable: null };
+    }
+    case 'replace_activity': {
+      const i = tc.input as { day: number; timeSlot: string; oldActivity: string; newActivity: string; newLocation?: string };
+      onTripUpdate?.({ type: 'replace_activity', day: i.day, timeSlot: i.timeSlot, activity: i.oldActivity, newActivity: i.newActivity, location: i.newLocation });
       return { planUpdated: true, addable: null };
     }
     case 'suggest_activity': {
