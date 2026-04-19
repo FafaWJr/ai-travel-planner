@@ -8,13 +8,20 @@ interface PhaseCardProps {
   plannedDaysCount: number;
   /** Returns a promise that resolves when expansion is complete (success or failure). */
   onPlanPhase?: () => Promise<void>;
+  /** R4: Called when user selects "Regenerate phase" from the three-dot menu. */
+  onRegeneratePhase?: (phaseId: string) => void;
+  /** R4: Whether the regen affordance is enabled. */
+  regenEnabled?: boolean;
+  /** R4: Whether this phase has any planned activity content (shows three-dot menu). */
+  isPlanned?: boolean;
 }
 
-export default function PhaseCard({ phase, plannedDaysCount, onPlanPhase }: PhaseCardProps) {
+export default function PhaseCard({ phase, plannedDaysCount, onPlanPhase, onRegeneratePhase, regenEnabled = false, isPlanned = false }: PhaseCardProps) {
   const totalDays = phase.dayTo - phase.dayFrom + 1;
   const isFullyPlanned = plannedDaysCount >= totalDays;
   const [isPlanning, setIsPlanning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleClick = async () => {
     if (!onPlanPhase || isPlanning) return;
@@ -118,6 +125,53 @@ export default function PhaseCard({ phase, plannedDaysCount, onPlanPhase }: Phas
             {phase.label}
           </h3>
         </div>
+
+        {isPlanned && regenEnabled && onRegeneratePhase && (
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <button
+              onClick={(e) => { e.stopPropagation(); setMenuOpen(v => !v); }}
+              title="Phase options"
+              style={{
+                background: 'rgba(255,255,255,0.15)', border: 'none', padding: 6,
+                cursor: 'pointer', color: '#fff', borderRadius: 8,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <circle cx="4" cy="8" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="12" cy="8" r="1.5"/>
+              </svg>
+            </button>
+            {menuOpen && (
+              <>
+                <div style={{ position: 'fixed', inset: 0, zIndex: 100 }} onClick={() => setMenuOpen(false)} />
+                <div style={{
+                  position: 'absolute', top: 34, right: 0, zIndex: 101,
+                  background: '#fff', border: '1px solid rgba(0,68,123,0.12)',
+                  borderRadius: 8, boxShadow: '0 8px 24px rgba(0,20,60,0.12)',
+                  minWidth: 180, overflow: 'hidden',
+                }}>
+                  <button
+                    onClick={() => { setMenuOpen(false); onRegeneratePhase(phase.id); }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 8, width: '100%',
+                      padding: '10px 14px', border: 'none', background: 'transparent',
+                      color: '#00447B', fontFamily: "'Poppins', sans-serif",
+                      fontSize: 13, fontWeight: 500, cursor: 'pointer', textAlign: 'left',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,68,123,0.06)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                      <path d="M14 8a6 6 0 1 1-2.5-4.87" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                      <path d="M14 2v4h-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    Regenerate phase
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
 
         {!isFullyPlanned && onPlanPhase && (
           <button

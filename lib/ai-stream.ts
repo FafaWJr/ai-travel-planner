@@ -61,10 +61,16 @@ export type AIRoute = AIRouteName;
  *     stream because the client has already rendered content.
  *   - Setting NEXT_PUBLIC_AI_FALLBACK_ENABLED=false disables fallback entirely.
  */
+export type ToolChoiceOption =
+  | { type: 'auto' }
+  | { type: 'any' }
+  | { type: 'tool'; name: string };
+
 export async function streamCompletion(
   messages: Message[],
   route: AIRoute,
   tools?: AnthropicTool[],
+  toolChoice?: ToolChoiceOption,
 ): Promise<ReadableStream<Uint8Array>> {
   const maxTokens = AI_CONFIG.maxTokens[route];
 
@@ -79,7 +85,7 @@ export async function streamCompletion(
 
   // Try primary (Sonnet 4.6).
   try {
-    return await streamAnthropic(AI_MODELS.primary, messages, maxTokens, route, tools);
+    return await streamAnthropic(AI_MODELS.primary, messages, maxTokens, route, tools, toolChoice);
   } catch (primaryErr) {
     console.warn(
       `[ai/${route}] primary model (${AI_MODELS.primary}) failed pre-stream:`,
@@ -93,7 +99,7 @@ export async function streamCompletion(
     // Retry once on Haiku 4.5. Same streaming shape so the client sees no difference.
     try {
       console.warn(`[ai/${route}] falling back to ${AI_MODELS.fallback}`);
-      return await streamAnthropic(AI_MODELS.fallback, messages, maxTokens, route, tools);
+      return await streamAnthropic(AI_MODELS.fallback, messages, maxTokens, route, tools, toolChoice);
     } catch (fallbackErr) {
       console.error(
         `[ai/${route}] fallback model (${AI_MODELS.fallback}) also failed:`,
@@ -111,6 +117,7 @@ async function streamAnthropic(
   maxTokens: number,
   route: AIRoute,
   tools?: AnthropicTool[],
+  toolChoice?: ToolChoiceOption,
 ): Promise<ReadableStream<Uint8Array>> {
   // Separate system message from conversation. The `system` content may be
   // a plain string (no caching) or an array of content blocks (with optional
@@ -135,7 +142,7 @@ async function streamAnthropic(
       stream: true,
       system,
       messages: conversation,
-      ...(tools && tools.length > 0 ? { tools, tool_choice: { type: 'auto' } } : {}),
+      ...(tools && tools.length > 0 ? { tools, tool_choice: toolChoice ?? { type: 'auto' } } : {}),
     }),
   });
 

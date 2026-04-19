@@ -103,5 +103,6 @@ export function defineDayInputToDay(input: DefineDayInput): Day {
     suggestions: [],
     loadingMore: false,
     confirmed:   false,
+    phase_id:    input.phase_id,
   };
 }

@@ -29,6 +29,8 @@ export const AI_CONFIG = {
     budgetEstimate: 4000,
     // Per-phase expansion: 7 days × ~400 tokens each = ~2800, 8000 gives headroom.
     expandPhase: 8000,
+    // Single day regeneration. Same budget as a day within /api/generate.
+    regenerateDay: 4000,
   },
   /** Temperature shared across all routes. Tune here if Luna ever drifts. */
   temperature: 0.7,
@@ -73,6 +75,16 @@ export function formatSlotHours(slot: SlotName, _locale?: string): string {
  */
 export function stage4RulesEnabled(): boolean {
   return process.env.NEXT_PUBLIC_STAGE4_RULES_ENABLED !== 'false';
+}
+
+/**
+ * R4 Regeneration feature flag.
+ * Gates /api/regenerate-day, the regenerate mode of /api/expand-phase,
+ * and the client-side regen affordances (day button + phase three-dot menu).
+ * Default ON. Rollback: NEXT_PUBLIC_REGENERATION_ENABLED=false.
+ */
+export function regenerationEnabled(): boolean {
+  return process.env.NEXT_PUBLIC_REGENERATION_ENABLED !== 'false';
 }
 
 /**

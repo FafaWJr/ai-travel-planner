@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { streamCompletion } from '@/lib/ai-stream';
-import { AI_CONFIG, getLanguageInstruction, sanitizePromptInput, DEFINE_DAY_TOOL } from '@/lib/ai';
+import { getLanguageInstruction, sanitizePromptInput, DEFINE_DAY_TOOL, buildStage4RulesBlock, regenerationEnabled, type TripRulesContext } from '@/lib/ai';
 
 export const maxDuration = 60;
 
@@ -20,8 +20,14 @@ interface ExpandPhaseRequest {
   travellers?: string;
   travelStyles?: string[];
   budgetLevel?: string;
+  adultAges?: string[];
+  childrenAges?: string[];
+  children?: number;
+  notes?: string;
   alreadyPlannedSummary?: string;
   locale?: string;
+  mode?: 'expand' | 'regenerate';
+  userHint?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -38,6 +44,12 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: 'Invalid phase data' }, { status: 400 });
     }
 
+    const isRegenerate = body.mode === 'regenerate';
+
+    if (isRegenerate && !regenerationEnabled()) {
+      return Response.json({ error: 'Regeneration is disabled' }, { status: 404 });
+    }
+
     const phase = body.phase;
     const dayCount = phase.day_to - phase.day_from + 1;
     const dayList = Array.from({ length: dayCount }, (_, i) => phase.day_from + i).join(', ');
@@ -45,7 +57,22 @@ export async function POST(request: NextRequest) {
     const locale = body.locale || 'en';
     const langInstruction = getLanguageInstruction(locale);
 
-    const systemPrompt = `You are an expert travel planner expanding a single thematic phase into a detailed day-by-day plan.
+    // Build audience safety rules block (R2-A parity)
+    const rulesCtx: TripRulesContext = {
+      adultAges:    body.adultAges,
+      childrenAges: body.childrenAges,
+      children:     body.children,
+      tripStyles:   body.travelStyles,
+      notes:        body.notes,
+      destination:  body.destination,
+    };
+    const rulesBlock = buildStage4RulesBlock(rulesCtx);
+
+    const regenerateIntro = isRegenerate
+      ? `This is a REGENERATION. The user previously had activities for this phase but wants a fresh take. Generate activities that feel meaningfully different from a standard first-pass expansion — new restaurants, different attractions, varied pacing.${body.userHint ? `\n\n## User's hint for this regeneration\n"${body.userHint}"\n\nHonor this hint above all else.` : ''}\n\n`
+      : '';
+
+    const systemPrompt = `You are an expert travel planner ${isRegenerate ? 'regenerating' : 'expanding'} a single thematic phase into a detailed day-by-day plan.
 
 Your only job is to call the define_day tool once per day in the phase. Do not write any narrative text.
 
@@ -57,7 +84,7 @@ CRITICAL RULES:
 - Do not write any text before or between tool calls
 ${langInstruction ? `\n${langInstruction}` : ''}`;
 
-    const userPrompt = `Expand this phase into ${dayCount} fully-planned days.
+    const userPrompt = `${regenerateIntro}${isRegenerate ? 'Regenerate' : 'Expand'} this phase into ${dayCount} fully-planned days.
 
 ## Phase
 - ID: ${phase.id}
@@ -73,7 +100,9 @@ ${body.travelStyles?.length ? `- Travel Styles: ${body.travelStyles.join(', ')}`
 ${body.budgetLevel ? `- Budget Level: ${body.budgetLevel}` : ''}
 ${body.startDate && body.endDate ? `- Trip Dates: ${body.startDate} to ${body.endDate}` : ''}
 
-${body.alreadyPlannedSummary ? `## What's Already Planned in Earlier Phases\n${sanitizePromptInput(body.alreadyPlannedSummary, 2000)}\n\nMake sure your suggestions for this phase don't duplicate activities already planned earlier.\n` : ''}
+${!isRegenerate && body.alreadyPlannedSummary ? `## What's Already Planned in Earlier Phases\n${sanitizePromptInput(body.alreadyPlannedSummary, 2000)}\n\nMake sure your suggestions for this phase don't duplicate activities already planned earlier.\n` : ''}
+${rulesBlock}
+
 Now emit ${dayCount} define_day tool calls covering Day ${phase.day_from} through Day ${phase.day_to}. Match the phase vibe. Do not write any narrative text.`;
 
     let stream: ReadableStream<Uint8Array>;

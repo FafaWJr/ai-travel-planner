@@ -7,6 +7,7 @@ import EditableItinerary, { type ItineraryHandle, type Day } from '@/components/
 import type { Phase } from '@/types';
 import { normalizeDefineDayInput, normalizeDefinePhaseInput, defineDayInputToDay, definePhaseInputToPhase } from '@/lib/normalizeToolInput';
 import { applyStage4Rules, parsePromptContext, type TripRulesContext } from '@/lib/ai';
+import RegenerationModal from '@/components/RegenerationModal';
 import { BOOKING_AFFILIATE } from '@/lib/affiliate';
 import FloatingChat, { type TripUpdate } from '@/components/FloatingChat';
 import Toast from '@/components/Toast';
@@ -401,6 +402,240 @@ function PlanContent() {
   const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'assistant'; content: string; planUpdated?: boolean; isWelcome?: boolean }[]>([]);
   const chatSyncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const markDirty = () => setIsDirty(true);
+
+  // R4: Regeneration modal state
+  const [regenModal, setRegenModal] = useState<{
+    isOpen: boolean;
+    mode: 'day' | 'phase';
+    dayNumber?: number;
+    phaseId?: string;
+    phaseName?: string;
+    dayRange?: [number, number];
+    hasAcceptedActivities: boolean;
+    isSubmitting: boolean;
+  }>({ isOpen: false, mode: 'day', hasAcceptedActivities: false, isSubmitting: false });
+
+  // ── R4 Regeneration handlers ─────────────────────────────────────────────
+
+  const handleRegenerateDayClick = (dayNumber: number) => {
+    const accepted = itineraryRef.current?.getAcceptedActivitiesForDay(dayNumber) ?? [];
+    setRegenModal({
+      isOpen: true, mode: 'day', dayNumber,
+      hasAcceptedActivities: accepted.length > 0, isSubmitting: false,
+    });
+  };
+
+  const handleRegeneratePhaseClick = (phaseId: string) => {
+    const phase = itineraryRef.current?.getPhases().find(p => p.id === phaseId);
+    if (!phase) return;
+    setRegenModal({
+      isOpen: true, mode: 'phase', phaseId,
+      phaseName: phase.label, dayRange: [phase.dayFrom, phase.dayTo],
+      hasAcceptedActivities: false, isSubmitting: false,
+    });
+  };
+
+  const handleRegenConfirm = async (opts: { userHint: string; keepAccepted: boolean }) => {
+    setRegenModal(prev => ({ ...prev, isSubmitting: true }));
+    try {
+      if (regenModal.mode === 'day') {
+        await executeRegenerateDay(regenModal.dayNumber!, opts);
+      } else {
+        await executeRegeneratePhase(regenModal.phaseId!, opts);
+      }
+      setRegenModal({ isOpen: false, mode: 'day', hasAcceptedActivities: false, isSubmitting: false });
+    } catch (err) {
+      console.error('[regen] failed:', err);
+      setToast('Regeneration failed. Please try again.');
+      setRegenModal(prev => ({ ...prev, isSubmitting: false }));
+    }
+  };
+
+  const executeRegenerateDay = async (
+    dayNumber: number,
+    opts: { userHint: string; keepAccepted: boolean },
+  ) => {
+    const parsed = parsePromptContext(prompt);
+    const days = itineraryRef.current?.getDaysSnapshot() ?? [];
+    const currentDay = days.find(d => d.number === dayNumber);
+    const phaseId = currentDay?.phase_id;
+    const phase = phaseId ? itineraryRef.current?.getPhases().find(p => p.id === phaseId) : undefined;
+
+    const prevDay = days.find(d => d.number === dayNumber - 1);
+    const nextDay = days.find(d => d.number === dayNumber + 1);
+    const adjacentDaysSummary = [prevDay, nextDay].filter(Boolean)
+      .map(d => `Day ${d!.number} (${d!.title}): ${d!.activities.slice(0, 3).map(a => a.text.replace(/\*\*/g, '').slice(0, 60)).join('; ')}`)
+      .join('\n');
+
+    const acceptedActivities = opts.keepAccepted
+      ? itineraryRef.current?.getAcceptedActivitiesForDay(dayNumber) ?? []
+      : [];
+
+    const adultsMatch = prompt.match(/for (\d+) adult/i);
+    const adultsNum = adultsMatch ? parseInt(adultsMatch[1], 10) : undefined;
+    const travellers = adultsNum
+      ? `${adultsNum} adult${adultsNum > 1 ? 's' : ''}${parsed.children ? ` + ${parsed.children} child${parsed.children > 1 ? 'ren' : ''}` : ''}`
+      : undefined;
+
+    const budgetMatch = prompt.match(/with (budget-friendly|comfortable|premium|luxury) budget/i);
+    const budgetLevel = budgetMatch ? budgetMatch[1] : undefined;
+
+    const res = await fetch('/api/regenerate-day', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        dayNumber,
+        destination: parsed.destination || '',
+        tripPrompt: prompt,
+        currentDayTitle: currentDay?.title,
+        phase: phase ? { id: phase.id, label: phase.label, summary: phase.summary } : undefined,
+        adjacentDaysSummary: adjacentDaysSummary || undefined,
+        travellers,
+        travelStyles: parsed.tripStyles,
+        budgetLevel,
+        adultAges: parsed.adultAges,
+        childrenAges: parsed.childrenAges,
+        children: parsed.children,
+        notes: parsed.notes,
+        locale,
+        userHint: opts.userHint || undefined,
+        mode: opts.keepAccepted ? 'keep-accepted' : 'replace-all',
+        acceptedActivities: opts.keepAccepted ? acceptedActivities : undefined,
+      }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+
+    const reader = res.body!.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let toolInput: Record<string, unknown> | null = null;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? '';
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const jsonStr = line.slice(6).trim();
+        if (!jsonStr || jsonStr === '[DONE]') continue;
+        try {
+          const event = JSON.parse(jsonStr);
+          if (event?.tool_use?.name === 'define_day') toolInput = event.tool_use.input ?? {};
+        } catch { /* skip */ }
+      }
+    }
+
+    if (!toolInput) throw new Error('No day returned from regeneration');
+
+    const normalized = normalizeDefineDayInput(toolInput);
+    if (!normalized) throw new Error('Invalid day data returned');
+
+    const rulesCtx: TripRulesContext = {
+      adultAges: parsed.adultAges, childrenAges: parsed.childrenAges,
+      children: parsed.children, tripStyles: parsed.tripStyles,
+      notes: parsed.notes, destination: parsed.destination,
+    };
+    const safeInput = applyStage4Rules(normalized as import('@/lib/ai').DefineDayInputForRules, rulesCtx);
+    const safeNormalized = {
+      ...normalized,
+      morning:   (safeInput.morning   ?? normalized.morning)   as string[],
+      afternoon: (safeInput.afternoon ?? normalized.afternoon) as string[],
+      evening:   (safeInput.evening   ?? normalized.evening)   as string[],
+      night:     (safeInput.night     ?? normalized.night)     as string[],
+    };
+
+    const newDay = defineDayInputToDay(safeNormalized);
+    // Preserve accepted activities if keep-accepted mode
+    if (opts.keepAccepted && acceptedActivities.length > 0) {
+      for (const acc of acceptedActivities) {
+        const existingIdx = newDay.activities.findIndex(
+          a => a.slot === acc.timeSlot && a.text.replace(/\*\*/g, '').toLowerCase().includes(acc.text.toLowerCase().slice(0, 30))
+        );
+        if (existingIdx >= 0) {
+          newDay.activities[existingIdx].status = 'accepted';
+        }
+      }
+    }
+
+    itineraryRef.current?.replaceDay(dayNumber, newDay);
+    setToast(`Day ${dayNumber} regenerated`);
+    markDirty();
+    setItineraryVersion(v => v + 1);
+  };
+
+  const executeRegeneratePhase = async (
+    phaseId: string,
+    opts: { userHint: string; keepAccepted: boolean },
+  ) => {
+    const phase = itineraryRef.current?.getPhases().find(p => p.id === phaseId);
+    if (!phase) throw new Error('Phase not found');
+
+    const parsed = parsePromptContext(prompt);
+    const ciM = prompt.match(/from (\d{4}-\d{2}-\d{2})/);
+    const coM = prompt.match(/to (\d{4}-\d{2}-\d{2})/);
+
+    const res = await fetch('/api/expand-phase', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phase: { id: phase.id, label: phase.label, day_from: phase.dayFrom, day_to: phase.dayTo, summary: phase.summary, highlights: phase.highlights },
+        destination: parsed.destination || '',
+        startDate: ciM?.[1],
+        endDate: coM?.[1],
+        travelStyles: parsed.tripStyles,
+        adultAges: parsed.adultAges,
+        childrenAges: parsed.childrenAges,
+        children: parsed.children,
+        notes: parsed.notes,
+        locale,
+        mode: 'regenerate',
+        userHint: opts.userHint || undefined,
+      }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+
+    const reader = res.body!.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+    let dayCount = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop() ?? '';
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const jsonStr = line.slice(6).trim();
+        if (!jsonStr || jsonStr === '[DONE]') continue;
+        try {
+          const event = JSON.parse(jsonStr);
+          if (event?.tool_use?.name === 'define_day') {
+            const normalized = normalizeDefineDayInput((event.tool_use.input ?? {}) as Record<string, unknown>);
+            if (normalized) {
+              itineraryRef.current?.setStructuredDay(defineDayInputToDay(normalized));
+              dayCount++;
+            }
+          }
+        } catch { /* skip */ }
+      }
+    }
+    if (dayCount === 0) throw new Error('No days returned from phase regeneration');
+
+    const acks = [
+      `I just regenerated the "${phase.label}" phase. Take a look at Days ${phase.dayFrom}-${phase.dayTo} and let me know if you want me to tweak anything.`,
+      `Fresh take on the "${phase.label}" phase done. Days ${phase.dayFrom} through ${phase.dayTo} have new activities. What do you think?`,
+      `Done! Reimagined the "${phase.label}" phase with fresh ideas. Have a look at Days ${phase.dayFrom}-${phase.dayTo}.`,
+    ];
+    setChatMessages(prev => [...prev, { role: 'assistant', content: acks[Math.floor(Math.random() * acks.length)], planUpdated: true }]);
+    setToast(`"${phase.label}" phase regenerated`);
+    markDirty();
+    setItineraryVersion(v => v + 1);
+  };
+
+  // ── End R4 handlers ───────────────────────────────────────────────────────
 
   // True for both unsaved new trips and edited saved trips
   const hasUnsavedChanges = isDirty || (!!plan && !savedTripId);
@@ -1139,6 +1374,9 @@ function PlanContent() {
                   startDate={prompt.match(/from (\d{4}-\d{2}-\d{2})/)?.[1]}
                   locale={locale}
                   isStreaming={isStreaming}
+                  onRegenerateDay={handleRegenerateDayClick}
+                  onRegeneratePhase={handleRegeneratePhaseClick}
+                  regenEnabled={process.env.NEXT_PUBLIC_REGENERATION_ENABLED !== 'false'}
                   onPlanPhase={async (phase: Phase): Promise<void> => {
                     if (!user) { openGate('Plan phase days'); throw new Error('Login required'); }
 
@@ -1584,6 +1822,18 @@ function PlanContent() {
         onSaveAndLeave={handleModalSaveAndLeave}
         onLeaveWithoutSaving={handleModalLeaveWithoutSaving}
         onStay={handleModalStay}
+      />
+
+      <RegenerationModal
+        isOpen={regenModal.isOpen}
+        mode={regenModal.mode}
+        dayNumber={regenModal.dayNumber}
+        phaseName={regenModal.phaseName}
+        dayRange={regenModal.dayRange}
+        hasAcceptedActivities={regenModal.hasAcceptedActivities}
+        isSubmitting={regenModal.isSubmitting}
+        onConfirm={handleRegenConfirm}
+        onCancel={() => setRegenModal(prev => ({ ...prev, isOpen: false }))}
       />
 
       <style>{`

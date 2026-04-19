@@ -75,6 +75,7 @@ export interface Day {
   loadingMore: boolean;
   confirmed: boolean;
   notes?: string;
+  phase_id?: string;
 }
 
 const SLOTS: { key: TimeSlot; label: string; icon: string }[] = [
@@ -236,6 +237,12 @@ interface Props {
   /** Called when the user clicks "Plan these days" on a PhaseCard.
       Returns a Promise so PhaseCard can show its loading state until expansion completes. */
   onPlanPhase?: (phase: Phase) => Promise<void>;
+  /** R4: Called when user clicks the regen button on a day card header. */
+  onRegenerateDay?: (dayNumber: number) => void;
+  /** R4: Called when user selects "Regenerate phase" from the PhaseCard three-dot menu. */
+  onRegeneratePhase?: (phaseId: string) => void;
+  /** R4: Gates the regen affordances. Pass process.env.NEXT_PUBLIC_REGENERATION_ENABLED !== 'false'. */
+  regenEnabled?: boolean;
 }
 
 export interface ItineraryHandle {
@@ -254,6 +261,13 @@ export interface ItineraryHandle {
   /** Stage 4: signal that the stream is delivering structured tool calls
       (disables markdown re-parsing). */
   beginStructuredStream: () => void;
+  /** R4: Replace a single day in-place (used after day/phase regeneration). */
+  replaceDay: (dayNumber: number, newDay: Day) => void;
+  /** R4: Get accepted activities for a day (for "keep my picks" regen mode). */
+  getAcceptedActivitiesForDay: (dayNumber: number) => Array<{
+    timeSlot: TimeSlot;
+    text: string;
+  }>;
 }
 
 const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableItinerary({
@@ -266,6 +280,9 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
   locale: localeProp,
   isStreaming = false,
   onPlanPhase,
+  onRegenerateDay,
+  onRegeneratePhase,
+  regenEnabled = false,
 }, ref) {
   const localeFromHook = useLocale();
   const locale = localeProp ?? localeFromHook;
@@ -441,6 +458,16 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
     setStructuredDays(newDays: Day[]) {
       // Set all structured days at once (used after full stream completion).
       _setDays(newDays);
+    },
+    replaceDay(dayNumber: number, newDay: Day) {
+      setDays(prev => prev.map(d => d.number === dayNumber ? newDay : d));
+    },
+    getAcceptedActivitiesForDay(dayNumber: number) {
+      const day = days.find(d => d.number === dayNumber);
+      if (!day) return [];
+      return day.activities
+        .filter(a => a.status === 'accepted')
+        .map(a => ({ timeSlot: a.slot, text: a.text.replace(/\*\*/g, '') }));
     },
   }));
 
@@ -687,12 +714,18 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
               d.number <= phase.dayTo &&
               d.activities.length > 0
             );
+            const phaseActivityCount = days
+              .filter(d => d.phase_id === phase.id)
+              .reduce((sum, d) => sum + d.activities.filter(a => a.status !== 'declined').length, 0);
             return (
               <PhaseCard
                 key={phase.id}
                 phase={phase}
                 plannedDaysCount={phaseDays.length}
                 onPlanPhase={onPlanPhase ? () => onPlanPhase(phase) : undefined}
+                onRegeneratePhase={onRegeneratePhase}
+                regenEnabled={regenEnabled}
+                isPlanned={phaseActivityCount > 0}
               />
             );
           })}
@@ -733,6 +766,28 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
                     <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 14, color: '#fff', flex: 1, margin: 0, textShadow: '0 1px 4px rgba(0,0,0,0.5)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{day.title}</p>
                     {day.confirmed && <span style={{ background: 'rgba(22,163,74,0.80)', color: '#fff', fontSize: 10, fontFamily: "'Inter',sans-serif", fontWeight: 700, padding: '2px 8px', borderRadius: 100, flexShrink: 0 }}>✓ {t('day.confirmed')}</span>}
                     <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: 'rgba(255,255,255,0.70)', flexShrink: 0 }}>{dayAccepted}/{day.activities.length}</span>
+                    {regenEnabled && onRegenerateDay && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onRegenerateDay(day.number); }}
+                        title={`Regenerate Day ${day.number}`}
+                        style={{
+                          background: 'rgba(255,255,255,0.15)',
+                          border: '1.5px solid rgba(255,255,255,0.35)',
+                          color: '#fff', borderRadius: 100,
+                          width: 28, height: 28,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          cursor: 'pointer', padding: 0, flexShrink: 0,
+                          transition: 'background 0.15s',
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.28)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; }}
+                      >
+                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                          <path d="M14 8a6 6 0 1 1-2.5-4.87" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                          <path d="M14 2v4h-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </button>
+                    )}
                     <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14, flexShrink: 0, display: 'inline-block', transition: 'transform 0.2s', transform: day.open ? 'rotate(180deg)' : 'rotate(0deg)' }}>▾</span>
                   </div>
                 </div>
