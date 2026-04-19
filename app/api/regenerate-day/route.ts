@@ -54,6 +54,15 @@ export async function POST(request: NextRequest) {
     } = body;
 
     if (!dayNumber || !destination) {
+      console.warn('[regenerate-day] 400 missing fields', {
+        dayNumber: dayNumber ?? null,
+        destination: destination ?? null,
+        destinationType: typeof destination,
+        destinationLength: typeof destination === 'string' ? destination.length : null,
+        hasTripPrompt: typeof body.tripPrompt === 'string' && body.tripPrompt.length > 0,
+        tripPromptPreview: typeof body.tripPrompt === 'string' ? body.tripPrompt.slice(0, 100) : null,
+        bodyKeys: Object.keys(body),
+      });
       return Response.json(
         { error: 'Missing required fields: dayNumber, destination' },
         { status: 400 },
