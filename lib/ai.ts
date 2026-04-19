@@ -50,6 +50,24 @@ export const SLOT_HOURS = {
 export type SlotName = keyof typeof SLOT_HOURS;
 
 /**
+ * Display string for a slot's hour window.
+ * Format: 12h lowercase with en-dash (U+2013), matching PDF Section 5.
+ * Examples: "6am–12pm", "12pm–6pm", "6pm–9pm", "9pm–6am"
+ *
+ * Currently locale-agnostic — 12h format for all supported locales (en, pt-BR, es)
+ * per product decision. _locale parameter reserved for future flexibility.
+ */
+export function formatSlotHours(slot: SlotName, _locale?: string): string {
+  const display: Record<SlotName, string> = {
+    morning:   '6am\u201312pm',
+    afternoon: '12pm\u20136pm',
+    evening:   '6pm\u20139pm',
+    night:     '9pm\u20136am',
+  };
+  return display[slot];
+}
+
+/**
  * R1 Stage 4 Rules feature flag.
  * Default true. Disable by setting NEXT_PUBLIC_STAGE4_RULES_ENABLED=false.
  */

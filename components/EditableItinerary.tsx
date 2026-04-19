@@ -6,6 +6,7 @@ import DayNotes from './itinerary/DayNotes';
 import PhaseCard from './PhaseCard';
 import type { AcceptedHotel } from './StayTab';
 import type { Phase } from '@/types';
+import { formatSlotHours, type SlotName } from '@/lib/ai';
 import {
   DndContext,
   DragOverlay,
@@ -870,6 +871,9 @@ function TimeSlotSection({
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 4px 6px', marginBottom: 4, borderBottom: '1px solid rgba(0,68,123,0.07)' }}>
         <span style={{ fontSize: 13 }}>{icon}</span>
         <span style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 11, color: '#00447B', textTransform: 'uppercase', letterSpacing: 0.5 }}>{t(`timeOfDay.${slotKey}` as Parameters<typeof t>[0])}</span>
+        <span style={{ fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: 11, color: '#9CA3AF', textTransform: 'none', letterSpacing: 'normal' }}>
+          {'\u00B7'} {formatSlotHours(slotKey as SlotName)}
+        </span>
       </div>
 
       <SortableContext id={containerId} items={ids} strategy={verticalListSortingStrategy}>
