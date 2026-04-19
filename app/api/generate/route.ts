@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { tripFormSchema } from '@/lib/validators';
 import { getWeather } from '@/lib/weather';
-import { buildTravelPrompt, SYSTEM_PROMPT, getLanguageInstruction, buildGenerateTools } from '@/lib/ai';
+import { buildTravelPrompt, SYSTEM_PROMPT, getLanguageInstruction, buildGenerateTools, parsePromptContext, buildStage4RulesBlock } from '@/lib/ai';
 import { streamCompletion } from '@/lib/ai-stream';
 import { createClient } from '@/lib/supabase/server';
 
@@ -67,7 +67,11 @@ export async function POST(request: NextRequest) {
       const tripDays = extractTripDaysFromPrompt(rawPrompt) ?? 7;
       const tools = buildGenerateTools(tripDays);
 
-      const structuredPrompt = rawPrompt + `
+      // R2: parse audience context from the prompt string and inject rules block
+      const parsedCtx = parsePromptContext(rawPrompt);
+      const rulesBlock = buildStage4RulesBlock(parsedCtx);
+
+      const structuredPrompt = rawPrompt + (rulesBlock ? `\n${rulesBlock}` : '') + `
 
 Please provide a detailed, personalised travel plan in Markdown with exactly these sections as H2 headers (no emojis in the headers):
 

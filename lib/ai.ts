@@ -273,7 +273,109 @@ export type TripRulesContext = {
   children?: number;
   tripStyles?: string[];
   notes?: string;
+  destination?: string;
 };
+
+/**
+ * Destinations / countries where the minimum drinking age is 21 (not the common 18).
+ * Substring-matched against the destination string (case-insensitive).
+ */
+export const RESTRICTIVE_DRINKING_COUNTRIES: readonly string[] = [
+  'united states', 'usa', ' us ', 'u.s.', 'u.s.a.',
+  'new york', 'los angeles', 'chicago', 'miami', 'las vegas', 'san francisco',
+  'boston', 'houston', 'seattle', 'portland', 'denver', 'austin', 'nashville',
+  'new orleans', 'hawaii', 'california', 'florida', 'texas', 'nevada',
+  'indonesia', 'pakistan', 'saudi arabia', 'dubai', 'abu dhabi', 'kuwait',
+  'qatar', 'bahrain', 'oman', 'egypt',
+];
+
+/**
+ * Returns the minimum legal drinking age for the given destination.
+ * Defaults to 18 (most of the world). Returns 21 for the US and a handful
+ * of dry/restrictive-law destinations.
+ */
+export function getDrinkingAgeCutoff(destination?: string): number {
+  if (!destination) return 18;
+  const lower = ` ${destination.toLowerCase()} `;
+  for (const keyword of RESTRICTIVE_DRINKING_COUNTRIES) {
+    if (lower.includes(keyword)) return 21;
+  }
+  return 18;
+}
+
+/**
+ * Parsed context extracted from a natural-language prompt string.
+ * Used by the simple-prompt branch in /api/generate to reconstruct
+ * structured audience data without a form submission.
+ */
+export type ParsedPromptContext = {
+  destination: string;
+  adultAges: string[];
+  childrenAges: string[];
+  children: number;
+  tripStyles: string[];
+  notes: string;
+  arrivalTime?: string;
+  departureTime?: string;
+};
+
+/**
+ * Extract structured audience/trip context from a HeroStepForm-built prompt string.
+ * Format produced by HeroStepForm.buildPrompt():
+ *   "Plan a trip to {dest} from {date} (arriving at HH:MM) to {date} (departing at HH:MM)
+ *    for N adults and M children, ..., with {budget} budget focusing on {style1, style2}.
+ *    Traveller ages: adults aged X, Y; children aged A, B. Additional context: ..."
+ */
+export function parsePromptContext(prompt: string): ParsedPromptContext {
+  // Destination: text between "Plan a trip to" and the next date/for clause
+  const destMatch = prompt.match(/[Pp]lan a trip to ([^,]+?)\s+(?:from\s+\d{4}|for\s+\d)/);
+  const destination = destMatch ? destMatch[1].trim() : '';
+
+  // Adult ages: "adults aged 35, 38" (terminated by ; . or end-of-string)
+  const adultAgesMatch = prompt.match(/adults?\s+aged\s+([\d,\s]+?)(?:;|\.|$)/i);
+  const adultAges = adultAgesMatch
+    ? adultAgesMatch[1].split(',').map(s => s.trim()).filter(Boolean)
+    : [];
+
+  // Children ages: "children aged 5, 8"
+  const childrenAgesMatch = prompt.match(/children?\s+aged\s+([\d,\s]+?)(?:;|\.|$)/i);
+  const childrenAges = childrenAgesMatch
+    ? childrenAgesMatch[1].split(',').map(s => s.trim()).filter(Boolean)
+    : [];
+
+  // Children count: prefer length of parsed ages, fallback to explicit "2 children"
+  const childrenCountMatch = prompt.match(/(\d+)\s+child(?:ren)?/i);
+  const children = childrenAges.length > 0
+    ? childrenAges.length
+    : childrenCountMatch ? parseInt(childrenCountMatch[1], 10) : 0;
+
+  // Travel styles: slug values embedded in the prompt by HeroStepForm
+  const STYLE_SLUGS = [
+    'cultural-history', 'gastronomy-food', 'party-nightlife', 'shopping',
+    'family-friendly', 'adventure-outdoors', 'beach-relaxation', 'wellness-spa',
+    'romance-couples', 'nature-eco', 'sports-activities', 'photography-art',
+  ];
+  const tripStyles = STYLE_SLUGS.filter(slug => prompt.includes(slug));
+
+  // Notes: "Additional context: ..." (to end of string or period)
+  const notesMatch = prompt.match(/[Aa]dditional context:\s*(.+?)(?:\.\s*$|$)/);
+  const notes = notesMatch ? notesMatch[1].trim() : '';
+
+  // Arrival / departure times: "arriving at HH:MM" / "departing at HH:MM"
+  const arrivalMatch = prompt.match(/arriving at\s+(\d{1,2}:\d{2})/i);
+  const departureMatch = prompt.match(/departing at\s+(\d{1,2}:\d{2})/i);
+
+  return {
+    destination,
+    adultAges,
+    childrenAges,
+    children,
+    tripStyles,
+    notes,
+    arrivalTime: arrivalMatch ? arrivalMatch[1] : undefined,
+    departureTime: departureMatch ? departureMatch[1] : undefined,
+  };
+}
 
 /** Extract activity text from either a plain string or an object with a text field. */
 function getRuleText(a: unknown): string {
@@ -294,7 +396,8 @@ export function buildStage4RulesBlock(ctx: TripRulesContext & { arrivalTime?: st
   const parsedAdultAges = (ctx.adultAges ?? []).map(a => parseInt(a, 10)).filter(n => Number.isFinite(n) && n > 0);
   const parsedChildrenAges = (ctx.childrenAges ?? []).map(a => parseInt(a, 10)).filter(n => Number.isFinite(n) && n >= 0);
   const hasChildren = parsedChildrenAges.length > 0 || (ctx.children ?? 0) > 0;
-  const allAdultsUnder21 = parsedAdultAges.length > 0 && parsedAdultAges.every(a => a < 21);
+  const drinkingCutoff = getDrinkingAgeCutoff(ctx.destination);
+  const allAdultsUnderCutoff = parsedAdultAges.length > 0 && parsedAdultAges.every(a => a < drinkingCutoff);
   const styles = ctx.tripStyles ?? [];
   const hasPartyNightlife = styles.includes('party-nightlife');
   const hasWellnessOrRelax = styles.includes('wellness-spa') || styles.includes('beach-relaxation');
@@ -311,13 +414,13 @@ export function buildStage4RulesBlock(ctx: TripRulesContext & { arrivalTime?: st
   const childrenRule = hasChildren
     ? `- **Children present (${parsedChildrenAges.length > 0 ? 'ages ' + parsedChildrenAges.join(', ') : 'count given but ages unspecified'}):** Night slot EMPTY every day unless Special Requests explicitly mention a late activity. NO nightlife, bars, clubs. Activities must be age-appropriate for the youngest child.`
     : '';
-  const under21Rule = allAdultsUnder21
-    ? `- **All adults under 21 (ages ${parsedAdultAges.join(', ')}):** NO wine tasting, brewery tours, vineyard visits, bar-centric activities, cellar tours, cocktail experiences.`
+  const underCutoffRule = allAdultsUnderCutoff
+    ? `- **All adults under ${drinkingCutoff} (ages ${parsedAdultAges.join(', ')}):** NO wine tasting, brewery tours, vineyard visits, bar-centric activities, cellar tours, cocktail experiences.`
     : '';
   const relaxedRule = hasWellnessOrRelax && !hasPartyNightlife
     ? `- **Relaxed/wellness trip without party-nightlife:** Evening activities must end by 20:00. Night slot EMPTY every day.`
     : '';
-  const noConstraints = !hasChildren && !allAdultsUnder21 && !(hasWellnessOrRelax && !hasPartyNightlife)
+  const noConstraints = !hasChildren && !allAdultsUnderCutoff && !(hasWellnessOrRelax && !hasPartyNightlife)
     ? '- No special audience constraints for this trip.'
     : '';
 
@@ -342,7 +445,7 @@ ${arrivalRule}
 ${departureRule}
 
 ### Audience safety rules (NO exceptions)
-${childrenRule}${under21Rule}${relaxedRule}${noConstraints}
+${childrenRule}${underCutoffRule}${relaxedRule}${noConstraints}
 These rules are safety-critical and override stylistic preferences.
 `;
 }
@@ -361,7 +464,8 @@ export function applyStage4Rules(
   const parsedAdultAges = (ctx.adultAges ?? []).map(a => parseInt(a, 10)).filter(n => Number.isFinite(n) && n > 0);
   const parsedChildrenAges = (ctx.childrenAges ?? []).map(a => parseInt(a, 10)).filter(n => Number.isFinite(n) && n >= 0);
   const hasChildren = parsedChildrenAges.length > 0 || (ctx.children ?? 0) > 0;
-  const allAdultsUnder21 = parsedAdultAges.length > 0 && parsedAdultAges.every(a => a < 21);
+  const drinkingCutoff = getDrinkingAgeCutoff(ctx.destination);
+  const allAdultsUnderCutoff = parsedAdultAges.length > 0 && parsedAdultAges.every(a => a < drinkingCutoff);
   const styles = ctx.tripStyles ?? [];
   const hasPartyNightlife = styles.includes('party-nightlife');
   const hasWellnessOrRelax = styles.includes('wellness-spa') || styles.includes('beach-relaxation');
@@ -376,8 +480,8 @@ export function applyStage4Rules(
     stripped.night = [];
   }
 
-  // Rule 2: all adults < 21 → strip alcohol-centric activities
-  if (allAdultsUnder21) {
+  // Rule 2: all adults under drinking age cutoff → strip alcohol-centric activities
+  if (allAdultsUnderCutoff) {
     const alcoholPattern = /\b(wine|winery|brewery|bar\b|pub\b|cocktail|cellar|vineyard|distillery|tasting room)/i;
     for (const slot of ['morning', 'afternoon', 'evening', 'night'] as const) {
       const arr = stripped[slot];

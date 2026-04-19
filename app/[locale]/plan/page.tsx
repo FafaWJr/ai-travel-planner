@@ -6,7 +6,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import EditableItinerary, { type ItineraryHandle, type Day } from '@/components/EditableItinerary';
 import type { Phase } from '@/types';
 import { normalizeDefineDayInput, normalizeDefinePhaseInput, defineDayInputToDay, definePhaseInputToPhase } from '@/lib/normalizeToolInput';
-import { applyStage4Rules, type TripRulesContext } from '@/lib/ai';
+import { applyStage4Rules, parsePromptContext, type TripRulesContext } from '@/lib/ai';
 import { BOOKING_AFFILIATE } from '@/lib/affiliate';
 import FloatingChat, { type TripUpdate } from '@/components/FloatingChat';
 import Toast from '@/components/Toast';
@@ -797,9 +797,7 @@ function PlanContent() {
                   const input = (toolUse.input ?? {}) as Record<string, unknown>;
                   const normalized = normalizeDefineDayInput(input);
                   if (normalized) {
-                    const rulesCtx: TripRulesContext = {
-                      tripStyles: prompt.match(/\b(cultural-history|gastronomy-food|party-nightlife|shopping|family-friendly|adventure-outdoors|beach-relaxation|wellness-spa|romance-couples|nature-eco|sports-activities|photography-art)\b/g) ?? [],
-                    };
+                    const rulesCtx: TripRulesContext = parsePromptContext(prompt);
                     const safeInput = applyStage4Rules(normalized as import('@/lib/ai').DefineDayInputForRules, rulesCtx);
                     const safeNormalized = {
                       ...normalized,
