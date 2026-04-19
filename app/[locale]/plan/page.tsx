@@ -396,6 +396,7 @@ function PlanContent() {
   const [gateFeature, setGateFeature] = useState<string | undefined>(undefined);
   const [saveLoading, setSaveLoading] = useState(false);
   const [savedTripId, setSavedTripId] = useState<string | null>(null);
+  const [savedTripDestination, setSavedTripDestination] = useState<string>('');
   const [isDirty, setIsDirty] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [unsavedModal, setUnsavedModal] = useState<{ isOpen: boolean; pendingDestination: string; pendingType: 'link' | 'popstate'; isSaving: boolean }>({ isOpen: false, pendingDestination: '', pendingType: 'link', isSaving: false });
@@ -456,6 +457,16 @@ function PlanContent() {
     opts: { userHint: string; keepAccepted: boolean },
   ) => {
     const parsed = parsePromptContext(prompt);
+
+    // Fallback: saved-trip flow has no prompt in URL — use the DB destination field.
+    const resolvedDestination = parsed.destination || savedTripDestination ||
+      new URLSearchParams(window.location.search).get('destination') || '';
+    if (!resolvedDestination) {
+      console.error('[regen] no destination resolvable from prompt, state, or URL');
+      setToast('Unable to regenerate: destination not found. Please refresh and try again.');
+      return;
+    }
+
     const days = itineraryRef.current?.getDaysSnapshot() ?? [];
     const currentDay = days.find(d => d.number === dayNumber);
     const phaseId = currentDay?.phase_id;
@@ -485,7 +496,7 @@ function PlanContent() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         dayNumber,
-        destination: parsed.destination || '',
+        destination: resolvedDestination,
         tripPrompt: prompt,
         currentDayTitle: currentDay?.title,
         phase: phase ? { id: phase.id, label: phase.label, summary: phase.summary } : undefined,
@@ -573,6 +584,8 @@ function PlanContent() {
     if (!phase) throw new Error('Phase not found');
 
     const parsed = parsePromptContext(prompt);
+    const resolvedDestination = parsed.destination || savedTripDestination ||
+      new URLSearchParams(window.location.search).get('destination') || '';
     const ciM = prompt.match(/from (\d{4}-\d{2}-\d{2})/);
     const coM = prompt.match(/to (\d{4}-\d{2}-\d{2})/);
 
@@ -581,7 +594,7 @@ function PlanContent() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         phase: { id: phase.id, label: phase.label, day_from: phase.dayFrom, day_to: phase.dayTo, summary: phase.summary, highlights: phase.highlights },
-        destination: parsed.destination || '',
+        destination: resolvedDestination,
         startDate: ciM?.[1],
         endDate: coM?.[1],
         travelStyles: parsed.tripStyles,
@@ -877,6 +890,7 @@ function PlanContent() {
           setChatMessages(data.chat_history as { role: 'user' | 'assistant'; content: string; planUpdated?: boolean; isWelcome?: boolean }[]);
         }
         setSavedTripId(data.id as string);
+        if (data.destination) setSavedTripDestination(data.destination as string);
       } else {
         setError('Could not load saved trip.');
       }

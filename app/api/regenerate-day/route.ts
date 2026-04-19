@@ -53,18 +53,17 @@ export async function POST(request: NextRequest) {
       userHint, mode, acceptedActivities,
     } = body;
 
-    if (!dayNumber || !destination) {
-      console.warn('[regenerate-day] 400 missing fields', {
-        dayNumber: dayNumber ?? null,
-        destination: destination ?? null,
-        destinationType: typeof destination,
-        destinationLength: typeof destination === 'string' ? destination.length : null,
-        hasTripPrompt: typeof body.tripPrompt === 'string' && body.tripPrompt.length > 0,
-        tripPromptPreview: typeof body.tripPrompt === 'string' ? body.tripPrompt.slice(0, 100) : null,
-        bodyKeys: Object.keys(body),
+    if (!dayNumber) {
+      return Response.json({ error: 'Missing dayNumber' }, { status: 400 });
+    }
+    if (!destination || typeof destination !== 'string' || destination.trim().length === 0) {
+      console.warn('[regenerate-day] 400 empty destination', {
+        receivedDestination: destination,
+        receivedType: typeof destination,
+        tripPromptPreview: typeof body.tripPrompt === 'string' ? body.tripPrompt.slice(0, 120) : null,
       });
       return Response.json(
-        { error: 'Missing required fields: dayNumber, destination' },
+        { error: 'Destination required for regeneration. This is likely a bug — please report.' },
         { status: 400 },
       );
     }

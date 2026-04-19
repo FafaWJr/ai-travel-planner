@@ -358,7 +358,10 @@ export type ParsedPromptContext = {
  */
 export function parsePromptContext(prompt: string): ParsedPromptContext {
   // Destination: text between "Plan a trip to" and the next date/for clause
-  const destMatch = prompt.match(/[Pp]lan a trip to ([^,]+?)\s+(?:from\s+\d{4}|for\s+\d)/);
+  // Allows commas — destinations like "Tokyo, Japan" or "Gold Coast, Queensland, Australia".
+  // Anchored on the deterministic from-YYYY-MM-DD pattern that always follows the destination
+  // in HeroStepForm-built prompts. Non-greedy so it stops at the first date occurrence.
+  const destMatch = prompt.match(/[Pp]lan a trip to (.+?)\s+from\s+\d{4}-\d{2}-\d{2}/);
   const destination = destMatch ? destMatch[1].trim() : '';
 
   // Adult ages: "adults aged 35, 38" (terminated by ; . or end-of-string)
