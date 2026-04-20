@@ -268,6 +268,25 @@ export interface ItineraryHandle {
     timeSlot: TimeSlot;
     text: string;
   }>;
+  /** R5: Update a phase's label/summary/highlights in-place. */
+  editPhase: (phaseId: string, patch: { label?: string; summary?: string; highlights?: string[] }) => void;
+  /** R5: Split a phase into two at a given day boundary. */
+  splitPhase: (
+    phaseId: string,
+    splitAtDay: number,
+    phaseA: { id: string; label: string; summary: string; highlights: string[] },
+    phaseB: { id: string; label: string; summary: string; highlights: string[] },
+  ) => void;
+  /** R5: Merge two adjacent phases into one. */
+  mergePhases: (
+    phaseIdA: string,
+    phaseIdB: string,
+    mergedPhase: { id: string; label: string; summary: string; highlights: string[] },
+  ) => void;
+  /** R5: Reorder phases (renumbers all days accordingly). */
+  reorderPhases: (orderedPhaseIds: string[]) => void;
+  /** R5: Remove a phase and all its days. */
+  removePhase: (phaseId: string) => void;
 }
 
 const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableItinerary({
@@ -468,6 +487,114 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
       return day.activities
         .filter(a => a.status === 'accepted')
         .map(a => ({ timeSlot: a.slot, text: a.text.replace(/\*\*/g, '') }));
+    },
+
+    // ── R5: Phase editing imperatives ───────────────────────────────────
+    editPhase(phaseId: string, patch: { label?: string; summary?: string; highlights?: string[] }) {
+      setPhases(prev => prev.map(p =>
+        p.id !== phaseId ? p : {
+          ...p,
+          ...(patch.label      !== undefined && { label:      patch.label }),
+          ...(patch.summary    !== undefined && { summary:    patch.summary }),
+          ...(patch.highlights !== undefined && { highlights: patch.highlights }),
+        }
+      ));
+    },
+
+    splitPhase(
+      phaseId: string,
+      splitAtDay: number,
+      phaseA: { id: string; label: string; summary: string; highlights: string[] },
+      phaseB: { id: string; label: string; summary: string; highlights: string[] },
+    ) {
+      const original = phases.find(p => p.id === phaseId);
+      if (!original) return;
+      const newPhaseA: Phase = {
+        id: phaseA.id,
+        label: phaseA.label,
+        dayFrom: original.dayFrom,
+        dayTo: splitAtDay - 1,
+        summary: phaseA.summary,
+        highlights: phaseA.highlights,
+        planned: original.planned,
+      };
+      const newPhaseB: Phase = {
+        id: phaseB.id,
+        label: phaseB.label,
+        dayFrom: splitAtDay,
+        dayTo: original.dayTo,
+        summary: phaseB.summary,
+        highlights: phaseB.highlights,
+        planned: original.planned,
+      };
+      setPhases(prev => {
+        const idx = prev.findIndex(p => p.id === phaseId);
+        const next = [...prev];
+        next.splice(idx, 1, newPhaseA, newPhaseB);
+        return next;
+      });
+      _setDays(prev => prev.map(d => {
+        if (d.phase_id !== phaseId) return d;
+        return { ...d, phase_id: d.number < splitAtDay ? phaseA.id : phaseB.id };
+      }));
+    },
+
+    mergePhases(
+      phaseIdA: string,
+      phaseIdB: string,
+      mergedPhase: { id: string; label: string; summary: string; highlights: string[] },
+    ) {
+      const pA = phases.find(p => p.id === phaseIdA);
+      const pB = phases.find(p => p.id === phaseIdB);
+      if (!pA || !pB) return;
+      const merged: Phase = {
+        id: mergedPhase.id,
+        label: mergedPhase.label,
+        dayFrom: Math.min(pA.dayFrom, pB.dayFrom),
+        dayTo: Math.max(pA.dayTo, pB.dayTo),
+        summary: mergedPhase.summary,
+        highlights: mergedPhase.highlights,
+        planned: pA.planned && pB.planned,
+      };
+      setPhases(prev => prev
+        .filter(p => p.id !== phaseIdA && p.id !== phaseIdB)
+        .concat([merged])
+        .sort((a, b) => a.dayFrom - b.dayFrom)
+      );
+      _setDays(prev => prev.map(d =>
+        (d.phase_id === phaseIdA || d.phase_id === phaseIdB)
+          ? { ...d, phase_id: mergedPhase.id }
+          : d
+      ));
+    },
+
+    reorderPhases(orderedPhaseIds: string[]) {
+      const phaseMap = new Map(phases.map(p => [p.id, p]));
+      let nextDay = 1;
+      const reorderedPhases: Phase[] = [];
+      const reorderedDays: Day[] = [];
+
+      for (const pid of orderedPhaseIds) {
+        const phase = phaseMap.get(pid);
+        if (!phase) continue;
+        const phaseDays = days
+          .filter(d => d.phase_id === pid)
+          .sort((a, b) => a.number - b.number);
+        const newDayFrom = nextDay;
+        const updatedDays = phaseDays.map((d, i) => ({ ...d, number: nextDay + i }));
+        const newDayTo = nextDay + phaseDays.length - 1;
+        reorderedPhases.push({ ...phase, dayFrom: newDayFrom, dayTo: newDayTo });
+        reorderedDays.push(...updatedDays);
+        nextDay = newDayTo + 1;
+      }
+
+      setPhases(reorderedPhases);
+      _setDays(reorderedDays);
+    },
+
+    removePhase(phaseId: string) {
+      setPhases(prev => prev.filter(p => p.id !== phaseId));
+      setDays(prev => prev.filter(d => d.phase_id !== phaseId));
     },
   }));
 

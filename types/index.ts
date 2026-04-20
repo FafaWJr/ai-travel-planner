@@ -71,6 +71,45 @@ export interface DefinePhaseInput {
 }
 
 /**
+ * Shared metadata shape for phase labels/descriptions.
+ * Used as a sub-object in SplitPhaseInput and MergePhasesInput.
+ */
+export interface PhaseMetadata {
+  label: string;
+  summary: string;
+  highlights: string[];
+}
+
+/** Input schema for the edit_phase Luna chat tool. */
+export interface EditPhaseInput {
+  phase_id: string;
+  label?: string;
+  summary?: string;
+  highlights?: string[];
+}
+
+/** Input schema for the split_phase Luna chat tool. */
+export interface SplitPhaseInput {
+  phase_id: string;
+  /** First day number of the new second half (i.e. the split point). */
+  split_at_day: number;
+  phase_a: PhaseMetadata;
+  phase_b: PhaseMetadata;
+}
+
+/** Input schema for the merge_phases Luna chat tool. */
+export interface MergePhasesInput {
+  phase_id_a: string;
+  phase_id_b: string;
+  merged_phase: PhaseMetadata;
+}
+
+/** Input schema for the reorder_phases Luna chat tool. */
+export interface ReorderPhasesInput {
+  ordered_phase_ids: string[];
+}
+
+/**
  * Input schema for the define_day Anthropic tool.
  * Each time slot holds an array of activity strings.
  */

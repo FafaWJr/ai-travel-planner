@@ -88,6 +88,15 @@ export function regenerationEnabled(): boolean {
 }
 
 /**
+ * R5 Phase Editing feature flag.
+ * Gates the edit_phase, split_phase, merge_phases, reorder_phases tools in Luna chat.
+ * Default OFF until NEXT_PUBLIC_PHASE_EDITING_ENABLED=true is set in Vercel.
+ */
+export function phaseEditingEnabled(): boolean {
+  return process.env.NEXT_PUBLIC_PHASE_EDITING_ENABLED === 'true';
+}
+
+/**
  * Anthropic tool definition. See:
  * https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview
  *
@@ -729,6 +738,18 @@ Multiple affiliate links can appear in the same response when relevant. Always o
 
 ---
 
+PHASE EDITING (when phase editing tools are available):
+For trips with named phases (15+ day trips), you can also edit the phase structure itself when the user asks.
+
+- edit_phase: Rename a phase, update its summary, or change its highlights. Use when the user says things like "rename Phase 2 to City Escape" or "update the description of the beach phase".
+- split_phase: Break one phase into two. Use when a phase feels too long or the user wants to distinguish two sub-segments. You must provide the split_at_day (the first day of the new second half) and metadata for both halves.
+- merge_phases: Combine two adjacent phases into one. Use when the user wants to simplify or the phases naturally flow together.
+- reorder_phases: Rearrange the order of phases. All days move with their phase and day numbers are reassigned automatically.
+
+When using phase editing tools, always write a short 1-2 sentence confirmation alongside the tool call.
+
+---
+
 WHAT YOU NEVER DO:
 - Never say "I am not able to directly edit your plan" - you are the agent, you edit the plan.
 - Never give a list without a personal recommendation.
@@ -1004,9 +1025,124 @@ export const LUNA_CHAT_TOOLS: AnthropicTool[] = [
       },
       required: ['hotel_name'],
     },
-    cache_control: { type: 'ephemeral' },
   },
 ];
+
+/**
+ * R5: Phase editing tools. Added to LUNA_CHAT_TOOLS when phaseEditingEnabled().
+ * cache_control goes on the last tool in the final merged array (buildLunaChatTools).
+ */
+export const LUNA_PHASE_EDITING_TOOLS: AnthropicTool[] = [
+  {
+    name: 'edit_phase',
+    description:
+      "Edit a phase's label, summary, or highlights. Use when the user wants to rename a phase, update its description, or change its highlights. Only include the fields you want to change.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        phase_id: { type: 'string', description: 'ID of the phase to edit' },
+        label:    { type: 'string', description: 'New short name for the phase (optional)' },
+        summary:  { type: 'string', description: 'New 2-3 sentence description (optional)' },
+        highlights: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'New list of 3-5 highlight experiences (optional — replaces existing list)',
+        },
+      },
+      required: ['phase_id'],
+    },
+  },
+  {
+    name: 'split_phase',
+    description:
+      'Split one phase into two phases at a given day boundary. Use when the user wants to break a phase into two distinct segments. Provide metadata (label, summary, highlights) for each new half.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        phase_id: { type: 'string', description: 'ID of the phase to split' },
+        split_at_day: {
+          type: 'integer',
+          description: 'The first day number of the NEW second phase (e.g. if splitting a phase covering days 1-10 at day 6, split_at_day = 6)',
+        },
+        phase_a: {
+          type: 'object',
+          description: 'Metadata for the first half (days before split_at_day)',
+          properties: {
+            label:      { type: 'string' },
+            summary:    { type: 'string' },
+            highlights: { type: 'array', items: { type: 'string' } },
+          },
+          required: ['label', 'summary'],
+        },
+        phase_b: {
+          type: 'object',
+          description: 'Metadata for the second half (split_at_day through end of original phase)',
+          properties: {
+            label:      { type: 'string' },
+            summary:    { type: 'string' },
+            highlights: { type: 'array', items: { type: 'string' } },
+          },
+          required: ['label', 'summary'],
+        },
+      },
+      required: ['phase_id', 'split_at_day', 'phase_a', 'phase_b'],
+    },
+  },
+  {
+    name: 'merge_phases',
+    description:
+      'Merge two adjacent phases into a single phase. Use when the user wants to combine phases. Both phases must be adjacent (their day ranges must be contiguous). Provide metadata for the merged result.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        phase_id_a: { type: 'string', description: 'ID of the first phase (lower day range)' },
+        phase_id_b: { type: 'string', description: 'ID of the second phase (higher day range)' },
+        merged_phase: {
+          type: 'object',
+          description: 'Metadata for the combined phase',
+          properties: {
+            label:      { type: 'string' },
+            summary:    { type: 'string' },
+            highlights: { type: 'array', items: { type: 'string' } },
+          },
+          required: ['label', 'summary'],
+        },
+      },
+      required: ['phase_id_a', 'phase_id_b', 'merged_phase'],
+    },
+  },
+  {
+    name: 'reorder_phases',
+    description:
+      "Reorder the trip's phases into a new sequence. All days within each phase move with it and day numbers are reassigned sequentially. Use when the user wants to rearrange the order of trip segments.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        ordered_phase_ids: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'All phase IDs in the desired new order (must include ALL existing phases)',
+        },
+      },
+      required: ['ordered_phase_ids'],
+    },
+  },
+];
+
+/**
+ * Builds the final tool array for /api/chat.
+ * Appends phase editing tools when the feature flag is on.
+ * Moves cache_control to the last tool regardless.
+ */
+export function buildLunaChatTools(): AnthropicTool[] {
+  const base = [...LUNA_CHAT_TOOLS];
+  if (phaseEditingEnabled()) {
+    base.push(...LUNA_PHASE_EDITING_TOOLS);
+  }
+  // cache_control on the last tool caches the entire array
+  const last = { ...base[base.length - 1], cache_control: { type: 'ephemeral' } as const };
+  return [...base.slice(0, -1), last];
+}
 
 /**
  * Tool name union. Exported for use in the client-side dispatcher.

@@ -1703,6 +1703,51 @@ function PlanContent() {
                 markDirty();
                 return;
               }
+              if (update.type === 'edit_phase') {
+                if (update.phaseId) {
+                  itineraryRef.current?.editPhase(update.phaseId, {
+                    label:      update.phaseLabel,
+                    summary:    update.phaseSummary,
+                    highlights: update.phaseHighlights,
+                  });
+                  setToast('Phase updated');
+                  markDirty();
+                }
+                return;
+              }
+              if (update.type === 'split_phase') {
+                if (update.phaseId && update.splitAtDay && update.phaseA && update.phaseB) {
+                  itineraryRef.current?.splitPhase(
+                    update.phaseId,
+                    update.splitAtDay,
+                    update.phaseA,
+                    update.phaseB,
+                  );
+                  setToast('Phase split');
+                  markDirty();
+                }
+                return;
+              }
+              if (update.type === 'merge_phases') {
+                if (update.phaseIdA && update.phaseIdB && update.mergedPhase) {
+                  itineraryRef.current?.mergePhases(
+                    update.phaseIdA,
+                    update.phaseIdB,
+                    update.mergedPhase,
+                  );
+                  setToast('Phases merged');
+                  markDirty();
+                }
+                return;
+              }
+              if (update.type === 'reorder_phases') {
+                if (update.orderedPhaseIds && update.orderedPhaseIds.length > 0) {
+                  itineraryRef.current?.reorderPhases(update.orderedPhaseIds);
+                  setToast('Phases reordered');
+                  markDirty();
+                }
+                return;
+              }
               if (update.type === 'stays') {
                 const d = update.data;
                 if (!d?.hotelName) return;

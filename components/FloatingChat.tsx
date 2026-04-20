@@ -14,7 +14,8 @@ interface Msg {
 }
 
 export interface TripUpdate {
-  type: 'stays' | 'add_activity' | 'remove_activity' | 'replace_activity' | 'itinerary' | 'budget';
+  type: 'stays' | 'add_activity' | 'remove_activity' | 'replace_activity' | 'itinerary' | 'budget'
+      | 'edit_phase' | 'split_phase' | 'merge_phases' | 'reorder_phases';
   action?: 'add' | 'update' | 'remove';
   // Hotel updates (type === 'stays')
   data?: {
@@ -34,6 +35,18 @@ export interface TripUpdate {
   newActivity?: string;  // replace_activity: replacement text
   location?: string;
   activityIndex?: number;
+  // Phase editing updates (R5)
+  phaseId?: string;
+  phaseLabel?: string;
+  phaseSummary?: string;
+  phaseHighlights?: string[];
+  splitAtDay?: number;
+  phaseA?: { id: string; label: string; summary: string; highlights: string[] };
+  phaseB?: { id: string; label: string; summary: string; highlights: string[] };
+  phaseIdA?: string;
+  phaseIdB?: string;
+  mergedPhase?: { id: string; label: string; summary: string; highlights: string[] };
+  orderedPhaseIds?: string[];
 }
 
 interface Props {
@@ -205,6 +218,55 @@ function dispatchToolUse(
       onTripUpdate?.({ type: 'stays', action: 'remove', data: { hotelName: i.hotel_name } });
       return { planUpdated: true, addable: null };
     }
+    case 'edit_phase': {
+      const i = tc.input as { phase_id: string; label?: string; summary?: string; highlights?: string[] };
+      onTripUpdate?.({
+        type: 'edit_phase',
+        phaseId: i.phase_id,
+        phaseLabel: i.label,
+        phaseSummary: i.summary,
+        phaseHighlights: i.highlights,
+      });
+      return { planUpdated: true, addable: null };
+    }
+    case 'split_phase': {
+      const i = tc.input as {
+        phase_id: string;
+        split_at_day: number;
+        phase_a: { label: string; summary: string; highlights?: string[] };
+        phase_b: { label: string; summary: string; highlights?: string[] };
+      };
+      const idA = `phase-${Date.now()}-a`;
+      const idB = `phase-${Date.now()}-b`;
+      onTripUpdate?.({
+        type: 'split_phase',
+        phaseId: i.phase_id,
+        splitAtDay: i.split_at_day,
+        phaseA: { id: idA, label: i.phase_a.label, summary: i.phase_a.summary, highlights: i.phase_a.highlights ?? [] },
+        phaseB: { id: idB, label: i.phase_b.label, summary: i.phase_b.summary, highlights: i.phase_b.highlights ?? [] },
+      });
+      return { planUpdated: true, addable: null };
+    }
+    case 'merge_phases': {
+      const i = tc.input as {
+        phase_id_a: string;
+        phase_id_b: string;
+        merged_phase: { label: string; summary: string; highlights?: string[] };
+      };
+      const mergedId = `phase-${Date.now()}-merged`;
+      onTripUpdate?.({
+        type: 'merge_phases',
+        phaseIdA: i.phase_id_a,
+        phaseIdB: i.phase_id_b,
+        mergedPhase: { id: mergedId, label: i.merged_phase.label, summary: i.merged_phase.summary, highlights: i.merged_phase.highlights ?? [] },
+      });
+      return { planUpdated: true, addable: null };
+    }
+    case 'reorder_phases': {
+      const i = tc.input as { ordered_phase_ids: string[] };
+      onTripUpdate?.({ type: 'reorder_phases', orderedPhaseIds: i.ordered_phase_ids });
+      return { planUpdated: true, addable: null };
+    }
     default:
       console.warn('[Luna] Unknown tool name:', tc.name);
       return { planUpdated: false, addable: null };
@@ -252,6 +314,25 @@ function summarizeToolCalls(toolCalls: ToolUseEvent[]): string {
       }
       case 'suggest_activity':
         // Suggestions become chips; no narration needed in the bubble
+        break;
+      case 'edit_phase': {
+        const label = typeof i.label === 'string' ? i.label : null;
+        parts.push(label ? `Updated phase to "${label}".` : 'Updated phase details.');
+        break;
+      }
+      case 'split_phase': {
+        const pa = (i.phase_a as Record<string, unknown>)?.label;
+        const pb = (i.phase_b as Record<string, unknown>)?.label;
+        parts.push(`Split phase into "${pa}" and "${pb}".`);
+        break;
+      }
+      case 'merge_phases': {
+        const ml = (i.merged_phase as Record<string, unknown>)?.label;
+        parts.push(`Merged phases into "${ml}".`);
+        break;
+      }
+      case 'reorder_phases':
+        parts.push('Reordered phases.');
         break;
       default:
         break;

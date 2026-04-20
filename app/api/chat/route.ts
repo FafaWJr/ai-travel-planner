@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import type { ChatMessage } from '@/types';
 import { streamCompletion } from '@/lib/ai-stream';
-import { buildLunaChatSystemBlocks, LUNA_CHAT_TOOLS } from '@/lib/ai';
+import { buildLunaChatSystemBlocks, buildLunaChatTools } from '@/lib/ai';
 import { createClient } from '@/lib/supabase/server';
 
 export const maxDuration = 60;
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
           ...messages.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
         ],
         'chat',
-        LUNA_CHAT_TOOLS,
+        buildLunaChatTools(),
       );
     } catch (err: unknown) {
       console.error('[chat] stream error:', err);
