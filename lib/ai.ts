@@ -93,7 +93,7 @@ export function regenerationEnabled(): boolean {
  * Default OFF until NEXT_PUBLIC_PHASE_EDITING_ENABLED=true is set in Vercel.
  */
 export function phaseEditingEnabled(): boolean {
-  return process.env.NEXT_PUBLIC_PHASE_EDITING_ENABLED === 'true';
+  return process.env.NEXT_PUBLIC_PHASE_EDITING_ENABLED !== 'false';
 }
 
 /**
