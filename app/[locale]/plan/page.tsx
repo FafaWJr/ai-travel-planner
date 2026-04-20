@@ -1663,6 +1663,7 @@ function PlanContent() {
               : undefined
             }
             currentActivities={liveActivitiesText}
+            getPhases={() => itineraryRef.current?.getPhases() ?? []}
             onAddToItinerary={(text, dayNum, slot) => {
               setActiveSection('itinerary');
               itineraryRef.current?.addActivity(text, dayNum, slot, true);
@@ -1704,48 +1705,48 @@ function PlanContent() {
                 return;
               }
               if (update.type === 'edit_phase') {
-                if (update.phaseId) {
-                  itineraryRef.current?.editPhase(update.phaseId, {
-                    label:      update.phaseLabel,
-                    summary:    update.phaseSummary,
-                    highlights: update.phaseHighlights,
-                  });
-                  setToast('Phase updated');
-                  markDirty();
-                }
+                if (!update.phaseId) { console.warn('[edit_phase] missing phaseId', update); return; }
+                if (!itineraryRef.current) { console.error('[edit_phase] itineraryRef.current is null'); setToast('Could not apply — please try again'); return; }
+                itineraryRef.current.editPhase(update.phaseId, {
+                  label:      update.phaseLabel,
+                  summary:    update.phaseSummary,
+                  highlights: update.phaseHighlights,
+                });
+                setToast('Phase updated');
+                markDirty();
                 return;
               }
               if (update.type === 'split_phase') {
-                if (update.phaseId && update.splitAtDay && update.phaseA && update.phaseB) {
-                  itineraryRef.current?.splitPhase(
-                    update.phaseId,
-                    update.splitAtDay,
-                    update.phaseA,
-                    update.phaseB,
-                  );
-                  setToast('Phase split');
-                  markDirty();
-                }
+                if (!update.phaseId || !update.splitAtDay || !update.phaseA || !update.phaseB) { console.warn('[split_phase] missing fields', update); return; }
+                if (!itineraryRef.current) { console.error('[split_phase] itineraryRef.current is null'); setToast('Could not apply — please try again'); return; }
+                itineraryRef.current.splitPhase(
+                  update.phaseId,
+                  update.splitAtDay,
+                  update.phaseA,
+                  update.phaseB,
+                );
+                setToast('Phase split');
+                markDirty();
                 return;
               }
               if (update.type === 'merge_phases') {
-                if (update.phaseIdA && update.phaseIdB && update.mergedPhase) {
-                  itineraryRef.current?.mergePhases(
-                    update.phaseIdA,
-                    update.phaseIdB,
-                    update.mergedPhase,
-                  );
-                  setToast('Phases merged');
-                  markDirty();
-                }
+                if (!update.phaseIdA || !update.phaseIdB || !update.mergedPhase) { console.warn('[merge_phases] missing fields', update); return; }
+                if (!itineraryRef.current) { console.error('[merge_phases] itineraryRef.current is null'); setToast('Could not apply — please try again'); return; }
+                itineraryRef.current.mergePhases(
+                  update.phaseIdA,
+                  update.phaseIdB,
+                  update.mergedPhase,
+                );
+                setToast('Phases merged');
+                markDirty();
                 return;
               }
               if (update.type === 'reorder_phases') {
-                if (update.orderedPhaseIds && update.orderedPhaseIds.length > 0) {
-                  itineraryRef.current?.reorderPhases(update.orderedPhaseIds);
-                  setToast('Phases reordered');
-                  markDirty();
-                }
+                if (!update.orderedPhaseIds || update.orderedPhaseIds.length === 0) { console.warn('[reorder_phases] empty orderedPhaseIds', update); return; }
+                if (!itineraryRef.current) { console.error('[reorder_phases] itineraryRef.current is null'); setToast('Could not apply — please try again'); return; }
+                itineraryRef.current.reorderPhases(update.orderedPhaseIds);
+                setToast('Phases reordered');
+                markDirty();
                 return;
               }
               if (update.type === 'stays') {

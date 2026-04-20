@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createClient as createSupabaseClient } from '@/lib/supabase/client';
 import { useLocale, useTranslations } from 'next-intl';
 import { CheckCircle } from 'lucide-react';
+import type { Phase } from '@/types';
 
 type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'night';
 
@@ -54,6 +55,8 @@ interface Props {
   destination?: string;
   hotelContext?: string;
   currentActivities?: string;
+  /** R5: Called right before each chat request to get current phase state for context injection. */
+  getPhases?: () => Phase[];
   onAddToItinerary: (text: string, dayNum: number, slot: TimeSlot) => void;
   onPlanUpdate?: (updatedPlan: string) => void;
   onTripUpdate?: (update: TripUpdate) => void;
@@ -374,7 +377,7 @@ function renderContent(text: string): React.ReactNode {
   });
 }
 
-export default function FloatingChat({ plan, destination, hotelContext, currentActivities, onAddToItinerary, onPlanUpdate, onTripUpdate, isGuest = false, onGateRequired, initialMessages, savedTripId, onMessagesChange, pendingPrompt, onPendingPromptConsumed, injectedAssistantMessage, onInjectedMessageConsumed }: Props) {
+export default function FloatingChat({ plan, destination, hotelContext, currentActivities, getPhases, onAddToItinerary, onPlanUpdate, onTripUpdate, isGuest = false, onGateRequired, initialMessages, savedTripId, onMessagesChange, pendingPrompt, onPendingPromptConsumed, injectedAssistantMessage, onInjectedMessageConsumed }: Props) {
   const locale = useLocale();
   const t = useTranslations('plan');
 
@@ -474,6 +477,20 @@ export default function FloatingChat({ plan, destination, hotelContext, currentA
       let ctx = plan;
       if (hotelContext) ctx += `\n\n## Confirmed Accommodation\n${hotelContext}`;
       if (currentActivities) ctx += `\n\n## Already in Itinerary (NEVER suggest these again)\n${currentActivities}`;
+
+      // R5: Inject actual phase_id values so Luna can call phase editing tools correctly.
+      const phases = getPhases?.() ?? [];
+      if (phases.length > 0) {
+        const phaseLines = phases.map((p, i) =>
+          `Phase ${i + 1}:\n` +
+          `  phase_id: "${p.id}"  ← USE THIS EXACT STRING when calling edit_phase / split_phase / merge_phases / reorder_phases. Do NOT invent IDs.\n` +
+          `  Label: ${p.label}\n` +
+          `  Days: ${p.dayFrom}–${p.dayTo}\n` +
+          `  Summary: ${p.summary || '(none)'}\n` +
+          (p.highlights?.length ? `  Highlights: ${p.highlights.join(' · ')}\n` : '')
+        ).join('\n');
+        ctx += `\n\n## Trip Phases (CRITICAL — phase_id values must be copied exactly for phase editing tools)\n${phaseLines}`;
+      }
 
       const res = await fetch('/api/chat', {
         method: 'POST',

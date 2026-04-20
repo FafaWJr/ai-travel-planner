@@ -1040,7 +1040,7 @@ export const LUNA_PHASE_EDITING_TOOLS: AnthropicTool[] = [
     input_schema: {
       type: 'object',
       properties: {
-        phase_id: { type: 'string', description: 'ID of the phase to edit' },
+        phase_id: { type: 'string', description: 'The phase_id of the phase to edit. MUST be the exact string value shown next to "phase_id:" in the trip context (e.g. "phase-1-a8f2x3"). Do NOT invent IDs like "phase_1" or "bangkok-immersion" — only use IDs that appear verbatim in the context. If you cannot find the phase_id in the context, do not call this tool.' },
         label:    { type: 'string', description: 'New short name for the phase (optional)' },
         summary:  { type: 'string', description: 'New 2-3 sentence description (optional)' },
         highlights: {
@@ -1059,7 +1059,7 @@ export const LUNA_PHASE_EDITING_TOOLS: AnthropicTool[] = [
     input_schema: {
       type: 'object',
       properties: {
-        phase_id: { type: 'string', description: 'ID of the phase to split' },
+        phase_id: { type: 'string', description: 'The phase_id of the phase to split. MUST be the exact string value from the trip context. Do not invent IDs.' },
         split_at_day: {
           type: 'integer',
           description: 'The first day number of the NEW second phase (e.g. if splitting a phase covering days 1-10 at day 6, split_at_day = 6)',
@@ -1095,8 +1095,8 @@ export const LUNA_PHASE_EDITING_TOOLS: AnthropicTool[] = [
     input_schema: {
       type: 'object',
       properties: {
-        phase_id_a: { type: 'string', description: 'ID of the first phase (lower day range)' },
-        phase_id_b: { type: 'string', description: 'ID of the second phase (higher day range)' },
+        phase_id_a: { type: 'string', description: 'The phase_id of the first phase to merge (lower day range). MUST be the exact string value from the trip context. Do not invent IDs.' },
+        phase_id_b: { type: 'string', description: 'The phase_id of the second phase to merge (higher day range), adjacent to phase_a. MUST be the exact string value from the trip context. Do not invent IDs.' },
         merged_phase: {
           type: 'object',
           description: 'Metadata for the combined phase',
@@ -1121,7 +1121,7 @@ export const LUNA_PHASE_EDITING_TOOLS: AnthropicTool[] = [
         ordered_phase_ids: {
           type: 'array',
           items: { type: 'string' },
-          description: 'All phase IDs in the desired new order (must include ALL existing phases)',
+          description: 'Array of phase_id strings in the new desired order. Each value MUST be an exact phase_id from the trip context. Do not invent IDs. The array must contain every existing phase_id exactly once.',
         },
       },
       required: ['ordered_phase_ids'],

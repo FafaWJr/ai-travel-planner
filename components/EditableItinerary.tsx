@@ -491,14 +491,19 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
 
     // ── R5: Phase editing imperatives ───────────────────────────────────
     editPhase(phaseId: string, patch: { label?: string; summary?: string; highlights?: string[] }) {
-      setPhases(prev => prev.map(p =>
-        p.id !== phaseId ? p : {
+      setPhases(prev => {
+        const matched = prev.some(p => p.id === phaseId);
+        if (!matched) {
+          console.error('[editPhase] no phase matched id:', phaseId, '— available IDs:', prev.map(p => p.id));
+          return prev;
+        }
+        return prev.map(p => p.id !== phaseId ? p : {
           ...p,
           ...(patch.label      !== undefined && { label:      patch.label }),
           ...(patch.summary    !== undefined && { summary:    patch.summary }),
           ...(patch.highlights !== undefined && { highlights: patch.highlights }),
-        }
-      ));
+        });
+      });
     },
 
     splitPhase(
@@ -508,7 +513,10 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
       phaseB: { id: string; label: string; summary: string; highlights: string[] },
     ) {
       const original = phases.find(p => p.id === phaseId);
-      if (!original) return;
+      if (!original) {
+        console.error('[splitPhase] no phase matched id:', phaseId, '— available IDs:', phases.map(p => p.id));
+        return;
+      }
       const newPhaseA: Phase = {
         id: phaseA.id,
         label: phaseA.label,
@@ -546,7 +554,10 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
     ) {
       const pA = phases.find(p => p.id === phaseIdA);
       const pB = phases.find(p => p.id === phaseIdB);
-      if (!pA || !pB) return;
+      if (!pA || !pB) {
+        console.error('[mergePhases] phase(s) not found — phaseIdA:', phaseIdA, 'phaseIdB:', phaseIdB, '— available IDs:', phases.map(p => p.id));
+        return;
+      }
       const merged: Phase = {
         id: mergedPhase.id,
         label: mergedPhase.label,
@@ -570,6 +581,10 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
 
     reorderPhases(orderedPhaseIds: string[]) {
       const phaseMap = new Map(phases.map(p => [p.id, p]));
+      const unknownIds = orderedPhaseIds.filter(id => !phaseMap.has(id));
+      if (unknownIds.length > 0) {
+        console.error('[reorderPhases] unknown phase IDs:', unknownIds, '— available IDs:', [...phaseMap.keys()]);
+      }
       let nextDay = 1;
       const reorderedPhases: Phase[] = [];
       const reorderedDays: Day[] = [];
