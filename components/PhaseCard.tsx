@@ -14,8 +14,8 @@ interface PhaseCardProps {
   onGeneratePlan?: () => Promise<void>;
   /** Inline label edit. */
   onEditLabel?: (newLabel: string) => void;
-  /** Inline range edit. Returns error message, or null on success. */
-  onEditRange?: (from: number, to: number) => string | null;
+  /** Inline range edit. Returns error message, or null on success (sync or async). */
+  onEditRange?: (from: number, to: number) => string | null | Promise<string | null>;
   /** Delete this phase. */
   onDeletePhase?: () => void;
   /** Medium trips: dismiss all phase cards. */
@@ -73,8 +73,9 @@ export default function PhaseCard({
     setEditingLabel(false);
   };
 
-  const saveRange = () => {
-    const err = onEditRange?.(fromDraft, toDraft);
+  const saveRange = async () => {
+    const result = onEditRange?.(fromDraft, toDraft);
+    const err = result instanceof Promise ? await result : result;
     if (err) {
       setRangeError(err);
       setFromDraft(phase.dayFrom);
@@ -199,16 +200,6 @@ export default function PhaseCard({
 
         {/* Right: action buttons */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, marginTop: 2 }}>
-          {/* Dismiss X (medium mode only) */}
-          {tripLengthMode === 'medium' && onDismissPhases && (
-            <button onClick={onDismissPhases} title="Hide phase overview"
-              style={{ background: 'rgba(255,255,255,0.15)', border: 'none', padding: 5, cursor: 'pointer', color: '#fff', borderRadius: 7, display: 'flex', alignItems: 'center' }}>
-              <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
-                <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </button>
-          )}
-
           {/* Generate / Regenerate button */}
           {onGeneratePlan && (
             <button

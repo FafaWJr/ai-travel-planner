@@ -207,24 +207,57 @@ function parseItinerary(md: string): Day[] {
   return days;
 }
 
-/* ─── Phase range validation ─────────────────────────────────── */
-function validatePhaseRange(
+/* ─── Phase range analysis (cascade-aware) ───────────────────── */
+type RangeEditEffect =
+  | { kind: 'ok-no-cascade' }
+  | { kind: 'ok-with-cascade'; neighborId: string; neighborLabel: string; neighborNewFrom: number; neighborNewTo: number; movedDays: number[] }
+  | { kind: 'error'; message: string };
+
+function analyzeRangeEdit(
   phases: Phase[],
   editingPhaseId: string,
   from: number,
   to: number,
   tripDays: number,
-): { ok: boolean; message: string } {
-  if (from < 1) return { ok: false, message: 'Day range must start at 1 or later.' };
-  if (to > tripDays) return { ok: false, message: `Day range can't go past Day ${tripDays}.` };
-  if (from > to) return { ok: false, message: '"From" day must be before or equal to "To" day.' };
+): RangeEditEffect {
+  if (from < 1) return { kind: 'error', message: 'Day range must start at 1 or later.' };
+  if (to > tripDays) return { kind: 'error', message: `Day range can't go past Day ${tripDays}.` };
+  if (from > to) return { kind: 'error', message: '"From" day must be before or equal to "To" day.' };
+
   const siblings = phases.filter(p => p.id !== editingPhaseId);
-  for (const s of siblings) {
-    if (!(to < s.dayFrom || from > s.dayTo)) {
-      return { ok: false, message: `Overlaps with "${s.label}" (Days ${s.dayFrom}–${s.dayTo}).` };
-    }
+  const overlapping = siblings.filter(s => !(to < s.dayFrom || from > s.dayTo));
+
+  if (overlapping.length === 0) return { kind: 'ok-no-cascade' };
+
+  if (overlapping.length > 1) {
+    return { kind: 'error', message: 'Range overlaps multiple phases. Change one boundary at a time.' };
   }
-  return { ok: true, message: '' };
+
+  const neighbor = overlapping[0];
+  const editing = phases.find(p => p.id === editingPhaseId);
+  if (!editing) return { kind: 'error', message: 'Phase not found.' };
+
+  const editingIsLeft = editing.dayFrom < neighbor.dayFrom;
+  let neighborNewFrom = neighbor.dayFrom;
+  let neighborNewTo = neighbor.dayTo;
+  if (editingIsLeft) {
+    neighborNewFrom = to + 1;
+  } else {
+    neighborNewTo = from - 1;
+  }
+
+  if (neighborNewFrom > neighborNewTo) {
+    return { kind: 'error', message: `That range would leave "${neighbor.label}" with zero days. Delete that phase instead if that's what you want.` };
+  }
+
+  const movedDays: number[] = [];
+  if (editingIsLeft) {
+    for (let d = neighbor.dayFrom; d <= to; d++) movedDays.push(d);
+  } else {
+    for (let d = from; d <= neighbor.dayTo; d++) movedDays.push(d);
+  }
+
+  return { kind: 'ok-with-cascade', neighborId: neighbor.id, neighborLabel: neighbor.label, neighborNewFrom, neighborNewTo, movedDays };
 }
 
 /* ─── Slot container ID helpers ─────────────────────────────── */
@@ -368,10 +401,64 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
     onActivityStatusChange?.();
   };
 
-  const updatePhaseRange = (phaseId: string, from: number, to: number): string | null => {
-    const result = validatePhaseRange(phases, phaseId, from, to, tripDays);
-    if (!result.ok) return result.message;
-    setPhases(prev => prev.map(p => p.id === phaseId ? { ...p, dayFrom: from, dayTo: to } : p));
+  const updatePhaseRange = async (phaseId: string, from: number, to: number): Promise<string | null> => {
+    const editing = phases.find(p => p.id === phaseId);
+    if (!editing) return 'Phase not found.';
+    if (editing.dayFrom === from && editing.dayTo === to) return null;
+
+    const effect = analyzeRangeEdit(phases, phaseId, from, to, tripDays);
+    if (effect.kind === 'error') return effect.message;
+
+    if (effect.kind === 'ok-no-cascade') {
+      setPhases(prev => prev.map(p => p.id === phaseId ? { ...p, dayFrom: from, dayTo: to } : p));
+      onActivityStatusChange?.();
+      return null;
+    }
+
+    // ok-with-cascade — confirm first
+    const neighbor = phases.find(p => p.id === effect.neighborId)!;
+    const movedCount = effect.movedDays.length;
+    const confirmMsg =
+      `"${effect.neighborLabel}" will shrink from Days ${neighbor.dayFrom}-${neighbor.dayTo} to Days ${effect.neighborNewFrom}-${effect.neighborNewTo}. ` +
+      `Day${movedCount !== 1 ? 's' : ''} ${effect.movedDays.join(', ')} will move to "${editing.label}". ` +
+      `If ${movedCount !== 1 ? 'they have' : 'it has'} activities, ${movedCount !== 1 ? 'they' : 'it'} will be regenerated to match the new phase. Continue?`;
+
+    if (!confirm(confirmMsg)) return null;
+
+    setPhases(prev => prev.map(p => {
+      if (p.id === phaseId) return { ...p, dayFrom: from, dayTo: to };
+      if (p.id === effect.neighborId) return { ...p, dayFrom: effect.neighborNewFrom, dayTo: effect.neighborNewTo };
+      return p;
+    }));
+    _setDays(prev => prev.map(d =>
+      effect.movedDays.includes(d.number) ? { ...d, phase_id: phaseId } : d
+    ));
+
+    const daysNeedingRegen = days.filter(d =>
+      effect.movedDays.includes(d.number) && d.activities.length > 0
+    );
+    for (const day of daysNeedingRegen) {
+      fetch('/api/regenerate-day', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          dayNumber: day.number,
+          tripPrompt,
+          phaseLabel: editing.label,
+          phaseSummary: editing.summary,
+          phaseHighlights: editing.highlights,
+          locale,
+        }),
+      })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data?.day) {
+            _setDays(prev => prev.map(d => d.number === day.number ? { ...data.day, phase_id: phaseId } : d));
+          }
+        })
+        .catch(err => console.warn('[R5.1 hotfix] regenerate-day failed:', err));
+    }
+
     onActivityStatusChange?.();
     return null;
   };
@@ -397,6 +484,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
     const newPhase: Phase = { id, label: 'New phase', dayFrom: startDay, dayTo: endDay, summary: '', highlights: [], planned: false };
     setPhases(prev => [...prev, newPhase]);
     setNewPhaseId(id);
+    setTimeout(() => setNewPhaseId(null), 100);
     onActivityStatusChange?.();
   };
 
