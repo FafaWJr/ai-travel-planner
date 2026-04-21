@@ -697,6 +697,8 @@ function PlanContent() {
   const [isExportingPDF, setIsExportingPDF] = useState(false);
   const [initialItineraryDays, setInitialItineraryDays] = useState<Day[] | undefined>(undefined);
   const [initialItineraryPhases, setInitialItineraryPhases] = useState<Phase[] | undefined>(undefined);
+  // R5 hotfix #3: page-level phase mirror — fallback when itineraryRef.getPhases() returns empty
+  const [pagePhasesMirror, setPagePhasesMirror] = useState<Phase[]>([]);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const openGate = (feature?: string) => {
@@ -884,6 +886,7 @@ function PlanContent() {
         }
         if (td.itineraryPhases && td.itineraryPhases.length > 0) {
           setInitialItineraryPhases(td.itineraryPhases);
+          setPagePhasesMirror(td.itineraryPhases);
         }
         // Restore chat history if available
         if (Array.isArray(data.chat_history) && data.chat_history.length > 0) {
@@ -1071,6 +1074,11 @@ function PlanContent() {
                   if (normalized) {
                     const phase = definePhaseInputToPhase(normalized);
                     itineraryRef.current?.upsertPhase(phase);
+                    setPagePhasesMirror(prev => {
+                      const idx = prev.findIndex(p => p.id === phase.id);
+                      if (idx >= 0) { const next = [...prev]; next[idx] = phase; return next; }
+                      return [...prev, phase];
+                    });
                   }
                 } catch (err) {
                   console.error('[plan] failed to apply define_phase:', err, toolUse.input);
@@ -1663,7 +1671,15 @@ function PlanContent() {
               : undefined
             }
             currentActivities={liveActivitiesText}
-            getPhases={() => itineraryRef.current?.getPhases() ?? []}
+            getPhases={() => {
+              const refPhases = itineraryRef.current?.getPhases() ?? [];
+              if (refPhases.length > 0) return refPhases;
+              if (pagePhasesMirror.length > 0) {
+                console.warn('[plan] getPhases ref returned empty, falling back to mirror', { mirror: pagePhasesMirror.length });
+                return pagePhasesMirror;
+              }
+              return [];
+            }}
             onAddToItinerary={(text, dayNum, slot) => {
               setActiveSection('itinerary');
               itineraryRef.current?.addActivity(text, dayNum, slot, true);

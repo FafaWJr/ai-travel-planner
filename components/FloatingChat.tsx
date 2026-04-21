@@ -478,19 +478,38 @@ export default function FloatingChat({ plan, destination, hotelContext, currentA
       if (hotelContext) ctx += `\n\n## Confirmed Accommodation\n${hotelContext}`;
       if (currentActivities) ctx += `\n\n## Already in Itinerary (NEVER suggest these again)\n${currentActivities}`;
 
-      // R5: Inject actual phase_id values so Luna can call phase editing tools correctly.
-      const phases = getPhases?.() ?? [];
-      if (phases.length > 0) {
-        const phaseLines = phases.map((p, i) =>
-          `Phase ${i + 1}:\n` +
-          `  phase_id: "${p.id}"  ← USE THIS EXACT STRING when calling edit_phase / split_phase / merge_phases / reorder_phases. Do NOT invent IDs.\n` +
+      // === R5 HOTFIX #3 INSTRUMENTATION ===
+      const phasesFromProp = (() => {
+        try {
+          const result = getPhases?.();
+          console.info('[FloatingChat] getPhases() returned:', {
+            isFunction: typeof getPhases === 'function',
+            result,
+            length: Array.isArray(result) ? result.length : 'not-array',
+            firstId: Array.isArray(result) && result.length > 0 ? result[0]?.id : null,
+          });
+          return Array.isArray(result) ? result : [];
+        } catch (err) {
+          console.error('[FloatingChat] getPhases() threw:', err);
+          return [];
+        }
+      })();
+
+      if (phasesFromProp.length > 0) {
+        const phasesBlock = phasesFromProp.map((p, idx) =>
+          `Phase ${idx + 1}:\n` +
+          `  phase_id: "${p.id}"  \u2190 USE THIS EXACT STRING when calling edit_phase / split_phase / merge_phases / reorder_phases. Do NOT invent IDs.\n` +
           `  Label: ${p.label}\n` +
-          `  Days: ${p.dayFrom}–${p.dayTo}\n` +
+          `  Days: ${p.dayFrom}\u2013${p.dayTo}\n` +
           `  Summary: ${p.summary || '(none)'}\n` +
-          (p.highlights?.length ? `  Highlights: ${p.highlights.join(' · ')}\n` : '')
+          (p.highlights?.length ? `  Highlights: ${p.highlights.join(' \u00b7 ')}\n` : '')
         ).join('\n');
-        ctx += `\n\n## Trip Phases (CRITICAL — phase_id values must be copied exactly for phase editing tools)\n${phaseLines}`;
+        ctx += `\n\n## Trip Phases (CRITICAL \u2014 phase_id values must be copied exactly for phase editing tools)\n${phasesBlock}`;
+        console.info('[FloatingChat] phase context injected \u2014 ctx length:', ctx.length, 'phases:', phasesFromProp.length);
+      } else {
+        console.warn('[FloatingChat] no phases in context \u2014 Luna will not know about phases for this request');
       }
+      // === END R5 HOTFIX #3 INSTRUMENTATION ===
 
       const res = await fetch('/api/chat', {
         method: 'POST',

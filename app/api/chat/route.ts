@@ -29,6 +29,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const hasPhaseContext = typeof tripContext === 'string' && tripContext.includes('## Trip Phases');
+    console.info('[api/chat] request', {
+      contextLength: tripContext?.length ?? 0,
+      hasPhaseBlock: hasPhaseContext,
+      phaseEditingFlag: process.env.NEXT_PUBLIC_PHASE_EDITING_ENABLED,
+    });
+
     const systemBlocks = buildLunaChatSystemBlocks(
       tripContext,
       userName,
