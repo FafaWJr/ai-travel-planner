@@ -1,7 +1,7 @@
 # Luna Let's Go - Claude Code Context
-**Last Updated:** 2026-04-21 18:50:45
+**Last Updated:** 2026-04-21 22:32:59
 **Current Branch:** main
-**Last Commit:** 19df3350 docs: reference AI-PATHS, PHASE-MODE-MATRIX, and POST-R6-CHANGELOG from CLAUDE.md
+**Last Commit:** c740269b feat: add luna-context-updater Claude agent definition
 **Deployment:** https://www.lunaletsgo.com
 
 ---
@@ -34,7 +34,6 @@ app/api/exchange-rates/route.ts
 app/api/expand-phase/route.ts
 app/api/extra-ideas/route.ts
 app/api/generate/route.ts
-app/api/google-place-photo/route.ts
 app/api/hotel-photos/route.ts
 app/api/hotel-suggestions/route.ts
 app/api/place-photo/route.ts
@@ -63,22 +62,11 @@ app/[locale]/quiz/page.tsx
 app/[locale]/start/page.tsx
 app/[locale]/terms/page.tsx
 app/[locale]/trip-ideas/page.tsx
-app/about/page.tsx
 app/auth/forgot-password/page.tsx
 app/auth/login/page.tsx
 app/auth/page.tsx
 app/auth/returning/page.tsx
 app/auth/signup/page.tsx
-app/blog/fiji-oct-2024/page.tsx
-app/blog/page.tsx
-app/deals/page.tsx
-app/my-trips/page.tsx
-app/page.tsx
-app/privacy-policy/page.tsx
-app/quiz/page.tsx
-app/start/page.tsx
-app/terms/page.tsx
-app/trip-ideas/page.tsx
 ```
 
 ---
@@ -86,16 +74,16 @@ app/trip-ideas/page.tsx
 ## Recent Changes (Last 10 Commits)
 
 ```
-19df3350 (HEAD -> main, origin/main, origin/HEAD) docs: reference AI-PATHS, PHASE-MODE-MATRIX, and POST-R6-CHANGELOG from CLAUDE.md
+c740269b (HEAD -> main, origin/main, origin/HEAD) feat: add luna-context-updater Claude agent definition
+73c06982 feat: add Luna QA Claude agent definition
+c729b849 docs: add luna-skills-subagents-sprint spec
+2fa1cf74 fix: remove legacy pre-locale app/ pages that broke Vercel build
+892209be chore: remove .claude worktree from git index, add .claude/ to .gitignore
+e6a67c16 chore: reorganise project structure - move docs into docs/, add README, remove dead route
+2b33813f docs: restore full CLAUDE.md template with Unsaved Guard + Persona sections
+19df3350 docs: reference AI-PATHS, PHASE-MODE-MATRIX, and POST-R6-CHANGELOG from CLAUDE.md
 75cce3c2 docs: add AI-PATHS, PHASE-MODE-MATRIX, POST-R6-CHANGELOG reference docs
 41286bf7 docs: update CLAUDE.md context — R5.1 hotfix #1 state
-5f800c29 fix(R5.1): cascade phase range edits + remove confusable dismiss X
-37095842 feat(R5.1): interleaved phase+day layout, inline editing, Add phase button
-3d6d88b3 feat(R5.1): phase + day collapse, compact day cards, range summary
-163c4aa6 fix(R6): narrow tools by trip length + branch route prompt by mode
-bd67282e feat(R6): unified phase experience across trip lengths
-1b1b30e5 fix(R5): add phase editing %%TRIP_UPDATE%% formats to chat system prompt
-4b953d47 fix(R5): hotfix #3 — instrumented diagnostic + cache-bust + phase mirror
 ```
 
 ---
@@ -210,6 +198,9 @@ After Claude Code finishes changes:
 - Affiliate links updated to new AWIN cread.php URLs
 - Deals page rebuilt with partner cards (Booking.com, Klook, GoWithGuide, Xcaret, Europcar)
 - Favicon: browser tab now shows Luna logo via /luna-favicon.ico
+- Legacy pre-locale app/ stubs (about, blog, deals, my-trips, quiz, start, trip-ideas) deleted; canonical pages are app/[locale]/ only
+- Luna QA agent added at .claude/agents/luna-qa-agent.md
+- Luna context-updater agent added at .claude/agents/luna-context-updater.md
 
 **Current Work:**
 - Brevo email integration (list ID 17, /api/brevo-sync/route.ts)

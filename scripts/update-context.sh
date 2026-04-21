@@ -164,6 +164,9 @@ After Claude Code finishes changes:
 - Affiliate links updated to new AWIN cread.php URLs
 - Deals page rebuilt with partner cards (Booking.com, Klook, GoWithGuide, Xcaret, Europcar)
 - Favicon: browser tab now shows Luna logo via /luna-favicon.ico
+- Legacy pre-locale app/ stubs (about, blog, deals, my-trips, quiz, start, trip-ideas) deleted; canonical pages are app/[locale]/ only
+- Luna QA agent added at .claude/agents/luna-qa-agent.md
+- Luna context-updater agent added at .claude/agents/luna-context-updater.md
 
 **Current Work:**
 - Brevo email integration (list ID 17, /api/brevo-sync/route.ts)
