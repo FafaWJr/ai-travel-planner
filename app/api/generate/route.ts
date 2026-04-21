@@ -34,15 +34,51 @@ function extractTripDaysFromPrompt(prompt: string): number | null {
 
 /**
  * Builds the user prompt for the itinerary section when using structured tool output.
- * Replaces the markdown day-by-day format instruction with a tool-use instruction.
+ * Branches by trip length to match the tool array narrowed in buildGenerateTools.
  */
 function buildStructuredItineraryInstruction(tripDays: number): string {
-  const phaseNote = tripDays >= 15
-    ? `\nFor this ${tripDays}-day trip, first call define_phase() to group the days into 3–5 thematic phases (e.g. "Coastal Escape: Days 1-5", "City Exploration: Days 6-10"). Then call define_day() for each day, including the phase_id it belongs to.`
-    : '';
+  // LONG TRIPS: phase-only. define_day is not in the tool array.
+  if (tripDays >= 15) {
+    return `## Personalised Itinerary
+
+CRITICAL OUTPUT MODE: PHASE-ONLY. This ${tripDays}-day trip uses phase-based planning.
+
+You MUST call define_phase 3 to 6 times to cover ALL ${tripDays} days. Every day from Day 1 to Day ${tripDays} must belong to exactly one phase. Phase boundaries should be 5 to 10 days each. Choose phases that match the destination's natural geography (e.g. "Coastal Days", "Hinterland Escape", "Southern Beaches") OR temporal flow (e.g. "Settling In", "Big Hits", "Slow Beach Living").
+
+Each define_phase call requires: phase_id, label, day_from, day_to, summary (2-3 sentences), and 3-5 highlights.
+
+You MUST NOT call define_day for ANY day. The define_day tool is not available for this trip. All phases are intentionally left as expandable cards. The user expands each phase later by tapping a "Plan these days" button which calls a separate API.
+
+Example for a 20-day trip with 4 phases:
+- 4 define_phase calls covering Days 1-5, Days 6-10, Days 11-15, Days 16-20
+- 0 define_day calls
+- Total: 4 tool calls only
+
+REMINDER: PHASE-ONLY. Do NOT call define_day. Just emit define_phase calls covering all ${tripDays} days.`;
+  }
+
+  // MEDIUM TRIPS: phases first, then all days.
+  if (tripDays >= 7) {
+    return `## Personalised Itinerary
+
+This ${tripDays}-day trip uses phase grouping for organisation. You MUST call define_phase 2 to 3 times BEFORE any define_day call.
+
+STEP A: Call define_phase 2 to 3 times to cover ALL ${tripDays} days. Every day must belong to exactly one phase. Choose phase boundaries that reflect natural journey structure (e.g. "Arrival & City", "Day Trips", "Coastal Finale"). Each phase needs phase_id, label, day_from, day_to, summary (1-2 sentences), and 2-4 highlights.
+
+STEP B: Call define_day with FULL activity content for ALL ${tripDays} days in order (Day 1 through Day ${tripDays}). Include the phase_id for each day matching the phase it belongs to. Each define_day call must include at least 1 activity per time slot (morning, afternoon, evening, night).
+
+Example for a 10-day trip with 3 phases of Days 1-3, Days 4-7, Days 8-10:
+- 3 define_phase calls (one per phase, covering all 10 days)
+- 10 define_day calls (all days, each with its phase_id)
+- Total: 13 tool calls
+
+REMINDER: phases FIRST, then days. Both are required.`;
+  }
+
+  // SHORT TRIPS: day-only.
   return `## Personalised Itinerary
-IMPORTANT: Do NOT write the itinerary days as markdown text. Instead, call define_day() ONCE for EACH of the ${tripDays} days in order (Day 1 through Day ${tripDays}).${phaseNote}
-Each define_day call must include at least 1 activity per time slot (morning, afternoon, evening, night). Be specific and practical.`;
+
+This is a ${tripDays}-day trip. Do NOT call define_phase. Just call define_day ONCE for EACH of the ${tripDays} days in order (Day 1 through Day ${tripDays}). Each call must include at least 1 activity per time slot (morning, afternoon, evening, night). Be specific and practical.`;
 }
 
 export async function POST(request: NextRequest) {

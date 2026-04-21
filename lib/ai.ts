@@ -1331,22 +1331,33 @@ export const DEFINE_DAY_TOOL: AnthropicTool = {
 /**
  * Builds the tool array for the /api/generate route.
  *
- * For trips under 7 days:  [ define_day ] (with cache_control on it)
- * For trips 7-14 days:     [ define_phase, define_day ] (medium — phases + all days)
- * For trips 15+ days:      [ define_phase, define_day ] (long — phases only, no define_day emitted)
+ * For trips under 7 days:  [ define_day ] — short, day-only generation.
+ * For trips 7-14 days:     [ define_phase, define_day ] — medium, phases + all days.
+ * For trips 15+ days:      [ define_phase ] ONLY — long, phase-only. define_day is
+ *   physically absent so the LLM cannot emit day cards even if the prompt slips.
  *
- * The cache_control marker goes on the LAST tool to cache the full tools array.
+ * cache_control goes on the last tool in each array to cache the full tools block.
  */
 export function buildGenerateTools(tripDays: number): AnthropicTool[] {
-  const dayTool: AnthropicTool = {
+  const dayToolCached: AnthropicTool = {
     ...DEFINE_DAY_TOOL,
     cache_control: { type: 'ephemeral' },
   };
+  const phaseToolCached: AnthropicTool = {
+    ...DEFINE_PHASE_TOOL,
+    cache_control: { type: 'ephemeral' },
+  };
 
-  if (tripDays >= 7) {
-    return [DEFINE_PHASE_TOOL, dayTool];
+  if (tripDays >= 15) {
+    // Phase-only: define_day absent — LLM physically cannot emit day cards.
+    return [phaseToolCached];
   }
-  return [dayTool];
+  if (tripDays >= 7) {
+    // Medium: both tools available, prompt controls order.
+    return [DEFINE_PHASE_TOOL, dayToolCached];
+  }
+  // Short: day-only.
+  return [dayToolCached];
 }
 
 export type GenerateToolName = 'define_day' | 'define_phase';
