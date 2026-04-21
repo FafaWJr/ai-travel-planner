@@ -18,9 +18,13 @@ interface PhaseCardProps {
   tripLengthMode?: TripLengthMode;
   /** R6: Called when user clicks the X button in medium mode to dismiss all phase cards. */
   onDismissPhases?: () => void;
+  /** R5.1: Whether this phase is collapsed (state lifted to EditableItinerary). */
+  collapsed?: boolean;
+  /** R5.1: Toggle collapsed state (lifted to EditableItinerary). */
+  onToggleCollapse?: () => void;
 }
 
-export default function PhaseCard({ phase, plannedDaysCount, onPlanPhase, onRegeneratePhase, regenEnabled = false, isPlanned = false, tripLengthMode = 'long', onDismissPhases }: PhaseCardProps) {
+export default function PhaseCard({ phase, plannedDaysCount, onPlanPhase, onRegeneratePhase, regenEnabled = false, isPlanned = false, tripLengthMode = 'long', onDismissPhases, collapsed = false, onToggleCollapse }: PhaseCardProps) {
   const totalDays = phase.dayTo - phase.dayFrom + 1;
   const isFullyPlanned = plannedDaysCount >= totalDays;
   const [isPlanning, setIsPlanning] = useState(false);
@@ -130,71 +134,75 @@ export default function PhaseCard({ phase, plannedDaysCount, onPlanPhase, onRege
           </h3>
         </div>
 
-        {tripLengthMode === 'medium' && onDismissPhases && (
-          <button
-            onClick={onDismissPhases}
-            title="Hide phase overview"
-            style={{
-              background: 'rgba(255,255,255,0.15)', border: 'none', padding: 6,
-              cursor: 'pointer', color: '#fff', borderRadius: 8,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-          </button>
-        )}
-
-        {isPlanned && regenEnabled && onRegeneratePhase && (
-          <div style={{ position: 'relative', flexShrink: 0 }}>
+        {/* Right-side action group */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          {/* Medium dismiss X */}
+          {tripLengthMode === 'medium' && onDismissPhases && (
             <button
-              onClick={(e) => { e.stopPropagation(); setMenuOpen(v => !v); }}
-              title="Phase options"
+              onClick={onDismissPhases}
+              title="Hide phase overview"
               style={{
                 background: 'rgba(255,255,255,0.15)', border: 'none', padding: 6,
                 cursor: 'pointer', color: '#fff', borderRadius: 8,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
             >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                <circle cx="4" cy="8" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="12" cy="8" r="1.5"/>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
               </svg>
             </button>
-            {menuOpen && (
-              <>
-                <div style={{ position: 'fixed', inset: 0, zIndex: 100 }} onClick={() => setMenuOpen(false)} />
-                <div style={{
-                  position: 'absolute', top: 34, right: 0, zIndex: 101,
-                  background: '#fff', border: '1px solid rgba(0,68,123,0.12)',
-                  borderRadius: 8, boxShadow: '0 8px 24px rgba(0,20,60,0.12)',
-                  minWidth: 180, overflow: 'hidden',
-                }}>
-                  <button
-                    onClick={() => { setMenuOpen(false); onRegeneratePhase(phase.id); }}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 8, width: '100%',
-                      padding: '10px 14px', border: 'none', background: 'transparent',
-                      color: '#00447B', fontFamily: "'Poppins', sans-serif",
-                      fontSize: 13, fontWeight: 500, cursor: 'pointer', textAlign: 'left',
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,68,123,0.06)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-                  >
-                    <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-                      <path d="M14 8a6 6 0 1 1-2.5-4.87" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-                      <path d="M14 2v4h-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    Regenerate phase
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        )}
+          )}
 
-        {tripLengthMode !== 'medium' && !isFullyPlanned && onPlanPhase && (
+          {/* Three-dot regen menu */}
+          {isPlanned && regenEnabled && onRegeneratePhase && (
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={(e) => { e.stopPropagation(); setMenuOpen(v => !v); }}
+                title="Phase options"
+                style={{
+                  background: 'rgba(255,255,255,0.15)', border: 'none', padding: 6,
+                  cursor: 'pointer', color: '#fff', borderRadius: 8,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                  <circle cx="4" cy="8" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="12" cy="8" r="1.5"/>
+                </svg>
+              </button>
+              {menuOpen && (
+                <>
+                  <div style={{ position: 'fixed', inset: 0, zIndex: 100 }} onClick={() => setMenuOpen(false)} />
+                  <div style={{
+                    position: 'absolute', top: 34, right: 0, zIndex: 101,
+                    background: '#fff', border: '1px solid rgba(0,68,123,0.12)',
+                    borderRadius: 8, boxShadow: '0 8px 24px rgba(0,20,60,0.12)',
+                    minWidth: 180, overflow: 'hidden',
+                  }}>
+                    <button
+                      onClick={() => { setMenuOpen(false); onRegeneratePhase(phase.id); }}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 8, width: '100%',
+                        padding: '10px 14px', border: 'none', background: 'transparent',
+                        color: '#00447B', fontFamily: "'Poppins', sans-serif",
+                        fontSize: 13, fontWeight: 500, cursor: 'pointer', textAlign: 'left',
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,68,123,0.06)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                        <path d="M14 8a6 6 0 1 1-2.5-4.87" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                        <path d="M14 2v4h-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      Regenerate phase
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Plan these days button */}
+          {tripLengthMode !== 'medium' && !isFullyPlanned && onPlanPhase && (
           <button
             onClick={handleClick}
             disabled={isPlanning}
@@ -234,10 +242,29 @@ export default function PhaseCard({ phase, plannedDaysCount, onPlanPhase, onRege
               'Plan these days'
             )}
           </button>
-        )}
+          )}
+
+          {/* Collapse caret */}
+          <button
+            onClick={onToggleCollapse}
+            title={collapsed ? 'Expand phase' : 'Collapse phase'}
+            style={{
+              background: 'rgba(255,255,255,0.15)', border: 'none', padding: 6,
+              cursor: 'pointer', color: '#fff', borderRadius: 8,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >
+            <svg
+              width="16" height="16" viewBox="0 0 16 16" fill="none"
+              style={{ transform: collapsed ? 'rotate(0deg)' : 'rotate(180deg)', transition: 'transform 200ms' }}
+            >
+              <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        </div>
       </div>
 
-      <div style={{ padding: '14px 18px 16px' }}>
+      {!collapsed && <div style={{ padding: '14px 18px 16px' }}>
         <p style={{
           fontFamily: "'Inter',sans-serif",
           fontSize: 14,
@@ -331,7 +358,7 @@ export default function PhaseCard({ phase, plannedDaysCount, onPlanPhase, onRege
             </div>
           </div>
         )}
-      </div>
+      </div>}
 
       <style>{`@keyframes phaseSpin { to { transform: rotate(360deg); } }`}</style>
     </div>

@@ -321,6 +321,15 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
   );
   // R6: medium mode only — user can dismiss phase overview cards.
   const [phasesDismissed, setPhasesDismissed] = useState(false);
+  // R5.1: which phases are manually collapsed (Set of phase IDs).
+  const [collapsedPhaseIds, setCollapsedPhaseIds] = useState<Set<string>>(new Set());
+  const togglePhase = (phaseId: string) => {
+    setCollapsedPhaseIds(prev => {
+      const next = new Set(prev);
+      if (next.has(phaseId)) next.delete(phaseId); else next.add(phaseId);
+      return next;
+    });
+  };
 
   // Hydration state machine. See HydrationMode type definition above.
   const [hydrationMode, setHydrationMode] = useState<HydrationMode>(() =>
@@ -452,19 +461,19 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
     },
     setStructuredDay(day: Day) {
       // Called incrementally as each define_day tool call arrives.
-      // Only active in structured-from-stream mode.
+      // R5.1: medium/long trips default days to collapsed.
+      const dayWithOpen = { ...day, open: tripLengthMode === 'short' ? day.open : false };
       _setDays(prev => {
-        const existing = prev.findIndex(d => d.number === day.number);
+        const existing = prev.findIndex(d => d.number === dayWithOpen.number);
         if (existing >= 0) {
           const updated = [...prev];
-          updated[existing] = day;
+          updated[existing] = dayWithOpen;
           return updated;
         }
-        // Insert in order
-        const insertAt = prev.findIndex(d => d.number > day.number);
-        if (insertAt === -1) return [...prev, day];
+        const insertAt = prev.findIndex(d => d.number > dayWithOpen.number);
+        if (insertAt === -1) return [...prev, dayWithOpen];
         const arr = [...prev];
-        arr.splice(insertAt, 0, day);
+        arr.splice(insertAt, 0, dayWithOpen);
         return arr;
       });
     },
@@ -480,8 +489,11 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
       });
     },
     setStructuredDays(newDays: Day[]) {
-      // Set all structured days at once (used after full stream completion).
-      _setDays(newDays);
+      // R5.1: medium/long trips default days to collapsed.
+      const daysWithOpen = tripLengthMode === 'short'
+        ? newDays
+        : newDays.map(d => ({ ...d, open: false }));
+      _setDays(daysWithOpen);
     },
     replaceDay(dayNumber: number, newDay: Day) {
       setDays(prev => prev.map(d => d.number === dayNumber ? newDay : d));
@@ -862,18 +874,58 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
             const phaseActivityCount = days
               .filter(d => d.phase_id === phase.id)
               .reduce((sum, d) => sum + d.activities.filter(a => a.status !== 'declined').length, 0);
+            const isCollapsed = collapsedPhaseIds.has(phase.id);
             return (
-              <PhaseCard
-                key={phase.id}
-                phase={phase}
-                plannedDaysCount={phaseDays.length}
-                onPlanPhase={onPlanPhase ? () => onPlanPhase(phase) : undefined}
-                onRegeneratePhase={onRegeneratePhase}
-                regenEnabled={regenEnabled}
-                isPlanned={phaseActivityCount > 0}
-                tripLengthMode={tripLengthMode}
-                onDismissPhases={tripLengthMode === 'medium' && phaseIdx === 0 ? () => setPhasesDismissed(true) : undefined}
-              />
+              <div key={phase.id}>
+                <PhaseCard
+                  phase={phase}
+                  plannedDaysCount={phaseDays.length}
+                  onPlanPhase={onPlanPhase ? () => onPlanPhase(phase) : undefined}
+                  onRegeneratePhase={onRegeneratePhase}
+                  regenEnabled={regenEnabled}
+                  isPlanned={phaseActivityCount > 0}
+                  tripLengthMode={tripLengthMode}
+                  onDismissPhases={tripLengthMode === 'medium' && phaseIdx === 0 ? () => setPhasesDismissed(true) : undefined}
+                  collapsed={isCollapsed}
+                  onToggleCollapse={() => togglePhase(phase.id)}
+                />
+                {/* R5.1: long-trip unplanned phase range summary card */}
+                {tripLengthMode === 'long' && !phase.planned && !isCollapsed && (
+                  <div style={{
+                    background: 'rgba(0,68,123,0.04)',
+                    border: '1px dashed rgba(0,68,123,0.20)',
+                    borderRadius: 12,
+                    padding: '14px 18px',
+                    marginTop: 8,
+                    marginLeft: 24,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 12,
+                  }}>
+                    <div>
+                      <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 14, color: '#00447B', margin: 0 }}>
+                        Days {phase.dayFrom}&ndash;{phase.dayTo}: {phase.label}
+                      </p>
+                      <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: '#6C6D6F', margin: '2px 0 0' }}>
+                        {phase.dayTo - phase.dayFrom + 1} days &middot; tap &ldquo;Plan these days&rdquo; to expand
+                      </p>
+                    </div>
+                    {onPlanPhase && (
+                      <button
+                        onClick={() => onPlanPhase(phase)}
+                        style={{
+                          background: '#FF8210', color: '#fff', border: 'none',
+                          fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 13,
+                          padding: '8px 18px', borderRadius: 100, cursor: 'pointer', flexShrink: 0,
+                        }}
+                      >
+                        Plan these days
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>
@@ -888,56 +940,78 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {days.map((day, idx) => {
-            const photo = photos.length > 0 ? photos[idx % photos.length] : null;
             const dayAccepted = day.activities.filter(a => a.status === 'accepted').length;
             const otherDays = days.filter(d => d.number !== day.number).map(d => ({ number: d.number, title: d.title }));
+            const phaseHidden = !!(day.phase_id && collapsedPhaseIds.has(day.phase_id));
+            const dayDate = formatDayDate(startDate, idx, locale);
 
             return (
-              <div key={day.number} style={{ background: day.confirmed ? 'rgba(22,163,74,0.02)' : '#fff', borderRadius: 16, overflow: 'hidden', border: `1px solid ${day.confirmed ? 'rgba(22,163,74,0.25)' : 'rgba(0,68,123,0.08)'}`, boxShadow: '0 2px 12px rgba(0,68,123,0.06)', transition: 'border-color 0.2s, background 0.2s' }}>
-
-                {/* Cover photo */}
-                <div onClick={() => toggleDay(day.number)} style={{ cursor: 'pointer', position: 'relative' }}>
-                  {photo
-                    ? <img src={photo} alt={`Day ${day.number}`} style={{ width: '100%', height: 120, objectFit: 'cover', display: 'block' }} />
-                    : <div style={{ width: '100%', height: 80, background: GRADIENTS[idx % GRADIENTS.length] }} />
-                  }
-                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top,rgba(0,0,0,0.60) 0%,rgba(0,0,0,0.10) 60%,transparent 100%)', display: 'flex', alignItems: 'flex-end', padding: '10px 14px', gap: 8 }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', flexShrink: 0 }}>
-                      <span style={{ background: '#FF8210', color: '#fff', fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 11, padding: '3px 10px', borderRadius: 100 }}>{t('day.badge', { n: day.number })}</span>
-                      {formatDayDate(startDate, idx, locale) && (
-                        <span style={{ fontFamily: "'Inter',sans-serif", fontWeight: 600, fontSize: 11, color: '#fff', marginTop: 2, textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>{formatDayDate(startDate, idx, locale)}</span>
+              <div key={day.number} style={{ display: phaseHidden ? 'none' : 'block' }}>
+                <div style={{
+                  background: day.confirmed ? 'rgba(22,163,74,0.02)' : '#fff',
+                  borderRadius: 14,
+                  border: `1px solid ${day.confirmed ? 'rgba(22,163,74,0.25)' : 'rgba(0,68,123,0.08)'}`,
+                  boxShadow: '0 1px 6px rgba(0,68,123,0.05)',
+                  transition: 'border-color 0.2s, background 0.2s',
+                  overflow: 'hidden',
+                }}>
+                  {/* Compact text header */}
+                  <div
+                    onClick={() => toggleDay(day.number)}
+                    style={{ cursor: 'pointer', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}
+                  >
+                    <span style={{ background: '#FF8210', color: '#fff', fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 12, padding: '3px 11px', borderRadius: 100, flexShrink: 0 }}>
+                      {t('day.badge', { n: day.number })}
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 14, color: '#00447B', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {day.title}
+                      </p>
+                      {dayDate && (
+                        <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: '#6C6D6F', margin: '1px 0 0' }}>
+                          {dayDate}
+                        </p>
                       )}
                     </div>
-                    <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 14, color: '#fff', flex: 1, margin: 0, textShadow: '0 1px 4px rgba(0,0,0,0.5)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{day.title}</p>
-                    {day.confirmed && <span style={{ background: 'rgba(22,163,74,0.80)', color: '#fff', fontSize: 10, fontFamily: "'Inter',sans-serif", fontWeight: 700, padding: '2px 8px', borderRadius: 100, flexShrink: 0 }}>✓ {t('day.confirmed')}</span>}
-                    <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: 'rgba(255,255,255,0.70)', flexShrink: 0 }}>{dayAccepted}/{day.activities.length}</span>
+                    {day.confirmed && (
+                      <span style={{ background: 'rgba(22,163,74,0.12)', color: '#16A34A', fontSize: 10, fontFamily: "'Inter',sans-serif", fontWeight: 700, padding: '2px 8px', borderRadius: 100, flexShrink: 0 }}>
+                        ✓ {t('day.confirmed')}
+                      </span>
+                    )}
+                    <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: '#6C6D6F', flexShrink: 0 }}>
+                      {dayAccepted}/{day.activities.length}
+                    </span>
                     {regenEnabled && onRegenerateDay && (
                       <button
                         onClick={(e) => { e.stopPropagation(); onRegenerateDay(day.number); }}
                         title={`Regenerate Day ${day.number}`}
                         style={{
-                          background: 'rgba(255,255,255,0.15)',
-                          border: '1.5px solid rgba(255,255,255,0.35)',
-                          color: '#fff', borderRadius: 100,
-                          width: 28, height: 28,
+                          background: 'rgba(0,68,123,0.06)',
+                          border: '1px solid rgba(0,68,123,0.14)',
+                          color: '#00447B', borderRadius: 100,
+                          width: 26, height: 26,
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           cursor: 'pointer', padding: 0, flexShrink: 0,
                           transition: 'background 0.15s',
                         }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.28)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,68,123,0.12)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(0,68,123,0.06)'; }}
                       >
-                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                        <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
                           <path d="M14 8a6 6 0 1 1-2.5-4.87" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
                           <path d="M14 2v4h-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                       </button>
                     )}
-                    <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14, flexShrink: 0, display: 'inline-block', transition: 'transform 0.2s', transform: day.open ? 'rotate(180deg)' : 'rotate(0deg)' }}>▾</span>
+                    <svg
+                      width="16" height="16" viewBox="0 0 16 16" fill="none"
+                      style={{ color: '#6C6D6F', flexShrink: 0, transform: day.open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 200ms' }}
+                    >
+                      <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
                   </div>
-                </div>
 
                 {/* Time-slot sections */}
                 {day.open && (
@@ -1013,6 +1087,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
                     />
                   </div>
                 )}
+                </div>
               </div>
             );
           })}

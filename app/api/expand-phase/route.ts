@@ -123,6 +123,7 @@ Now emit ${dayCount} define_day tool calls covering Day ${phase.day_from} throug
       );
     }
 
+    console.log(`[expand-phase] ${phase.id}: requested ${dayCount} days (Day ${phase.day_from}–${phase.day_to})`);
     return new Response(stream, {
       headers: {
         'Content-Type': 'text/event-stream',
