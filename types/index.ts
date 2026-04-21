@@ -110,6 +110,14 @@ export interface ReorderPhasesInput {
 }
 
 /**
+ * R6: Controls phase rendering and generation strategy.
+ * short  = 1-6 days:  day cards only, no phases.
+ * medium = 7-14 days: phases as organisational headers + all days planned.
+ * long   = 15+ days:  phase-only generation with on-demand day expansion.
+ */
+export type TripLengthMode = 'short' | 'medium' | 'long';
+
+/**
  * Input schema for the define_day Anthropic tool.
  * Each time slot holds an array of activity strings.
  */

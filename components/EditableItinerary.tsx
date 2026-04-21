@@ -5,7 +5,7 @@ import FinalItineraryModal from './FinalItineraryModal';
 import DayNotes from './itinerary/DayNotes';
 import PhaseCard from './PhaseCard';
 import type { AcceptedHotel } from './StayTab';
-import type { Phase } from '@/types';
+import type { Phase, TripLengthMode } from '@/types';
 import { formatSlotHours, type SlotName } from '@/lib/ai';
 import {
   DndContext,
@@ -243,6 +243,8 @@ interface Props {
   onRegeneratePhase?: (phaseId: string) => void;
   /** R4: Gates the regen affordances. Pass process.env.NEXT_PUBLIC_REGENERATION_ENABLED !== 'false'. */
   regenEnabled?: boolean;
+  /** R6: Controls phase generation strategy and phase card rendering mode. */
+  tripLengthMode?: TripLengthMode;
 }
 
 export interface ItineraryHandle {
@@ -302,6 +304,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
   onRegenerateDay,
   onRegeneratePhase,
   regenEnabled = false,
+  tripLengthMode = 'short',
 }, ref) {
   const localeFromHook = useLocale();
   const locale = localeProp ?? localeFromHook;
@@ -312,10 +315,12 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
     (initialDays && initialDays.length > 0) ? initialDays : []
   );
 
-  // Phase state for 15+ day trips (Stage 4). Empty for shorter trips.
+  // Phase state for 7+ day trips (Stage 4 / R6). Empty for shorter trips.
   const [phases, setPhases] = useState<Phase[]>(() =>
     (initialPhases && initialPhases.length > 0) ? initialPhases : []
   );
+  // R6: medium mode only — user can dismiss phase overview cards.
+  const [phasesDismissed, setPhasesDismissed] = useState(false);
 
   // Hydration state machine. See HydrationMode type definition above.
   const [hydrationMode, setHydrationMode] = useState<HydrationMode>(() =>
@@ -845,12 +850,10 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
         </div>
       </div>
 
-      {/* ── Phase cards (15+ day trips only) ── */}
-      {phases.length > 0 && (
+      {/* ── Phase cards (7+ day trips) ── */}
+      {phases.length > 0 && !phasesDismissed && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16 }}>
-          {phases.map(phase => {
-            // Count only days with actual activity content — empty placeholder
-            // days (zero activities) do not count as planned.
+          {phases.map((phase, phaseIdx) => {
             const phaseDays = days.filter(d =>
               d.number >= phase.dayFrom &&
               d.number <= phase.dayTo &&
@@ -868,6 +871,8 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
                 onRegeneratePhase={onRegeneratePhase}
                 regenEnabled={regenEnabled}
                 isPlanned={phaseActivityCount > 0}
+                tripLengthMode={tripLengthMode}
+                onDismissPhases={tripLengthMode === 'medium' && phaseIdx === 0 ? () => setPhasesDismissed(true) : undefined}
               />
             );
           })}

@@ -1,4 +1,4 @@
-import type { TripFormData, TripStyle, BudgetLevel, WeatherData } from '@/types';
+import type { TripFormData, TripStyle, BudgetLevel, WeatherData, TripLengthMode } from '@/types';
 import { BOOKING_AFFILIATE, ACTIVITY_AFFILIATE } from '@/lib/affiliate';
 import type { SystemContentBlock } from './ai-stream';
 
@@ -185,21 +185,34 @@ ${weather.humidity !== undefined ? `- Humidity: ${weather.humidity}%` : ''}
     styleLabels,
   });
 
-  const isLongTrip = tripDays >= 15;
-  const phaseInstruction = isLongTrip
-    ? `This is a ${tripDays}-day trip (15+ days). Use ON-DEMAND PHASE EXPANSION:
+  const tripLengthMode: TripLengthMode = tripDays >= 15 ? 'long' : tripDays >= 7 ? 'medium' : 'short';
+
+  let phaseInstruction: string;
+  if (tripLengthMode === 'long') {
+    phaseInstruction = `This is a ${tripDays}-day trip (15+ days). Use PHASE-ONLY GENERATION — do NOT call define_day at all during this response:
 
 STEP A: Call define_phase 2 to 6 times to cover ALL ${tripDays} days. Every day from Day 1 to Day ${tripDays} must belong to exactly one phase. Phase boundaries should be 5 to 10 days each. Choose phases that match the destination's natural geography (e.g. "Coastal Days", "Hinterland Escape", "Southern Beaches") OR temporal flow (e.g. "Settling In", "Big Hits", "Slow Beach Living"). Each phase needs a phase_id, label, day_from, day_to, summary (2-3 sentences), and 3-5 highlights.
 
-STEP B: Call define_day with FULL activity content for ONLY the days in PHASE 1 (the very first phase). Each define_day call must include realistic morning/afternoon/evening/night activities, at least 1 per slot, max 3. Include the phase_id matching Phase 1.
+CRITICAL: do NOT call define_day for ANY day. All phases are intentionally left as expandable cards. The user triggers expansion of each phase by tapping a "Plan these days" button, which calls a separate API. Emitting define_day breaks the experience.
 
-CRITICAL: do NOT call define_day for any day in Phase 2, Phase 3, Phase 4, or beyond. Those phases are intentionally left as expandable cards. The user will trigger expansion of each later phase by tapping a "Plan these days" button, which calls a separate API. Emitting define_day for those days creates empty cards and breaks the experience.
+Example for a 30-day trip with 4 phases:
+- 4 define_phase calls covering Days 1-7, Days 8-14, Days 15-21, Days 22-30
+- 0 define_day calls
+- Total: 4 tool calls only.`;
+  } else if (tripLengthMode === 'medium') {
+    phaseInstruction = `This is a ${tripDays}-day trip (7-14 days). Suggest 2 to 3 phases as named organisational segments, then plan ALL days:
 
-Example for a 30-day trip with 4 phases of Days 1-7, Days 8-14, Days 15-21, Days 22-30:
-- 4 define_phase calls (one per phase, covering all 30 days)
-- 7 define_day calls (Days 1 through 7, all with full activities, phase_id matches Phase 1)
-- Total: 11 tool calls. Phases 2, 3, 4 are deliberately left empty for on-demand expansion.`
-    : `This is a ${tripDays}-day trip (under 15 days), so DO NOT call define_phase. Just call define_day once per day with full activities, from Day 1 through Day ${tripDays}.`;
+STEP A: Call define_phase 2 to 3 times to cover ALL ${tripDays} days. Every day must belong to exactly one phase. Choose phase boundaries that reflect natural journey structure (e.g. "Arrival & City", "Day Trips", "Coastal Finale"). Each phase needs a phase_id, label, day_from, day_to, summary (1-2 sentences), and 2-4 highlights.
+
+STEP B: Call define_day with FULL activity content for ALL ${tripDays} days in order (Day 1 through Day ${tripDays}). Include the phase_id for each day matching the phase it belongs to.
+
+Example for a 10-day trip with 3 phases of Days 1-3, Days 4-7, Days 8-10:
+- 3 define_phase calls (one per phase, covering all 10 days)
+- 10 define_day calls (all days, each with its phase_id)
+- Total: 13 tool calls.`;
+  } else {
+    phaseInstruction = `This is a ${tripDays}-day trip (under 7 days), so DO NOT call define_phase. Just call define_day once per day with full activities, from Day 1 through Day ${tripDays}.`;
+  }
 
   const userPrompt = `Please create a comprehensive travel plan for the following trip:
 
@@ -1220,11 +1233,10 @@ export type LunaChatToolName = (typeof LUNA_CHAT_TOOLS)[number]['name'];
 export const DEFINE_PHASE_TOOL: AnthropicTool = {
   name: 'define_phase',
   description:
-    'For trips of 15 or more days: define a named phase of the trip BEFORE calling ' +
-    'define_day for the days in that phase. A phase is a thematic segment such as ' +
-    '"Days 1-5: Coastal Escape" or "Days 6-10: City Exploration". ' +
-    'Call define_phase once per phase, in order, then follow with define_day calls ' +
-    'for each day in that phase. Each phase should cover 3-7 days.',
+    'For trips of 7 or more days: define a named phase (organisational segment) of the trip. ' +
+    'A phase is a thematic segment such as "Days 1-3: Arrival & City" or "Days 4-7: Coast". ' +
+    'Call define_phase once per phase, in order, BEFORE the define_day calls that belong to it. ' +
+    'Each phase should cover 2-10 days.',
   input_schema: {
     type: 'object',
     properties: {
@@ -1319,8 +1331,9 @@ export const DEFINE_DAY_TOOL: AnthropicTool = {
 /**
  * Builds the tool array for the /api/generate route.
  *
- * For trips under 15 days: [ define_day ] (with cache_control on it)
- * For trips 15+ days:      [ define_phase, define_day ] (cache_control on last = define_day)
+ * For trips under 7 days:  [ define_day ] (with cache_control on it)
+ * For trips 7-14 days:     [ define_phase, define_day ] (medium — phases + all days)
+ * For trips 15+ days:      [ define_phase, define_day ] (long — phases only, no define_day emitted)
  *
  * The cache_control marker goes on the LAST tool to cache the full tools array.
  */
@@ -1330,7 +1343,7 @@ export function buildGenerateTools(tripDays: number): AnthropicTool[] {
     cache_control: { type: 'ephemeral' },
   };
 
-  if (tripDays >= 15) {
+  if (tripDays >= 7) {
     return [DEFINE_PHASE_TOOL, dayTool];
   }
   return [dayTool];

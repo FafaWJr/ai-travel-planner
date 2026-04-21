@@ -4,7 +4,7 @@ import DOMPurify from 'isomorphic-dompurify';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import EditableItinerary, { type ItineraryHandle, type Day } from '@/components/EditableItinerary';
-import type { Phase } from '@/types';
+import type { Phase, TripLengthMode } from '@/types';
 import { normalizeDefineDayInput, normalizeDefinePhaseInput, defineDayInputToDay, definePhaseInputToPhase } from '@/lib/normalizeToolInput';
 import { applyStage4Rules, parsePromptContext, type TripRulesContext } from '@/lib/ai';
 import RegenerationModal from '@/components/RegenerationModal';
@@ -1399,6 +1399,12 @@ function PlanContent() {
                   onRegenerateDay={handleRegenerateDayClick}
                   onRegeneratePhase={handleRegeneratePhaseClick}
                   regenEnabled={process.env.NEXT_PUBLIC_REGENERATION_ENABLED !== 'false'}
+                  tripLengthMode={(() => {
+                    const sd = prompt.match(/from (\d{4}-\d{2}-\d{2})/)?.[1];
+                    const ed = prompt.match(/to (\d{4}-\d{2}-\d{2})/)?.[1];
+                    const d = sd && ed ? Math.ceil((new Date(ed).getTime() - new Date(sd).getTime()) / 86400000) + 1 : 0;
+                    return (d >= 15 ? 'long' : d >= 7 ? 'medium' : 'short') as TripLengthMode;
+                  })()}
                   onPlanPhase={async (phase: Phase): Promise<void> => {
                     if (!user) { openGate('Plan phase days'); throw new Error('Login required'); }
 

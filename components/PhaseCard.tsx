@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { Phase } from '@/types';
+import type { Phase, TripLengthMode } from '@/types';
 
 interface PhaseCardProps {
   phase: Phase;
@@ -14,9 +14,13 @@ interface PhaseCardProps {
   regenEnabled?: boolean;
   /** R4: Whether this phase has any planned activity content (shows three-dot menu). */
   isPlanned?: boolean;
+  /** R6: Controls phase card behaviour — medium shows dismiss X, long shows "Plan these days". */
+  tripLengthMode?: TripLengthMode;
+  /** R6: Called when user clicks the X button in medium mode to dismiss all phase cards. */
+  onDismissPhases?: () => void;
 }
 
-export default function PhaseCard({ phase, plannedDaysCount, onPlanPhase, onRegeneratePhase, regenEnabled = false, isPlanned = false }: PhaseCardProps) {
+export default function PhaseCard({ phase, plannedDaysCount, onPlanPhase, onRegeneratePhase, regenEnabled = false, isPlanned = false, tripLengthMode = 'long', onDismissPhases }: PhaseCardProps) {
   const totalDays = phase.dayTo - phase.dayFrom + 1;
   const isFullyPlanned = plannedDaysCount >= totalDays;
   const [isPlanning, setIsPlanning] = useState(false);
@@ -126,6 +130,23 @@ export default function PhaseCard({ phase, plannedDaysCount, onPlanPhase, onRege
           </h3>
         </div>
 
+        {tripLengthMode === 'medium' && onDismissPhases && (
+          <button
+            onClick={onDismissPhases}
+            title="Hide phase overview"
+            style={{
+              background: 'rgba(255,255,255,0.15)', border: 'none', padding: 6,
+              cursor: 'pointer', color: '#fff', borderRadius: 8,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </button>
+        )}
+
         {isPlanned && regenEnabled && onRegeneratePhase && (
           <div style={{ position: 'relative', flexShrink: 0 }}>
             <button
@@ -173,7 +194,7 @@ export default function PhaseCard({ phase, plannedDaysCount, onPlanPhase, onRege
           </div>
         )}
 
-        {!isFullyPlanned && onPlanPhase && (
+        {tripLengthMode !== 'medium' && !isFullyPlanned && onPlanPhase && (
           <button
             onClick={handleClick}
             disabled={isPlanning}
@@ -277,7 +298,7 @@ export default function PhaseCard({ phase, plannedDaysCount, onPlanPhase, onRege
           </div>
         )}
 
-        {totalDays > 0 && (
+        {tripLengthMode !== 'medium' && totalDays > 0 && (
           <div style={{ marginTop: 12 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
               <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: '#6C6D6F' }}>
