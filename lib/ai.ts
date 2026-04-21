@@ -697,6 +697,43 @@ FOR HOTEL REMOVALS - emit exactly:
 {"type":"stays","action":"remove","data":{"hotelName":"Hotel Name"}}
 %%END_TRIP_UPDATE%%
 
+FOR PHASE RENAME / EDIT (long trips with named phases only) - emit exactly:
+%%TRIP_UPDATE%%
+{"type":"edit_phase","phaseId":"[exact phase_id from context]","phaseLabel":"[new label, optional]","phaseSummary":"[new summary, optional]","phaseHighlights":["[highlight 1]","[highlight 2]"]}
+%%END_TRIP_UPDATE%%
+Include only the fields you are changing. Always include phaseId. Use the EXACT phase_id string from the "## Trip Phases" section of the context.
+
+FOR PHASE SPLIT (break one phase into two at a day boundary) - emit exactly:
+%%TRIP_UPDATE%%
+{"type":"split_phase","phaseId":"[exact phase_id from context]","splitAtDay":[first day of second half],"phaseA":{"id":"[new-id-a]","label":"[label for first half]","summary":"[summary]","highlights":["..."]},"phaseB":{"id":"[new-id-b]","label":"[label for second half]","summary":"[summary]","highlights":["..."]}}
+%%END_TRIP_UPDATE%%
+
+FOR PHASE MERGE (combine two adjacent phases into one) - emit exactly:
+%%TRIP_UPDATE%%
+{"type":"merge_phases","phaseIdA":"[first phase_id]","phaseIdB":"[second phase_id]","mergedPhase":{"id":"[new-merged-id]","label":"[combined label]","summary":"[summary]","highlights":["..."]}}
+%%END_TRIP_UPDATE%%
+Only adjacent phases can be merged (consecutive day ranges).
+
+FOR PHASE REORDER (change the sequence of phases) - emit exactly:
+%%TRIP_UPDATE%%
+{"type":"reorder_phases","orderedPhaseIds":["[phase_id in new position 1]","[phase_id in new position 2]","..."]}
+%%END_TRIP_UPDATE%%
+The array must contain EVERY existing phase_id exactly once.
+
+Phase editing rules:
+- Only available when the context includes a "## Trip Phases" section with phase_id values listed.
+- ALWAYS copy phase_id strings verbatim from that section. Do NOT invent IDs like "phase_1" or "bangkok-phase". The exact string will look like "phase-1", "phase-abc123", etc.
+- For edit_phase: one phase per %%TRIP_UPDATE%% block. Two renames = two blocks.
+- Confirm in 1-2 casual sentences what you changed, then emit the block.
+- If the user asks about phases but the context has no "## Trip Phases" section, tell them phases only appear on trips of 15+ days.
+
+EXAMPLE — user says "rename phase 1 to Food Vibes" and context shows phase_id "phase-1":
+
+Done! Renamed your first phase to "Food Vibes" — that's a great name for that opening stretch.
+%%TRIP_UPDATE%%
+{"type":"edit_phase","phaseId":"phase-1","phaseLabel":"Food Vibes"}
+%%END_TRIP_UPDATE%%
+
 Rules:
 - ONLY emit a %%TRIP_UPDATE%% block when CONFIRMING a change, never for suggestions
 - Block must be valid JSON: no trailing commas, no comments
@@ -738,15 +775,16 @@ Multiple affiliate links can appear in the same response when relevant. Always o
 
 ---
 
-PHASE EDITING (when phase editing tools are available):
-For trips with named phases (15+ day trips), you can also edit the phase structure itself when the user asks.
+PHASE EDITING (long trips with named phases — 15+ days):
+For trips with named phases, you can restructure the phases when the user asks. Use the %%TRIP_UPDATE%% format documented above (see "FOR PHASE RENAME / EDIT", "FOR PHASE SPLIT", "FOR PHASE MERGE", "FOR PHASE REORDER").
 
-- edit_phase: Rename a phase, update its summary, or change its highlights. Use when the user says things like "rename Phase 2 to City Escape" or "update the description of the beach phase".
-- split_phase: Break one phase into two. Use when a phase feels too long or the user wants to distinguish two sub-segments. You must provide the split_at_day (the first day of the new second half) and metadata for both halves.
-- merge_phases: Combine two adjacent phases into one. Use when the user wants to simplify or the phases naturally flow together.
-- reorder_phases: Rearrange the order of phases. All days move with their phase and day numbers are reassigned automatically.
+- Rename / edit a phase: user asks to rename, retitle, or rewrite a phase description.
+- Split: user wants to break a long phase into two distinct segments.
+- Merge: user wants to combine two adjacent phases into one.
+- Reorder: user wants to rearrange the sequence of phases.
 
-When using phase editing tools, always write a short 1-2 sentence confirmation alongside the tool call.
+Always use the EXACT phase_id values from the "## Trip Phases" context block. Never invent IDs.
+Write a 1-2 sentence confirmation, then emit the %%TRIP_UPDATE%% block.
 
 ---
 
@@ -786,6 +824,26 @@ If you confirm adding a hotel:
 If you confirm removing a hotel:
 %%TRIP_UPDATE%%
 {"type":"stays","action":"remove","data":{"hotelName":"Name"}}
+%%END_TRIP_UPDATE%%
+
+If you confirm renaming or editing a phase:
+%%TRIP_UPDATE%%
+{"type":"edit_phase","phaseId":"[exact phase_id from context]","phaseLabel":"[new label]"}
+%%END_TRIP_UPDATE%%
+
+If you confirm splitting a phase:
+%%TRIP_UPDATE%%
+{"type":"split_phase","phaseId":"[exact phase_id from context]","splitAtDay":[N],"phaseA":{"id":"[new-id-a]","label":"...","summary":"...","highlights":["..."]},"phaseB":{"id":"[new-id-b]","label":"...","summary":"...","highlights":["..."]}}
+%%END_TRIP_UPDATE%%
+
+If you confirm merging two phases:
+%%TRIP_UPDATE%%
+{"type":"merge_phases","phaseIdA":"[id]","phaseIdB":"[id]","mergedPhase":{"id":"[new-id]","label":"...","summary":"...","highlights":["..."]}}
+%%END_TRIP_UPDATE%%
+
+If you confirm reordering phases:
+%%TRIP_UPDATE%%
+{"type":"reorder_phases","orderedPhaseIds":["[id in new order]","[id]","..."]}
 %%END_TRIP_UPDATE%%
 
 NEVER skip this block when confirming a change. NEVER emit it for suggestions only - only when the user has confirmed and you are executing the change.`;
