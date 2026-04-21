@@ -4,6 +4,8 @@ import { useTranslations, useLocale } from 'next-intl';
 import FinalItineraryModal from './FinalItineraryModal';
 import DayNotes from './itinerary/DayNotes';
 import PhaseCard from './PhaseCard';
+import AddPhaseButton from './AddPhaseButton';
+import RangeSummaryCard from './RangeSummaryCard';
 import type { AcceptedHotel } from './StayTab';
 import type { Phase, TripLengthMode } from '@/types';
 import { formatSlotHours, type SlotName } from '@/lib/ai';
@@ -205,6 +207,26 @@ function parseItinerary(md: string): Day[] {
   return days;
 }
 
+/* ─── Phase range validation ─────────────────────────────────── */
+function validatePhaseRange(
+  phases: Phase[],
+  editingPhaseId: string,
+  from: number,
+  to: number,
+  tripDays: number,
+): { ok: boolean; message: string } {
+  if (from < 1) return { ok: false, message: 'Day range must start at 1 or later.' };
+  if (to > tripDays) return { ok: false, message: `Day range can't go past Day ${tripDays}.` };
+  if (from > to) return { ok: false, message: '"From" day must be before or equal to "To" day.' };
+  const siblings = phases.filter(p => p.id !== editingPhaseId);
+  for (const s of siblings) {
+    if (!(to < s.dayFrom || from > s.dayTo)) {
+      return { ok: false, message: `Overlaps with "${s.label}" (Days ${s.dayFrom}–${s.dayTo}).` };
+    }
+  }
+  return { ok: true, message: '' };
+}
+
 /* ─── Slot container ID helpers ─────────────────────────────── */
 const slotId = (dayNum: number, slot: TimeSlot) => `__slot__${dayNum}__${slot}`;
 const parseSlotId = (id: UniqueIdentifier): { dayNum: number; slot: TimeSlot } | null => {
@@ -329,6 +351,62 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
       if (next.has(phaseId)) next.delete(phaseId); else next.add(phaseId);
       return next;
     });
+  };
+  // R5.1 FINAL: newly created phase ID, used to auto-open label editor.
+  const [newPhaseId, setNewPhaseId] = useState<string | null>(null);
+
+  // Derive trip day count from tripPrompt for range validation.
+  const tripDays = (() => {
+    const m1 = tripPrompt?.match(/from (\d{4}-\d{2}-\d{2})/);
+    const m2 = tripPrompt?.match(/to (\d{4}-\d{2}-\d{2})/);
+    if (m1 && m2) return Math.ceil((new Date(m2[1]).getTime() - new Date(m1[1]).getTime()) / 86400000) + 1;
+    return 365;
+  })();
+
+  const updatePhaseLabel = (phaseId: string, newLabel: string) => {
+    setPhases(prev => prev.map(p => p.id === phaseId ? { ...p, label: newLabel } : p));
+    onActivityStatusChange?.();
+  };
+
+  const updatePhaseRange = (phaseId: string, from: number, to: number): string | null => {
+    const result = validatePhaseRange(phases, phaseId, from, to, tripDays);
+    if (!result.ok) return result.message;
+    setPhases(prev => prev.map(p => p.id === phaseId ? { ...p, dayFrom: from, dayTo: to } : p));
+    onActivityStatusChange?.();
+    return null;
+  };
+
+  const deletePhase = (phaseId: string) => {
+    const ph = phases.find(p => p.id === phaseId);
+    const dayCount = ph ? ph.dayTo - ph.dayFrom + 1 : 0;
+    const msg = dayCount > 0
+      ? `Delete this phase? The ${dayCount} day(s) inside will become unassigned.`
+      : 'Delete this phase?';
+    if (!confirm(msg)) return;
+    setPhases(prev => prev.filter(p => p.id !== phaseId));
+    _setDays(prev => prev.map(d => d.phase_id === phaseId ? { ...d, phase_id: undefined } : d));
+    onActivityStatusChange?.();
+  };
+
+  const createNewPhase = () => {
+    const sorted = [...phases].sort((a, b) => b.dayTo - a.dayTo);
+    const lastEnd = sorted[0]?.dayTo ?? 0;
+    const startDay = Math.min(lastEnd + 1, tripDays);
+    const endDay = Math.min(startDay + 2, tripDays);
+    const id = `phase-${Date.now()}`;
+    const newPhase: Phase = { id, label: 'New phase', dayFrom: startDay, dayTo: endDay, summary: '', highlights: [], planned: false };
+    setPhases(prev => [...prev, newPhase]);
+    setNewPhaseId(id);
+    onActivityStatusChange?.();
+  };
+
+  const handleGeneratePhase = async (phase: Phase): Promise<void> => {
+    const existingDayCount = days.filter(d => d.phase_id === phase.id && d.activities.length > 0).length;
+    if (existingDayCount > 0) {
+      const ok = confirm(`Regenerating will overwrite the ${existingDayCount} day(s) currently in this phase. Continue?`);
+      if (!ok) return;
+    }
+    await onPlanPhase?.(phase);
   };
 
   // Hydration state machine. See HydrationMode type definition above.
@@ -822,6 +900,152 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
 
   const activeActivity = activeId ? findActivity(activeId) : null;
 
+  const renderDayCard = (day: Day) => {
+    const idx = day.number - 1;
+    const dayAccepted = day.activities.filter(a => a.status === 'accepted').length;
+    const otherDays = days.filter(d => d.number !== day.number).map(d => ({ number: d.number, title: d.title }));
+    const dayDate = formatDayDate(startDate, idx, locale);
+
+    return (
+      <div key={day.number} style={{ marginBottom: 8 }}>
+        <div style={{
+          background: day.confirmed ? 'rgba(22,163,74,0.02)' : '#fff',
+          borderRadius: 14,
+          border: `1px solid ${day.confirmed ? 'rgba(22,163,74,0.25)' : 'rgba(0,68,123,0.08)'}`,
+          boxShadow: '0 1px 6px rgba(0,68,123,0.05)',
+          transition: 'border-color 0.2s, background 0.2s',
+          overflow: 'hidden',
+        }}>
+          <div
+            onClick={() => toggleDay(day.number)}
+            style={{ cursor: 'pointer', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}
+          >
+            <span style={{ background: '#FF8210', color: '#fff', fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 12, padding: '3px 11px', borderRadius: 100, flexShrink: 0 }}>
+              {t('day.badge', { n: day.number })}
+            </span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 14, color: '#00447B', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {day.title}
+              </p>
+              {dayDate && (
+                <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: '#6C6D6F', margin: '1px 0 0' }}>
+                  {dayDate}
+                </p>
+              )}
+            </div>
+            {day.confirmed && (
+              <span style={{ background: 'rgba(22,163,74,0.12)', color: '#16A34A', fontSize: 10, fontFamily: "'Inter',sans-serif", fontWeight: 700, padding: '2px 8px', borderRadius: 100, flexShrink: 0 }}>
+                ✓ {t('day.confirmed')}
+              </span>
+            )}
+            <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: '#6C6D6F', flexShrink: 0 }}>
+              {dayAccepted}/{day.activities.length}
+            </span>
+            {regenEnabled && onRegenerateDay && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onRegenerateDay(day.number); }}
+                title={`Regenerate Day ${day.number}`}
+                style={{
+                  background: 'rgba(0,68,123,0.06)',
+                  border: '1px solid rgba(0,68,123,0.14)',
+                  color: '#00447B', borderRadius: 100,
+                  width: 26, height: 26,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', padding: 0, flexShrink: 0,
+                  transition: 'background 0.15s',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,68,123,0.12)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(0,68,123,0.06)'; }}
+              >
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                  <path d="M14 8a6 6 0 1 1-2.5-4.87" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                  <path d="M14 2v4h-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            )}
+            <svg
+              width="16" height="16" viewBox="0 0 16 16" fill="none"
+              style={{ color: '#6C6D6F', flexShrink: 0, transform: day.open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 200ms' }}
+            >
+              <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+
+          {day.open && (
+            <div style={{ padding: '14px 14px 16px' }}>
+              {SLOTS.map(({ key, label, icon }) => {
+                const slotActs = day.activities.filter(a => a.slot === key);
+                const containerId = slotId(day.number, key);
+                return (
+                  <TimeSlotSection
+                    key={key}
+                    containerId={containerId}
+                    slotKey={key}
+                    label={label}
+                    icon={icon}
+                    activities={slotActs}
+                    activeId={activeId}
+                    onAccept={(id) => setActivityStatus(day.number, id, 'accepted')}
+                    onDecline={(id) => setActivityStatus(day.number, id, 'declined')}
+                    otherDays={otherDays}
+                    onMoveToDay={(actId, toDayNum) => moveActivityToDay(actId, day.number, toDayNum)}
+                  />
+                );
+              })}
+
+              {day.suggestions.length > 0 && (
+                <div style={{ marginTop: 14 }}>
+                  <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 11, color: '#FF8210', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>💡 Extra Ideas for Day {day.number}</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {day.suggestions.map(sug => (
+                      <SuggestionCard
+                        key={sug.id}
+                        sug={sug}
+                        onAccept={() => acceptSuggestion(day.number, sug)}
+                        onDecline={() => declineSuggestion(day.number, sug.id)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <button
+                onClick={() => fetchMoreIdeas(day.number)}
+                disabled={day.loadingMore}
+                style={{ marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 7, background: 'none', border: '1.5px dashed rgba(0,68,123,0.22)', borderRadius: 100, padding: '7px 16px', cursor: day.loadingMore ? 'default' : 'pointer', fontFamily: "'Poppins',sans-serif", fontWeight: 500, fontSize: 12, color: '#00447B', transition: 'background 0.15s', opacity: day.loadingMore ? 0.6 : 1 }}
+                onMouseEnter={e => { if (!day.loadingMore) e.currentTarget.style.background = 'rgba(0,68,123,0.04)'; }}
+                onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+              >
+                {day.loadingMore ? <><InlineSpinner /> Finding ideas...</> : <><span style={{ fontSize: 15 }}>+</span> {t('itinerary.moreIdeas')}</>}
+              </button>
+
+              <button
+                onClick={() => toggleConfirmed(day.number)}
+                style={{
+                  marginTop: 14, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  background: day.confirmed ? 'rgba(22,163,74,0.10)' : 'rgba(0,68,123,0.04)',
+                  color: day.confirmed ? '#16A34A' : '#00447B',
+                  border: `1.5px solid ${day.confirmed ? 'rgba(22,163,74,0.30)' : 'rgba(0,68,123,0.15)'}`,
+                  borderRadius: 10, padding: '10px 0',
+                  fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 13,
+                  cursor: 'pointer', transition: 'all 0.2s',
+                }}
+              >
+                {day.confirmed ? `✓ ${t('itinerary.dayAccepted')}` : `✓ ${t('itinerary.acceptDay')}`}
+              </button>
+
+              <DayNotes
+                dayIndex={idx}
+                initialNote={day.notes || ''}
+                onSave={handleNoteChange}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div onMouseOver={onPlaceHover} onMouseLeave={onPlaceLeave}>
 
@@ -862,76 +1086,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
         </div>
       </div>
 
-      {/* ── Phase cards (7+ day trips) ── */}
-      {phases.length > 0 && !phasesDismissed && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16 }}>
-          {phases.map((phase, phaseIdx) => {
-            const phaseDays = days.filter(d =>
-              d.number >= phase.dayFrom &&
-              d.number <= phase.dayTo &&
-              d.activities.length > 0
-            );
-            const phaseActivityCount = days
-              .filter(d => d.phase_id === phase.id)
-              .reduce((sum, d) => sum + d.activities.filter(a => a.status !== 'declined').length, 0);
-            const isCollapsed = collapsedPhaseIds.has(phase.id);
-            return (
-              <div key={phase.id}>
-                <PhaseCard
-                  phase={phase}
-                  plannedDaysCount={phaseDays.length}
-                  onPlanPhase={onPlanPhase ? () => onPlanPhase(phase) : undefined}
-                  onRegeneratePhase={onRegeneratePhase}
-                  regenEnabled={regenEnabled}
-                  isPlanned={phaseActivityCount > 0}
-                  tripLengthMode={tripLengthMode}
-                  onDismissPhases={tripLengthMode === 'medium' && phaseIdx === 0 ? () => setPhasesDismissed(true) : undefined}
-                  collapsed={isCollapsed}
-                  onToggleCollapse={() => togglePhase(phase.id)}
-                />
-                {/* R5.1: long-trip unplanned phase range summary card */}
-                {tripLengthMode === 'long' && !phase.planned && !isCollapsed && (
-                  <div style={{
-                    background: 'rgba(0,68,123,0.04)',
-                    border: '1px dashed rgba(0,68,123,0.20)',
-                    borderRadius: 12,
-                    padding: '14px 18px',
-                    marginTop: 8,
-                    marginLeft: 24,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 12,
-                  }}>
-                    <div>
-                      <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 14, color: '#00447B', margin: 0 }}>
-                        Days {phase.dayFrom}&ndash;{phase.dayTo}: {phase.label}
-                      </p>
-                      <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: '#6C6D6F', margin: '2px 0 0' }}>
-                        {phase.dayTo - phase.dayFrom + 1} days &middot; tap &ldquo;Plan these days&rdquo; to expand
-                      </p>
-                    </div>
-                    {onPlanPhase && (
-                      <button
-                        onClick={() => onPlanPhase(phase)}
-                        style={{
-                          background: '#FF8210', color: '#fff', border: 'none',
-                          fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 13,
-                          padding: '8px 18px', borderRadius: 100, cursor: 'pointer', flexShrink: 0,
-                        }}
-                      >
-                        Plan these days
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* ── DnD context wraps all day cards ── */}
+      {/* ── DnD context wraps phases + day cards ── */}
       <DndContext
         id={instanceId}
         sensors={sensors}
@@ -940,158 +1095,41 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {days.map((day, idx) => {
-            const dayAccepted = day.activities.filter(a => a.status === 'accepted').length;
-            const otherDays = days.filter(d => d.number !== day.number).map(d => ({ number: d.number, title: d.title }));
-            const phaseHidden = !!(day.phase_id && collapsedPhaseIds.has(day.phase_id));
-            const dayDate = formatDayDate(startDate, idx, locale);
-
-            return (
-              <div key={day.number} style={{ display: phaseHidden ? 'none' : 'block' }}>
-                <div style={{
-                  background: day.confirmed ? 'rgba(22,163,74,0.02)' : '#fff',
-                  borderRadius: 14,
-                  border: `1px solid ${day.confirmed ? 'rgba(22,163,74,0.25)' : 'rgba(0,68,123,0.08)'}`,
-                  boxShadow: '0 1px 6px rgba(0,68,123,0.05)',
-                  transition: 'border-color 0.2s, background 0.2s',
-                  overflow: 'hidden',
-                }}>
-                  {/* Compact text header */}
-                  <div
-                    onClick={() => toggleDay(day.number)}
-                    style={{ cursor: 'pointer', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}
-                  >
-                    <span style={{ background: '#FF8210', color: '#fff', fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 12, padding: '3px 11px', borderRadius: 100, flexShrink: 0 }}>
-                      {t('day.badge', { n: day.number })}
-                    </span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 14, color: '#00447B', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {day.title}
-                      </p>
-                      {dayDate && (
-                        <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: '#6C6D6F', margin: '1px 0 0' }}>
-                          {dayDate}
-                        </p>
-                      )}
-                    </div>
-                    {day.confirmed && (
-                      <span style={{ background: 'rgba(22,163,74,0.12)', color: '#16A34A', fontSize: 10, fontFamily: "'Inter',sans-serif", fontWeight: 700, padding: '2px 8px', borderRadius: 100, flexShrink: 0 }}>
-                        ✓ {t('day.confirmed')}
-                      </span>
-                    )}
-                    <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: '#6C6D6F', flexShrink: 0 }}>
-                      {dayAccepted}/{day.activities.length}
-                    </span>
-                    {regenEnabled && onRegenerateDay && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); onRegenerateDay(day.number); }}
-                        title={`Regenerate Day ${day.number}`}
-                        style={{
-                          background: 'rgba(0,68,123,0.06)',
-                          border: '1px solid rgba(0,68,123,0.14)',
-                          color: '#00447B', borderRadius: 100,
-                          width: 26, height: 26,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          cursor: 'pointer', padding: 0, flexShrink: 0,
-                          transition: 'background 0.15s',
-                        }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,68,123,0.12)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(0,68,123,0.06)'; }}
-                      >
-                        <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-                          <path d="M14 8a6 6 0 1 1-2.5-4.87" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-                          <path d="M14 2v4h-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      </button>
-                    )}
-                    <svg
-                      width="16" height="16" viewBox="0 0 16 16" fill="none"
-                      style={{ color: '#6C6D6F', flexShrink: 0, transform: day.open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 200ms' }}
-                    >
-                      <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </div>
-
-                {/* Time-slot sections */}
-                {day.open && (
-                  <div style={{ padding: '14px 14px 16px' }}>
-                    {SLOTS.map(({ key, label, icon }) => {
-                      const slotActs = day.activities.filter(a => a.slot === key);
-                      const containerId = slotId(day.number, key);
-                      return (
-                        <TimeSlotSection
-                          key={key}
-                          containerId={containerId}
-                          slotKey={key}
-                          label={label}
-                          icon={icon}
-                          activities={slotActs}
-                          activeId={activeId}
-                          onAccept={(id) => setActivityStatus(day.number, id, 'accepted')}
-                          onDecline={(id) => setActivityStatus(day.number, id, 'declined')}
-                          otherDays={otherDays}
-                          onMoveToDay={(actId, toDayNum) => moveActivityToDay(actId, day.number, toDayNum)}
-                        />
-                      );
-                    })}
-
-                    {/* Suggestions */}
-                    {day.suggestions.length > 0 && (
-                      <div style={{ marginTop: 14 }}>
-                        <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 11, color: '#FF8210', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>💡 Extra Ideas for Day {day.number}</p>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                          {day.suggestions.map(sug => (
-                            <SuggestionCard
-                              key={sug.id}
-                              sug={sug}
-                              onAccept={() => acceptSuggestion(day.number, sug)}
-                              onDecline={() => declineSuggestion(day.number, sug.id)}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* More ideas button */}
-                    <button
-                      onClick={() => fetchMoreIdeas(day.number)}
-                      disabled={day.loadingMore}
-                      style={{ marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 7, background: 'none', border: '1.5px dashed rgba(0,68,123,0.22)', borderRadius: 100, padding: '7px 16px', cursor: day.loadingMore ? 'default' : 'pointer', fontFamily: "'Poppins',sans-serif", fontWeight: 500, fontSize: 12, color: '#00447B', transition: 'background 0.15s', opacity: day.loadingMore ? 0.6 : 1 }}
-                      onMouseEnter={e => { if (!day.loadingMore) e.currentTarget.style.background = 'rgba(0,68,123,0.04)'; }}
-                      onMouseLeave={e => (e.currentTarget.style.background = 'none')}
-                    >
-                      {day.loadingMore ? <><InlineSpinner /> Finding ideas...</> : <><span style={{ fontSize: 15 }}>+</span> {t('itinerary.moreIdeas')}</>}
-                    </button>
-
-                    {/* Accept Day button */}
-                    <button
-                      onClick={() => toggleConfirmed(day.number)}
-                      style={{
-                        marginTop: 14, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                        background: day.confirmed ? 'rgba(22,163,74,0.10)' : 'rgba(0,68,123,0.04)',
-                        color: day.confirmed ? '#16A34A' : '#00447B',
-                        border: `1.5px solid ${day.confirmed ? 'rgba(22,163,74,0.30)' : 'rgba(0,68,123,0.15)'}`,
-                        borderRadius: 10, padding: '10px 0',
-                        fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 13,
-                        cursor: 'pointer', transition: 'all 0.2s',
-                      }}
-                    >
-                      {day.confirmed ? `✓ ${t('itinerary.dayAccepted')}` : `✓ ${t('itinerary.acceptDay')}`}
-                    </button>
-
-                    <DayNotes
-                      dayIndex={idx}
-                      initialNote={day.notes || ''}
-                      onSave={handleNoteChange}
+        {phases.length > 0 && !phasesDismissed ? (
+          <>
+            {phases
+              .slice()
+              .sort((a, b) => a.dayFrom - b.dayFrom)
+              .map(phase => {
+                const phaseDays = days
+                  .filter(d => d.phase_id === phase.id)
+                  .sort((a, b) => a.number - b.number);
+                return (
+                  <div key={phase.id} style={{ marginBottom: 12 }}>
+                    <PhaseCard
+                      phase={phase}
+                      plannedDaysCount={phaseDays.length}
+                      tripDays={tripDays}
+                      collapsed={collapsedPhaseIds.has(phase.id)}
+                      onToggleCollapse={() => togglePhase(phase.id)}
+                      onGeneratePlan={() => handleGeneratePhase(phase)}
+                      onEditLabel={(lbl) => updatePhaseLabel(phase.id, lbl)}
+                      onEditRange={(from, to) => updatePhaseRange(phase.id, from, to)}
+                      onDeletePhase={() => deletePhase(phase.id)}
+                      onDismissPhases={tripLengthMode === 'medium' ? () => setPhasesDismissed(true) : undefined}
+                      tripLengthMode={tripLengthMode}
+                      initialLabelEditing={phase.id === newPhaseId}
                     />
+                    {!collapsedPhaseIds.has(phase.id) && phaseDays.map(day => renderDayCard(day))}
                   </div>
-                )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                );
+              })
+            }
+            <AddPhaseButton onAdd={createNewPhase} />
+          </>
+        ) : (
+          days.map(day => renderDayCard(day))
+        )}
 
         {/* Drag overlay — ghost card */}
         <DragOverlay dropAnimation={{ duration: 180, easing: 'ease' }}>
