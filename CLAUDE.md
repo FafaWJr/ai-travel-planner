@@ -1,7 +1,7 @@
 # Luna Let's Go - Claude Code Context
-**Last Updated:** 2026-04-21 22:32:59
+**Last Updated:** 2026-04-22 22:23:59
 **Current Branch:** main
-**Last Commit:** c740269b feat: add luna-context-updater Claude agent definition
+**Last Commit:** 167908ab docs: replace luna-skills-subagents-sprint spec with -final version
 **Deployment:** https://www.lunaletsgo.com
 
 ---
@@ -74,16 +74,16 @@ app/auth/signup/page.tsx
 ## Recent Changes (Last 10 Commits)
 
 ```
-c740269b (HEAD -> main, origin/main, origin/HEAD) feat: add luna-context-updater Claude agent definition
+167908ab (HEAD -> main, origin/main, origin/HEAD) docs: replace luna-skills-subagents-sprint spec with -final version
+7a2ae578 docs: finalize luna skills and subagents sprint with retrospective
+7d9e128d feat: add luna-release-writer agent for drafting memory updates
+be13a47e fix: auto-load .env.local in i18n scripts
+c5ad010f feat: add luna-multilang-qa subagent with 3-layer i18n check pipeline
+8bcb71fd chore: regenerate context with recent releases and agent additions
+c740269b feat: add luna-context-updater Claude agent definition
 73c06982 feat: add Luna QA Claude agent definition
 c729b849 docs: add luna-skills-subagents-sprint spec
 2fa1cf74 fix: remove legacy pre-locale app/ pages that broke Vercel build
-892209be chore: remove .claude worktree from git index, add .claude/ to .gitignore
-e6a67c16 chore: reorganise project structure - move docs into docs/, add README, remove dead route
-2b33813f docs: restore full CLAUDE.md template with Unsaved Guard + Persona sections
-19df3350 docs: reference AI-PATHS, PHASE-MODE-MATRIX, and POST-R6-CHANGELOG from CLAUDE.md
-75cce3c2 docs: add AI-PATHS, PHASE-MODE-MATRIX, POST-R6-CHANGELOG reference docs
-41286bf7 docs: update CLAUDE.md context — R5.1 hotfix #1 state
 ```
 
 ---
@@ -198,9 +198,6 @@ After Claude Code finishes changes:
 - Affiliate links updated to new AWIN cread.php URLs
 - Deals page rebuilt with partner cards (Booking.com, Klook, GoWithGuide, Xcaret, Europcar)
 - Favicon: browser tab now shows Luna logo via /luna-favicon.ico
-- Legacy pre-locale app/ stubs (about, blog, deals, my-trips, quiz, start, trip-ideas) deleted; canonical pages are app/[locale]/ only
-- Luna QA agent added at .claude/agents/luna-qa-agent.md
-- Luna context-updater agent added at .claude/agents/luna-context-updater.md
 
 **Current Work:**
 - Brevo email integration (list ID 17, /api/brevo-sync/route.ts)
