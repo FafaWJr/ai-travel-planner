@@ -4,26 +4,12 @@
 // Orchestrator for Luna multilang QA.
 // Runs Layer 1 (deterministic) then Layer 2 (semantic) and emits a
 // structured JSON report + human-readable summary.
-//
-// Usage:
-//   node scripts/i18n-check/run-qa.mjs [options]
-//
-// Options:
-//   --locale <locale>   Target locale: pt-BR or es or both. Default: both
-//   --full              Check all keys instead of just git-diff keys
-//   --layer <n>         Run only layer 1 or only layer 2. Default: both
-//   --en-path <path>    Path to messages/en.json. Default: messages/en.json
-//   --out <path>        Write JSON report to this path. Default: stdout only
-//
-// Exit codes:
-//   0 = all checks passed
-//   1 = one or more failures (error or fatal severity)
-//   2 = script-level error (missing file, API key, etc.)
 
 import { execSync } from 'node:child_process';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { runLayer1 } from './layer1-deterministic.mjs';
 import { runLayer2 } from './layer2-semantic.mjs';
+import { loadEnvLocal } from './shared/env-loader.mjs';
 
 const DEFAULT_EN_PATH = 'messages/en.json';
 const LOCALE_PATHS = {
@@ -32,6 +18,8 @@ const LOCALE_PATHS = {
 };
 
 async function main() {
+  loadEnvLocal();
+
   const args = parseArgs(process.argv.slice(2));
   const enPath = args['en-path'] ?? DEFAULT_EN_PATH;
   const locales = args.locale === 'both' || !args.locale ? ['pt-BR', 'es'] : [args.locale];
@@ -44,10 +32,9 @@ async function main() {
     process.exit(2);
   }
 
-  // Determine which keys to check
   let keysToCheck;
   if (fullScan) {
-    keysToCheck = null; // null = all keys
+    keysToCheck = null;
     console.error('Mode: full scan (all keys)');
   } else {
     keysToCheck = getChangedKeysFromGitDiff(enPath, locales);
@@ -78,7 +65,6 @@ async function main() {
 
     report.results[locale] = { layer1: null, layer2: null };
 
-    // Layer 1
     if (layersToRun.includes(1)) {
       console.error(`\n[${locale}] Running Layer 1 (deterministic)...`);
       const l1 = runLayer1({ enPath, localePath, locale, keysToCheck });
@@ -90,7 +76,6 @@ async function main() {
       console.error(`[${locale}] Layer 1: ${l1.passed ? 'PASS' : 'FAIL'} (${l1.checked} checked, ${l1.failures.length} findings)`);
     }
 
-    // Layer 2 — only run if Layer 1 passed (or Layer 1 was skipped)
     const l1Passed = !report.results[locale].layer1 || report.results[locale].layer1.passed;
     if (layersToRun.includes(2) && l1Passed) {
       console.error(`\n[${locale}] Running Layer 2 (semantic via Haiku)...`);
@@ -108,7 +93,6 @@ async function main() {
     }
   }
 
-  // Human-readable summary to stderr
   console.error('\n========== SUMMARY ==========');
   console.error(`Total keys checked: ${report.summary.totalChecked}`);
   console.error(`Total findings: ${report.summary.totalFailures} (${report.summary.errors} errors, ${report.summary.warnings} warnings)`);
@@ -124,19 +108,15 @@ async function main() {
     console.error('\nPASSED clean.');
   }
 
-  // Write JSON report
   if (outPath) {
     writeFileSync(outPath, JSON.stringify(report, null, 2));
     console.error(`\nFull report written to ${outPath}`);
   }
 
-  // Print JSON report to stdout (so it can be piped)
   console.log(JSON.stringify(report, null, 2));
 
   process.exit(report.summary.errors > 0 ? 1 : 0);
 }
-
-// ---------- Helpers ----------
 
 function parseArgs(argv) {
   const args = {};
@@ -158,44 +138,32 @@ function parseArgs(argv) {
   return args;
 }
 
-/**
- * Returns dot-paths of translation keys that have changed in the working
- * tree vs HEAD. Looks at both the English file (new keys) and each
- * locale file (updated translations).
- */
 function getChangedKeysFromGitDiff(enPath, locales) {
   const filesToCheck = [enPath, ...locales.map((l) => LOCALE_PATHS[l])];
   const changedKeys = new Set();
 
   for (const file of filesToCheck) {
     if (!existsSync(file)) continue;
-    let diff;
     try {
-      diff = execSync(`git diff HEAD -- "${file}"`, { encoding: 'utf-8' });
+      execSync(`git diff HEAD -- "${file}"`, { encoding: 'utf-8' });
     } catch (err) {
       console.error(`Warning: git diff failed for ${file}: ${err.message}`);
       continue;
     }
 
-    // Extract JSON key paths from the diff.
-    // Naive approach: look for `"keyname":` lines in added/removed sections.
-    // For nested keys, this misses the full path, so we re-parse HEAD and
-    // working tree versions and diff the key sets.
     const workingKeys = flattenKeyListFromFile(file);
     let headContent;
     try {
       headContent = execSync(`git show HEAD:"${file}"`, { encoding: 'utf-8' });
     } catch {
-      headContent = '{}'; // File is new
+      headContent = '{}';
     }
     const headKeys = flattenKeyList(headContent);
 
-    // Added keys
     for (const k of workingKeys) {
       if (!headKeys.has(k)) changedKeys.add(k);
     }
 
-    // Changed values (keys present in both but with different content)
     try {
       const workingJson = JSON.parse(readFileSync(file, 'utf-8'));
       const headJson = JSON.parse(headContent);
@@ -207,7 +175,7 @@ function getChangedKeysFromGitDiff(enPath, locales) {
         }
       }
     } catch {
-      // Ignore parse errors here, the main checks will catch them
+      // Ignore parse errors here
     }
   }
 
