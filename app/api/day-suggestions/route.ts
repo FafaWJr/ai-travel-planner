@@ -4,6 +4,10 @@ import { getLanguageInstruction, sanitizePromptInput } from '@/lib/ai';
 import { createClient } from '@/lib/supabase/server';
 import { collectStream } from '@/lib/stream-utils';
 
+// Stage 2c audit: deliberately NOT role-gated. Suggestions are
+// informational. Mutation (Add to trip) happens via Stage 2d's
+// patch system which role-gates separately.
+
 export const maxDuration = 30;
 
 export async function POST(request: NextRequest) {

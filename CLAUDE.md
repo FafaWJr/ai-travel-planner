@@ -1,7 +1,7 @@
 # Luna Let's Go - Claude Code Context
-**Last Updated:** 2026-04-24 21:57:44
-**Current Branch:** qa/collab-test
-**Last Commit:** 215960b0 feat: Collab Stage 2b realtime channel + presence + dual-mode hook
+**Last Updated:** 2026-04-24 22:27:50
+**Current Branch:** main
+**Last Commit:** 5fd9865b fix: Collab share-landing redirects to /plan?tripId= not ?savedTripId=
 **Deployment:** https://www.lunaletsgo.com
 
 ---
@@ -98,7 +98,8 @@ app/auth/signup/page.tsx
 ## Recent Changes (Last 10 Commits)
 
 ```
-215960b0 (HEAD -> qa/collab-test, origin/qa/collab-test, origin/main, origin/HEAD, main) feat: Collab Stage 2b realtime channel + presence + dual-mode hook
+5fd9865b (HEAD -> main, origin/main, origin/HEAD) fix: Collab share-landing redirects to /plan?tripId= not ?savedTripId=
+215960b0 feat: Collab Stage 2b realtime channel + presence + dual-mode hook
 49797b6e chore: sync package.json + lockfile (add @anthropic-ai/sdk)
 d39ab0e1 feat: Collab Stage 2a patch library + activity log writer
 8e132e15 docs: Collab Stage 1 corrigendum
@@ -107,7 +108,6 @@ f7a61bf4 feat: Collab Stage 1 share link & invite system
 c44d7ac9 docs: add Tier 2 Collab spec v2.1, remove superseded v1.1
 eb2fe9e4 chore: pre-Collab hygiene, remove stale script and add Tier 1 plan
 44033863 docs: regenerate CLAUDE.md for pre-Collab context baseline
-c691bdfa chore: regenerate CLAUDE.md with latest commits and timestamp
 ```
 
 ---
@@ -290,8 +290,17 @@ Six-stage sprint adding real-time collaborative trip planning. Master plan: `doc
 - **Auth paths are NOT locale-prefixed.** Use `/auth/login`, `/auth/signup`, `/auth/callback` directly, never `/${locale}/auth/login`. The `[locale]` segment wraps user-facing pages; auth pages live in `app/auth/` outside it.
 - **URL param convention: plan page reads `tripId`, NOT `savedTripId`.** The state variable in `plan/page.tsx` is named `savedTripId` (historical) but is populated from `searchParams.get('tripId')`. All internal links to a saved trip must use `?tripId={uuid}`. Stage 1 and 2b prompts incorrectly used `savedTripId=` in redirects, causing invited collaborators to land on the "No trip prompt" empty state. Fixed in commit `collab-stage-2b-hotfix-url-param` (24 April 2026). Two-browser presence acceptance test passed on the same day; avatars sync within 1-2 seconds on both connect and disconnect.
 
+**Stage 2a, 2b, 2c shipped (patch library, realtime hook, role gates + UUID injection).**
+
+**Stage 2c implementation notes:**
+- `getRequestUserAndRole(supabase, tripId)` helper in `lib/collaboration.ts` resolves { user, role } for any API route that needs it. Returns `role: 'owner'` for solo-trip owners so solo flows are unchanged.
+- `/api/chat` viewer path (Path A, buffered): tools array is empty for viewers; full stream buffered, `%%TRIP_UPDATE%%` and `[[ADD:]]` markers stripped, returned as `text/plain` with `X-Luna-Viewer-Filtered: 1` header. Editor/owner path is unchanged SSE. `FloatingChat` passes `tripId: savedTripId ?? undefined` in the chat body so the role lookup can occur.
+- `/api/trips` POST and PATCH apply `injectMissingDayIds` from `lib/trip-ids.ts` before write. The original plan targeted `/api/generate`, but that streams raw Anthropic SSE; injecting at the persistence boundary is simpler and catches every generation path.
+- Suggestion routes (`/api/hotel-suggestions`, `/api/extra-ideas`, `/api/day-suggestions`, `/api/budget-estimate`) are deliberately NOT role-gated; they don't write to `saved_trips`. Persistence goes through RLS-gated `/api/trips` PATCH. Each route has an inline Stage 2c audit comment recording the decision.
+
 **Stages remaining:**
-- Stage 2 (~23.5h): realtime sync engine, role-gated mutations, UUID injection in `/api/generate` and `/api/chat`.
+- Stage 2d (~4h): patch emission, debounced save, disconnect recovery. Wires Stage 2a patch library + Stage 2b hook into `EditableItinerary` via its imperative ref API.
+- Stage 2e (~0.5h): final i18n + combined Stage 2 context update.
 - Stage 3 (~10h): per-user Luna with cross-awareness, viewer read-only.
 - Stage 4 (~18h): comments on activity/day/phase/hotel, My Trips integration polish, mobile polish.
 - Stage 5 (~6h): landing page, OG image, flag flip.

@@ -183,3 +183,31 @@ export async function countCollaborators(
   if (error) return 0;
   return count ?? 0;
 }
+
+/**
+ * Resolve the authenticated user and their role on a given trip from a
+ * Next.js API route. Used by every mutation route that needs to gate
+ * by role.
+ *
+ * Returns:
+ *   - { user, role } with role in owner/editor/viewer when authenticated
+ *     AND has a role on the trip.
+ *   - { user, role: null } when authenticated but has no role on the trip
+ *     (trip not found, or not shared with this user). Caller treats as no access.
+ *   - { user: null, role: null } when not authenticated. Caller returns 401.
+ *
+ * Solo trips: returns role 'owner' for the trip's owner (getUserTripRole
+ * checks saved_trips.user_id before trip_collaborators). Solo-trip behavior
+ * is unchanged.
+ */
+export async function getRequestUserAndRole(
+  supabase: SupabaseClient,
+  tripId: string
+): Promise<{ user: { id: string; email?: string } | null; role: CollabRole | null }> {
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user) {
+    return { user: null, role: null };
+  }
+  const role = await getUserTripRole(supabase, tripId, user.id);
+  return { user: { id: user.id, email: user.email }, role };
+}

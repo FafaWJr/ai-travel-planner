@@ -736,6 +736,16 @@ Every mutation passes through three independent enforcement layers. Any one laye
 - Safety net only, NOT security.
 - Assumes a malicious client could bypass the UI and call API directly; Layers 1-2 catch that.
 
+**Stage 2c corrigendum (24 April 2026): implementation reality.**
+
+Stage 2c shipped the Layer 2 API enforcement. The specifics differ from the original design and are locked in here:
+
+- **`getRequestUserAndRole(supabase, tripId)` helper** in `lib/collaboration.ts` returns `{ user, role }` for a tripId. Use this in any future API route that needs role-aware behavior. Returns `role: null` when the user has no access; returns `role: 'owner'` for solo trip owners (preserving solo flows unchanged).
+- **`/api/chat` uses Path A (buffered) for viewers**, not 403. Viewers can chat with Luna; the server buffers Luna's full response, strips `%%TRIP_UPDATE%%` and `[[ADD:]]` markers, and returns the cleaned text as `text/plain`. Editor/owner path continues to stream SSE unchanged. Tools array is empty for viewers so no tool-use events can leak. Trade-off: viewer loses the typing animation but gains a guaranteed mutation-free response.
+- **`/api/trips` POST and PATCH** apply `injectMissingDayIds` (from `lib/trip-ids.ts`) to incoming `trip_data` before write. This closes the "new trip / new day" UUID gap at the DB boundary. The original Stage 2c plan called for injection at `/api/generate`, but that route streams raw Anthropic SSE to the client; mutating tool-use events server-side would require re-parsing and re-emitting SSE (high risk). The `/api/trips` boundary catches every trip regardless of generation path.
+- **`/api/hotel-suggestions`, `/api/extra-ideas`, `/api/day-suggestions`, `/api/budget-estimate`** are deliberately NOT gated. They don't write to `saved_trips`; persistence happens through `/api/trips` PATCH which is RLS-gated. Decision documented in each route's file.
+- **Solo trips unchanged.** When `tripId` is absent from the chat body (the path used by solo trips), the role lookup is skipped entirely and the stream goes through the editor/owner path.
+
 ---
 
 ## 4. Risk Analysis

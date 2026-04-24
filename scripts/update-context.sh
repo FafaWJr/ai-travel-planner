@@ -248,8 +248,17 @@ Six-stage sprint adding real-time collaborative trip planning. Master plan: \`do
 - **Auth paths are NOT locale-prefixed.** Use \`/auth/login\`, \`/auth/signup\`, \`/auth/callback\` directly, never \`/\${locale}/auth/login\`. The \`[locale]\` segment wraps user-facing pages; auth pages live in \`app/auth/\` outside it.
 - **URL param convention: plan page reads \`tripId\`, NOT \`savedTripId\`.** The state variable in \`plan/page.tsx\` is named \`savedTripId\` (historical) but is populated from \`searchParams.get('tripId')\`. All internal links to a saved trip must use \`?tripId={uuid}\`. Stage 1 and 2b prompts incorrectly used \`savedTripId=\` in redirects, causing invited collaborators to land on the "No trip prompt" empty state. Fixed in commit \`collab-stage-2b-hotfix-url-param\` (24 April 2026). Two-browser presence acceptance test passed on the same day; avatars sync within 1-2 seconds on both connect and disconnect.
 
+**Stage 2a, 2b, 2c shipped (patch library, realtime hook, role gates + UUID injection).**
+
+**Stage 2c implementation notes:**
+- \`getRequestUserAndRole(supabase, tripId)\` helper in \`lib/collaboration.ts\` resolves { user, role } for any API route that needs it. Returns \`role: 'owner'\` for solo-trip owners so solo flows are unchanged.
+- \`/api/chat\` viewer path (Path A, buffered): tools array is empty for viewers; full stream buffered, \`%%TRIP_UPDATE%%\` and \`[[ADD:]]\` markers stripped, returned as \`text/plain\` with \`X-Luna-Viewer-Filtered: 1\` header. Editor/owner path is unchanged SSE. \`FloatingChat\` passes \`tripId: savedTripId ?? undefined\` in the chat body so the role lookup can occur.
+- \`/api/trips\` POST and PATCH apply \`injectMissingDayIds\` from \`lib/trip-ids.ts\` before write. The original plan targeted \`/api/generate\`, but that streams raw Anthropic SSE; injecting at the persistence boundary is simpler and catches every generation path.
+- Suggestion routes (\`/api/hotel-suggestions\`, \`/api/extra-ideas\`, \`/api/day-suggestions\`, \`/api/budget-estimate\`) are deliberately NOT role-gated; they don't write to \`saved_trips\`. Persistence goes through RLS-gated \`/api/trips\` PATCH. Each route has an inline Stage 2c audit comment recording the decision.
+
 **Stages remaining:**
-- Stage 2 (~23.5h): realtime sync engine, role-gated mutations, UUID injection in \`/api/generate\` and \`/api/chat\`.
+- Stage 2d (~4h): patch emission, debounced save, disconnect recovery. Wires Stage 2a patch library + Stage 2b hook into \`EditableItinerary\` via its imperative ref API.
+- Stage 2e (~0.5h): final i18n + combined Stage 2 context update.
 - Stage 3 (~10h): per-user Luna with cross-awareness, viewer read-only.
 - Stage 4 (~18h): comments on activity/day/phase/hotel, My Trips integration polish, mobile polish.
 - Stage 5 (~6h): landing page, OG image, flag flip.

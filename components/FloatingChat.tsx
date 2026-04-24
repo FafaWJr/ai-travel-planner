@@ -519,6 +519,9 @@ export default function FloatingChat({ plan, destination, hotelContext, currentA
           tripContext: ctx,
           userName: firstName ?? undefined,
           locale,
+          // Stage 2c: pass tripId when known so the server can resolve
+          // the requester's role and filter mutation markers for viewers.
+          tripId: savedTripId ?? undefined,
         }),
       });
       const { text: raw, toolCalls } = await collectSSEWithTools(res);

@@ -3,6 +3,11 @@ import { streamCompletion } from '@/lib/ai-stream';
 import { createClient } from '@/lib/supabase/server';
 import { collectStream as collectText } from '@/lib/stream-utils';
 
+// Stage 2c audit: deliberately NOT role-gated. Hotel suggestions are
+// informational; viewers may want to see and discuss them. Mutation
+// (Accept) happens client-side and the resulting trip mutation goes
+// through Stage 2d's patch system which DOES role-gate.
+
 export const maxDuration = 60;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

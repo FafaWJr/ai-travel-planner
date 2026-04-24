@@ -3,6 +3,14 @@ import { streamCompletion } from '@/lib/ai-stream';
 import { createClient } from '@/lib/supabase/server';
 import { collectStream as collectText } from '@/lib/stream-utils';
 
+// Stage 2c audit: route does NOT write to saved_trips (verified via
+// grep for 'saved_trips'/'insert'/'update' — zero matches). Budget
+// estimates are returned to the client which stores them in trip_data
+// via /api/trips PATCH. That save path is already role-gated by RLS
+// (only owner/editor can UPDATE saved_trips). No additional gate
+// needed here. Viewers can request a budget estimate for informational
+// purposes; any attempt to persist would be blocked by RLS.
+
 export const maxDuration = 60;
 
 const SYSTEM_PROMPT = `You are a travel budget estimator. Analyse the itinerary and return a cost estimate as a single compact JSON object.

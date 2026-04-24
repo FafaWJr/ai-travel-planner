@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
+import { injectMissingDayIds, type TripData } from '@/lib/trip-ids'
 
 async function makeSupabase() {
   const cookieStore = await cookies()
@@ -57,6 +58,14 @@ export async function POST(request: NextRequest) {
   const body = await request.json()
   const { title, destination, start_date, end_date, trip_data, chat_history } = body
 
+  // Stage 2c: server-side UUID injection. Every day gets a stable id
+  // before trip_data crosses the DB boundary, so Stage 2d patches and
+  // Stage 4 comments-on-day have a consistent key. Idempotent: days
+  // that already have an id are untouched.
+  const safeTripData = trip_data
+    ? injectMissingDayIds(trip_data as TripData)
+    : trip_data
+
   // Guarantee the profiles row exists — saved_trips.user_id has FK → profiles.id
   await supabase.from('profiles').upsert(
     {
@@ -76,7 +85,7 @@ export async function POST(request: NextRequest) {
       destination: destination ?? null,
       start_date: start_date ?? null,
       end_date: end_date ?? null,
-      trip_data,
+      trip_data: safeTripData,
       chat_history: chat_history ?? [],
       is_favorite: false,
     })
@@ -109,7 +118,10 @@ export async function PATCH(request: NextRequest) {
 
   const updatePayload: Record<string, unknown> = { updated_at: new Date().toISOString() }
   if (title !== undefined) updatePayload.title = title
-  if (trip_data !== undefined) updatePayload.trip_data = trip_data
+  if (trip_data !== undefined) {
+    // Stage 2c: server-side UUID injection (idempotent). See POST handler.
+    updatePayload.trip_data = injectMissingDayIds(trip_data as TripData)
+  }
   if (chat_history !== undefined) updatePayload.chat_history = chat_history
 
   const { error } = await supabase

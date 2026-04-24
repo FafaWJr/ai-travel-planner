@@ -3,6 +3,10 @@ import { streamCompletion } from '@/lib/ai-stream';
 import { ACTIVITY_AFFILIATE } from '@/lib/affiliate';
 import { getLanguageInstruction, sanitizePromptInput } from '@/lib/ai';
 import { createClient } from '@/lib/supabase/server';
+
+// Stage 2c audit: deliberately NOT role-gated. Suggestions are
+// informational. Mutation (Add to trip) happens via Stage 2d's
+// patch system which role-gates separately.
 import { collectStream } from '@/lib/stream-utils';
 
 export const maxDuration = 30;
