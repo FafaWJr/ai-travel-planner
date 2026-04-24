@@ -1,7 +1,7 @@
 # Luna Let's Go - Claude Code Context
-**Last Updated:** 2026-04-24 15:55:32
+**Last Updated:** 2026-04-24 17:50:13
 **Current Branch:** main
-**Last Commit:** c44d7ac9 docs: add Tier 2 Collab spec v2.1, remove superseded v1.1
+**Last Commit:** f7a61bf4 feat: Collab Stage 1 share link & invite system
 **Deployment:** https://www.lunaletsgo.com
 
 ---
@@ -54,7 +54,14 @@ app/api/hotel-photos/route.ts
 app/api/hotel-suggestions/route.ts
 app/api/place-photo/route.ts
 app/api/regenerate-day/route.ts
+app/api/trips/[tripId]/collaborators/[userId]/route.ts
+app/api/trips/[tripId]/collaborators/route.ts
+app/api/trips/[tripId]/join/route.ts
+app/api/trips/[tripId]/leave/route.ts
+app/api/trips/[tripId]/share/regenerate/route.ts
+app/api/trips/[tripId]/share/route.ts
 app/api/trips/route.ts
+app/api/trips/shared/route.ts
 app/api/weather/route.ts
 ```
 
@@ -78,6 +85,7 @@ app/[locale]/quiz/page.tsx
 app/[locale]/start/page.tsx
 app/[locale]/terms/page.tsx
 app/[locale]/trip-ideas/page.tsx
+app/[locale]/trip/[tripId]/page.tsx
 app/auth/forgot-password/page.tsx
 app/auth/login/page.tsx
 app/auth/page.tsx
@@ -90,7 +98,9 @@ app/auth/signup/page.tsx
 ## Recent Changes (Last 10 Commits)
 
 ```
-c44d7ac9 (HEAD -> main, origin/main, origin/HEAD) docs: add Tier 2 Collab spec v2.1, remove superseded v1.1
+f7a61bf4 (HEAD -> main, origin/main, origin/HEAD) feat: Collab Stage 1 share link & invite system
+3a7da416 feat: Collab Stage 0b application scaffold + Tier 2 corrigendum
+c44d7ac9 docs: add Tier 2 Collab spec v2.1, remove superseded v1.1
 eb2fe9e4 chore: pre-Collab hygiene, remove stale script and add Tier 1 plan
 44033863 docs: regenerate CLAUDE.md for pre-Collab context baseline
 c691bdfa chore: regenerate CLAUDE.md with latest commits and timestamp
@@ -98,8 +108,6 @@ c691bdfa chore: regenerate CLAUDE.md with latest commits and timestamp
 7a2ae578 docs: finalize luna skills and subagents sprint with retrospective
 7d9e128d feat: add luna-release-writer agent for drafting memory updates
 be13a47e fix: auto-load .env.local in i18n scripts
-c5ad010f feat: add luna-multilang-qa subagent with 3-layer i18n check pipeline
-8bcb71fd chore: regenerate context with recent releases and agent additions
 ```
 
 ---
@@ -248,7 +256,7 @@ Full rollout complete. All user-facing pages under `app/[locale]/` render from `
 
 ---
 
-## Collaborative Trips (Stage 0 shipped 24 April 2026)
+## Collaborative Trips (Stage 0 shipped 24 April 2026, Stage 1 shipped)
 
 Six-stage sprint adding real-time collaborative trip planning. Master plan: `docs/specs/collab/00-master-plan.md`. Technical spec: `docs/specs/collab/01-technical-spec.md`.
 
@@ -267,11 +275,24 @@ Six-stage sprint adding real-time collaborative trip planning. Master plan: `doc
 
 **Three-tier permission model:** owner / editor / viewer, with hybrid two-link invites (`share_token_viewer` + `share_token_editor`). Per-person role override via owner dashboard.
 
+**Stage 1 deliverables (landed):**
+- Seven API routes under `/api/trips/[tripId]/`: `share`, `share/regenerate`, `join`, `collaborators` (GET), `collaborators/[userId]` (PATCH + DELETE), `leave`. Plus `/api/trips/shared` for the My Trips list.
+- New share-landing page: `app/[locale]/trip/[tripId]/page.tsx`.
+- Five components under `components/collab/`: `InviteModal`, `CollaboratorAvatars`, `CollaboratorList`, `JoinTripPrompt`, `RoleBadge`.
+- `lib/collaboration.ts` extended with server helpers: `getUserTripRole`, `requireTripOwner`, `countCollaborators`.
+- Trip plan page: Invite button for owners (flag-gated).
+- My Trips page: "Shared with me" section with role badges (flag-gated).
+- i18n: `collab` + `myTrips.sharedSection/sharedBy/untitled` namespaces in all three locales (36 `collab` keys each, parity verified).
+
+**Stage 1 behavioral notes (corrigendum, 24 April 2026):**
+- **Share landing auto-joins on load.** `/trip/[tripId]?invite={token}` calls `/api/trips/[tripId]/join` automatically, shows a brief "Joining..." state, then redirects to `/plan?savedTripId={tripId}`. No explicit Accept/Decline prompt.
+- **`JoinTripPrompt` component shipped but unused.** Reserved for a potential future "confirm before joining" flow. Do not import it unless user feedback indicates auto-join feels too silent.
+- **Auth paths are NOT locale-prefixed.** Use `/auth/login`, `/auth/signup`, `/auth/callback` directly, never `/${locale}/auth/login`. The `[locale]` segment wraps user-facing pages; auth pages live in `app/auth/` outside it.
+
 **Stages remaining:**
-- Stage 1 (~14h): share link, invite system, viewer/editor tokens.
-- Stage 2 (~23.5h): realtime sync engine, role-gated mutations, UUID injection.
+- Stage 2 (~23.5h): realtime sync engine, role-gated mutations, UUID injection in `/api/generate` and `/api/chat`.
 - Stage 3 (~10h): per-user Luna with cross-awareness, viewer read-only.
-- Stage 4 (~18h): comments on activity/day/phase/hotel, My Trips integration, mobile polish.
+- Stage 4 (~18h): comments on activity/day/phase/hotel, My Trips integration polish, mobile polish.
 - Stage 5 (~6h): landing page, OG image, flag flip.
 
 ---
@@ -303,6 +324,26 @@ Before coding in Claude Code, ALWAYS:
    - `/lib/supabase/` (auth patterns)
 
 **NEVER assume file locations. ALWAYS verify first.**
+
+---
+
+## Local Build Hygiene
+
+If `npm run build` fails locally with `next-intl` errors like:
+
+```
+Module not found: Can't resolve './shared/NextIntlClientProvider.js'
+Module not found: Can't resolve './server/react-server/getRequestConfig.js'
+```
+
+the fix is a clean reinstall:
+
+```bash
+rm -rf node_modules .next
+npm ci
+```
+
+This happens after fresh clones, branch switches, or pulls where `node_modules` drifts from `package-lock.json`. Vercel handles this automatically on every deploy (always installs fresh), so this is a local-only concern. If the error persists after `npm ci`, investigate `next-intl` version pinning in `package.json`.
 
 ---
 

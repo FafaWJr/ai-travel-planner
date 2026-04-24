@@ -93,16 +93,18 @@ MindTrip's collaboration model (for competitive context):
 **Collaborator (User B):**
 1. Receives a link via any messaging app.
 2. Opens the link in their browser.
-3. If not logged in: redirected to login via `luna_redirect_after_login` localStorage pattern, returned post-auth.
-4. If logged in and not yet a collaborator: sees a "Join this trip as viewer|editor?" prompt with the role determined by the token that matched.
-5. On join, added to `trip_collaborators` with the appropriate role.
-6. Immediately redirected to `/plan?savedTripId={tripId}`.
+3. If not logged in: URL is stashed in `luna_redirect_after_login` (localStorage), redirected to `/auth/login`, returned to the share page post-auth. (Note: auth paths are NOT locale-prefixed; `/auth/login` is correct.)
+4. Once authenticated, the share page **auto-joins**: calls `/api/trips/[tripId]/join?token={token}` on page load, briefly shows a "Joining..." state, then redirects to `/plan?savedTripId={tripId}`.
+5. If the user is already a collaborator or the owner, the page short-circuits and redirects straight to `/plan?savedTripId={tripId}`.
+6. `JoinTripPrompt` component exists in the repo at `components/collab/JoinTripPrompt.tsx` but is **NOT wired** in v1. It is reserved for a potential future "confirm before joining" flow if user feedback indicates auto-join feels too silent. v1 ships auto-join because the vast majority of users clicking an invite link are expecting to collaborate and a confirmation step adds friction without adding clarity.
 
 **Owner promotes/demotes collaborators:**
 1. Opens InviteModal.
 2. Sees list of all current collaborators with role badges.
 3. Clicks a role toggle next to any collaborator to switch them between viewer and editor.
 4. Change takes effect on the collaborator's next page load.
+
+**Auth path convention.** All auth routes (`/auth/login`, `/auth/signup`, `/auth/callback`, etc.) are outside the `[locale]` URL segment. The share page correctly redirects unauthenticated visitors to `/auth/login` without a locale prefix. Future features must follow this convention.
 
 **Real-time sync (all three users connected):**
 - Owner adds an activity via Luna chat. Editor and viewer see it appear within 2 seconds.
