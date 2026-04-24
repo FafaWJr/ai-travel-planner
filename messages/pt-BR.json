@@ -662,7 +662,54 @@
       "removeFavorite": "Remover dos favoritos",
       "deleteTrip": "Excluir viagem"
     },
-    "deleteConfirm": "Excluir esta viagem? Isso não pode ser desfeito."
+    "deleteConfirm": "Excluir esta viagem? Isso não pode ser desfeito.",
+    "sharedSection": "Compartilhadas comigo",
+    "sharedBy": "Compartilhada por {name}",
+    "untitled": "Viagem sem título"
+  },
+  "collab": {
+    "roles": {
+      "owner": "Dono",
+      "editor": "Editor",
+      "viewer": "Visualizador"
+    },
+    "share": {
+      "loading": "Carregando viagem...",
+      "joining": "Entrando na viagem...",
+      "joinedTitle": "Bem-vindo a bordo!",
+      "joinedAsEditor": "Você entrou como editor. Pode editar atividades, adicionar notas e conversar com a Luna nesta viagem.",
+      "joinedAsViewer": "Você entrou como visualizador. Pode acompanhar tudo e deixar comentários.",
+      "alreadyOwner": "Esta viagem é sua. Abrindo agora.",
+      "alreadyCollaborator": "Você já faz parte desta viagem. Abrindo agora.",
+      "errorTitle": "Algo deu errado",
+      "invalidLink": "Este link de convite é inválido ou expirou. Peça um novo ao dono da viagem.",
+      "featureDisabled": "O compartilhamento de viagens ainda não está habilitado.",
+      "joinFailed": "Não foi possível entrar na viagem. Tente novamente ou peça um novo link ao dono.",
+      "promptTitle": "Entrar nesta viagem",
+      "promptBody": "Você foi convidado para entrar nesta viagem como:",
+      "acceptButton": "Entrar",
+      "declineButton": "Agora não"
+    },
+    "invite": {
+      "button": "Convidar",
+      "title": "Convidar para esta viagem",
+      "loading": "Carregando...",
+      "editorLinkLabel": "Link de editor: acesso total de edição",
+      "viewerLinkLabel": "Link de visualizador: apenas leitura e comentários",
+      "copyButton": "Copiar",
+      "regenerateEditor": "Gerar novo link de editor",
+      "regenerateViewer": "Gerar novo link de visualizador",
+      "regenerateConfirm": "O link antigo deixará de funcionar. Continuar?",
+      "collaboratorsLabel": "Colaboradores",
+      "noCollaborators": "Ninguém entrou ainda. Compartilhe um link acima.",
+      "unknownUser": "Usuário desconhecido",
+      "promoteToEditor": "Tornar editor",
+      "demoteToViewer": "Tornar visualizador",
+      "remove": "Remover",
+      "removeConfirm": "Remover este colaborador da viagem?",
+      "closeButton": "Fechar",
+      "softLimitMessage": "Esta viagem atingiu o limite atual de 10 colaboradores."
+    }
   },
   "plan": {
     "loading": "Carregando seu plano...",

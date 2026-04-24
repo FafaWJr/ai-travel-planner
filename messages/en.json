@@ -662,7 +662,54 @@
       "removeFavorite": "Remove from favorites",
       "deleteTrip": "Delete trip"
     },
-    "deleteConfirm": "Delete this trip? This cannot be undone."
+    "deleteConfirm": "Delete this trip? This cannot be undone.",
+    "sharedSection": "Shared with me",
+    "sharedBy": "Shared by {name}",
+    "untitled": "Untitled trip"
+  },
+  "collab": {
+    "roles": {
+      "owner": "Owner",
+      "editor": "Editor",
+      "viewer": "Viewer"
+    },
+    "share": {
+      "loading": "Loading trip...",
+      "joining": "Joining trip...",
+      "joinedTitle": "You're in!",
+      "joinedAsEditor": "You joined as an editor. You can edit activities, add notes, and work with Luna on this trip.",
+      "joinedAsViewer": "You joined as a viewer. You can follow along and leave comments.",
+      "alreadyOwner": "This is your trip. Taking you there now.",
+      "alreadyCollaborator": "You're already on this trip. Taking you there now.",
+      "errorTitle": "Something went wrong",
+      "invalidLink": "This invite link is invalid or has expired. Ask the trip owner for a new one.",
+      "featureDisabled": "Trip sharing is not enabled yet.",
+      "joinFailed": "Could not join the trip. Try again or ask the owner for a new link.",
+      "promptTitle": "Join this trip",
+      "promptBody": "You've been invited to join this trip as:",
+      "acceptButton": "Join",
+      "declineButton": "Not now"
+    },
+    "invite": {
+      "button": "Invite",
+      "title": "Invite to this trip",
+      "loading": "Loading...",
+      "editorLinkLabel": "Editor link: full editing access",
+      "viewerLinkLabel": "Viewer link: read-only plus comments",
+      "copyButton": "Copy",
+      "regenerateEditor": "Regenerate editor link",
+      "regenerateViewer": "Regenerate viewer link",
+      "regenerateConfirm": "The old link will stop working. Continue?",
+      "collaboratorsLabel": "Collaborators",
+      "noCollaborators": "No one has joined yet. Share a link above.",
+      "unknownUser": "Unknown user",
+      "promoteToEditor": "Make editor",
+      "demoteToViewer": "Make viewer",
+      "remove": "Remove",
+      "removeConfirm": "Remove this collaborator from the trip?",
+      "closeButton": "Close",
+      "softLimitMessage": "This trip has 10 collaborators, the current limit."
+    }
   },
   "plan": {
     "loading": "Loading your plan...",

@@ -22,6 +22,8 @@ import { trackTripPlanGenerated, trackChatMessageSent } from '@/lib/analytics';
 import { generateTripPDF } from '@/lib/generateTripPDF';
 import UnsavedChangesModal from '@/components/UnsavedChangesModal';
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
+import { COLLAB_ENABLED, type CollabRole } from '@/lib/collaboration';
+import { InviteModal } from '@/components/collab/InviteModal';
 
 /* Map next-intl locale codes to JS Intl locale codes for date formatting */
 function toDateLocale(locale: string): string {
@@ -350,6 +352,7 @@ function markdownToHtml(md: string): string {
 /* ── Main component ── */
 function PlanContent() {
   const t            = useTranslations('plan');
+  const tCollab      = useTranslations('collab.invite');
   const locale       = useLocale();
   const searchParams = useSearchParams();
   const router       = useRouter();
@@ -396,6 +399,24 @@ function PlanContent() {
   const [gateFeature, setGateFeature] = useState<string | undefined>(undefined);
   const [saveLoading, setSaveLoading] = useState(false);
   const [savedTripId, setSavedTripId] = useState<string | null>(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [myRole, setMyRole] = useState<CollabRole | null>(null);
+
+  useEffect(() => {
+    if (!COLLAB_ENABLED || !savedTripId) {
+      setMyRole(null);
+      return;
+    }
+    (async () => {
+      const res = await fetch(`/api/trips/${savedTripId}/collaborators`);
+      if (!res.ok) {
+        setMyRole(null);
+        return;
+      }
+      const body = await res.json();
+      setMyRole(body.currentUserRole ?? null);
+    })();
+  }, [savedTripId]);
   const [savedTripDestination, setSavedTripDestination] = useState<string>('');
   const [isDirty, setIsDirty] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -1286,7 +1307,29 @@ function PlanContent() {
                           </button>
                         </div>
                       </div>
-                      {/* Right — Save button standalone */}
+                      {/* Right — Invite (owner only, flag-gated) + Save */}
+                      {COLLAB_ENABLED && myRole === 'owner' && savedTripId && (
+                        <button
+                          onClick={() => setInviteOpen(true)}
+                          style={{
+                            background: '#FF8210',
+                            color: '#fff',
+                            border: 'none',
+                            fontFamily: "'Poppins',sans-serif",
+                            fontWeight: 600,
+                            fontSize: 14,
+                            padding: '10px 18px',
+                            borderRadius: 8,
+                            cursor: 'pointer',
+                            transition: 'background 0.15s',
+                            whiteSpace: 'nowrap',
+                            flexShrink: 0,
+                            marginRight: 8,
+                          }}
+                        >
+                          {tCollab('button')}
+                        </button>
+                      )}
                       <button
                         onClick={saveTrip}
                         disabled={saveLoading || (!!savedTripId && !isDirty)}
@@ -1301,6 +1344,13 @@ function PlanContent() {
                       >
                         {saveLoading ? t('header.saving') : (savedTripId && !isDirty) ? '✓ Saved' : savedTripId ? 'Save changes' : t('header.saveTrip')}
                       </button>
+                      {COLLAB_ENABLED && inviteOpen && savedTripId && (
+                        <InviteModal
+                          tripId={savedTripId}
+                          locale={locale}
+                          onClose={() => setInviteOpen(false)}
+                        />
+                      )}
                     </div>
             </div>
           );

@@ -662,7 +662,54 @@
       "removeFavorite": "Quitar de favoritos",
       "deleteTrip": "Eliminar viaje"
     },
-    "deleteConfirm": "¿Eliminar este viaje? Esta acción no se puede deshacer."
+    "deleteConfirm": "¿Eliminar este viaje? Esta acción no se puede deshacer.",
+    "sharedSection": "Compartidos conmigo",
+    "sharedBy": "Compartido por {name}",
+    "untitled": "Viaje sin título"
+  },
+  "collab": {
+    "roles": {
+      "owner": "Dueño",
+      "editor": "Editor",
+      "viewer": "Espectador"
+    },
+    "share": {
+      "loading": "Cargando viaje...",
+      "joining": "Uniéndote al viaje...",
+      "joinedTitle": "¡Estás dentro!",
+      "joinedAsEditor": "Te uniste como editor. Puedes editar actividades, agregar notas y conversar con Luna en este viaje.",
+      "joinedAsViewer": "Te uniste como espectador. Puedes seguir todo y dejar comentarios.",
+      "alreadyOwner": "Este viaje es tuyo. Te llevamos allí ahora.",
+      "alreadyCollaborator": "Ya formas parte de este viaje. Te llevamos allí ahora.",
+      "errorTitle": "Algo salió mal",
+      "invalidLink": "Este enlace de invitación no es válido o caducó. Pide uno nuevo al dueño del viaje.",
+      "featureDisabled": "Compartir viajes aún no está habilitado.",
+      "joinFailed": "No pudimos unirte al viaje. Inténtalo otra vez o pide un nuevo enlace al dueño.",
+      "promptTitle": "Unirte a este viaje",
+      "promptBody": "Te invitaron a unirte a este viaje como:",
+      "acceptButton": "Unirme",
+      "declineButton": "Ahora no"
+    },
+    "invite": {
+      "button": "Invitar",
+      "title": "Invitar a este viaje",
+      "loading": "Cargando...",
+      "editorLinkLabel": "Enlace de editor: acceso total de edición",
+      "viewerLinkLabel": "Enlace de espectador: solo lectura y comentarios",
+      "copyButton": "Copiar",
+      "regenerateEditor": "Generar nuevo enlace de editor",
+      "regenerateViewer": "Generar nuevo enlace de espectador",
+      "regenerateConfirm": "El enlace anterior dejará de funcionar. ¿Continuar?",
+      "collaboratorsLabel": "Colaboradores",
+      "noCollaborators": "Nadie se ha unido todavía. Comparte un enlace arriba.",
+      "unknownUser": "Usuario desconocido",
+      "promoteToEditor": "Hacer editor",
+      "demoteToViewer": "Hacer espectador",
+      "remove": "Quitar",
+      "removeConfirm": "¿Quitar a este colaborador del viaje?",
+      "closeButton": "Cerrar",
+      "softLimitMessage": "Este viaje alcanzó el límite actual de 10 colaboradores."
+    }
   },
   "plan": {
     "loading": "Cargando tu plan...",

@@ -101,3 +101,85 @@ export const COLLAB_CONSTANTS = {
   /** Share token character length. Set by gen_random_bytes(16) hex-encoded. */
   SHARE_TOKEN_LENGTH: 32,
 } as const;
+
+// ─────────────────────────────────────────────────────────────
+// Server-side helpers. These import from @supabase/ssr and are safe
+// to use in API routes and server components. Do NOT import these
+// from client components.
+// ─────────────────────────────────────────────────────────────
+
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+/**
+ * Resolve the authenticated user's role on a given trip.
+ *
+ * Returns:
+ *   - 'owner' if user_id matches saved_trips.user_id
+ *   - 'editor' or 'viewer' if the user has a matching trip_collaborators row
+ *   - null if the user has no access to the trip at all
+ *
+ * Uses the caller's Supabase client (RLS-enforced). Safe to call from
+ * API routes without service role elevation.
+ */
+export async function getUserTripRole(
+  supabase: SupabaseClient,
+  tripId: string,
+  userId: string
+): Promise<CollabRole | null> {
+  const { data: trip, error: tripErr } = await supabase
+    .from('saved_trips')
+    .select('user_id')
+    .eq('id', tripId)
+    .maybeSingle();
+
+  if (tripErr) return null;
+  if (trip?.user_id === userId) return 'owner';
+
+  const { data: collab, error: collabErr } = await supabase
+    .from('trip_collaborators')
+    .select('role')
+    .eq('trip_id', tripId)
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (collabErr || !collab) return null;
+  return collab.role as CollabRole;
+}
+
+/**
+ * Verify a trip exists and the authenticated user is the owner.
+ * Returns the trip row on success, null on failure.
+ * Throws no errors; caller inspects the return value.
+ */
+export async function requireTripOwner(
+  supabase: SupabaseClient,
+  tripId: string,
+  userId: string
+): Promise<{ id: string; user_id: string } | null> {
+  const { data, error } = await supabase
+    .from('saved_trips')
+    .select('id, user_id')
+    .eq('id', tripId)
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data;
+}
+
+/**
+ * Count current collaborators on a trip (excludes the owner).
+ * Used for the soft limit check in join/promote flows.
+ */
+export async function countCollaborators(
+  supabase: SupabaseClient,
+  tripId: string
+): Promise<number> {
+  const { count, error } = await supabase
+    .from('trip_collaborators')
+    .select('id', { count: 'exact', head: true })
+    .eq('trip_id', tripId);
+
+  if (error) return 0;
+  return count ?? 0;
+}

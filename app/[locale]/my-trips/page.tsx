@@ -7,7 +7,9 @@ import { useAuth } from '@/context/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import NavBar from '@/components/NavBar';
 import { Clock } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { COLLAB_ENABLED, type CollabRole } from '@/lib/collaboration';
+import { RoleBadge } from '@/components/collab/RoleBadge';
 
 function isTripExpired(startDate?: string | null, endDate?: string | null): boolean {
   const referenceDate = endDate || startDate;
@@ -35,9 +37,24 @@ export default function MyTripsPage() {
   const supabase = createClient();
   const t = useTranslations('myTrips');
 
+  const locale = useLocale();
   const [trips,      setTrips]      = useState<SavedTrip[]>([]);
   const [loading,    setLoading]    = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [sharedTrips, setSharedTrips] = useState<Array<{ id: string; title: string | null; destination: string | null; role: CollabRole; ownerName: string }>>([]);
+
+  useEffect(() => {
+    if (!COLLAB_ENABLED || !user) {
+      setSharedTrips([]);
+      return;
+    }
+    (async () => {
+      const res = await fetch('/api/trips/shared');
+      if (!res.ok) return;
+      const body = await res.json();
+      setSharedTrips(body.trips ?? []);
+    })();
+  }, [user]);
 
   /* Redirect if not logged in */
   useEffect(() => {
@@ -267,6 +284,44 @@ export default function MyTripsPage() {
               </div>
             ))}
           </div>
+        )}
+
+        {/* Shared with me — flag-gated */}
+        {COLLAB_ENABLED && sharedTrips.length > 0 && (
+          <section style={{ marginTop: 40 }}>
+            <h2 style={{ fontFamily: "'Poppins',sans-serif", color: '#00447B', marginBottom: 12, fontSize: 20 }}>
+              {t('sharedSection')}
+            </h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 20 }}>
+              {sharedTrips.map((trip) => (
+                <Link
+                  key={trip.id}
+                  href={`/plan?savedTripId=${trip.id}`}
+                  style={{ textDecoration: 'none' }}
+                >
+                  <div style={{
+                    background: '#fff',
+                    borderRadius: 16,
+                    border: '1.5px solid rgba(0,68,123,0.10)',
+                    boxShadow: '0 2px 16px rgba(0,68,123,0.06)',
+                    overflow: 'hidden',
+                    padding: 20,
+                    transition: 'box-shadow 0.15s',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
+                      <h3 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 16, color: '#00447B', margin: 0, flex: 1 }}>
+                        {trip.title || trip.destination || t('untitled')}
+                      </h3>
+                      <RoleBadge role={trip.role} />
+                    </div>
+                    <p style={{ margin: 0, fontSize: 13, color: '#6B7280' }}>
+                      {t('sharedBy', { name: trip.ownerName })}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
         )}
       </div>
 
