@@ -613,3 +613,43 @@ function applyReorderPhases(
   if (reordered.length !== td.itineraryPhases.length) return td;
   return { ...td, itineraryPhases: reordered };
 }
+
+// ─────────────────────────────────────────────────────────────
+// Stage 2d: Commutativity classification
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Per-patch-type commutativity. Used by useCollaborativeTrip (Stage 2d)
+ * to decide between optimistic-apply (commutative) and wait-for-seq
+ * (non-commutative). Non-commutative patches are structural ops where
+ * two simultaneous applies in different orders produce different
+ * final states; we serialize them through the server's seq counter.
+ *
+ * Structural / non-commutative: split_phase, merge_phases, reorder_phases.
+ * Everything else is commutative (LWW per entity id, or append-only).
+ */
+export const PATCH_COMMUTATIVITY: Record<PatchType, boolean> = {
+  add_activity: true,
+  remove_activity: true,
+  replace_activity: true,
+  accept_activity: true,
+  unaccept_activity: true,
+  add_note: true,
+  update_note: true,
+  remove_note: true,
+  add_hotel: true,
+  remove_hotel: true,
+  edit_phase: true,
+  split_phase: false,
+  merge_phases: false,
+  reorder_phases: false,
+  update_budget: true,
+  expand_phase: true,
+  add_comment: true,
+  edit_comment: true,
+  delete_comment: true,
+};
+
+export function isCommutative(type: PatchType): boolean {
+  return PATCH_COMMUTATIVITY[type] === true;
+}

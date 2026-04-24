@@ -434,11 +434,16 @@ function PlanContent() {
   const collab = useCollaborativeTrip({
     tripId: savedTripId ?? '',
     enabled: collabEnabled,
-    initialTripData: {}, // Stage 2d wires real trip data; 2b is subscription-only
+    initialTripData: {}, // tripData not hook-managed; EditableItinerary owns day/phase state via ref
     userId: user?.id ?? '',
     userName: user?.user_metadata?.full_name ?? user?.email ?? 'You',
     userRole: myRole ?? 'viewer',
     avatarUrl: user?.user_metadata?.avatar_url ?? null,
+    // Stage 2d: wire ref + hotels so received patches can dispatch to
+    // the correct handle method or callback.
+    itineraryRef,
+    onHotelsChange: setAcceptedHotels,
+    currentHotels: acceptedHotels,
   });
 
   const [savedTripDestination, setSavedTripDestination] = useState<string>('');
@@ -1482,6 +1487,7 @@ function PlanContent() {
                   onRegenerateDay={handleRegenerateDayClick}
                   onRegeneratePhase={handleRegeneratePhaseClick}
                   regenEnabled={process.env.NEXT_PUBLIC_REGENERATION_ENABLED !== 'false'}
+                  onPatchEmit={collab.enabled ? collab.emitPatch : undefined}
                   tripLengthMode={(() => {
                     const sd = prompt.match(/from (\d{4}-\d{2}-\d{2})/)?.[1];
                     const ed = prompt.match(/to (\d{4}-\d{2}-\d{2})/)?.[1];

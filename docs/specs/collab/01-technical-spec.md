@@ -736,6 +736,30 @@ Every mutation passes through three independent enforcement layers. Any one laye
 - Safety net only, NOT security.
 - Assumes a malicious client could bypass the UI and call API directly; Layers 1-2 catch that.
 
+### 3.13 Patch pipeline (Stage 2d)
+
+Every collaborative mutation flows through a four-step pipeline:
+
+1. **Local emit.** User action triggers a `PatchPayload` via an `ItineraryHandle` method (or a page-level hotel wrapper). Commutative patches apply to local state immediately. Non-commutative patches wait for step 2.
+2. **Server log + seq assignment.** `POST /api/trips/[tripId]/patches` inserts the patch into `trip_activity_log`. Postgres assigns a monotonic `seq` via BIGSERIAL (added by the Stage 2d migration). The seq is returned.
+3. **Broadcast.** The client sends the patch (with its assigned seq) over the trip's Realtime channel (`trip:{tripId}`). Other connected clients receive it via the `TRIP_BROADCAST_EVENTS.PATCH` handler.
+4. **Receive + apply.** Receiving clients check seq against `lastAppliedSeqRef`. If `seq === last + 1`, apply immediately. If there's a gap, fetch missed patches from `GET /api/trips/[tripId]/patches?since=last` and replay in seq order.
+
+**Commutativity.** Each patch type declares `commutative: boolean` in `PATCH_COMMUTATIVITY` (lib/trip-patches.ts). Commutative: all activity ops, note ops, hotel ops, edit_phase, update_budget, expand_phase, comment ops. Non-commutative: split_phase, merge_phases, reorder_phases. Non-commutative ops defer local apply until server-assigned seq arrives, ensuring deterministic ordering across clients.
+
+**Debounced save.** Every patch marks the trip dirty. After 5 seconds of patch-idle, the hook PATCHes `/api/trips` (the shared endpoint) with a materialized `trip_data` object (itineraryDays + itineraryPhases + acceptedHotels). Activity log remains source of truth; debounced saves are an optimization so page loads don't replay the log from scratch.
+
+**Reconnect recovery.** When the channel disconnects and reconnects, the hook fetches `/api/trips/[tripId]/patches?since=lastAppliedSeq` and replays missed entries. If the gap exceeds 500 entries, the response has `truncated: true` and the hook logs a warning (future work: force-rehydrate from `saved_trips.trip_data`).
+
+**Ref-based dispatcher.** Stage 2d uses the existing `ItineraryHandle` imperative API as the dispatch surface. No state-ownership refactor. Six new handle methods (`removeActivityById`, `editActivityById`, `replaceActivityById`, `moveActivityById`, `setNoteForDay`, `setDayExpanded`) fill gaps where received patches target entities by stable id. Existing imperative methods (addActivity, editPhase, splitPhase, mergePhases, reorderPhases) fire `onPatchEmit?` after applying locally so every Luna-chat-driven and programmatic mutation emits a patch. Inline click-handler mutations (accept/decline buttons) do NOT yet emit patches in Stage 2d; Stage 2e or later can add coverage if required.
+
+**Scope deferrals in Stage 2d (documented here so future prompts don't re-discover):**
+- `editActivityById`, `moveActivityById`, `setDayExpanded`, `removePhase`: no corresponding patch type in the 19-type library, so these methods mutate locally but do NOT fire `onPatchEmit`. Adding patch types is Stage 2e's call.
+- `update_budget` patch type exists but no Stage 2d callsite emits it; received `update_budget` patches are dispatcher no-ops.
+- Broadcast of `accept_activity`/`unaccept_activity` flows through via `editActivityById` locally, but emission is TODO (would require knowing both dayId and activityId in the setActivityStatus inline handler; easier if lifted to an imperative method).
+
+---
+
 **Stage 2c corrigendum (24 April 2026): implementation reality.**
 
 Stage 2c shipped the Layer 2 API enforcement. The specifics differ from the original design and are locked in here:

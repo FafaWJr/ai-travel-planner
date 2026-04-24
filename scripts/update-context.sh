@@ -248,7 +248,17 @@ Six-stage sprint adding real-time collaborative trip planning. Master plan: \`do
 - **Auth paths are NOT locale-prefixed.** Use \`/auth/login\`, \`/auth/signup\`, \`/auth/callback\` directly, never \`/\${locale}/auth/login\`. The \`[locale]\` segment wraps user-facing pages; auth pages live in \`app/auth/\` outside it.
 - **URL param convention: plan page reads \`tripId\`, NOT \`savedTripId\`.** The state variable in \`plan/page.tsx\` is named \`savedTripId\` (historical) but is populated from \`searchParams.get('tripId')\`. All internal links to a saved trip must use \`?tripId={uuid}\`. Stage 1 and 2b prompts incorrectly used \`savedTripId=\` in redirects, causing invited collaborators to land on the "No trip prompt" empty state. Fixed in commit \`collab-stage-2b-hotfix-url-param\` (24 April 2026). Two-browser presence acceptance test passed on the same day; avatars sync within 1-2 seconds on both connect and disconnect.
 
-**Stage 2a, 2b, 2c shipped (patch library, realtime hook, role gates + UUID injection).**
+**Stage 2a, 2b, 2c, 2d shipped (patch library, realtime hook, role gates + UUID injection, patch pipeline).**
+
+**Stage 2d implementation notes:**
+- \`trip_activity_log.seq\` BIGSERIAL column added (migration \`add_seq_to_trip_activity_log\`). Unique index on \`(trip_id, seq)\`; separate index on \`seq\` for global scans.
+- New endpoints: \`POST /api/trips/[tripId]/patches\` (viewer 403, editor/owner insert + return assigned seq) and \`GET /api/trips/[tripId]/patches?since=N\` (returns up to 500 entries ordered by seq asc, with \`truncated\` flag).
+- \`lib/trip-patches.ts\` exports \`PATCH_COMMUTATIVITY\` (Record<PatchType, boolean>) and \`isCommutative(type)\`. Non-commutative: \`split_phase\`, \`merge_phases\`, \`reorder_phases\`. All other 16 patch types are commutative.
+- \`useCollaborativeTrip\` now has a real \`emitPatch\` (commutative: local apply first, then POST + broadcast; non-commutative: POST for seq, then local apply), a real broadcast receiver (seq gap detection triggers backfill), debounced 5s save to \`/api/trips\` PATCH, and reconnect-triggered backfill.
+- \`ItineraryHandle\` gained six id/number-keyed methods (\`removeActivityById\`, \`editActivityById\`, \`replaceActivityById\`, \`moveActivityById\`, \`setNoteForDay\`, \`setDayExpanded\`). Existing imperative mutation methods (\`addActivity\`, \`editPhase\`, \`splitPhase\`, \`mergePhases\`, \`reorderPhases\`) fire \`onPatchEmit?\` after applying.
+- \`EditableItinerary\` gained \`onPatchEmit?: (payload: PatchPayload) => void\` prop. Plan page wires \`collab.enabled ? collab.emitPatch : undefined\`. Solo trips never emit.
+- \`Day\` interface gained optional \`id?: string\` field to reflect the Stage 0a UUID migration.
+- Scope deferrals to Stage 2e or later: \`editActivityById\` / \`moveActivityById\` / \`setDayExpanded\` / \`removePhase\` don't emit patches (no matching types); inline click-handler mutations (accept/decline button clicks) don't yet route through imperative methods so they also don't emit.
 
 **Stage 2c implementation notes:**
 - \`getRequestUserAndRole(supabase, tripId)\` helper in \`lib/collaboration.ts\` resolves { user, role } for any API route that needs it. Returns \`role: 'owner'\` for solo-trip owners so solo flows are unchanged.
@@ -257,8 +267,7 @@ Six-stage sprint adding real-time collaborative trip planning. Master plan: \`do
 - Suggestion routes (\`/api/hotel-suggestions\`, \`/api/extra-ideas\`, \`/api/day-suggestions\`, \`/api/budget-estimate\`) are deliberately NOT role-gated; they don't write to \`saved_trips\`. Persistence goes through RLS-gated \`/api/trips\` PATCH. Each route has an inline Stage 2c audit comment recording the decision.
 
 **Stages remaining:**
-- Stage 2d (~4h): patch emission, debounced save, disconnect recovery. Wires Stage 2a patch library + Stage 2b hook into \`EditableItinerary\` via its imperative ref API.
-- Stage 2e (~0.5h): final i18n + combined Stage 2 context update.
+- Stage 2e (~0.5h): final i18n + combined Stage 2 context update + optional broader \`onPatchEmit\` coverage for inline mutations.
 - Stage 3 (~10h): per-user Luna with cross-awareness, viewer read-only.
 - Stage 4 (~18h): comments on activity/day/phase/hotel, My Trips integration polish, mobile polish.
 - Stage 5 (~6h): landing page, OG image, flag flip.

@@ -1,7 +1,7 @@
 # Luna Let's Go - Claude Code Context
-**Last Updated:** 2026-04-24 22:27:50
+**Last Updated:** 2026-04-24 23:01:05
 **Current Branch:** main
-**Last Commit:** 5fd9865b fix: Collab share-landing redirects to /plan?tripId= not ?savedTripId=
+**Last Commit:** 1add9ccb feat: Collab Stage 2c role gates + UUID injection
 **Deployment:** https://www.lunaletsgo.com
 
 ---
@@ -58,6 +58,7 @@ app/api/trips/[tripId]/collaborators/[userId]/route.ts
 app/api/trips/[tripId]/collaborators/route.ts
 app/api/trips/[tripId]/join/route.ts
 app/api/trips/[tripId]/leave/route.ts
+app/api/trips/[tripId]/patches/route.ts
 app/api/trips/[tripId]/share/regenerate/route.ts
 app/api/trips/[tripId]/share/route.ts
 app/api/trips/route.ts
@@ -98,7 +99,8 @@ app/auth/signup/page.tsx
 ## Recent Changes (Last 10 Commits)
 
 ```
-5fd9865b (HEAD -> main, origin/main, origin/HEAD) fix: Collab share-landing redirects to /plan?tripId= not ?savedTripId=
+1add9ccb (HEAD -> main, origin/main, origin/HEAD) feat: Collab Stage 2c role gates + UUID injection
+5fd9865b fix: Collab share-landing redirects to /plan?tripId= not ?savedTripId=
 215960b0 feat: Collab Stage 2b realtime channel + presence + dual-mode hook
 49797b6e chore: sync package.json + lockfile (add @anthropic-ai/sdk)
 d39ab0e1 feat: Collab Stage 2a patch library + activity log writer
@@ -107,7 +109,6 @@ f7a61bf4 feat: Collab Stage 1 share link & invite system
 3a7da416 feat: Collab Stage 0b application scaffold + Tier 2 corrigendum
 c44d7ac9 docs: add Tier 2 Collab spec v2.1, remove superseded v1.1
 eb2fe9e4 chore: pre-Collab hygiene, remove stale script and add Tier 1 plan
-44033863 docs: regenerate CLAUDE.md for pre-Collab context baseline
 ```
 
 ---
@@ -290,7 +291,17 @@ Six-stage sprint adding real-time collaborative trip planning. Master plan: `doc
 - **Auth paths are NOT locale-prefixed.** Use `/auth/login`, `/auth/signup`, `/auth/callback` directly, never `/${locale}/auth/login`. The `[locale]` segment wraps user-facing pages; auth pages live in `app/auth/` outside it.
 - **URL param convention: plan page reads `tripId`, NOT `savedTripId`.** The state variable in `plan/page.tsx` is named `savedTripId` (historical) but is populated from `searchParams.get('tripId')`. All internal links to a saved trip must use `?tripId={uuid}`. Stage 1 and 2b prompts incorrectly used `savedTripId=` in redirects, causing invited collaborators to land on the "No trip prompt" empty state. Fixed in commit `collab-stage-2b-hotfix-url-param` (24 April 2026). Two-browser presence acceptance test passed on the same day; avatars sync within 1-2 seconds on both connect and disconnect.
 
-**Stage 2a, 2b, 2c shipped (patch library, realtime hook, role gates + UUID injection).**
+**Stage 2a, 2b, 2c, 2d shipped (patch library, realtime hook, role gates + UUID injection, patch pipeline).**
+
+**Stage 2d implementation notes:**
+- `trip_activity_log.seq` BIGSERIAL column added (migration `add_seq_to_trip_activity_log`). Unique index on `(trip_id, seq)`; separate index on `seq` for global scans.
+- New endpoints: `POST /api/trips/[tripId]/patches` (viewer 403, editor/owner insert + return assigned seq) and `GET /api/trips/[tripId]/patches?since=N` (returns up to 500 entries ordered by seq asc, with `truncated` flag).
+- `lib/trip-patches.ts` exports `PATCH_COMMUTATIVITY` (Record<PatchType, boolean>) and `isCommutative(type)`. Non-commutative: `split_phase`, `merge_phases`, `reorder_phases`. All other 16 patch types are commutative.
+- `useCollaborativeTrip` now has a real `emitPatch` (commutative: local apply first, then POST + broadcast; non-commutative: POST for seq, then local apply), a real broadcast receiver (seq gap detection triggers backfill), debounced 5s save to `/api/trips` PATCH, and reconnect-triggered backfill.
+- `ItineraryHandle` gained six id/number-keyed methods (`removeActivityById`, `editActivityById`, `replaceActivityById`, `moveActivityById`, `setNoteForDay`, `setDayExpanded`). Existing imperative mutation methods (`addActivity`, `editPhase`, `splitPhase`, `mergePhases`, `reorderPhases`) fire `onPatchEmit?` after applying.
+- `EditableItinerary` gained `onPatchEmit?: (payload: PatchPayload) => void` prop. Plan page wires `collab.enabled ? collab.emitPatch : undefined`. Solo trips never emit.
+- `Day` interface gained optional `id?: string` field to reflect the Stage 0a UUID migration.
+- Scope deferrals to Stage 2e or later: `editActivityById` / `moveActivityById` / `setDayExpanded` / `removePhase` don't emit patches (no matching types); inline click-handler mutations (accept/decline button clicks) don't yet route through imperative methods so they also don't emit.
 
 **Stage 2c implementation notes:**
 - `getRequestUserAndRole(supabase, tripId)` helper in `lib/collaboration.ts` resolves { user, role } for any API route that needs it. Returns `role: 'owner'` for solo-trip owners so solo flows are unchanged.
@@ -299,8 +310,7 @@ Six-stage sprint adding real-time collaborative trip planning. Master plan: `doc
 - Suggestion routes (`/api/hotel-suggestions`, `/api/extra-ideas`, `/api/day-suggestions`, `/api/budget-estimate`) are deliberately NOT role-gated; they don't write to `saved_trips`. Persistence goes through RLS-gated `/api/trips` PATCH. Each route has an inline Stage 2c audit comment recording the decision.
 
 **Stages remaining:**
-- Stage 2d (~4h): patch emission, debounced save, disconnect recovery. Wires Stage 2a patch library + Stage 2b hook into `EditableItinerary` via its imperative ref API.
-- Stage 2e (~0.5h): final i18n + combined Stage 2 context update.
+- Stage 2e (~0.5h): final i18n + combined Stage 2 context update + optional broader `onPatchEmit` coverage for inline mutations.
 - Stage 3 (~10h): per-user Luna with cross-awareness, viewer read-only.
 - Stage 4 (~18h): comments on activity/day/phase/hotel, My Trips integration polish, mobile polish.
 - Stage 5 (~6h): landing page, OG image, flag flip.

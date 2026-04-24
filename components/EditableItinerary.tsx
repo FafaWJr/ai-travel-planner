@@ -9,6 +9,7 @@ import RangeSummaryCard from './RangeSummaryCard';
 import type { AcceptedHotel } from './StayTab';
 import type { Phase, TripLengthMode } from '@/types';
 import { formatSlotHours, type SlotName } from '@/lib/ai';
+import type { PatchPayload } from '@/lib/trip-patches';
 import {
   DndContext,
   DragOverlay,
@@ -69,6 +70,10 @@ interface Suggestion {
   timing: string;
 }
 export interface Day {
+  /** Stable UUID injected server-side (Stage 0a migration + Stage 2c
+      /api/trips POST/PATCH injection). Optional because days parsed from
+      streamed markdown before persistence may not yet have one. */
+  id?: string;
   number: number;
   title: string;
   activities: Activity[];
@@ -300,6 +305,12 @@ interface Props {
   regenEnabled?: boolean;
   /** R6: Controls phase generation strategy and phase card rendering mode. */
   tripLengthMode?: TripLengthMode;
+  /** Stage 2d (Collab): fired after every imperative mutation via ItineraryHandle.
+      Plan page wires this to collab.emitPatch when collab is enabled, undefined
+      otherwise. Solo trips: callback stays undefined; mutations only touch
+      local state. Not fired for inline UI handlers (accept/decline button
+      clicks) in Stage 2d; those can be wrapped in Stage 2e if needed. */
+  onPatchEmit?: (payload: PatchPayload) => void;
 }
 
 export interface ItineraryHandle {
@@ -344,6 +355,18 @@ export interface ItineraryHandle {
   reorderPhases: (orderedPhaseIds: string[]) => void;
   /** R5: Remove a phase and all its days. */
   removePhase: (phaseId: string) => void;
+  /** Stage 2d: remove an activity by stable id (idempotent if not found). */
+  removeActivityById: (activityId: string) => void;
+  /** Stage 2d: patch an activity's fields by stable id. Partial update. */
+  editActivityById: (activityId: string, changes: Partial<{ text: string; status: Status; lunaAdded: boolean; manuallyAdded: boolean }>) => void;
+  /** Stage 2d: replace an activity's text/slot by id. Preserves id. */
+  replaceActivityById: (activityId: string, newActivity: { text: string; slot: TimeSlot; lunaAdded?: boolean; manuallyAdded?: boolean }) => void;
+  /** Stage 2d: move an activity to a different day/slot by id. */
+  moveActivityById: (activityId: string, toDayNumber: number, toSlot: TimeSlot) => void;
+  /** Stage 2d: set or clear a day's notes by day number (empty string clears). */
+  setNoteForDay: (dayNumber: number, note: string) => void;
+  /** Stage 2d: imperatively set day expansion (open/close) state. */
+  setDayExpanded: (dayNumber: number, expanded: boolean) => void;
 }
 
 const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableItinerary({
@@ -360,6 +383,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
   onRegeneratePhase,
   regenEnabled = false,
   tripLengthMode = 'short',
+  onPatchEmit,
 }, ref) {
   const localeFromHook = useLocale();
   const locale = localeProp ?? localeFromHook;
@@ -586,10 +610,13 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
   /* Expose handle to parent via ref */
   useImperativeHandle(ref, () => ({
     addActivity(text: string, dayNum: number, slot: TimeSlot, manuallyAdded?: boolean, lunaAdded?: boolean) {
+      const newActivityId = `d${dayNum}-chat-${Math.random().toString(36).slice(2,8)}`;
+      let dayIdForPatch: string | undefined;
       setDays(prev => prev.map(d => {
         if (d.number !== dayNum) return d;
+        dayIdForPatch = d.id;
         const newActivity: Activity = {
-          id: `d${dayNum}-chat-${Math.random().toString(36).slice(2,8)}`,
+          id: newActivityId,
           text,
           status: 'pending',
           slot,
@@ -598,6 +625,14 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
         };
         return { ...d, activities: [...d.activities, newActivity], open: true };
       }));
+      if (dayIdForPatch) {
+        onPatchEmit?.({
+          type: 'add_activity',
+          dayId: dayIdForPatch,
+          slot,
+          activity: { id: newActivityId, slot, text, status: 'pending', manuallyAdded, lunaAdded },
+        });
+      }
     },
     removeActivitiesMatching(pattern: string) {
       const lower = pattern.toLowerCase();
@@ -687,6 +722,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
           ...(patch.highlights !== undefined && { highlights: patch.highlights }),
         });
       });
+      onPatchEmit?.({ type: 'edit_phase', phaseId, changes: patch });
     },
 
     splitPhase(
@@ -728,6 +764,13 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
         if (d.phase_id !== phaseId) return d;
         return { ...d, phase_id: d.number < splitAtDay ? phaseA.id : phaseB.id };
       }));
+      onPatchEmit?.({
+        type: 'split_phase',
+        phaseId,
+        splitAfterDay: splitAtDay - 1,
+        newPhaseLabel: phaseB.label,
+        newPhaseId: phaseB.id,
+      });
     },
 
     mergePhases(
@@ -760,6 +803,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
           ? { ...d, phase_id: mergedPhase.id }
           : d
       ));
+      onPatchEmit?.({ type: 'merge_phases', phaseIds: [phaseIdA, phaseIdB], mergedLabel: mergedPhase.label });
     },
 
     reorderPhases(orderedPhaseIds: string[]) {
@@ -788,11 +832,120 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
 
       setPhases(reorderedPhases);
       _setDays(reorderedDays);
+      onPatchEmit?.({ type: 'reorder_phases', phaseIdOrder: orderedPhaseIds });
     },
 
     removePhase(phaseId: string) {
       setPhases(prev => prev.filter(p => p.id !== phaseId));
       setDays(prev => prev.filter(d => d.phase_id !== phaseId));
+      // No corresponding patch type; removal of a phase is not synced via
+      // patches in Stage 2d. Stage 2e or later can add one if needed.
+    },
+
+    // ── Stage 2d: id-keyed mutation methods for patch dispatching ──────
+    removeActivityById(activityId: string) {
+      let dayIdForPatch: string | undefined;
+      setDays(prev => prev.map(d => {
+        if (!d.activities.some(a => a.id === activityId)) return d;
+        dayIdForPatch = d.id;
+        return { ...d, activities: d.activities.filter(a => a.id !== activityId) };
+      }));
+      if (dayIdForPatch) {
+        onPatchEmit?.({ type: 'remove_activity', dayId: dayIdForPatch, activityId });
+      }
+    },
+
+    editActivityById(activityId, changes) {
+      setDays(prev => prev.map(d => ({
+        ...d,
+        activities: d.activities.map(a =>
+          a.id === activityId ? { ...a, ...changes } : a
+        ),
+      })));
+      // No corresponding patch type for arbitrary edits. Status changes
+      // could map to accept_activity/unaccept_activity but at this method
+      // we don't know the day id from just the activity id without a
+      // scan. Stage 2e can add targeted emitters if this becomes load-bearing.
+    },
+
+    replaceActivityById(activityId, newActivity) {
+      let dayIdForPatch: string | undefined;
+      setDays(prev => prev.map(d => {
+        if (!d.activities.some(a => a.id === activityId)) return d;
+        dayIdForPatch = d.id;
+        return {
+          ...d,
+          activities: d.activities.map(a =>
+            a.id === activityId
+              ? { ...a, text: newActivity.text, slot: newActivity.slot, manuallyAdded: newActivity.manuallyAdded, lunaAdded: newActivity.lunaAdded }
+              : a
+          ),
+        };
+      }));
+      if (dayIdForPatch) {
+        onPatchEmit?.({
+          type: 'replace_activity',
+          dayId: dayIdForPatch,
+          activityId,
+          newActivity: {
+            id: activityId,
+            slot: newActivity.slot,
+            text: newActivity.text,
+            status: 'pending',
+            manuallyAdded: newActivity.manuallyAdded,
+            lunaAdded: newActivity.lunaAdded,
+          },
+        });
+      }
+    },
+
+    moveActivityById(activityId, toDayNumber, toSlot) {
+      setDays(prev => {
+        let moving: Activity | null = null;
+        const withoutSource = prev.map(d => ({
+          ...d,
+          activities: d.activities.filter(a => {
+            if (a.id === activityId) { moving = { ...a, slot: toSlot }; return false; }
+            return true;
+          }),
+        }));
+        if (!moving) return prev;
+        return withoutSource.map(d =>
+          d.number === toDayNumber ? { ...d, activities: [...d.activities, moving!] } : d
+        );
+      });
+      // Stage 2d: no move_activity patch type in shipped library. Deferred.
+    },
+
+    setNoteForDay(dayNumber, note) {
+      let dayIdForPatch: string | undefined;
+      let hadNote = false;
+      setDays(prev => prev.map(d => {
+        if (d.number !== dayNumber) return d;
+        dayIdForPatch = d.id;
+        hadNote = Boolean(d.notes && d.notes.length > 0);
+        if (!note) {
+          const { notes: _n, ...rest } = d;
+          void _n;
+          return rest as Day;
+        }
+        return { ...d, notes: note };
+      }));
+      if (dayIdForPatch) {
+        if (!note) {
+          onPatchEmit?.({ type: 'remove_note', dayId: dayIdForPatch });
+        } else if (hadNote) {
+          onPatchEmit?.({ type: 'update_note', dayId: dayIdForPatch, note });
+        } else {
+          onPatchEmit?.({ type: 'add_note', dayId: dayIdForPatch, note });
+        }
+      }
+    },
+
+    setDayExpanded(dayNumber, expanded) {
+      setDays(prev => prev.map(d => d.number === dayNumber ? { ...d, open: expanded } : d));
+      // UI state; not synced as a patch (expand_phase patch type is for
+      // phase-level UI in R6, not day-level). Local-only.
     },
   }));
 
