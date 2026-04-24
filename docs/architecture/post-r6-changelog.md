@@ -239,3 +239,69 @@ Tracked in project memory + session briefs. In order:
 ---
 
 Last updated: 2026-04-21 after R5.1 hotfix #1.
+
+---
+
+## Collaborative Trips Stage 0 (24 April 2026)
+
+First stage of the Collaborative Trips sprint. Database foundation and application scaffold only; no UI changes, no behavior changes for users. Master plan at `docs/specs/collab/00-master-plan.md`.
+
+### Stage 0a: SQL migrations (executed via Supabase MCP)
+
+Ten batches executed interactively against project `qhpxejzoxfruuositwzo`:
+
+1. Pre-flight snapshot (confirmed 34 trips, 284 days, expected shape).
+2. Five new columns on `saved_trips`: `share_token_viewer`, `share_token_editor`, `is_collaborative`, `last_synced_at`, `trip_data_pre_migration`.
+3. `trip_collaborators` table created (three-role CHECK: `owner`, `editor`, `viewer`).
+4. `trip_activity_log` table created (append-only, indexed by trip + time).
+5. `trip_comments` table created (four target_types: activity, day, phase, hotel; `target_id` as TEXT).
+6. RLS on `saved_trips`: replaced owner-only policies with owner-or-collaborator using SECURITY DEFINER helpers (see note below).
+7. RLS on new tables: 9 policies added.
+8. Share tokens backfilled on all 34 existing trips (32-char hex, verified unique).
+9. UUID injection on `itineraryDays[]` with audit backup in `trip_data_pre_migration`. 284 days across 34 trips. Idempotent. All other trip_data keys byte-identical to backup.
+10. Final verification: 13 RLS policies across 4 tables, all metrics match expected state.
+
+**Critical architectural detail: SECURITY DEFINER helpers break RLS recursion.**
+
+Initial Batch 6/7 approach had mutual recursion between `saved_trips_select_own_or_collab` (which queried `trip_collaborators`) and `trip_collaborators_select` (which queried `saved_trips`). Caught during Batch 7 verification with `42P17 infinite recursion detected`. Blast radius ~90 seconds of broken `saved_trips` SELECT; emergency rollback restored original owner-only RLS immediately.
+
+Resolved by adding two SECURITY DEFINER functions that bypass RLS when checking collaborator membership:
+- `public.user_collaborates_on_trip(trip UUID) RETURNS BOOLEAN`
+- `public.user_is_editor_on_trip(trip UUID) RETURNS BOOLEAN`
+
+Both are `SECURITY DEFINER`, `STABLE`, `SET search_path = public`. The `saved_trips` SELECT and UPDATE policies now call these functions instead of subquerying `trip_collaborators` directly. The `trip_collaborators_select` policy is now self-only (`user_id = auth.uid()`); fellow-collaborator list reads happen at the API layer with service role.
+
+**Lesson locked in:** Every future cross-table RLS change must run a recursion smoke test (stranger SELECT on all four tables) before the next batch proceeds.
+
+**Scope deviation from Tier 2 spec v2.1:**
+- `target_id` in `trip_comments` is TEXT, not UUID (accommodates existing non-UUID activity/phase/hotel IDs).
+- UUID migration only applies to `itineraryDays[]`. Activities (format `d1-a0-fgfj`), phases (format `phase-1`), and hotels (format `hotel-arts-barcelona`) already had stable IDs pre-Collab; no migration needed for those.
+- Tier 2 spec Section 3.4 corrigendum landed in this commit (see Change 5 below).
+
+### Stage 0b: Application scaffold (this commit)
+
+- New file `lib/trip-ids.ts`: UUID injection helpers for new trip_data. Exports `generateEntityId`, `injectMissingDayIds`, `isValidTripData`. Not yet imported anywhere; Stage 2 wires it in.
+- New file `lib/collaboration.ts`: feature flag reader, role types, permission helpers, constants. Not yet imported anywhere; Stage 1 adds the first consumer.
+- New Vercel env var `NEXT_PUBLIC_COLLAB_ENABLED=false` (set via dashboard, all environments).
+- Tier 2 spec corrigendum: `docs/specs/collab/01-technical-spec.md` Section 3.4 updated to reflect the SECURITY DEFINER pattern and the actual `trip_data` shape (`itineraryDays`, `itineraryPhases`, `acceptedHotels`).
+
+### Ground-truth facts captured during Stage 0
+
+- `saved_trips`: 34 rows (was 22 in older memory).
+- `profiles`: 15 rows.
+- `blog_comments`: 10 rows.
+- `user_preferences`: 5 rows.
+- Total days across all trips: 284.
+- Total activities across all trips: 1804.
+- Trips with phases (R5.1+): 5 of 34 (long trips only).
+
+### Rollback
+
+If Stage 0 needs to be reverted:
+- Schema rollback SQL is in `docs/specs/collab/00-master-plan.md` Section 5.3.
+- Audit backups in `saved_trips.trip_data_pre_migration` allow restoring original trip_data for 30 days.
+- Feature flag flip (`NEXT_PUBLIC_COLLAB_ENABLED=false`) disables any future UI consumers with no DB rollback needed.
+
+### Next
+
+Stage 1: share link and invite system with viewer/editor tokens. Prompt: `luna-collab-stage-1.md` (to be produced).

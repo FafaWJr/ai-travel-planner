@@ -197,7 +197,10 @@ CREATE TABLE trip_comments (
   user_id UUID NOT NULL REFERENCES profiles(id),
   target_type TEXT NOT NULL
     CHECK (target_type IN ('activity', 'day', 'phase', 'hotel')),
-  target_id UUID NOT NULL,
+  -- TEXT, not UUID, because existing activity/phase/hotel IDs are not UUID-formatted.
+  -- Accepts: UUID day IDs (post Stage 0a migration), "d1-a0-fgfj" activity IDs,
+  -- "phase-1" phase IDs, "hotel-arts-barcelona" hotel IDs.
+  target_id TEXT NOT NULL,
   -- Denormalized for display when original item is removed
   original_day_id UUID,
   comment_text TEXT NOT NULL CHECK (length(comment_text) <= 500),
@@ -224,86 +227,98 @@ ALTER TABLE saved_trips
   ADD COLUMN trip_data_pre_migration JSONB;
 ```
 
-**RLS policies on `saved_trips` (updated).**
+**RLS policies on `saved_trips` (updated, uses SECURITY DEFINER helpers).**
 
-Existing RLS: owner-only for all operations. New model: owner OR any role for SELECT, owner OR editor for UPDATE, owner-only for DELETE.
+The original v2.1 spec had these policies querying `trip_collaborators` via subquery. In practice this caused mutual recursion with `trip_collaborators_select` (which must query `saved_trips` to check trip ownership). The recursion was caught during Stage 0a Batch 7 and fixed with two SECURITY DEFINER helper functions that bypass RLS inside their bodies.
 
 ```sql
--- Drop old policies
-DROP POLICY IF EXISTS "Users can view own trips" ON saved_trips;
-DROP POLICY IF EXISTS "Users can update own trips" ON saved_trips;
-DROP POLICY IF EXISTS "Users can delete own trips" ON saved_trips;
+-- Helper functions: SECURITY DEFINER breaks the recursion cycle by running
+-- as postgres (bypassing RLS) inside the function body.
+CREATE OR REPLACE FUNCTION public.user_collaborates_on_trip(trip UUID)
+RETURNS BOOLEAN
+LANGUAGE sql SECURITY DEFINER STABLE
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.trip_collaborators
+    WHERE trip_id = trip AND user_id = auth.uid()
+  );
+$$;
 
--- SELECT: owner OR any collaborator
-CREATE POLICY "Users can view own or collaborated trips"
-  ON saved_trips FOR SELECT
+CREATE OR REPLACE FUNCTION public.user_is_editor_on_trip(trip UUID)
+RETURNS BOOLEAN
+LANGUAGE sql SECURITY DEFINER STABLE
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.trip_collaborators
+    WHERE trip_id = trip
+      AND user_id = auth.uid()
+      AND role IN ('owner', 'editor')
+  );
+$$;
+
+-- Drop old owner-only policies
+DROP POLICY IF EXISTS saved_trips_select_own ON public.saved_trips;
+DROP POLICY IF EXISTS saved_trips_update_own ON public.saved_trips;
+
+-- SELECT: owner OR any collaborator (via helper)
+CREATE POLICY saved_trips_select_own_or_collab
+  ON public.saved_trips FOR SELECT
   USING (
-    user_id = auth.uid()
-    OR id IN (
-      SELECT trip_id FROM trip_collaborators WHERE user_id = auth.uid()
-    )
+    auth.uid() = user_id
+    OR public.user_collaborates_on_trip(id)
   );
 
--- UPDATE: owner OR editor
-CREATE POLICY "Users can update own or edited trips"
-  ON saved_trips FOR UPDATE
+-- INSERT: owner only (unchanged)
+-- existing saved_trips_insert_own policy preserved
+
+-- UPDATE: owner OR editor (via helper)
+CREATE POLICY saved_trips_update_own_or_editor
+  ON public.saved_trips FOR UPDATE
   USING (
-    user_id = auth.uid()
-    OR id IN (
-      SELECT trip_id FROM trip_collaborators
-      WHERE user_id = auth.uid() AND role IN ('owner', 'editor')
-    )
+    auth.uid() = user_id
+    OR public.user_is_editor_on_trip(id)
   );
 
--- INSERT: owner only (new trips)
-CREATE POLICY "Users can insert own trips"
-  ON saved_trips FOR INSERT
-  WITH CHECK (user_id = auth.uid());
-
--- DELETE: owner only
-CREATE POLICY "Users can delete own trips"
-  ON saved_trips FOR DELETE
-  USING (user_id = auth.uid());
+-- DELETE: owner only (unchanged)
+-- existing saved_trips_delete_own policy preserved
 ```
 
-**RLS policies on `trip_collaborators`.**
+**RLS policies on `trip_collaborators` (self-only).**
+
+The original v2.1 spec had this policy querying `saved_trips`, which is exactly the other half of the recursion cycle. The shipped version is self-only: users see only their own row via RLS. The "fellow collaborators on a trip I own/collab on" use case is handled at the API layer via `/api/trips/[tripId]/collaborators`, which uses service role to bypass RLS.
 
 ```sql
--- SELECT: any collaborator on the trip can see the list
-CREATE POLICY "Collaborators can view list"
-  ON trip_collaborators FOR SELECT
-  USING (
-    trip_id IN (
-      SELECT id FROM saved_trips WHERE user_id = auth.uid()
-    )
-    OR user_id = auth.uid()
-    OR trip_id IN (
-      SELECT trip_id FROM trip_collaborators WHERE user_id = auth.uid()
-    )
-  );
+-- SELECT: self only
+CREATE POLICY trip_collaborators_select
+  ON public.trip_collaborators FOR SELECT
+  USING (user_id = auth.uid());
 
--- INSERT: owner only (join API uses service role key to bypass)
-CREATE POLICY "Owners can add collaborators"
-  ON trip_collaborators FOR INSERT
+-- INSERT: owner only
+CREATE POLICY trip_collaborators_insert
+  ON public.trip_collaborators FOR INSERT
   WITH CHECK (
-    trip_id IN (SELECT id FROM saved_trips WHERE user_id = auth.uid())
+    trip_id IN (SELECT id FROM public.saved_trips WHERE user_id = auth.uid())
   );
 
 -- UPDATE: owner only (for role changes)
-CREATE POLICY "Owners can change roles"
-  ON trip_collaborators FOR UPDATE
+CREATE POLICY trip_collaborators_update
+  ON public.trip_collaborators FOR UPDATE
   USING (
-    trip_id IN (SELECT id FROM saved_trips WHERE user_id = auth.uid())
+    trip_id IN (SELECT id FROM public.saved_trips WHERE user_id = auth.uid())
   );
 
--- DELETE: owner can remove anyone, collaborator can remove self only
-CREATE POLICY "Owners or self can remove"
-  ON trip_collaborators FOR DELETE
+-- DELETE: owner can remove anyone, self can remove self
+CREATE POLICY trip_collaborators_delete
+  ON public.trip_collaborators FOR DELETE
   USING (
-    trip_id IN (SELECT id FROM saved_trips WHERE user_id = auth.uid())
+    trip_id IN (SELECT id FROM public.saved_trips WHERE user_id = auth.uid())
     OR user_id = auth.uid()
   );
 ```
+
+Note: the `saved_trips` subqueries here do NOT cause recursion because `saved_trips`'s own policies use the SECURITY DEFINER helpers, which bypass `trip_collaborators` RLS on the return path.
 
 **RLS policies on `trip_activity_log`.**
 
@@ -554,6 +569,14 @@ Three layers affected when collaborators use different locales:
 ### 3.10 UUID Architecture
 
 **Why.** Comments anchor to entities by stable UUID, not positional index. When activities are added, removed, or reordered, comments survive cleanly without relying on fragile indexes.
+
+**Stage 0a reality note.** When the UUID migration ran on 24 April 2026, ground truth differed from the original v2.1 spec:
+- Activities already had stable IDs in format `d1-a0-fgfj`. No UUID replacement needed.
+- Phases already had stable IDs in format `phase-1`. No replacement needed.
+- Hotels already had stable IDs in format `hotel-arts-barcelona`. No replacement needed.
+- Days had no ID field. Migration injected `gen_random_uuid()` on 284 days across 34 existing trips.
+
+The comment system treats all of these as opaque stable strings. `trip_comments.target_id` is TEXT, accepting any of the above formats as a valid target.
 
 **Entities that carry a UUID.**
 

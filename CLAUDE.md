@@ -1,7 +1,7 @@
 # Luna Let's Go - Claude Code Context
-**Last Updated:** 2026-04-23 21:22:57
+**Last Updated:** 2026-04-24 15:55:32
 **Current Branch:** main
-**Last Commit:** c691bdfa chore: regenerate CLAUDE.md with latest commits and timestamp
+**Last Commit:** c44d7ac9 docs: add Tier 2 Collab spec v2.1, remove superseded v1.1
 **Deployment:** https://www.lunaletsgo.com
 
 ---
@@ -27,7 +27,9 @@ Read these before modifying the respective areas — each documents architecture
 
 - `docs/architecture/ai-paths.md` — the two parallel AI invocation paths (generate-path uses Anthropic tools API + structured itinerary; chat-path uses SSE + text markers). Read BEFORE adding any new Luna capability.
 - `docs/architecture/phase-mode-matrix.md` — tool arrays, prompts, rendering, and affordances per trip length (short 1-6d / medium 7-14d / long 15+d). Read BEFORE modifying any trip-length-mode behavior.
-- `docs/architecture/post-r6-changelog.md` — durable release log R1 onward with commit hashes, deployment IDs, UTC timestamps.
+- `docs/architecture/post-r6-changelog.md` — durable release log R1 onward with commit hashes, deployment IDs, UTC timestamps (includes Stage 0 Collab entry as of 24 April 2026).
+- `docs/specs/collab/00-master-plan.md` — Tier 1 master plan v2.1 for Collaborative Trips (locked decisions, stage summaries).
+- `docs/specs/collab/01-technical-spec.md` — Tier 2 technical spec v2.1 for Collaborative Trips (schema SQL, RLS, API contracts, with Stage 0a corrigendum).
 - `docs/i18n/multilang-reference.md` — canonical i18n rules (EN, PT-BR, ES). Read BEFORE touching any user-facing string.
 - `CONVENTIONS.md` — style, branding, coding conventions (no em dashes, Lucide icons only, brand colors).
 
@@ -88,28 +90,47 @@ app/auth/signup/page.tsx
 ## Recent Changes (Last 10 Commits)
 
 ```
-c691bdfa (HEAD -> main, origin/main, origin/HEAD) chore: regenerate CLAUDE.md with latest commits and timestamp
+c44d7ac9 (HEAD -> main, origin/main, origin/HEAD) docs: add Tier 2 Collab spec v2.1, remove superseded v1.1
+eb2fe9e4 chore: pre-Collab hygiene, remove stale script and add Tier 1 plan
+44033863 docs: regenerate CLAUDE.md for pre-Collab context baseline
+c691bdfa chore: regenerate CLAUDE.md with latest commits and timestamp
 167908ab docs: replace luna-skills-subagents-sprint spec with -final version
 7a2ae578 docs: finalize luna skills and subagents sprint with retrospective
 7d9e128d feat: add luna-release-writer agent for drafting memory updates
 be13a47e fix: auto-load .env.local in i18n scripts
 c5ad010f feat: add luna-multilang-qa subagent with 3-layer i18n check pipeline
 8bcb71fd chore: regenerate context with recent releases and agent additions
-c740269b feat: add luna-context-updater Claude agent definition
-73c06982 feat: add Luna QA Claude agent definition
-c729b849 docs: add luna-skills-subagents-sprint spec
 ```
 
 ---
 
 ## Database Schema (Supabase Tables)
 
-Current tables in production:
-- `profiles` (user profile data)
-- `saved_trips` (columns: destination, is_favorite, start_date, end_date, trip_data JSONB, title)
-- `travel_personas` (user travel preferences)
-- `trip_history` (past trip records)
-- `user_preferences` (user settings)
+Current tables in production (row counts from Stage 0a snapshot, 24 April 2026):
+- `profiles` (15 rows) — user profile data
+- `saved_trips` (34 rows) — destination, is_favorite, start_date, end_date, trip_data JSONB, title, + Collab columns: share_token_viewer, share_token_editor, is_collaborative, last_synced_at, trip_data_pre_migration (30-day audit backup)
+- `trip_collaborators` (0 rows, Collab Stage 0a) — trip_id, user_id, role CHECK (owner|editor|viewer), joined_at
+- `trip_activity_log` (0 rows, Collab Stage 0a) — append-only log keyed by (trip_id, created_at)
+- `trip_comments` (0 rows, Collab Stage 0a) — target_type CHECK (activity|day|phase|hotel), target_id TEXT (not UUID — accepts all existing ID formats), 500-char comment_text, soft-delete via deleted_at
+- `blog_comments` (10 rows) — blog post comments
+- `user_preferences` (5 rows) — travel_persona, travel_style
+
+Additional Stage 0a facts:
+- Total days across all trips: 284
+- Total activities: 1804
+- Trips with phases (R5.1+): 5 of 34 (long trips only)
+
+### RLS Pattern: SECURITY DEFINER Helpers (CRITICAL)
+
+Any cross-table RLS policy that needs to check collaborator membership MUST use these helpers:
+- `public.user_collaborates_on_trip(trip UUID) RETURNS BOOLEAN` — SECURITY DEFINER, STABLE, SET search_path = public
+- `public.user_is_editor_on_trip(trip UUID) RETURNS BOOLEAN` — same qualifiers
+
+Direct subqueries between `saved_trips` RLS and `trip_collaborators` RLS cause `42P17 infinite recursion detected` (incident confirmed during Stage 0a Batch 7, 90s blast radius, emergency rollback applied). The helpers bypass RLS inside their bodies and break the cycle.
+
+`trip_collaborators_select` is self-only (`user_id = auth.uid()`). Fellow-collaborator list reads happen at the API layer with service role, not RLS.
+
+Future cross-table RLS changes MUST include a recursion smoke test (stranger SELECT on all four tables) before deploy.
 
 ---
 
@@ -227,6 +248,34 @@ Full rollout complete. All user-facing pages under `app/[locale]/` render from `
 
 ---
 
+## Collaborative Trips (Stage 0 shipped 24 April 2026)
+
+Six-stage sprint adding real-time collaborative trip planning. Master plan: `docs/specs/collab/00-master-plan.md`. Technical spec: `docs/specs/collab/01-technical-spec.md`.
+
+**Stage 0 deliverables (landed):**
+- Three new tables: `trip_collaborators`, `trip_activity_log`, `trip_comments` (see Database Schema section for details).
+- Five new columns on `saved_trips`.
+- 13 RLS policies across four tables, using SECURITY DEFINER helpers to break recursion.
+- UUID migration on 284 days across 34 trips (audit backup in `trip_data_pre_migration`, 30-day lifespan).
+- Scaffold files: `lib/trip-ids.ts` (generateEntityId, injectMissingDayIds, isValidTripData), `lib/collaboration.ts` (COLLAB_ENABLED, CollabRole, canMutateTrip, isOwner, canComment, COLLAB_CONSTANTS). Neither imported yet.
+- Feature flag `NEXT_PUBLIC_COLLAB_ENABLED=false` (all environments).
+
+**Three feature flags for granular rollback:**
+- `NEXT_PUBLIC_COLLAB_ENABLED` (master) — default false, flips to true after Stage 5 launch.
+- `NEXT_PUBLIC_COLLAB_REALTIME_ENABLED` (Stage 2) — default true, disables realtime sync only.
+- `NEXT_PUBLIC_COLLAB_LUNA_AWARENESS_ENABLED` (Stage 3) — default true, disables cross-awareness summary only.
+
+**Three-tier permission model:** owner / editor / viewer, with hybrid two-link invites (`share_token_viewer` + `share_token_editor`). Per-person role override via owner dashboard.
+
+**Stages remaining:**
+- Stage 1 (~14h): share link, invite system, viewer/editor tokens.
+- Stage 2 (~23.5h): realtime sync engine, role-gated mutations, UUID injection.
+- Stage 3 (~10h): per-user Luna with cross-awareness, viewer read-only.
+- Stage 4 (~18h): comments on activity/day/phase/hotel, My Trips integration, mobile polish.
+- Stage 5 (~6h): landing page, OG image, flag flip.
+
+---
+
 ## Pre-Session Discovery Checklist
 
 Before coding in Claude Code, ALWAYS:
@@ -287,7 +336,8 @@ After Claude Code finishes changes:
 - Luna context-updater agent added at .claude/agents/luna-context-updater.md
 
 **Current Work:**
-- Collaborative Trips sprint about to begin. Tier 1 master plan in planning — will land at `docs/specs/collab/00-master-plan.md` when drafted.
+- Collaborative Trips Stage 0 **shipped** (24 April 2026). Foundation tables, RLS with SECURITY DEFINER helpers, UUID migration on 284 days, scaffold files `lib/trip-ids.ts` and `lib/collaboration.ts`, feature flag `NEXT_PUBLIC_COLLAB_ENABLED=false`. No UI yet.
+- Stage 1 next: share link and invite system with viewer/editor tokens. Prompt: `luna-collab-stage-1.md` (to be produced).
 - Brevo email integration (list ID 17, /api/brevo-sync/route.ts)
 - PDF export (jsPDF + html2canvas, branded itinerary)
 
