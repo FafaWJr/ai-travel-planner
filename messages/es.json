@@ -709,6 +709,12 @@
       "removeConfirm": "¿Quitar a este colaborador del viaje?",
       "closeButton": "Cerrar",
       "softLimitMessage": "Este viaje alcanzó el límite actual de 10 colaboradores."
+    },
+    "presence": {
+      "connected": "En vivo",
+      "disconnected": "Reconectando...",
+      "youLabel": "tú",
+      "tooltipHere": "{name} está aquí"
     }
   },
   "plan": {

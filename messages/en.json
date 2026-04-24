@@ -709,6 +709,12 @@
       "removeConfirm": "Remove this collaborator from the trip?",
       "closeButton": "Close",
       "softLimitMessage": "This trip has 10 collaborators, the current limit."
+    },
+    "presence": {
+      "connected": "Live",
+      "disconnected": "Reconnecting...",
+      "youLabel": "you",
+      "tooltipHere": "{name} is here"
     }
   },
   "plan": {

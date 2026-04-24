@@ -22,8 +22,10 @@ import { trackTripPlanGenerated, trackChatMessageSent } from '@/lib/analytics';
 import { generateTripPDF } from '@/lib/generateTripPDF';
 import UnsavedChangesModal from '@/components/UnsavedChangesModal';
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
-import { COLLAB_ENABLED, type CollabRole } from '@/lib/collaboration';
+import { COLLAB_ENABLED, COLLAB_REALTIME_ENABLED, type CollabRole } from '@/lib/collaboration';
 import { InviteModal } from '@/components/collab/InviteModal';
+import { CollaboratorAvatars } from '@/components/collab/CollaboratorAvatars';
+import { useCollaborativeTrip } from '@/hooks/useCollaborativeTrip';
 
 /* Map next-intl locale codes to JS Intl locale codes for date formatting */
 function toDateLocale(locale: string): string {
@@ -417,6 +419,28 @@ function PlanContent() {
       setMyRole(body.currentUserRole ?? null);
     })();
   }, [savedTripId]);
+
+  // Collab realtime hook. Dual-mode: hook owns state when enabled,
+  // passthrough otherwise. Solo trips are unaffected.
+  // Stage 2b: presence + subscription only. emitPatch is stubbed.
+  // Stage 2d will wire patch emission and application.
+  const collabEnabled = Boolean(
+    COLLAB_ENABLED &&
+    COLLAB_REALTIME_ENABLED &&
+    savedTripId &&
+    myRole
+  );
+
+  const collab = useCollaborativeTrip({
+    tripId: savedTripId ?? '',
+    enabled: collabEnabled,
+    initialTripData: {}, // Stage 2d wires real trip data; 2b is subscription-only
+    userId: user?.id ?? '',
+    userName: user?.user_metadata?.full_name ?? user?.email ?? 'You',
+    userRole: myRole ?? 'viewer',
+    avatarUrl: user?.user_metadata?.avatar_url ?? null,
+  });
+
   const [savedTripDestination, setSavedTripDestination] = useState<string>('');
   const [isDirty, setIsDirty] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -1307,7 +1331,16 @@ function PlanContent() {
                           </button>
                         </div>
                       </div>
-                      {/* Right — Invite (owner only, flag-gated) + Save */}
+                      {/* Right — Presence avatars + Invite (owner only, flag-gated) + Save */}
+                      {collab.enabled && (
+                        <div style={{ display: 'flex', alignItems: 'center', marginRight: 12, paddingLeft: 6 }}>
+                          <CollaboratorAvatars
+                            presence={collab.presence}
+                            currentUserId={user?.id}
+                            maxVisible={3}
+                          />
+                        </div>
+                      )}
                       {COLLAB_ENABLED && myRole === 'owner' && savedTripId && (
                         <button
                           onClick={() => setInviteOpen(true)}
