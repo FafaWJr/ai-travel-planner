@@ -1,7 +1,7 @@
 # Luna Let's Go - Claude Code Context
-**Last Updated:** 2026-04-24 23:01:05
+**Last Updated:** 2026-04-25 08:57:56
 **Current Branch:** main
-**Last Commit:** 1add9ccb feat: Collab Stage 2c role gates + UUID injection
+**Last Commit:** fed2bdd9 feat: Collab Stage 2d patch pipeline
 **Deployment:** https://www.lunaletsgo.com
 
 ---
@@ -99,7 +99,8 @@ app/auth/signup/page.tsx
 ## Recent Changes (Last 10 Commits)
 
 ```
-1add9ccb (HEAD -> main, origin/main, origin/HEAD) feat: Collab Stage 2c role gates + UUID injection
+fed2bdd9 (HEAD -> main, origin/main, origin/HEAD) feat: Collab Stage 2d patch pipeline
+1add9ccb feat: Collab Stage 2c role gates + UUID injection
 5fd9865b fix: Collab share-landing redirects to /plan?tripId= not ?savedTripId=
 215960b0 feat: Collab Stage 2b realtime channel + presence + dual-mode hook
 49797b6e chore: sync package.json + lockfile (add @anthropic-ai/sdk)
@@ -108,7 +109,6 @@ d39ab0e1 feat: Collab Stage 2a patch library + activity log writer
 f7a61bf4 feat: Collab Stage 1 share link & invite system
 3a7da416 feat: Collab Stage 0b application scaffold + Tier 2 corrigendum
 c44d7ac9 docs: add Tier 2 Collab spec v2.1, remove superseded v1.1
-eb2fe9e4 chore: pre-Collab hygiene, remove stale script and add Tier 1 plan
 ```
 
 ---
@@ -294,6 +294,7 @@ Six-stage sprint adding real-time collaborative trip planning. Master plan: `doc
 **Stage 2a, 2b, 2c, 2d shipped (patch library, realtime hook, role gates + UUID injection, patch pipeline).**
 
 **Stage 2d implementation notes:**
+- **Stage 2d hotfix #1 shipped 25 April 2026** (`collab-stage-2d-hotfix-1-suppressEmit`). Every `ItineraryHandle` mutation method accepts an optional `{ suppressEmit?: boolean }` trailing parameter. The hook's `applyPatchToRef` passes `suppressEmit:true` when applying received patches so they don't re-broadcast (which caused a ping-pong loop in Stage 2d production QA: 223 `add_activity` rows in 7 minutes for one user action on trip `9b7f25fb-7c75-4514-bd23-1604dd9ae737`, log preserved). Defense-in-depth: `emitPatch` rate limit (10 emits / 5s, 2s backoff), self-receive warning, and rapid-duplicate (\<2s) tripwire. Convention: `onPatchEmit` is fire-and-forget; never call `ItineraryHandle` mutation methods from within an `onPatchEmit` callback. New mutation methods that fire `onPatchEmit` MUST accept the suppressEmit option.
 - `trip_activity_log.seq` BIGSERIAL column added (migration `add_seq_to_trip_activity_log`). Unique index on `(trip_id, seq)`; separate index on `seq` for global scans.
 - New endpoints: `POST /api/trips/[tripId]/patches` (viewer 403, editor/owner insert + return assigned seq) and `GET /api/trips/[tripId]/patches?since=N` (returns up to 500 entries ordered by seq asc, with `truncated` flag).
 - `lib/trip-patches.ts` exports `PATCH_COMMUTATIVITY` (Record<PatchType, boolean>) and `isCommutative(type)`. Non-commutative: `split_phase`, `merge_phases`, `reorder_phases`. All other 16 patch types are commutative.

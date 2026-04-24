@@ -119,15 +119,21 @@ function applyPatchToRef(
   const handle = itineraryRef?.current;
   const p = patch.payload;
 
+  // Stage 2d hotfix #1: every handle call from this dispatcher passes
+  // suppressEmit:true so the receive path mutates locally without
+  // re-broadcasting (which would create a ping-pong loop with the
+  // remote client that emitted this patch in the first place).
+  const SUPPRESS = { suppressEmit: true } as const;
+
   switch (p.type) {
     case 'add_activity': {
       const dayNum = dayIdToNumber(itineraryRef, p.dayId);
       if (dayNum == null) return;
-      handle?.addActivity(p.activity.text, dayNum, p.slot, p.activity.manuallyAdded, p.activity.lunaAdded);
+      handle?.addActivity(p.activity.text, dayNum, p.slot, p.activity.manuallyAdded, p.activity.lunaAdded, SUPPRESS);
       break;
     }
     case 'remove_activity':
-      handle?.removeActivityById?.(p.activityId);
+      handle?.removeActivityById?.(p.activityId, SUPPRESS);
       break;
     case 'replace_activity': {
       const dayNum = dayIdToNumber(itineraryRef, p.dayId);
@@ -137,24 +143,24 @@ function applyPatchToRef(
         slot: p.newActivity.slot as TimeSlot,
         manuallyAdded: p.newActivity.manuallyAdded,
         lunaAdded: p.newActivity.lunaAdded,
-      });
+      }, SUPPRESS);
       break;
     }
     case 'accept_activity':
-      handle?.editActivityById?.(p.activityId, { status: 'accepted' });
+      handle?.editActivityById?.(p.activityId, { status: 'accepted' }, SUPPRESS);
       break;
     case 'unaccept_activity':
-      handle?.editActivityById?.(p.activityId, { status: 'pending' });
+      handle?.editActivityById?.(p.activityId, { status: 'pending' }, SUPPRESS);
       break;
     case 'add_note':
     case 'update_note': {
       const dayNum = dayIdToNumber(itineraryRef, p.dayId);
-      if (dayNum != null) handle?.setNoteForDay?.(dayNum, p.note);
+      if (dayNum != null) handle?.setNoteForDay?.(dayNum, p.note, SUPPRESS);
       break;
     }
     case 'remove_note': {
       const dayNum = dayIdToNumber(itineraryRef, p.dayId);
-      if (dayNum != null) handle?.setNoteForDay?.(dayNum, '');
+      if (dayNum != null) handle?.setNoteForDay?.(dayNum, '', SUPPRESS);
       break;
     }
     case 'add_hotel': {
@@ -174,7 +180,7 @@ function applyPatchToRef(
       break;
     }
     case 'edit_phase':
-      handle?.editPhase(p.phaseId, p.changes);
+      handle?.editPhase(p.phaseId, p.changes, SUPPRESS);
       break;
     case 'split_phase':
       // Bridge my Patch payload shape (splitAfterDay, newPhaseId, newPhaseLabel)
@@ -184,6 +190,7 @@ function applyPatchToRef(
         p.splitAfterDay + 1, // splitAtDay is the first day of phaseB
         { id: p.phaseId, label: '', summary: '', highlights: [] },
         { id: p.newPhaseId, label: p.newPhaseLabel, summary: '', highlights: [] },
+        SUPPRESS,
       );
       break;
     case 'merge_phases':
@@ -191,10 +198,11 @@ function applyPatchToRef(
         p.phaseIds[0],
         p.phaseIds[1],
         { id: p.phaseIds[0], label: p.mergedLabel ?? '', summary: '', highlights: [] },
+        SUPPRESS,
       );
       break;
     case 'reorder_phases':
-      handle?.reorderPhases(p.phaseIdOrder);
+      handle?.reorderPhases(p.phaseIdOrder, SUPPRESS);
       break;
     case 'update_budget':
       // Budget lives in trip_data; not wired through the ref yet.
@@ -244,6 +252,15 @@ export function useCollaborativeTrip(
   const debouncedSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dirtyRef = useRef<boolean>(false);
   const wasConnectedRef = useRef<boolean>(false);
+  // Stage 2d hotfix #1: defense-in-depth rate limit. 10 emits per 5s
+  // triggers a 2s backoff during which new emits are dropped. Caps
+  // blast radius of any future runaway loop that slips past the
+  // primary suppressEmit fix.
+  const emitTimestampsRef = useRef<number[]>([]);
+  const throttleBackoffUntilRef = useRef<number>(0);
+  // Stage 2d hotfix #1: rapid-duplicate tripwire. Two identical payloads
+  // received within 2s suggests a ping-pong variant.
+  const recentReceivedRef = useRef<Array<{ key: string; at: number }>>([]);
 
   // Keep latest hotel state and callback in refs so emitPatch and
   // the broadcast handler (captured once per subscription) see fresh values.
@@ -322,6 +339,28 @@ export function useCollaborativeTrip(
   // Real emitPatch. Apply → POST → Broadcast → schedule save.
   const emitPatch = useCallback(async (payload: PatchPayload) => {
     if (!enabled) return;
+
+    // Stage 2d hotfix #1: rate limit. 10 emits in 5s triggers 2s backoff.
+    const now = Date.now();
+    if (now < throttleBackoffUntilRef.current) {
+      console.warn(
+        '[useCollaborativeTrip] emitPatch throttled (in backoff). Dropped patch:',
+        payload.type
+      );
+      return;
+    }
+    emitTimestampsRef.current = emitTimestampsRef.current.filter(t => now - t < 5000);
+    if (emitTimestampsRef.current.length >= 10) {
+      throttleBackoffUntilRef.current = now + 2000;
+      console.error(
+        '[useCollaborativeTrip] Runaway emit detected. Entering 2s backoff. Recent count:',
+        emitTimestampsRef.current.length,
+        'current patch type:',
+        payload.type
+      );
+      return;
+    }
+    emitTimestampsRef.current.push(now);
 
     const patch: Patch = {
       id: generateEntityId(),
@@ -435,6 +474,40 @@ export function useCollaborativeTrip(
 
       if (emittedPatchIdsRef.current.has(incoming.id)) return;
       if (seq > 0 && emittedSeqsRef.current.has(seq)) return;
+
+      // Stage 2d hotfix #1: self-receive tripwire. If we get a broadcast
+      // claiming to be from ourselves despite receiveOwnBroadcasts:false,
+      // realtime is misconfigured. Don't block; emittedSeqsRef dedup
+      // catches actual self-echoes. This is diagnostic.
+      if (incoming.userId === userId) {
+        console.warn(
+          '[useCollaborativeTrip] Received own broadcast despite receiveOwnBroadcasts:false. Seq:',
+          seq
+        );
+      }
+
+      // Stage 2d hotfix #1: rapid-duplicate tripwire. Two identical
+      // received payloads within 2 seconds suggests a ping-pong variant
+      // not caught by suppressEmit + seq dedup.
+      const dedupKey = JSON.stringify({
+        type: incoming.payload?.type,
+        // Hash a few payload fields likely to differ across legitimate
+        // edits but be identical in a ping-pong: dayId for activity ops,
+        // phaseId for phase ops, hotelId for hotel ops.
+        dayId: (incoming.payload as { dayId?: string })?.dayId,
+        phaseId: (incoming.payload as { phaseId?: string })?.phaseId,
+        hotelId: (incoming.payload as { hotelId?: string })?.hotelId,
+        activityId: (incoming.payload as { activityId?: string })?.activityId,
+      });
+      const nowMs = Date.now();
+      recentReceivedRef.current = recentReceivedRef.current.filter(r => nowMs - r.at < 2000);
+      if (recentReceivedRef.current.some(r => r.key === dedupKey)) {
+        console.error(
+          '[useCollaborativeTrip] Rapid duplicate patch received within 2s. Possible ping-pong loop.',
+          { type: incoming.payload?.type, seq, dedupKey }
+        );
+      }
+      recentReceivedRef.current.push({ key: dedupKey, at: nowMs });
 
       // Gap detection: if seq is more than 1 ahead, backfill first.
       if (seq > 0 && seq > lastAppliedSeqRef.current + 1) {

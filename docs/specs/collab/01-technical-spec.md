@@ -753,6 +753,18 @@ Every collaborative mutation flows through a four-step pipeline:
 
 **Ref-based dispatcher.** Stage 2d uses the existing `ItineraryHandle` imperative API as the dispatch surface. No state-ownership refactor. Six new handle methods (`removeActivityById`, `editActivityById`, `replaceActivityById`, `moveActivityById`, `setNoteForDay`, `setDayExpanded`) fill gaps where received patches target entities by stable id. Existing imperative methods (addActivity, editPhase, splitPhase, mergePhases, reorderPhases) fire `onPatchEmit?` after applying locally so every Luna-chat-driven and programmatic mutation emits a patch. Inline click-handler mutations (accept/decline buttons) do NOT yet emit patches in Stage 2d; Stage 2e or later can add coverage if required.
 
+**Ping-pong prevention (Stage 2d-hotfix-1, 24-25 April 2026).** Every `ItineraryHandle` mutation method that fires `onPatchEmit` accepts an optional trailing `{ suppressEmit?: boolean }` parameter. The realtime hook's receive path (`applyPatchToRef`) calls these methods with `suppressEmit: true` so received patches mutate locally without re-broadcasting. User-initiated calls (UI events, chat handlers) omit the option and emit normally.
+
+Three defense-in-depth mechanisms catch any future variant:
+
+1. **Emit rate limit.** `emitPatch` caps at 10 calls per 5 seconds per client. Exceeding triggers a 2s backoff during which new emits are dropped with `console.error`. Limits blast radius of any unknown runaway bug.
+2. **Self-receive warning.** The broadcast handler warns if a received patch's `userId` matches our own, indicating misconfigured realtime.
+3. **Rapid-duplicate warning.** The broadcast handler tracks the last 2 seconds of received payloads by content-hash; a duplicate triggers `console.error` as a tripwire.
+
+**Never call `ItineraryHandle` mutation methods from within an `onPatchEmit` callback.** Doing so would fire `onPatchEmit` again synchronously and create an infinite loop within a single client. The convention: `onPatchEmit` is fire-and-forget; it dispatches outward (to the hook) and never loops back to the handle.
+
+Historical note: Stage 2d originally shipped without `suppressEmit`. Production QA on 24 April 2026 surfaced a ping-pong loop producing 223 `add_activity` rows in 7 minutes for one user action on trip `9b7f25fb-7c75-4514-bd23-1604dd9ae737`. Forensic log preserved. Hotfix shipped as `collab-stage-2d-hotfix-1-suppressEmit`.
+
 **Scope deferrals in Stage 2d (documented here so future prompts don't re-discover):**
 - `editActivityById`, `moveActivityById`, `setDayExpanded`, `removePhase`: no corresponding patch type in the 19-type library, so these methods mutate locally but do NOT fire `onPatchEmit`. Adding patch types is Stage 2e's call.
 - `update_budget` patch type exists but no Stage 2d callsite emits it; received `update_budget` patches are dispatcher no-ops.
