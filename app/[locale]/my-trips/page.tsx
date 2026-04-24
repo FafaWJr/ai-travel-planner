@@ -296,7 +296,7 @@ export default function MyTripsPage() {
               {sharedTrips.map((trip) => (
                 <Link
                   key={trip.id}
-                  href={`/plan?savedTripId=${trip.id}`}
+                  href={`/plan?tripId=${trip.id}`}
                   style={{ textDecoration: 'none' }}
                 >
                   <div style={{

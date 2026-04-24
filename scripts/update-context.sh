@@ -243,9 +243,10 @@ Six-stage sprint adding real-time collaborative trip planning. Master plan: \`do
 - i18n: \`collab\` + \`myTrips.sharedSection/sharedBy/untitled\` namespaces in all three locales (36 \`collab\` keys each, parity verified).
 
 **Stage 1 behavioral notes (corrigendum, 24 April 2026):**
-- **Share landing auto-joins on load.** \`/trip/[tripId]?invite={token}\` calls \`/api/trips/[tripId]/join\` automatically, shows a brief "Joining..." state, then redirects to \`/plan?savedTripId={tripId}\`. No explicit Accept/Decline prompt.
+- **Share landing auto-joins on load.** \`/trip/[tripId]?invite={token}\` calls \`/api/trips/[tripId]/join\` automatically, shows a brief "Joining..." state, then redirects to \`/plan?tripId={tripId}\`. No explicit Accept/Decline prompt.
 - **\`JoinTripPrompt\` component shipped but unused.** Reserved for a potential future "confirm before joining" flow. Do not import it unless user feedback indicates auto-join feels too silent.
 - **Auth paths are NOT locale-prefixed.** Use \`/auth/login\`, \`/auth/signup\`, \`/auth/callback\` directly, never \`/\${locale}/auth/login\`. The \`[locale]\` segment wraps user-facing pages; auth pages live in \`app/auth/\` outside it.
+- **URL param convention: plan page reads \`tripId\`, NOT \`savedTripId\`.** The state variable in \`plan/page.tsx\` is named \`savedTripId\` (historical) but is populated from \`searchParams.get('tripId')\`. All internal links to a saved trip must use \`?tripId={uuid}\`. Stage 1 and 2b prompts incorrectly used \`savedTripId=\` in redirects, causing invited collaborators to land on the "No trip prompt" empty state. Fixed in commit \`collab-stage-2b-hotfix-url-param\` (24 April 2026). Two-browser presence acceptance test passed on the same day; avatars sync within 1-2 seconds on both connect and disconnect.
 
 **Stages remaining:**
 - Stage 2 (~23.5h): realtime sync engine, role-gated mutations, UUID injection in \`/api/generate\` and \`/api/chat\`.

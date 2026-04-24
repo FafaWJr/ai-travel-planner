@@ -106,6 +106,8 @@ MindTrip's collaboration model (for competitive context):
 
 **Auth path convention.** All auth routes (`/auth/login`, `/auth/signup`, `/auth/callback`, etc.) are outside the `[locale]` URL segment. The share page correctly redirects unauthenticated visitors to `/auth/login` without a locale prefix. Future features must follow this convention.
 
+**URL param convention.** The plan page reads the URL param `tripId`, not `savedTripId`. The state variable in `plan/page.tsx` is named `savedTripId` for historical reasons, but it is populated from `searchParams.get('tripId')` and persists the trip ID after the user saves a new trip. All internal links to a saved trip must use `?tripId={uuid}`. Earlier Stage 1 and Stage 2b prompts incorrectly used `savedTripId=` as a URL param name; this bug surfaced during Stage 2b QA when invited collaborators landed on a "No trip prompt" empty state. Fixed in commit `collab-stage-2b-hotfix-url-param`.
+
 **Real-time sync (all three users connected):**
 - Owner adds an activity via Luna chat. Editor and viewer see it appear within 2 seconds.
 - Editor accepts a hotel suggestion. Owner and viewer see the acceptance state update.

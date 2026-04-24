@@ -1,7 +1,7 @@
 # Luna Let's Go - Claude Code Context
-**Last Updated:** 2026-04-24 17:50:13
-**Current Branch:** main
-**Last Commit:** f7a61bf4 feat: Collab Stage 1 share link & invite system
+**Last Updated:** 2026-04-24 21:57:44
+**Current Branch:** qa/collab-test
+**Last Commit:** 215960b0 feat: Collab Stage 2b realtime channel + presence + dual-mode hook
 **Deployment:** https://www.lunaletsgo.com
 
 ---
@@ -98,16 +98,16 @@ app/auth/signup/page.tsx
 ## Recent Changes (Last 10 Commits)
 
 ```
-f7a61bf4 (HEAD -> main, origin/main, origin/HEAD) feat: Collab Stage 1 share link & invite system
+215960b0 (HEAD -> qa/collab-test, origin/qa/collab-test, origin/main, origin/HEAD, main) feat: Collab Stage 2b realtime channel + presence + dual-mode hook
+49797b6e chore: sync package.json + lockfile (add @anthropic-ai/sdk)
+d39ab0e1 feat: Collab Stage 2a patch library + activity log writer
+8e132e15 docs: Collab Stage 1 corrigendum
+f7a61bf4 feat: Collab Stage 1 share link & invite system
 3a7da416 feat: Collab Stage 0b application scaffold + Tier 2 corrigendum
 c44d7ac9 docs: add Tier 2 Collab spec v2.1, remove superseded v1.1
 eb2fe9e4 chore: pre-Collab hygiene, remove stale script and add Tier 1 plan
 44033863 docs: regenerate CLAUDE.md for pre-Collab context baseline
 c691bdfa chore: regenerate CLAUDE.md with latest commits and timestamp
-167908ab docs: replace luna-skills-subagents-sprint spec with -final version
-7a2ae578 docs: finalize luna skills and subagents sprint with retrospective
-7d9e128d feat: add luna-release-writer agent for drafting memory updates
-be13a47e fix: auto-load .env.local in i18n scripts
 ```
 
 ---
@@ -285,9 +285,10 @@ Six-stage sprint adding real-time collaborative trip planning. Master plan: `doc
 - i18n: `collab` + `myTrips.sharedSection/sharedBy/untitled` namespaces in all three locales (36 `collab` keys each, parity verified).
 
 **Stage 1 behavioral notes (corrigendum, 24 April 2026):**
-- **Share landing auto-joins on load.** `/trip/[tripId]?invite={token}` calls `/api/trips/[tripId]/join` automatically, shows a brief "Joining..." state, then redirects to `/plan?savedTripId={tripId}`. No explicit Accept/Decline prompt.
+- **Share landing auto-joins on load.** `/trip/[tripId]?invite={token}` calls `/api/trips/[tripId]/join` automatically, shows a brief "Joining..." state, then redirects to `/plan?tripId={tripId}`. No explicit Accept/Decline prompt.
 - **`JoinTripPrompt` component shipped but unused.** Reserved for a potential future "confirm before joining" flow. Do not import it unless user feedback indicates auto-join feels too silent.
 - **Auth paths are NOT locale-prefixed.** Use `/auth/login`, `/auth/signup`, `/auth/callback` directly, never `/${locale}/auth/login`. The `[locale]` segment wraps user-facing pages; auth pages live in `app/auth/` outside it.
+- **URL param convention: plan page reads `tripId`, NOT `savedTripId`.** The state variable in `plan/page.tsx` is named `savedTripId` (historical) but is populated from `searchParams.get('tripId')`. All internal links to a saved trip must use `?tripId={uuid}`. Stage 1 and 2b prompts incorrectly used `savedTripId=` in redirects, causing invited collaborators to land on the "No trip prompt" empty state. Fixed in commit `collab-stage-2b-hotfix-url-param` (24 April 2026). Two-browser presence acceptance test passed on the same day; avatars sync within 1-2 seconds on both connect and disconnect.
 
 **Stages remaining:**
 - Stage 2 (~23.5h): realtime sync engine, role-gated mutations, UUID injection in `/api/generate` and `/api/chat`.

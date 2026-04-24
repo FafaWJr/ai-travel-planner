@@ -57,12 +57,12 @@ export default function TripSharePage() {
 
       if (body.alreadyOwner) {
         setState({ kind: 'already-owner' });
-        setTimeout(() => router.push(`/${locale}/plan?savedTripId=${tripId}`), 800);
+        setTimeout(() => router.push(`/${locale}/plan?tripId=${tripId}`), 800);
         return;
       }
       if (body.alreadyCollaborator) {
         setState({ kind: 'already-collaborator' });
-        setTimeout(() => router.push(`/${locale}/plan?savedTripId=${tripId}`), 800);
+        setTimeout(() => router.push(`/${locale}/plan?tripId=${tripId}`), 800);
         return;
       }
       if (!res.ok) {
@@ -71,7 +71,7 @@ export default function TripSharePage() {
       }
 
       setState({ kind: 'joined', role: body.role });
-      setTimeout(() => router.push(`/${locale}/plan?savedTripId=${tripId}`), 1200);
+      setTimeout(() => router.push(`/${locale}/plan?tripId=${tripId}`), 1200);
     })();
   }, [tripId, token, locale, router, t]);
 
