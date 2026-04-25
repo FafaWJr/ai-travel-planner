@@ -398,6 +398,16 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
   tripLengthMode = 'short',
   onPatchEmit,
 }, ref) {
+  // Stage 2e diagnostic: log whether the page passed onPatchEmit. If
+  // false, every emit in this component is dead. Solo trips will log false;
+  // collab trips should log true once mounted.
+  useEffect(() => {
+    console.log('[luna-collab-diag] [emit-prop]', {
+      onPatchEmitDefined: typeof onPatchEmit === 'function',
+      onActivityStatusChangeDefined: typeof onActivityStatusChange === 'function',
+    });
+  }, [onPatchEmit, onActivityStatusChange]);
+
   const localeFromHook = useLocale();
   const locale = localeProp ?? localeFromHook;
   const t = useTranslations('plan');
@@ -639,6 +649,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
         return { ...d, activities: [...d.activities, newActivity], open: true };
       }));
       if (dayIdForPatch && !options?.suppressEmit) {
+        console.log('[luna-collab-diag] [emit] add_activity (handle.addActivity)', { dayId: dayIdForPatch, slot, activityId: newActivityId, hasOnPatchEmit: typeof onPatchEmit === 'function' });
         onPatchEmit?.({
           type: 'add_activity',
           dayId: dayIdForPatch,
@@ -736,6 +747,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
         });
       });
       if (!options?.suppressEmit) {
+        console.log('[luna-collab-diag] [emit] edit_phase (handle.editPhase)', { phaseId, changes: patch, hasOnPatchEmit: typeof onPatchEmit === 'function' });
         onPatchEmit?.({ type: 'edit_phase', phaseId, changes: patch });
       }
     },
@@ -781,6 +793,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
         return { ...d, phase_id: d.number < splitAtDay ? phaseA.id : phaseB.id };
       }));
       if (!options?.suppressEmit) {
+        console.log('[luna-collab-diag] [emit] split_phase (handle.splitPhase)', { phaseId, splitAtDay, newPhaseId: phaseB.id });
         onPatchEmit?.({
           type: 'split_phase',
           phaseId,
@@ -823,6 +836,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
           : d
       ));
       if (!options?.suppressEmit) {
+        console.log('[luna-collab-diag] [emit] merge_phases (handle.mergePhases)', { phaseIdA, phaseIdB });
         onPatchEmit?.({ type: 'merge_phases', phaseIds: [phaseIdA, phaseIdB], mergedLabel: mergedPhase.label });
       }
     },
@@ -854,6 +868,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
       setPhases(reorderedPhases);
       _setDays(reorderedDays);
       if (!options?.suppressEmit) {
+        console.log('[luna-collab-diag] [emit] reorder_phases (handle.reorderPhases)', { count: orderedPhaseIds.length });
         onPatchEmit?.({ type: 'reorder_phases', phaseIdOrder: orderedPhaseIds });
       }
     },
@@ -875,6 +890,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
         return { ...d, activities: d.activities.filter(a => a.id !== activityId) };
       }));
       if (dayIdForPatch && !options?.suppressEmit) {
+        console.log('[luna-collab-diag] [emit] remove_activity (handle.removeActivityById)', { dayId: dayIdForPatch, activityId });
         onPatchEmit?.({ type: 'remove_activity', dayId: dayIdForPatch, activityId });
       }
     },
@@ -908,6 +924,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
         };
       }));
       if (dayIdForPatch && !options?.suppressEmit) {
+        console.log('[luna-collab-diag] [emit] replace_activity (handle.replaceActivityById)', { dayId: dayIdForPatch, activityId });
         onPatchEmit?.({
           type: 'replace_activity',
           dayId: dayIdForPatch,
@@ -959,10 +976,13 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
       }));
       if (dayIdForPatch && !options?.suppressEmit) {
         if (!note) {
+          console.log('[luna-collab-diag] [emit] remove_note (handle.setNoteForDay)', { dayId: dayIdForPatch });
           onPatchEmit?.({ type: 'remove_note', dayId: dayIdForPatch });
         } else if (hadNote) {
+          console.log('[luna-collab-diag] [emit] update_note (handle.setNoteForDay)', { dayId: dayIdForPatch });
           onPatchEmit?.({ type: 'update_note', dayId: dayIdForPatch, note });
         } else {
+          console.log('[luna-collab-diag] [emit] add_note (handle.setNoteForDay)', { dayId: dayIdForPatch });
           onPatchEmit?.({ type: 'add_note', dayId: dayIdForPatch, note });
         }
       }
@@ -1007,7 +1027,11 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
    * the local user sees their change, collaborators don't.
    */
   const emitFromInline = (payload: PatchPayload) => {
-    if (!onPatchEmit) return;
+    if (!onPatchEmit) {
+      console.log('[luna-collab-diag] [emit-skipped] emitFromInline called but onPatchEmit is not a function', { type: payload.type });
+      return;
+    }
+    console.log('[luna-collab-diag] [emit-passthrough] emitFromInline → onPatchEmit', { type: payload.type });
     onPatchEmit(payload);
   };
 
@@ -1059,6 +1083,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
 
     // Stage 2e: emit replace_activity so collaborators see the slot change.
     if (act && day?.id && typeof active.id === 'string') {
+      console.log('[luna-collab-diag] [emit] replace_activity (inline.handleDragOver)', { dayId: day.id, activityId: active.id, fromSlot: from.slot, toSlot: to.slot, hasOnPatchEmit: typeof onPatchEmit === 'function' });
       emitFromInline({
         type: 'replace_activity',
         dayId: day.id,
@@ -1118,6 +1143,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
     // Stage 2e: drag-end commits the slot change; emit replace_activity
     // so collaborators see the same activity in its new slot.
     if (act && day?.id && typeof active.id === 'string' && from.slot !== to.slot) {
+      console.log('[luna-collab-diag] [emit] replace_activity (inline.handleDragEnd)', { dayId: day.id, activityId: active.id, fromSlot: from.slot, toSlot: to.slot, hasOnPatchEmit: typeof onPatchEmit === 'function' });
       emitFromInline({
         type: 'replace_activity',
         dayId: day.id,
@@ -1154,9 +1180,13 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
     // Stage 2e: emit accept/unaccept patch so collaborators see status change.
     // Only emit for accepted/pending toggles; declined isn't a synced patch type.
     if (willBe === 'accepted') {
+      console.log('[luna-collab-diag] [emit] accept_activity (inline.setActivityStatus)', { dayId: day?.id, activityId: actId, fromStatus: act?.status, hasOnPatchEmit: typeof onPatchEmit === 'function' });
       emitFromInline({ type: 'accept_activity', dayId: day?.id ?? '', activityId: actId });
     } else if (willBe === 'pending') {
+      console.log('[luna-collab-diag] [emit] unaccept_activity (inline.setActivityStatus)', { dayId: day?.id, activityId: actId, fromStatus: act?.status, hasOnPatchEmit: typeof onPatchEmit === 'function' });
       emitFromInline({ type: 'unaccept_activity', dayId: day?.id ?? '', activityId: actId });
+    } else {
+      console.log('[luna-collab-diag] [emit-skipped] setActivityStatus produced unsupported status', { willBe, fromStatus: act?.status });
     }
   };
 
@@ -1222,6 +1252,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
 
     // Stage 2e: emit add_activity so collaborators see the suggestion was accepted.
     if (day?.id) {
+      console.log('[luna-collab-diag] [emit] add_activity (inline.acceptSuggestion)', { dayId: day.id, activityId: newActivityId, hasOnPatchEmit: typeof onPatchEmit === 'function' });
       emitFromInline({
         type: 'add_activity',
         dayId: day.id,
@@ -1287,10 +1318,13 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
     const timer = setTimeout(() => {
       noteDebounceRefs.current.delete(dayNumber);
       if (!note) {
+        console.log('[luna-collab-diag] [emit] remove_note (inline.handleNoteChange-debounced)', { dayId, dayNumber, hasOnPatchEmit: typeof onPatchEmit === 'function' });
         emitFromInline({ type: 'remove_note', dayId });
       } else if (hadNote) {
+        console.log('[luna-collab-diag] [emit] update_note (inline.handleNoteChange-debounced)', { dayId, dayNumber, hasOnPatchEmit: typeof onPatchEmit === 'function' });
         emitFromInline({ type: 'update_note', dayId, note });
       } else {
+        console.log('[luna-collab-diag] [emit] add_note (inline.handleNoteChange-debounced)', { dayId, dayNumber, hasOnPatchEmit: typeof onPatchEmit === 'function' });
         emitFromInline({ type: 'add_note', dayId, note });
       }
     }, 800);

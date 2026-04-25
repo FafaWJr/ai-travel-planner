@@ -116,6 +116,12 @@ function applyPatchToRef(
   currentHotels: AcceptedHotel[] | undefined,
   onHotelsChange: ((next: AcceptedHotel[]) => void) | undefined
 ): void {
+  // Stage 2e diagnostic: confirm dispatcher is reached AND ref is attached.
+  console.log('[luna-collab-diag] [dispatch]', {
+    type: patch.payload?.type,
+    handleAttached: !!itineraryRef?.current,
+    hotelsCallbackAttached: !!onHotelsChange,
+  });
   const handle = itineraryRef?.current;
   const p = patch.payload;
 
@@ -338,6 +344,13 @@ export function useCollaborativeTrip(
 
   // Real emitPatch. Apply → POST → Broadcast → schedule save.
   const emitPatch = useCallback(async (payload: PatchPayload) => {
+    // Stage 2e diagnostic: confirm hook-level emitPatch is reached.
+    console.log('[luna-collab-diag] [hook-emit]', {
+      type: payload.type,
+      enabled,
+      hasChannel: !!channelRef.current,
+    });
+
     if (!enabled) return;
 
     // Stage 2d hotfix #1: rate limit. 10 emits in 5s triggers 2s backoff.
@@ -471,6 +484,15 @@ export function useCollaborativeTrip(
     channel.on('broadcast', { event: TRIP_BROADCAST_EVENTS.PATCH }, async (message) => {
       const incoming = (message as unknown as { payload: Patch & { seq: number | null } }).payload;
       const seq = incoming.seq ?? 0;
+
+      // Stage 2e diagnostic: confirm broadcast handler is reached for every patch.
+      console.log('[luna-collab-diag] [recv]', {
+        type: incoming.payload?.type,
+        seq,
+        fromUserId: incoming.userId,
+        isSelf: incoming.userId === userId,
+        alreadyEmitted: emittedPatchIdsRef.current.has(incoming.id),
+      });
 
       if (emittedPatchIdsRef.current.has(incoming.id)) return;
       if (seq > 0 && emittedSeqsRef.current.has(seq)) return;
