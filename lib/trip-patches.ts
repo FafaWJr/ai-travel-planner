@@ -45,6 +45,7 @@ export type PatchType =
   | 'replace_activity'
   | 'accept_activity'
   | 'unaccept_activity'
+  | 'decline_activity'
   // Note ops
   | 'add_note'
   | 'update_note'
@@ -114,6 +115,12 @@ export type AcceptActivityPayload = {
 
 export type UnacceptActivityPayload = {
   type: 'unaccept_activity';
+  dayId: string;
+  activityId: string;
+};
+
+export type DeclineActivityPayload = {
+  type: 'decline_activity';
   dayId: string;
   activityId: string;
 };
@@ -227,6 +234,7 @@ export type PatchPayload =
   | ReplaceActivityPayload
   | AcceptActivityPayload
   | UnacceptActivityPayload
+  | DeclineActivityPayload
   | AddNotePayload
   | UpdateNotePayload
   | RemoveNotePayload
@@ -377,6 +385,8 @@ export function applyPatch(
       return applyAcceptActivity(tripData, p);
     case 'unaccept_activity':
       return applyUnacceptActivity(tripData, p);
+    case 'decline_activity':
+      return applyDeclineActivity(tripData, p);
     case 'add_note':
     case 'update_note':
       return applySetNote(tripData, p);
@@ -476,6 +486,13 @@ function applyUnacceptActivity(
   p: UnacceptActivityPayload
 ): PatchableTripData {
   return setActivityStatus(td, p.dayId, p.activityId, 'pending');
+}
+
+function applyDeclineActivity(
+  td: PatchableTripData,
+  p: DeclineActivityPayload
+): PatchableTripData {
+  return setActivityStatus(td, p.dayId, p.activityId, 'rejected');
 }
 
 function setActivityStatus(
@@ -634,6 +651,7 @@ export const PATCH_COMMUTATIVITY: Record<PatchType, boolean> = {
   replace_activity: true,
   accept_activity: true,
   unaccept_activity: true,
+  decline_activity: true,
   add_note: true,
   update_note: true,
   remove_note: true,

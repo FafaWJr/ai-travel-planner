@@ -753,6 +753,22 @@ Every collaborative mutation flows through a four-step pipeline:
 
 **Ref-based dispatcher.** Stage 2d uses the existing `ItineraryHandle` imperative API as the dispatch surface. No state-ownership refactor. Six new handle methods (`removeActivityById`, `editActivityById`, `replaceActivityById`, `moveActivityById`, `setNoteForDay`, `setDayExpanded`) fill gaps where received patches target entities by stable id. Existing imperative methods (addActivity, editPhase, splitPhase, mergePhases, reorderPhases) fire `onPatchEmit?` after applying locally so every Luna-chat-driven and programmatic mutation emits a patch. Inline click-handler mutations (accept/decline buttons) do NOT yet emit patches in Stage 2d; Stage 2e or later can add coverage if required.
 
+**Stage 2f hotfix (25 April 2026): emit pipeline fixes from instrumented Preview QA.**
+
+Three precise bugs surfaced via instrumentation logs:
+
+1. **Stale closure in `useImperativeHandle`.** Handle methods (addActivity, editPhase, splitPhase, mergePhases, reorderPhases, removeActivityById, replaceActivityById, setNoteForDay) referenced `onPatchEmit` from closure. Even though `useImperativeHandle` re-runs on every render without a deps array, the prop captured at first render was `undefined` (because `collab.enabled` is false until `myRole` resolves async). Result: handle method emits silently no-op'd for the lifetime of the component. Fix: Approach B — `onPatchEmitRef = useRef(onPatchEmit)` updated via `useEffect`. Handle methods now call `onPatchEmitRef.current?.(...)`. Inline handlers and `emitFromInline` continue to reference `onPatchEmit` directly (they're redefined every render, no closure issue).
+
+2. **Decline path missing emit.** `setActivityStatus` only emitted for the `accepted` branch. New patch type `decline_activity` added to `lib/trip-patches.ts` (DeclineActivityPayload, dispatcher case, commutative=true). The receive dispatcher in the hook calls `editActivityById(activityId, { status: 'declined' }, SUPPRESS)`. `setActivityStatus` now has three branches: accept_activity / decline_activity / unaccept_activity (toggle-back-to-pending).
+
+3. **Drag-drop `handleDragOver` was emitting intermediate states.** Cleaned up: `handleDragOver` is now strictly local (drag preview); only `handleDragEnd` emits `replace_activity` with the final slot. Avoids broadcasting many intermediate states during a single drag gesture.
+
+The `[luna-collab-diag]` instrumentation logs (~25 console.log lines) were removed in the same commit that shipped these fixes.
+
+**Convention locked in:** any `useImperativeHandle` whose handle methods reference props MUST use a ref-of-prop pattern (Approach B) or include all referenced props in a deps array (Approach A). Approach A is risky when the deps include frequently-changing state (like `days`, `phases`) because the handle rebuilds on every change.
+
+---
+
 **Stage 2e additions (25 April 2026): inline emission coverage + Stage 1 follow-ups.**
 
 After Stage 2d-hotfix-1, ItineraryHandle ref methods emitted patches correctly, but five inline mutation handlers (drag/drop, accept/decline buttons, accept-suggestion, note editing) bypassed `onPatchEmit` because they wrote directly via `setDays`. Browser B saw none of those mutations until reload.
