@@ -42,10 +42,15 @@ export default function TripSharePage() {
 
       if (!user) {
         const returnPath = `/${locale}/trip/${tripId}?invite=${token}`;
+        // Belt-and-braces: write to localStorage (read by /auth/returning
+        // after the OAuth round-trip) AND pass as ?next= query param (used
+        // by /auth/login email/password flow + Google OAuth's pre-redirect
+        // localStorage write). The login page would otherwise overwrite
+        // luna_redirect_after_login with its own next='/' default.
         if (typeof window !== 'undefined') {
           window.localStorage.setItem('luna_redirect_after_login', returnPath);
         }
-        router.push(`/auth/login`);
+        router.push(`/auth/login?next=${encodeURIComponent(returnPath)}`);
         return;
       }
 

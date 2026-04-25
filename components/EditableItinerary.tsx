@@ -993,6 +993,36 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
     return null;
   };
 
+  /**
+   * Stage 2e: helper invoked by inline mutation handlers (drag, accept,
+   * suggestions, notes) to fire onPatchEmit after they've already mutated
+   * local state via setDays. Imperative ref methods (addActivity, editPhase,
+   * etc.) emit through their own internal logic established in Stage 2d
+   * hotfix #1; this helper is for the click/drag-driven sites that don't
+   * route through ref methods.
+   *
+   * Convention: every `setDays(...)` call in an inline user-action handler
+   * MUST have a matching emitFromInline() call (or note debounce) so that
+   * collaborator views stay in sync. Forgetting one causes silent desync —
+   * the local user sees their change, collaborators don't.
+   */
+  const emitFromInline = (payload: PatchPayload) => {
+    if (!onPatchEmit) return;
+    onPatchEmit(payload);
+  };
+
+  // Stage 2e: per-day debounce for note edits. Avoids one patch per
+  // keystroke when the user types a paragraph; emits the final value
+  // after 800ms of typing-idle.
+  const noteDebounceRefs = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
+  useEffect(() => {
+    const timers = noteDebounceRefs.current;
+    return () => {
+      timers.forEach(t => clearTimeout(t));
+      timers.clear();
+    };
+  }, []);
+
   /* ── Drag handlers ── */
   const handleDragStart = ({ active }: DragStartEvent) => setActiveId(active.id);
 
@@ -1004,6 +1034,11 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
     if (!from || !to) return;
     if (from.dayNum !== to.dayNum) return; // cross-day drag not supported
     if (from.slot === to.slot) return;     // same slot — handled by onDragEnd
+
+    // Capture the activity + day id before the setState callback so we can
+    // emit a patch with the right shape afterwards.
+    const day = days.find(d => d.number === from.dayNum);
+    const act = day?.activities.find(a => a.id === active.id);
 
     setDays(prev => prev.map(d => {
       if (d.number !== from.dayNum) return d;
@@ -1021,6 +1056,23 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
 
       return { ...d, activities: newActs };
     }));
+
+    // Stage 2e: emit replace_activity so collaborators see the slot change.
+    if (act && day?.id && typeof active.id === 'string') {
+      emitFromInline({
+        type: 'replace_activity',
+        dayId: day.id,
+        activityId: active.id,
+        newActivity: {
+          id: active.id,
+          slot: to.slot,
+          text: act.text,
+          status: act.status === 'declined' ? 'rejected' : act.status,
+          manuallyAdded: act.manuallyAdded,
+          lunaAdded: act.lunaAdded,
+        },
+      });
+    }
   };
 
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
@@ -1031,6 +1083,9 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
     const from = findContainer(active.id);
     const to   = findContainer(over.id);
     if (!from || !to || from.dayNum !== to.dayNum) return;
+
+    const day = days.find(d => d.number === from.dayNum);
+    const act = day?.activities.find(a => a.id === active.id);
 
     setDays(prev => prev.map(d => {
       if (d.number !== from.dayNum) return d;
@@ -1059,10 +1114,33 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
         ),
       };
     }));
+
+    // Stage 2e: drag-end commits the slot change; emit replace_activity
+    // so collaborators see the same activity in its new slot.
+    if (act && day?.id && typeof active.id === 'string' && from.slot !== to.slot) {
+      emitFromInline({
+        type: 'replace_activity',
+        dayId: day.id,
+        activityId: active.id,
+        newActivity: {
+          id: active.id,
+          slot: to.slot,
+          text: act.text,
+          status: act.status === 'declined' ? 'rejected' : act.status,
+          manuallyAdded: act.manuallyAdded,
+          lunaAdded: act.lunaAdded,
+        },
+      });
+    }
   };
 
   /* ── Mutations ── */
   const setActivityStatus = (dayNum: number, actId: string, status: Status) => {
+    // Compute the resulting status BEFORE setDays so we can emit accurately.
+    const day = days.find(d => d.number === dayNum);
+    const act = day?.activities.find(a => a.id === actId);
+    const willBe: Status = act?.status === status ? 'pending' : status;
+
     setDays(prev => prev.map(d =>
       d.number !== dayNum ? d : {
         ...d,
@@ -1072,6 +1150,14 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
       }
     ));
     onActivityStatusChange?.();
+
+    // Stage 2e: emit accept/unaccept patch so collaborators see status change.
+    // Only emit for accepted/pending toggles; declined isn't a synced patch type.
+    if (willBe === 'accepted') {
+      emitFromInline({ type: 'accept_activity', dayId: day?.id ?? '', activityId: actId });
+    } else if (willBe === 'pending') {
+      emitFromInline({ type: 'unaccept_activity', dayId: day?.id ?? '', activityId: actId });
+    }
   };
 
   const toggleDay = (num: number) =>
@@ -1116,18 +1202,38 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
     // Detect slot from timing hint
     const timing   = (sug.timing || '').toLowerCase();
     const sugSlot: TimeSlot = detectSlot(timing) ?? 'afternoon';
+    // Generate the new activity id outside setDays so we can emit it.
+    const day = days.find(d => d.number === dayNum);
+    const newActivityId = `d${dayNum}-a${day?.activities.length ?? 0}-${Math.random().toString(36).slice(2,6)}`;
+    const newActivityText = `**${sug.title}** — ${sug.description}`;
+
     setDays(prev => prev.map(d =>
       d.number !== dayNum ? d : {
         ...d,
         suggestions: d.suggestions.filter(s => s.id !== sug.id),
         activities: [...d.activities, {
-          id: `d${dayNum}-a${d.activities.length}-${Math.random().toString(36).slice(2,6)}`,
-          text: `**${sug.title}** — ${sug.description}`,
+          id: newActivityId,
+          text: newActivityText,
           status: 'accepted',
           slot: sugSlot,
         }],
       }
     ));
+
+    // Stage 2e: emit add_activity so collaborators see the suggestion was accepted.
+    if (day?.id) {
+      emitFromInline({
+        type: 'add_activity',
+        dayId: day.id,
+        slot: sugSlot,
+        activity: {
+          id: newActivityId,
+          slot: sugSlot,
+          text: newActivityText,
+          status: 'accepted',
+        },
+      });
+    }
   };
 
   const declineSuggestion = (dayNum: number, sugId: string) =>
@@ -1163,8 +1269,33 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
       };
     }));
 
-  const handleNoteChange = (dayIndex: number, note: string) =>
+  const handleNoteChange = (dayIndex: number, note: string) => {
+    // Apply locally immediately for responsive typing.
     setDays(prev => prev.map((d, i) => i === dayIndex ? { ...d, notes: note } : d));
+
+    // Stage 2e: debounced emit. 800ms idle before firing so typing a paragraph
+    // produces 1 patch, not one per keystroke. Per-day debounce so editing
+    // notes on different days doesn't cancel each other.
+    const day = days[dayIndex];
+    if (!day || !day.id) return;
+    const dayId = day.id;
+    const dayNumber = day.number;
+    const hadNote = Boolean(day.notes && day.notes.length > 0);
+
+    const existing = noteDebounceRefs.current.get(dayNumber);
+    if (existing) clearTimeout(existing);
+    const timer = setTimeout(() => {
+      noteDebounceRefs.current.delete(dayNumber);
+      if (!note) {
+        emitFromInline({ type: 'remove_note', dayId });
+      } else if (hadNote) {
+        emitFromInline({ type: 'update_note', dayId, note });
+      } else {
+        emitFromInline({ type: 'add_note', dayId, note });
+      }
+    }, 800);
+    noteDebounceRefs.current.set(dayNumber, timer);
+  };
 
   const activeActivity = activeId ? findActivity(activeId) : null;
 

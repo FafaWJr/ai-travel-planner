@@ -753,6 +753,24 @@ Every collaborative mutation flows through a four-step pipeline:
 
 **Ref-based dispatcher.** Stage 2d uses the existing `ItineraryHandle` imperative API as the dispatch surface. No state-ownership refactor. Six new handle methods (`removeActivityById`, `editActivityById`, `replaceActivityById`, `moveActivityById`, `setNoteForDay`, `setDayExpanded`) fill gaps where received patches target entities by stable id. Existing imperative methods (addActivity, editPhase, splitPhase, mergePhases, reorderPhases) fire `onPatchEmit?` after applying locally so every Luna-chat-driven and programmatic mutation emits a patch. Inline click-handler mutations (accept/decline buttons) do NOT yet emit patches in Stage 2d; Stage 2e or later can add coverage if required.
 
+**Stage 2e additions (25 April 2026): inline emission coverage + Stage 1 follow-ups.**
+
+After Stage 2d-hotfix-1, ItineraryHandle ref methods emitted patches correctly, but five inline mutation handlers (drag/drop, accept/decline buttons, accept-suggestion, note editing) bypassed `onPatchEmit` because they wrote directly via `setDays`. Browser B saw none of those mutations until reload.
+
+Stage 2e ships:
+
+- **`emitFromInline(payload)` helper** inside `EditableItinerary`. Inline handlers call this after their `setDays(...)` to fire `onPatchEmit?.(payload)`. Convention: every inline `setDays` in a user-action handler MUST have a matching `emitFromInline` call. Forgetting one causes silent desync.
+- **Coverage:** `setActivityStatus` emits `accept_activity` / `unaccept_activity`; `handleDragOver` and `handleDragEnd` emit `replace_activity` (slot change, same day); `acceptSuggestion` emits `add_activity`; `handleNoteChange` emits `add_note` / `update_note` / `remove_note` after an 800ms per-day debounce (avoids one patch per keystroke).
+- **Note-edit debounce:** `noteDebounceRefs.current.Map<dayNumber, Timer>`. Local `setDays` is synchronous (responsive typing); emit is delayed. `useEffect` cleanup clears timers on unmount.
+- **`acceptSuggestion`** emits with `status: 'accepted'` (the suggestion is committed as-accepted, matching pre-Stage 2e local behaviour).
+- **`fetchMoreIdeas`, `declineSuggestion`, `moveActivityToDay`, `toggleConfirmed`** are NOT wired in this stage. Decline-suggestion is per-user UI (the suggestion array is local), not a trip mutation. `toggleConfirmed` is per-day UI state. `moveActivityToDay` (cross-day move via picker) and `fetchMoreIdeas` (loadingMore flag) deferred — patch types don't cleanly map to either.
+
+**Auth redirect (Stage 1 follow-up).** The share-landing page (`app/[locale]/trip/[tripId]/page.tsx`) now redirects logged-out users to `/auth/login?next=<encoded-share-url>` AND writes `localStorage['luna_redirect_after_login']` (belt-and-braces). The login page's existing `next=` plumbing (email/password sets `window.location.href = next`; Google OAuth writes `next` to localStorage so `/auth/returning` reads it post-OAuth) carries the share URL through cleanly. Approach B (query param) chosen over Approach A (new `/auth/post-login` page) because the existing flow already handles `next=`; one-line fix vs new page.
+
+**Trip header for joined collaborators (Stage 1 follow-up).** `plan/page.tsx` adds `savedTripStartDate` and `savedTripEndDate` state alongside the existing `savedTripDestination`. `loadSavedTripById` populates all three from `data.start_date`, `data.end_date`, `data.destination`. The destination card render block (and `EditableItinerary`'s `destination` / `startDate` / `tripLengthMode` props) prefer prompt-parsed values, then fall back to saved-trip state. Browser B opening `?tripId=...` (no `prompt`) now sees the full destination card (title + dates + day count badge).
+
+---
+
 **Ping-pong prevention (Stage 2d-hotfix-1, 24-25 April 2026).** Every `ItineraryHandle` mutation method that fires `onPatchEmit` accepts an optional trailing `{ suppressEmit?: boolean }` parameter. The realtime hook's receive path (`applyPatchToRef`) calls these methods with `suppressEmit: true` so received patches mutate locally without re-broadcasting. User-initiated calls (UI events, chat handlers) omit the option and emit normally.
 
 Three defense-in-depth mechanisms catch any future variant:

@@ -1,7 +1,7 @@
 # Luna Let's Go - Claude Code Context
-**Last Updated:** 2026-04-25 08:57:56
+**Last Updated:** 2026-04-25 13:10:00
 **Current Branch:** main
-**Last Commit:** fed2bdd9 feat: Collab Stage 2d patch pipeline
+**Last Commit:** 31ca2f79 fix: Collab Stage 2d ping-pong loop via suppressEmit option
 **Deployment:** https://www.lunaletsgo.com
 
 ---
@@ -99,7 +99,8 @@ app/auth/signup/page.tsx
 ## Recent Changes (Last 10 Commits)
 
 ```
-fed2bdd9 (HEAD -> main, origin/main, origin/HEAD) feat: Collab Stage 2d patch pipeline
+31ca2f79 (HEAD -> main, origin/main, origin/HEAD) fix: Collab Stage 2d ping-pong loop via suppressEmit option
+fed2bdd9 feat: Collab Stage 2d patch pipeline
 1add9ccb feat: Collab Stage 2c role gates + UUID injection
 5fd9865b fix: Collab share-landing redirects to /plan?tripId= not ?savedTripId=
 215960b0 feat: Collab Stage 2b realtime channel + presence + dual-mode hook
@@ -108,7 +109,6 @@ d39ab0e1 feat: Collab Stage 2a patch library + activity log writer
 8e132e15 docs: Collab Stage 1 corrigendum
 f7a61bf4 feat: Collab Stage 1 share link & invite system
 3a7da416 feat: Collab Stage 0b application scaffold + Tier 2 corrigendum
-c44d7ac9 docs: add Tier 2 Collab spec v2.1, remove superseded v1.1
 ```
 
 ---
@@ -294,6 +294,7 @@ Six-stage sprint adding real-time collaborative trip planning. Master plan: `doc
 **Stage 2a, 2b, 2c, 2d shipped (patch library, realtime hook, role gates + UUID injection, patch pipeline).**
 
 **Stage 2d implementation notes:**
+- **Stage 2e shipped 25 April 2026** (`collab-stage-2e-dispatch-funnel`). Closes the inline-mutation emission gap from Stage 2d Preview QA: `setActivityStatus`, `handleDragOver`, `handleDragEnd`, `acceptSuggestion`, `handleNoteChange` all now call `emitFromInline(payload)` after their local `setDays`. Notes are 800ms debounced per-day to avoid keystroke spam. Plus two Stage 1 follow-ups: share-landing page redirects to `/auth/login?next=<encoded-trip-url>` (so login carries the destination through cleanly) and the trip header destination card / EditableItinerary props fall back to `savedTripStartDate` / `savedTripEndDate` / `savedTripDestination` when the URL `prompt` is empty (joined collaborators see the full header card). Convention: every inline `setDays` in a user-action handler MUST have a matching `emitFromInline` call (or note debounce). Forgetting one causes silent collab desync.
 - **Stage 2d hotfix #1 shipped 25 April 2026** (`collab-stage-2d-hotfix-1-suppressEmit`). Every `ItineraryHandle` mutation method accepts an optional `{ suppressEmit?: boolean }` trailing parameter. The hook's `applyPatchToRef` passes `suppressEmit:true` when applying received patches so they don't re-broadcast (which caused a ping-pong loop in Stage 2d production QA: 223 `add_activity` rows in 7 minutes for one user action on trip `9b7f25fb-7c75-4514-bd23-1604dd9ae737`, log preserved). Defense-in-depth: `emitPatch` rate limit (10 emits / 5s, 2s backoff), self-receive warning, and rapid-duplicate (\<2s) tripwire. Convention: `onPatchEmit` is fire-and-forget; never call `ItineraryHandle` mutation methods from within an `onPatchEmit` callback. New mutation methods that fire `onPatchEmit` MUST accept the suppressEmit option.
 - `trip_activity_log.seq` BIGSERIAL column added (migration `add_seq_to_trip_activity_log`). Unique index on `(trip_id, seq)`; separate index on `seq` for global scans.
 - New endpoints: `POST /api/trips/[tripId]/patches` (viewer 403, editor/owner insert + return assigned seq) and `GET /api/trips/[tripId]/patches?since=N` (returns up to 500 entries ordered by seq asc, with `truncated` flag).
@@ -311,7 +312,6 @@ Six-stage sprint adding real-time collaborative trip planning. Master plan: `doc
 - Suggestion routes (`/api/hotel-suggestions`, `/api/extra-ideas`, `/api/day-suggestions`, `/api/budget-estimate`) are deliberately NOT role-gated; they don't write to `saved_trips`. Persistence goes through RLS-gated `/api/trips` PATCH. Each route has an inline Stage 2c audit comment recording the decision.
 
 **Stages remaining:**
-- Stage 2e (~0.5h): final i18n + combined Stage 2 context update + optional broader `onPatchEmit` coverage for inline mutations.
 - Stage 3 (~10h): per-user Luna with cross-awareness, viewer read-only.
 - Stage 4 (~18h): comments on activity/day/phase/hotel, My Trips integration polish, mobile polish.
 - Stage 5 (~6h): landing page, OG image, flag flip.

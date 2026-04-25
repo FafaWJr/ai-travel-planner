@@ -447,6 +447,11 @@ function PlanContent() {
   });
 
   const [savedTripDestination, setSavedTripDestination] = useState<string>('');
+  // Stage 2e: hold start/end dates from saved-trip state so the trip
+  // header renders correctly for joined collaborators (who open via
+  // ?tripId= without a `prompt` URL param).
+  const [savedTripStartDate, setSavedTripStartDate] = useState<string>('');
+  const [savedTripEndDate, setSavedTripEndDate] = useState<string>('');
   const [isDirty, setIsDirty] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [unsavedModal, setUnsavedModal] = useState<{ isOpen: boolean; pendingDestination: string; pendingType: 'link' | 'popstate'; isSaving: boolean }>({ isOpen: false, pendingDestination: '', pendingType: 'link', isSaving: false });
@@ -944,6 +949,10 @@ function PlanContent() {
         }
         setSavedTripId(data.id as string);
         if (data.destination) setSavedTripDestination(data.destination as string);
+        // Stage 2e: populate start/end so the destination card has dates
+        // and the day-count badge when the user opens via ?tripId= only.
+        if (data.start_date) setSavedTripStartDate(data.start_date as string);
+        if (data.end_date) setSavedTripEndDate(data.end_date as string);
       } else {
         setError('Could not load saved trip.');
       }
@@ -1281,13 +1290,20 @@ function PlanContent() {
 
               {/* Destination title + action buttons */}
               {(() => {
+                // Stage 2e: prefer prompt-parsed values, fall back to saved-trip
+                // state. This covers the joined-collaborator case where the URL
+                // is /plan?tripId=... with no `prompt` param.
                 const ciM = prompt.match(/from (\d{4}-\d{2}-\d{2})/);
                 const coM = prompt.match(/to (\d{4}-\d{2}-\d{2})/);
-                const sd = ciM?.[1]; const ed = coM?.[1];
+                const sd = ciM?.[1] || savedTripStartDate || undefined;
+                const ed = coM?.[1] || savedTripEndDate || undefined;
                 const dl = toDateLocale(locale);
                 const fmt = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString(dl,{day:'2-digit',month:'long',year:'numeric'});
                 const numDays = sd && ed ? Math.round((new Date(ed).getTime() - new Date(sd).getTime()) / 86400000) : null;
-                const destination = prompt.replace(/^plan a (trip to |)?/i,'').replace(/\b(from \d{4}-\d{2}-\d{2}.*)/i,'').trim().split(' ').slice(0,5).join(' ');
+                const destinationFromPrompt = prompt
+                  ? prompt.replace(/^plan a (trip to |)?/i,'').replace(/\b(from \d{4}-\d{2}-\d{2}.*)/i,'').trim().split(' ').slice(0,5).join(' ')
+                  : '';
+                const destination = destinationFromPrompt || savedTripDestination || '';
                 return (
                   <div style={{ marginBottom:20, display:'flex', borderRadius:16, border:'1px solid #E5E7EB', background:'#fff', overflow:'hidden' }}>
                     {/* Orange accent bar */}
@@ -1470,7 +1486,11 @@ function PlanContent() {
                 <EditableItinerary
                   ref={itineraryRef}
                   itineraryMd={extractSection(plan, 'itinerary')}
-                  destination={prompt.replace(/^plan a (trip to |)?/i,'').split(/\s+/).slice(0,4).join(' ')}
+                  destination={
+                    (prompt
+                      ? prompt.replace(/^plan a (trip to |)?/i,'').split(/\s+/).slice(0,4).join(' ')
+                      : '') || savedTripDestination
+                  }
                   tripPrompt={prompt}
                   photos={photos}
                   acceptedHotels={acceptedHotels}
@@ -1481,7 +1501,7 @@ function PlanContent() {
                   onGateRequired={() => openGate(t('extraIdeas.show'))}
                   initialDays={initialItineraryDays}
                   initialPhases={initialItineraryPhases}
-                  startDate={prompt.match(/from (\d{4}-\d{2}-\d{2})/)?.[1]}
+                  startDate={prompt.match(/from (\d{4}-\d{2}-\d{2})/)?.[1] || savedTripStartDate || undefined}
                   locale={locale}
                   isStreaming={isStreaming}
                   onRegenerateDay={handleRegenerateDayClick}
@@ -1489,8 +1509,11 @@ function PlanContent() {
                   regenEnabled={process.env.NEXT_PUBLIC_REGENERATION_ENABLED !== 'false'}
                   onPatchEmit={collab.enabled ? collab.emitPatch : undefined}
                   tripLengthMode={(() => {
-                    const sd = prompt.match(/from (\d{4}-\d{2}-\d{2})/)?.[1];
-                    const ed = prompt.match(/to (\d{4}-\d{2}-\d{2})/)?.[1];
+                    // Stage 2e: fall back to savedTripStartDate / savedTripEndDate
+                    // so joined collaborators (no `prompt`) still get the right
+                    // tripLengthMode from saved trip dates.
+                    const sd = prompt.match(/from (\d{4}-\d{2}-\d{2})/)?.[1] || savedTripStartDate || '';
+                    const ed = prompt.match(/to (\d{4}-\d{2}-\d{2})/)?.[1] || savedTripEndDate || '';
                     const d = sd && ed ? Math.ceil((new Date(ed).getTime() - new Date(sd).getTime()) / 86400000) + 1 : 0;
                     return (d >= 15 ? 'long' : d >= 7 ? 'medium' : 'short') as TripLengthMode;
                   })()}
