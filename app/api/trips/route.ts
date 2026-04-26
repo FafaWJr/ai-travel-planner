@@ -116,6 +116,71 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Missing trip id' }, { status: 400 })
   }
 
+  // ── Destructive-PATCH guard (plan-ssr-fix, 2026-04-27) ──────────────────
+  // Defense-in-depth: refuse any PATCH that would replace a non-empty
+  // plan/photos with an empty value. Triggered when a layout-level autosave
+  // fires while PlanContent never mounted, sending `plan: ''` and `photos: []`
+  // and silently corrupting saved trips.
+  //
+  // The guard is intentionally scoped:
+  //   - ONLY fires when the incoming trip_data EXPLICITLY contains the
+  //     `plan` (or `photos`) key with an empty value. A collab save (which
+  //     writes only `itineraryDays/Phases/hotels` and omits `plan/photos`)
+  //     is NOT affected.
+  //   - Compares against the current row's stored value, fetched with the
+  //     same RLS-scoped client used for the update below.
+  //
+  // To genuinely clear a plan in the future, send an explicit
+  // `trip_data.allowEmpty: true` flag and extend this guard accordingly.
+  if (trip_data !== undefined && trip_data !== null && typeof trip_data === 'object') {
+    const incoming = trip_data as Record<string, unknown>
+    const hasPlanKey = 'plan' in incoming
+    const hasPhotosKey = 'photos' in incoming
+    const incomingPlan = hasPlanKey ? String(incoming.plan ?? '') : null
+    const incomingPhotos = hasPhotosKey && Array.isArray(incoming.photos) ? incoming.photos : null
+
+    if (hasPlanKey || hasPhotosKey) {
+      const { data: current, error: currentErr } = await supabase
+        .from('saved_trips')
+        .select('trip_data')
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      if (currentErr) {
+        console.error('[PATCH /api/trips] guard: current-row fetch failed:', currentErr)
+        return NextResponse.json({ error: currentErr.message }, { status: 500 })
+      }
+
+      const currentTd = (current?.trip_data ?? null) as Record<string, unknown> | null
+      const currentPlan = typeof currentTd?.plan === 'string' ? currentTd.plan : ''
+      const currentPhotos = Array.isArray(currentTd?.photos) ? (currentTd.photos as unknown[]) : []
+
+      const isDestructivePlan = hasPlanKey && currentPlan.length > 0 && (incomingPlan ?? '').length === 0
+      const isDestructivePhotos = hasPhotosKey && currentPhotos.length > 0 && (incomingPhotos?.length ?? 0) === 0
+
+      if (isDestructivePlan || isDestructivePhotos) {
+        console.error('[PATCH /api/trips] REFUSED_DESTRUCTIVE_PATCH', {
+          tripId: id,
+          userId: user.id,
+          currentPlanLen: currentPlan.length,
+          incomingPlanLen: incomingPlan?.length ?? null,
+          currentPhotosCount: currentPhotos.length,
+          incomingPhotosCount: incomingPhotos?.length ?? null,
+        })
+        return NextResponse.json(
+          {
+            error: 'REFUSED_DESTRUCTIVE_PATCH',
+            reason: 'Refusing to overwrite non-empty plan or photos with empty values',
+            currentPlanLen: currentPlan.length,
+            incomingPlanLen: incomingPlan?.length ?? null,
+          },
+          { status: 400 }
+        )
+      }
+    }
+  }
+
   const updatePayload: Record<string, unknown> = { updated_at: new Date().toISOString() }
   if (title !== undefined) updatePayload.title = title
   if (trip_data !== undefined) {
