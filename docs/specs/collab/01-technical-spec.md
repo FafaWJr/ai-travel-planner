@@ -753,6 +753,33 @@ Every collaborative mutation flows through a four-step pipeline:
 
 **Ref-based dispatcher.** Stage 2d uses the existing `ItineraryHandle` imperative API as the dispatch surface. No state-ownership refactor. Six new handle methods (`removeActivityById`, `editActivityById`, `replaceActivityById`, `moveActivityById`, `setNoteForDay`, `setDayExpanded`) fill gaps where received patches target entities by stable id. Existing imperative methods (addActivity, editPhase, splitPhase, mergePhases, reorderPhases) fire `onPatchEmit?` after applying locally so every Luna-chat-driven and programmatic mutation emits a patch. Inline click-handler mutations (accept/decline buttons) do NOT yet emit patches in Stage 2d; Stage 2e or later can add coverage if required.
 
+**Stage 2f-hotfix-2 (26 April 2026): THE root-cause fix — Day objects had no id.**
+
+The actual root cause of every non-working collab sync was the markdown itinerary parser creating Day objects without an `id` field. Activities got IDs (line 213); days didn't. Every patch type that needs `dayId` to construct a valid payload was silently failing the guard `if (dayIdForPatch && ...)`.
+
+Found via the `[2fh2-diag]` micro-diagnostic logs in `addActivity`: the entry log showed `daysAvailable` populated with 7 days, `dayNum: 1`, and `dayFound: true`. The lookup log showed `matched_d_id: undefined` and `dayIdForPatch: undefined`. The post-setDays log showed `willEmit: false`. Patch never emitted.
+
+**Patch types affected and now fixed:**
+- `add_activity`, `replace_activity`, `remove_activity`, `add_note`, `update_note`, `remove_note` — all need `dayId`. Were silently no-op'ing.
+
+**Patch types that worked before (and after):**
+- `accept_activity` / `decline_activity` / `unaccept_activity` — receive dispatcher uses `activityId` only; the `dayId: ''` fallback in payload was unused.
+- `edit_phase`, `reorder_phases`, `split_phase`, `merge_phases` — use phaseId.
+
+**Three-layer fix:**
+
+1. **Markdown parser (`components/EditableItinerary.tsx` line 220).** Now generates `id: \`day-${number}-${random}\`` for every parsed Day.
+2. **Structured streaming (`lib/normalizeToolInput.ts` `defineDayInputToDay`).** Now includes an `id` field in the returned Day. Prefers any id on the input; falls back to a generated one.
+3. **`setDays` wrapper backstop.** Any Day in incoming state without an id gets one auto-injected. Defense in depth — catches future construction sites that forget.
+
+**Convention now locked:** every Day object MUST have a stable `id` property. Day construction sites must always set it. The `setDays` wrapper enforces this at the state level. Future contributors: never construct a Day without an id.
+
+The `[2fh2-diag]` instrumentation logs from the micro-diagnostic commit were removed in the same commit that ships this fix.
+
+**Lesson learned (recorded for future contributors):** when emit-side bugs persist after multiple targeted fixes, instrument the actual data flow (`console.log` the key values) before writing more code. We chased this through Stages 2d, 2e, 2f, and 2f-hotfix-1 — each fix found a real bug, but the root cause was hiding under multiple layers. Adding 4 diagnostic logs in `addActivity` revealed the truth in 60 seconds.
+
+---
+
 **Stage 2f-hotfix-1 (26 April 2026): closure-race + missing inline phase emit + drag boundary doc.**
 
 Three concrete bugs surfaced in Preview QA after Stage 2f shipped:

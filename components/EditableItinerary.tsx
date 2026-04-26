@@ -217,7 +217,21 @@ function parseItinerary(md: string): Day[] {
       });
     }
 
-    days.push({ number, title, activities, open: number === 1, suggestions: [], loadingMore: false, confirmed: false });
+    // Stage 2f-hotfix-2: every Day MUST have a stable id. Without it, every
+    // collab patch type that requires `dayId` in its payload (add_activity,
+    // replace_activity, remove_activity, add_note, update_note, remove_note)
+    // silently fails its emit guard. The markdown parser previously omitted
+    // this field, breaking 5+ patch types simultaneously.
+    days.push({
+      id: `day-${number}-${Math.random().toString(36).slice(2, 10)}`,
+      number,
+      title,
+      activities,
+      open: number === 1,
+      suggestions: [],
+      loadingMore: false,
+      confirmed: false,
+    });
   }
 
   return days;
@@ -599,7 +613,21 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
       }
       return prev;
     });
-    _setDays(updater);
+    // Stage 2f-hotfix-2: backstop. If any code path slips through and
+    // produces a Day without an id (e.g., a future construction site,
+    // or a saved trip restored from older data), inject one here. This
+    // guarantees every Day in state has an id so collab patches always
+    // have a valid dayId. Day construction sites (markdown parser,
+    // defineDayInputToDay) SHOULD already inject ids; this is defense
+    // in depth.
+    _setDays(prev => {
+      const next = typeof updater === 'function'
+        ? (updater as (prev: Day[]) => Day[])(prev)
+        : updater;
+      return next.map(d =>
+        d.id ? d : { ...d, id: `day-${d.number}-${Math.random().toString(36).slice(2, 10)}` }
+      );
+    });
   };
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [showFinalModal, setShowFinalModal] = useState(false);
@@ -670,29 +698,12 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
   /* Expose handle to parent via ref */
   useImperativeHandle(ref, () => ({
     addActivity(text: string, dayNum: number, slot: TimeSlot, manuallyAdded?: boolean, lunaAdded?: boolean, options?: MutationOptions) {
-      console.log('[2fh2-diag] addActivity entry', {
-        text: text?.substring(0, 40),
-        dayNum,
-        typeOfDayNum: typeof dayNum,
-        slot,
-        daysRefLength: daysRef.current?.length ?? 'NULL_REF',
-        daysAvailable: daysRef.current?.map(d => ({ number: d.number, type: typeof d.number, id: d.id?.substring(0, 8) })) ?? 'NO_DAYS',
-        onPatchEmitDefined: !!onPatchEmitRef.current,
-      });
-
       // Stage 2f-hotfix-1: capture dayId BEFORE setDays. The setDays
       // updater is async-scheduled; reading after the call sees the
       // pre-assignment value (undefined). Read synchronously from
       // the live daysRef instead.
       const day = daysRef.current.find(d => d.number === dayNum);
       const dayIdForPatch = day?.id;
-
-      console.log('[2fh2-diag] addActivity lookup result', {
-        dayFound: !!day,
-        dayIdForPatch,
-        matched_d_number: day?.number,
-        matched_d_id: day?.id,
-      });
 
       const newActivityId = `d${dayNum}-chat-${Math.random().toString(36).slice(2,8)}`;
       setDays(prev => prev.map(d => {
@@ -708,13 +719,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
         return { ...d, activities: [...d.activities, newActivity], open: true };
       }));
 
-      console.log('[2fh2-diag] addActivity post-setDays', {
-        willEmit: !!(dayIdForPatch && !options?.suppressEmit),
-        suppressEmit: options?.suppressEmit,
-      });
-
       if (dayIdForPatch && !options?.suppressEmit) {
-        console.log('[2fh2-diag] addActivity EMITTING patch');
         onPatchEmitRef.current?.({
           type: 'add_activity',
           dayId: dayIdForPatch,

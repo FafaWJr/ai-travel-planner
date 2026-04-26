@@ -151,6 +151,11 @@ export function defineDayInputToDay(input: DefineDayInput): Day {
   ];
 
   return {
+    // Stage 2f-hotfix-2: every Day MUST have a stable id so collab patches
+    // can reference it. Structured-streaming tool inputs don't include id;
+    // we generate one. Future Anthropic tool inputs may carry an id field;
+    // if so, prefer it.
+    id:          (input as { id?: string }).id ?? `day-${input.day}-${Math.random().toString(36).slice(2, 10)}`,
     number:      input.day,
     title:       input.title,
     activities,
