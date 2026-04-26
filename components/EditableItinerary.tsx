@@ -339,7 +339,20 @@ interface Props {
 }
 
 export interface ItineraryHandle {
-  addActivity: (text: string, dayNum: number, slot: TimeSlot, manuallyAdded?: boolean, lunaAdded?: boolean, options?: MutationOptions) => void;
+  addActivity: (
+    text: string,
+    dayNum: number,
+    slot: TimeSlot,
+    manuallyAdded?: boolean,
+    lunaAdded?: boolean,
+    options?: MutationOptions,
+    // Stage 2f-hotfix-4: optional id for cross-browser stability.
+    // When this method is called via the receive dispatcher, the
+    // originator's id is passed so both browsers end up with the
+    // same activity id. Reorder/replace patches that reference
+    // activity ids then dispatch correctly.
+    forcedId?: string,
+  ) => void;
   removeActivitiesMatching: (pattern: string) => void;
   getDays: () => { number: number; title: string }[];
   getDaysSnapshot: () => Day[];
@@ -702,7 +715,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
 
   /* Expose handle to parent via ref */
   useImperativeHandle(ref, () => ({
-    addActivity(text: string, dayNum: number, slot: TimeSlot, manuallyAdded?: boolean, lunaAdded?: boolean, options?: MutationOptions) {
+    addActivity(text: string, dayNum: number, slot: TimeSlot, manuallyAdded?: boolean, lunaAdded?: boolean, options?: MutationOptions, forcedId?: string) {
       // Stage 2f-hotfix-1: capture dayId BEFORE setDays. The setDays
       // updater is async-scheduled; reading after the call sees the
       // pre-assignment value (undefined). Read synchronously from
@@ -710,7 +723,11 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
       const day = daysRef.current.find(d => d.number === dayNum);
       const dayIdForPatch = day?.id;
 
-      const newActivityId = `d${dayNum}-chat-${Math.random().toString(36).slice(2,8)}`;
+      // Stage 2f-hotfix-4: prefer the originator's id when supplied
+      // (passed by the receive dispatcher via p.activity.id). Local
+      // user-action callers omit forcedId, so a random id is generated
+      // as before — same behaviour as pre-hotfix-4 for solo flows.
+      const newActivityId = forcedId ?? `d${dayNum}-chat-${Math.random().toString(36).slice(2,8)}`;
       setDays(prev => prev.map(d => {
         if (d.number !== dayNum) return d;
         const newActivity: Activity = {

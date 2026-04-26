@@ -1,7 +1,7 @@
 # Luna Let's Go - Claude Code Context
-**Last Updated:** 2026-04-26 19:23:24
+**Last Updated:** 2026-04-26 20:01:04
 **Current Branch:** main
-**Last Commit:** 7dde72ce fix: Stage 2f hotfix #2 - day IDs were missing, breaking collab emits
+**Last Commit:** 2f9ae017 fix: Collab Stage 2f-hotfix-3 final cleanup
 **Deployment:** https://www.lunaletsgo.com
 
 ---
@@ -99,7 +99,8 @@ app/auth/signup/page.tsx
 ## Recent Changes (Last 10 Commits)
 
 ```
-7dde72ce (HEAD -> main, origin/main, origin/HEAD) fix: Stage 2f hotfix #2 - day IDs were missing, breaking collab emits
+2f9ae017 (HEAD -> main, origin/main, origin/HEAD) fix: Collab Stage 2f-hotfix-3 final cleanup
+7dde72ce fix: Stage 2f hotfix #2 - day IDs were missing, breaking collab emits
 c4a799f2 diag: micro-logs in addActivity to find why Luna chat add doesn't emit
 38b770f2 fix: Stage 2f hotfix - closure race in addActivity + missing emits
 9f883eb1 fix: Stage 2f emit pipeline - stale closure, decline, drag-drop
@@ -108,7 +109,6 @@ c4a799f2 diag: micro-logs in addActivity to find why Luna chat add doesn't emit
 31ca2f79 fix: Collab Stage 2d ping-pong loop via suppressEmit option
 fed2bdd9 feat: Collab Stage 2d patch pipeline
 1add9ccb feat: Collab Stage 2c role gates + UUID injection
-5fd9865b fix: Collab share-landing redirects to /plan?tripId= not ?savedTripId=
 ```
 
 ---
@@ -294,6 +294,7 @@ Six-stage sprint adding real-time collaborative trip planning. Master plan: `doc
 **Stage 2a, 2b, 2c, 2d shipped (patch library, realtime hook, role gates + UUID injection, patch pipeline).**
 
 **Stage 2d implementation notes:**
+- **Stage 2f-hotfix-4 shipped 25 April 2026** (`collab-stage-2f-hotfix-4-stable-activity-ids`). Same root-cause class as hotfix-2 (Day.id missing) but for activities. When Luna adds (or a suggestion is accepted), Browser A generates a random activity id, emits the patch, and Browser B's dispatcher used to call `handle.addActivity(text, dayNum, slot, manuallyAdded, lunaAdded, SUPPRESS)` — dropping `p.activity.id`. Browser B's `addActivity` then generated its own random id. Same logical activity, divergent ids. `reorder_activities_in_slot` patches carrying activity-id arrays then failed to match the Luna-added activity across browsers (filtered out of reorder or scrambled). **Fix:** `ItineraryHandle.addActivity` gained an optional trailing `forcedId?: string` param. The dispatcher's `case 'add_activity'` now passes `p.activity.id` as `forcedId`. Local user-action call sites (Luna chat, suggestion accept) omit it and generate a random id as before. `acceptSuggestion` was already correct (carries local id through `emitFromInline`); the dispatcher fix handles its sync automatically. **Convention added (load-bearing):** any patch payload carrying an entity (activity, day, phase, hotel, etc.) MUST carry that entity's stable id; receivers MUST use the patch-carried id, not generate their own. Random id generation is allowed ONLY when the originator has no upstream id. Previously enforced for days (hotfix-2) and phases (by construction); now applies to activities and all entity types. Should be the FINAL Stage 2 hotfix — pipeline structurally complete for all common patch types.
 - **Stage 2f-hotfix-3 shipped 25 April 2026** (`collab-stage-2f-hotfix-3-final-cleanup`). Final cleanup after hotfix-2 unblocked the emit pipeline. Three changes: (1) Removed sender-side commutative re-apply in `emitPatch` — every emit in the codebase already updates state locally via the inline handler or imperative method, so the second apply was duplicating non-idempotent patches like `add_activity` (the dispatcher's add_activity case generates a new random activity id, producing duplicate activities). Non-commutative branch unchanged. (2) Confirmed `decline_activity` dispatcher case present (was added in hotfix-1). (3) Added `reorder_activities_in_slot` patch type to close the within-slot drag sync gap from hotfix-1. New payload `{ type: 'reorder_activities_in_slot'; dayId; slot; activityIdOrder }`, marked **non-commutative** (deferred apply ensures all clients converge on same final order). New `ItineraryHandle.reorderActivitiesInSlot(dayId, slot, activityIdOrder, options?)` method preserves out-of-slot activity positions. `handleDragEnd` now emits `reorder_activities_in_slot` for within-slot drag and `replace_activity` for cross-slot drag. **Patch library: 21 types** (was 20). Non-commutative count: 4 (`split_phase`, `merge_phases`, `reorder_phases`, `reorder_activities_in_slot`). **Convention locked:** every emit site that reaches `emitPatch` must have already applied the change locally; `emitPatch` does NOT auto-apply commutative patches on the sender. Within-slot vs cross-slot drag emit different patch types — do not collapse them.
 - **Stage 2f-hotfix-2 shipped 26 April 2026** (`collab-stage-2f-hotfix-2-day-uuids`). **THE root-cause fix.** Markdown itinerary parser was creating Day objects without an `id` field (line 220 of `EditableItinerary.tsx`). Activities got IDs; days didn't. Every patch type that needs `dayId` in its payload (`add_activity`, `replace_activity`, `remove_activity`, `add_note`, `update_note`, `remove_note`) was silently failing the `if (dayIdForPatch && ...)` guard. Found via `[2fh2-diag]` micro-diagnostic logs: `dayFound: true` but `matched_d_id: undefined`. Three-layer fix: (1) markdown parser line 220 now includes `id: \`day-${number}-${random}\`` in every parsed Day; (2) `defineDayInputToDay` in `lib/normalizeToolInput.ts` now injects an id (preferring any on the input); (3) `setDays` wrapper has a backstop that auto-injects ids on any Day missing one. Diagnostic logs removed in the same commit. **CRITICAL CONVENTION LOCKED:** every Day object MUST have a stable `id`. Day construction sites must set it. The `setDays` wrapper enforces this; never construct a Day without an id. **Patch types unaffected** (worked before and after): accept/decline/unaccept use activityId only; edit_phase/reorder_phases/split_phase/merge_phases use phaseId.
 - **Stage 2f-hotfix-1 shipped 26 April 2026** (`collab-stage-2f-hotfix-1-emit-bugs`). Three bugs from Preview QA: (1) closure side-effect race — `addActivity`, `removeActivityById`, `replaceActivityById`, `setNoteForDay` were assigning `dayIdForPatch` inside a `setDays(prev => ...)` updater and reading it after, but React 18's async-scheduled updaters mean the read returns `undefined`. Fix: capture dayId synchronously from `daysRef.current` BEFORE setDays. (2) `updatePhaseLabel` had no emit — the inline phase rename UI bypassed the patch pipeline; now emits `edit_phase` with a no-op guard. (3) Within-slot drag reorder is documented as an intentional gap (no matching patch type yet). **CRITICAL CONVENTION:** handle methods inside `useImperativeHandle` MUST read state via `*Ref.current` (`daysRef`, `phasesRef`, `onPatchEmitRef`), NEVER via the closure-captured state variable. State updaters MUST be pure — never assign to outer-scope variables from inside a `setState(prev => ...)` updater. Deferred to Stage 3+: `reorder_activities_in_slot`, `remove_phase`, extended `edit_phase` payload (dayFrom/dayTo), cross-day `move_activity`.

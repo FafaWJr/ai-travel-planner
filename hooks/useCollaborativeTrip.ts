@@ -129,7 +129,20 @@ function applyPatchToRef(
     case 'add_activity': {
       const dayNum = dayIdToNumber(itineraryRef, p.dayId);
       if (dayNum == null) return;
-      handle?.addActivity(p.activity.text, dayNum, p.slot, p.activity.manuallyAdded, p.activity.lunaAdded, SUPPRESS);
+      // Stage 2f-hotfix-4: pass the originator's activity id as forcedId
+      // so both browsers end up with identical activity ids for Luna-added
+      // and suggestion-accepted activities. Without this, each browser
+      // generates a random id internally, and reorder/replace patches that
+      // reference activity ids fail to match across browsers.
+      handle?.addActivity(
+        p.activity.text,
+        dayNum,
+        p.slot,
+        p.activity.manuallyAdded,
+        p.activity.lunaAdded,
+        SUPPRESS,
+        p.activity.id,
+      );
       break;
     }
     case 'remove_activity':

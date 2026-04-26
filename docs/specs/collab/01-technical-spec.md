@@ -753,6 +753,28 @@ Every collaborative mutation flows through a four-step pipeline:
 
 **Ref-based dispatcher.** Stage 2d uses the existing `ItineraryHandle` imperative API as the dispatch surface. No state-ownership refactor. Six new handle methods (`removeActivityById`, `editActivityById`, `replaceActivityById`, `moveActivityById`, `setNoteForDay`, `setDayExpanded`) fill gaps where received patches target entities by stable id. Existing imperative methods (addActivity, editPhase, splitPhase, mergePhases, reorderPhases) fire `onPatchEmit?` after applying locally so every Luna-chat-driven and programmatic mutation emits a patch. Inline click-handler mutations (accept/decline buttons) do NOT yet emit patches in Stage 2d; Stage 2e or later can add coverage if required.
 
+**Stage 2f-hotfix-4 (25 April 2026): stable activity IDs across browsers.**
+
+After hotfix-3, Preview QA confirmed Luna chat add, decline, accept, and reorder of pre-existing activities all synced. The remaining failure mode: reordering a Luna-added (or suggestion-accepted) activity didn't sync correctly across browsers.
+
+**Diagnosis.** When Browser A asks Luna to add an activity, Browser A generates a random id (`d1-chat-aaaaaa`), updates local state, and emits an `add_activity` patch carrying that id. Browser B receives the patch via the dispatcher's `case 'add_activity'`, which called `handle?.addActivity(text, dayNum, slot, manuallyAdded, lunaAdded, SUPPRESS)` — passing every payload field EXCEPT the activity's id. Browser B's `addActivity` handle method then generated its OWN random id (`d1-chat-bbbbbb`) internally. Both browsers ended up with the same activity but divergent ids.
+
+When the user reorders activities on Browser B, the `reorder_activities_in_slot` patch carries Browser B's local id order. Browser A's dispatcher tried to match those ids against its own activities — the Luna-added activity's id didn't match (A had `aaaaaa`, B had `bbbbbb`), so it got filtered out of the reorder OR appeared scrambled.
+
+**Fix:**
+1. `ItineraryHandle.addActivity` gained an optional trailing `forcedId?: string` parameter. When supplied, it overrides the random id generation; when omitted (every existing local user-action call site), random id generation is unchanged.
+2. The hook's `applyPatchToRef` dispatcher's `case 'add_activity'` now passes `p.activity.id` as `forcedId`.
+
+Both browsers now end up with identical activity ids for the same logical activity. `reorder_activities_in_slot` and `replace_activity` payloads carrying activity ids dispatch correctly.
+
+**Same root-cause class as hotfix-2** (Day.id missing). Pattern: different browsers generating different random ids for the same logical entity. Fix pattern: pass the originator's id through the patch payload, use it on the receiver.
+
+**`acceptSuggestion` path verified correct.** It already generates `newActivityId` locally, applies it to local state via `setDays`, and emits an `add_activity` patch carrying that id. The dispatcher fix above handles its sync automatically.
+
+**Convention added (Tier 2):** any patch payload carrying an entity (activity, day, phase, hotel, etc.) MUST carry that entity's stable id. Receivers MUST use the patch-carried id, not generate their own. Random id generation is allowed ONLY when the originator has no upstream id to use. This convention was previously enforced for days (hotfix-2) and phases (by construction); it now applies to activities and to all entity types.
+
+---
+
 **Stage 2f-hotfix-3 (25 April 2026): final cleanup after the root-cause fix.**
 
 With Day.id now reliably present after Stage 2f-hotfix-2, three remaining symptoms surfaced:
