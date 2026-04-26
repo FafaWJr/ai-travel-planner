@@ -670,13 +670,31 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
   /* Expose handle to parent via ref */
   useImperativeHandle(ref, () => ({
     addActivity(text: string, dayNum: number, slot: TimeSlot, manuallyAdded?: boolean, lunaAdded?: boolean, options?: MutationOptions) {
-      const newActivityId = `d${dayNum}-chat-${Math.random().toString(36).slice(2,8)}`;
+      console.log('[2fh2-diag] addActivity entry', {
+        text: text?.substring(0, 40),
+        dayNum,
+        typeOfDayNum: typeof dayNum,
+        slot,
+        daysRefLength: daysRef.current?.length ?? 'NULL_REF',
+        daysAvailable: daysRef.current?.map(d => ({ number: d.number, type: typeof d.number, id: d.id?.substring(0, 8) })) ?? 'NO_DAYS',
+        onPatchEmitDefined: !!onPatchEmitRef.current,
+      });
+
       // Stage 2f-hotfix-1: capture dayId BEFORE setDays. The setDays
       // updater is async-scheduled; reading after the call sees the
       // pre-assignment value (undefined). Read synchronously from
       // the live daysRef instead.
-      const dayIdForPatch = daysRef.current.find(d => d.number === dayNum)?.id;
+      const day = daysRef.current.find(d => d.number === dayNum);
+      const dayIdForPatch = day?.id;
 
+      console.log('[2fh2-diag] addActivity lookup result', {
+        dayFound: !!day,
+        dayIdForPatch,
+        matched_d_number: day?.number,
+        matched_d_id: day?.id,
+      });
+
+      const newActivityId = `d${dayNum}-chat-${Math.random().toString(36).slice(2,8)}`;
       setDays(prev => prev.map(d => {
         if (d.number !== dayNum) return d;
         const newActivity: Activity = {
@@ -690,7 +708,13 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
         return { ...d, activities: [...d.activities, newActivity], open: true };
       }));
 
+      console.log('[2fh2-diag] addActivity post-setDays', {
+        willEmit: !!(dayIdForPatch && !options?.suppressEmit),
+        suppressEmit: options?.suppressEmit,
+      });
+
       if (dayIdForPatch && !options?.suppressEmit) {
+        console.log('[2fh2-diag] addActivity EMITTING patch');
         onPatchEmitRef.current?.({
           type: 'add_activity',
           dayId: dayIdForPatch,
