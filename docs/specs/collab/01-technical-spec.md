@@ -753,6 +753,31 @@ Every collaborative mutation flows through a four-step pipeline:
 
 **Ref-based dispatcher.** Stage 2d uses the existing `ItineraryHandle` imperative API as the dispatch surface. No state-ownership refactor. Six new handle methods (`removeActivityById`, `editActivityById`, `replaceActivityById`, `moveActivityById`, `setNoteForDay`, `setDayExpanded`) fill gaps where received patches target entities by stable id. Existing imperative methods (addActivity, editPhase, splitPhase, mergePhases, reorderPhases) fire `onPatchEmit?` after applying locally so every Luna-chat-driven and programmatic mutation emits a patch. Inline click-handler mutations (accept/decline buttons) do NOT yet emit patches in Stage 2d; Stage 2e or later can add coverage if required.
 
+**Stage 2f-hotfix-1 (26 April 2026): closure-race + missing inline phase emit + drag boundary doc.**
+
+Three concrete bugs surfaced in Preview QA after Stage 2f shipped:
+
+1. **Closure side-effect race in `addActivity` and 3 other handle methods.** The methods captured `dayIdForPatch` inside a `setDays(prev => ...)` updater, then read it AFTER the call to decide whether to emit. React 18's async-scheduled updaters mean the read returns `undefined` (the updater hasn't run yet). All four handle methods (`addActivity`, `removeActivityById`, `replaceActivityById`, `setNoteForDay`) silently failed to emit. Fix: capture the dayId synchronously from `daysRef.current` BEFORE the `setDays` call. State updaters are now pure (no outer-scope writes).
+
+2. **`updatePhaseLabel` had no emit.** The inline phase rename UI handler was bypassing the patch pipeline entirely. Now emits `edit_phase` with a no-op guard (skip if `oldLabel === newLabel`) to avoid spam from blur events that didn't change the value.
+
+3. **Within-slot drag reorder is documented as an intentional sync gap.** Cross-slot drag (morning → afternoon) continues to emit `replace_activity` correctly. Within-slot reorder (position 2 → 4 in the same slot) has no matching patch type and thus does NOT sync in real time. Stage 3+ will add `reorder_activities_in_slot`.
+
+**`daysRef` / `phasesRef` ref-of-state pattern.** All handle methods inside `useImperativeHandle` now read state via `daysRef.current` and `phasesRef.current`, never via the closure-captured `days` / `phases` (which would be the value at first render, typically empty). Combined with `onPatchEmitRef` from Stage 2f, the handle now correctly reads live state AND emits via the live prop reference.
+
+**Convention locked in (Tier 2):** when writing handle methods inside `useImperativeHandle` that mutate state and emit patches:
+- Read needed values from `*Ref.current` BEFORE setState.
+- Never write to outer-scope variables from inside a setState updater.
+- Use the captured local-const for the emit, not a re-read after setState.
+
+**Deferred (TODO Stage 3+):**
+- `reorder_activities_in_slot` patch type for within-slot drag.
+- `edit_phase` payload extension with `dayFrom`/`dayTo` so `updatePhaseRange` can emit.
+- `remove_phase` patch type so `deletePhase` can emit.
+- Cross-day `move_activity` patch type so `moveActivityToDay` can emit.
+
+---
+
 **Stage 2f hotfix (25 April 2026): emit pipeline fixes from instrumented Preview QA.**
 
 Three precise bugs surfaced via instrumentation logs:

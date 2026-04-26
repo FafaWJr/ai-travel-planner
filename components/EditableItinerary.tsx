@@ -409,6 +409,14 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
   const onPatchEmitRef = useRef(onPatchEmit);
   useEffect(() => { onPatchEmitRef.current = onPatchEmit; }, [onPatchEmit]);
 
+  // Stage 2f-hotfix-1: ref-of-state pattern for handle methods. Without
+  // these, methods inside useImperativeHandle read state from the closure
+  // captured at first render (empty days/phases). With these, handle
+  // methods read live state via *Ref.current. Combined with the
+  // closure-race fix (capture id BEFORE setDays, never via outer-scope
+  // assignment from inside the updater), handle methods reliably emit
+  // patches with correct payloads.
+
   const localeFromHook = useLocale();
   const locale = localeProp ?? localeFromHook;
   const t = useTranslations('plan');
@@ -422,6 +430,13 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
   const [phases, setPhases] = useState<Phase[]>(() =>
     (initialPhases && initialPhases.length > 0) ? initialPhases : []
   );
+
+  // Stage 2f-hotfix-1: keep refs of days/phases so handle methods inside
+  // useImperativeHandle read live state, not state captured at first render.
+  const daysRef = useRef(days);
+  const phasesRef = useRef(phases);
+  useEffect(() => { daysRef.current = days; }, [days]);
+  useEffect(() => { phasesRef.current = phases; }, [phases]);
   // R6: medium mode only — user can dismiss phase overview cards.
   const [phasesDismissed, setPhasesDismissed] = useState(false);
   // R5.1: which phases are manually collapsed (Set of phase IDs).
@@ -445,11 +460,28 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
   })();
 
   const updatePhaseLabel = (phaseId: string, newLabel: string) => {
+    // Stage 2f-hotfix-1: emit edit_phase. The inline phase rename UI was
+    // bypassing the patch pipeline entirely; collaborators never saw
+    // renames until manual save + reload. No-op guard prevents emit
+    // spam from blur events that didn't change the value.
+    const oldLabel = phases.find(p => p.id === phaseId)?.label;
+    if (oldLabel === newLabel) return;
+
     setPhases(prev => prev.map(p => p.id === phaseId ? { ...p, label: newLabel } : p));
     onActivityStatusChange?.();
+
+    emitFromInline({
+      type: 'edit_phase',
+      phaseId,
+      changes: { label: newLabel },
+    });
   };
 
   const updatePhaseRange = async (phaseId: string, from: number, to: number): Promise<string | null> => {
+    // TODO Stage 4+: emit edit_phase with extended payload (dayFrom, dayTo).
+    // The current edit_phase payload only carries label/summary/highlights.
+    // Range changes apply locally and persist via debounced save, but
+    // collaborators see them only after manual save + reload.
     const editing = phases.find(p => p.id === phaseId);
     if (!editing) return 'Phase not found.';
     if (editing.dayFrom === from && editing.dayTo === to) return null;
@@ -512,6 +544,10 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
   };
 
   const deletePhase = (phaseId: string) => {
+    // TODO Stage 4+: phase deletion needs a `remove_phase` patch type.
+    // No corresponding type exists in the 20-type patch library yet, so
+    // local apply works but collaborators see deletion only after manual
+    // save + reload.
     const ph = phases.find(p => p.id === phaseId);
     const dayCount = ph ? ph.dayTo - ph.dayFrom + 1 : 0;
     const msg = dayCount > 0
@@ -635,10 +671,14 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
   useImperativeHandle(ref, () => ({
     addActivity(text: string, dayNum: number, slot: TimeSlot, manuallyAdded?: boolean, lunaAdded?: boolean, options?: MutationOptions) {
       const newActivityId = `d${dayNum}-chat-${Math.random().toString(36).slice(2,8)}`;
-      let dayIdForPatch: string | undefined;
+      // Stage 2f-hotfix-1: capture dayId BEFORE setDays. The setDays
+      // updater is async-scheduled; reading after the call sees the
+      // pre-assignment value (undefined). Read synchronously from
+      // the live daysRef instead.
+      const dayIdForPatch = daysRef.current.find(d => d.number === dayNum)?.id;
+
       setDays(prev => prev.map(d => {
         if (d.number !== dayNum) return d;
-        dayIdForPatch = d.id;
         const newActivity: Activity = {
           id: newActivityId,
           text,
@@ -649,6 +689,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
         };
         return { ...d, activities: [...d.activities, newActivity], open: true };
       }));
+
       if (dayIdForPatch && !options?.suppressEmit) {
         onPatchEmitRef.current?.({
           type: 'add_activity',
@@ -666,13 +707,14 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
       })));
     },
     getDays() {
-      return days.map(d => ({ number: d.number, title: d.title }));
+      // Stage 2f-hotfix-1: read from ref so callers see live state.
+      return daysRef.current.map(d => ({ number: d.number, title: d.title }));
     },
     getDaysSnapshot() {
-      return days;
+      return daysRef.current;
     },
     getPhases() {
-      return phases;
+      return phasesRef.current;
     },
     restoreDays(savedDays: Day[]) {
       setDays(savedDays);
@@ -724,7 +766,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
       setDays(prev => prev.map(d => d.number === dayNumber ? newDay : d));
     },
     getAcceptedActivitiesForDay(dayNumber: number) {
-      const day = days.find(d => d.number === dayNumber);
+      const day = daysRef.current.find(d => d.number === dayNumber);
       if (!day) return [];
       return day.activities
         .filter(a => a.status === 'accepted')
@@ -758,9 +800,11 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
       phaseB: { id: string; label: string; summary: string; highlights: string[] },
       options?: MutationOptions,
     ) {
-      const original = phases.find(p => p.id === phaseId);
+      // Stage 2f-hotfix-1: read live phases from ref so handle method
+      // works correctly after the first render.
+      const original = phasesRef.current.find(p => p.id === phaseId);
       if (!original) {
-        console.error('[splitPhase] no phase matched id:', phaseId, '— available IDs:', phases.map(p => p.id));
+        console.error('[splitPhase] no phase matched id:', phaseId, '— available IDs:', phasesRef.current.map(p => p.id));
         return;
       }
       const newPhaseA: Phase = {
@@ -808,10 +852,11 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
       mergedPhase: { id: string; label: string; summary: string; highlights: string[] },
       options?: MutationOptions,
     ) {
-      const pA = phases.find(p => p.id === phaseIdA);
-      const pB = phases.find(p => p.id === phaseIdB);
+      // Stage 2f-hotfix-1: read live phases from ref.
+      const pA = phasesRef.current.find(p => p.id === phaseIdA);
+      const pB = phasesRef.current.find(p => p.id === phaseIdB);
       if (!pA || !pB) {
-        console.error('[mergePhases] phase(s) not found — phaseIdA:', phaseIdA, 'phaseIdB:', phaseIdB, '— available IDs:', phases.map(p => p.id));
+        console.error('[mergePhases] phase(s) not found — phaseIdA:', phaseIdA, 'phaseIdB:', phaseIdB, '— available IDs:', phasesRef.current.map(p => p.id));
         return;
       }
       const merged: Phase = {
@@ -839,7 +884,8 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
     },
 
     reorderPhases(orderedPhaseIds: string[], options?: MutationOptions) {
-      const phaseMap = new Map(phases.map(p => [p.id, p]));
+      // Stage 2f-hotfix-1: read live phases and days from refs.
+      const phaseMap = new Map(phasesRef.current.map(p => [p.id, p]));
       const unknownIds = orderedPhaseIds.filter(id => !phaseMap.has(id));
       if (unknownIds.length > 0) {
         console.error('[reorderPhases] unknown phase IDs:', unknownIds, '— available IDs:', [...phaseMap.keys()]);
@@ -851,7 +897,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
       for (const pid of orderedPhaseIds) {
         const phase = phaseMap.get(pid);
         if (!phase) continue;
-        const phaseDays = days
+        const phaseDays = daysRef.current
           .filter(d => d.phase_id === pid)
           .sort((a, b) => a.number - b.number);
         const newDayFrom = nextDay;
@@ -879,12 +925,14 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
 
     // ── Stage 2d: id-keyed mutation methods for patch dispatching ──────
     removeActivityById(activityId: string, options?: MutationOptions) {
-      let dayIdForPatch: string | undefined;
+      // Stage 2f-hotfix-1: read dayId synchronously before setDays.
+      const dayIdForPatch = daysRef.current.find(d => d.activities.some(a => a.id === activityId))?.id;
+
       setDays(prev => prev.map(d => {
         if (!d.activities.some(a => a.id === activityId)) return d;
-        dayIdForPatch = d.id;
         return { ...d, activities: d.activities.filter(a => a.id !== activityId) };
       }));
+
       if (dayIdForPatch && !options?.suppressEmit) {
         onPatchEmitRef.current?.({ type: 'remove_activity', dayId: dayIdForPatch, activityId });
       }
@@ -905,10 +953,11 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
     },
 
     replaceActivityById(activityId, newActivity, options?: MutationOptions) {
-      let dayIdForPatch: string | undefined;
+      // Stage 2f-hotfix-1: read dayId synchronously before setDays.
+      const dayIdForPatch = daysRef.current.find(d => d.activities.some(a => a.id === activityId))?.id;
+
       setDays(prev => prev.map(d => {
         if (!d.activities.some(a => a.id === activityId)) return d;
-        dayIdForPatch = d.id;
         return {
           ...d,
           activities: d.activities.map(a =>
@@ -955,12 +1004,14 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
     },
 
     setNoteForDay(dayNumber, note, options?: MutationOptions) {
-      let dayIdForPatch: string | undefined;
-      let hadNote = false;
+      // Stage 2f-hotfix-1: read dayId and hadNote synchronously from refs
+      // before setDays. The updater is async-scheduled.
+      const targetDay = daysRef.current.find(d => d.number === dayNumber);
+      const dayIdForPatch = targetDay?.id;
+      const hadNote = Boolean(targetDay?.notes && targetDay.notes.length > 0);
+
       setDays(prev => prev.map(d => {
         if (d.number !== dayNumber) return d;
-        dayIdForPatch = d.id;
-        hadNote = Boolean(d.notes && d.notes.length > 0);
         if (!note) {
           const { notes: _n, ...rest } = d;
           void _n;
@@ -968,6 +1019,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
         }
         return { ...d, notes: note };
       }));
+
       if (dayIdForPatch && !options?.suppressEmit) {
         if (!note) {
           onPatchEmitRef.current?.({ type: 'remove_note', dayId: dayIdForPatch });
@@ -1117,6 +1169,16 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
 
     // Stage 2e/2f: drag-end commits the slot change; emit replace_activity
     // so collaborators see the same activity in its new slot.
+    //
+    // Stage 2f-hotfix-1 boundary: this emits ONLY for cross-slot drag
+    // (e.g. morning → afternoon). Within-slot reorder (position 2 → 4
+    // inside the same slot) has no matching patch type in the 20-type
+    // library and thus does NOT sync to collaborators in real time.
+    // It still applies locally and persists via the debounced save;
+    // collaborators see the new order on next save + reload.
+    //
+    // TODO Stage 3+: add `reorder_activities_in_slot` patch type with
+    // payload { dayId, slot, activityIdOrder } and remove this guard.
     if (act && day?.id && typeof active.id === 'string' && from.slot !== to.slot) {
       emitFromInline({
         type: 'replace_activity',
