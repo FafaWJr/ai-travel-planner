@@ -1,4 +1,12 @@
-import jsPDF from 'jspdf';
+// jspdf is loaded dynamically inside generateTripPDF so it stays out of
+// the SSR import graph for /plan. Static-importing jspdf at the top
+// level pulled it into the server bundle, which transitively referenced
+// `node:fs/promises` and crashed Vercel's Node runtime on /plan SSR
+// (Failed to load external module). PDF generation only runs client-side
+// in response to a button click, so dynamic import is safe and incurs
+// only a ~200ms first-click delay while the chunk loads.
+//
+// Release: plan-ssr-fix-jspdf
 
 interface Activity {
   name: string;
@@ -23,6 +31,7 @@ interface TripData {
 }
 
 export async function generateTripPDF(tripData: TripData): Promise<void> {
+  const { default: jsPDF } = await import('jspdf');
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
