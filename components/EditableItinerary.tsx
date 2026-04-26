@@ -394,6 +394,11 @@ export interface ItineraryHandle {
   setNoteForDay: (dayNumber: number, note: string, options?: MutationOptions) => void;
   /** Stage 2d: imperatively set day expansion (open/close) state. */
   setDayExpanded: (dayNumber: number, expanded: boolean, options?: MutationOptions) => void;
+  /** Stage 2f-hotfix-3: reorder activities within a single slot of a day.
+      activityIdOrder is the desired in-slot order. Activities outside the
+      slot are unaffected; activities in the slot but missing from
+      activityIdOrder are appended at the end (defensive). */
+  reorderActivitiesInSlot: (dayId: string, slot: TimeSlot, activityIdOrder: string[], options?: MutationOptions) => void;
 }
 
 const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableItinerary({
@@ -1066,6 +1071,56 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
       // UI state; not synced as a patch (expand_phase patch type is for
       // phase-level UI in R6, not day-level). Local-only.
     },
+
+    reorderActivitiesInSlot(dayId, slot, activityIdOrder, options?: MutationOptions) {
+      // Stage 2f-hotfix-3: within-slot reorder. Receive path passes
+      // suppressEmit:true to prevent re-broadcast. The local emit path
+      // (handleDragEnd) calls onPatchEmit directly, not this method, so
+      // this implementation only needs to handle the receive case
+      // structurally — but emit support is included for symmetry.
+      setDays(prev => prev.map(d => {
+        if (d.id !== dayId) return d;
+        const inSlot = d.activities.filter(a => a.slot === slot);
+        const outOfSlot = d.activities.filter(a => a.slot !== slot);
+        const byId = new Map(inSlot.map(a => [a.id, a]));
+        const ordered: typeof inSlot = [];
+        for (const id of activityIdOrder) {
+          const found = byId.get(id);
+          if (found) {
+            ordered.push(found);
+            byId.delete(id);
+          }
+        }
+        // Append any in-slot activities not mentioned in activityIdOrder
+        // (defensive; should not happen in practice).
+        for (const remaining of byId.values()) ordered.push(remaining);
+        // Re-merge: keep out-of-slot activities in their original index
+        // positions relative to the day, place ordered in-slot activities
+        // at the original first-in-slot index.
+        const merged: typeof d.activities = [];
+        let orderedIdx = 0;
+        for (const a of d.activities) {
+          if (a.slot === slot) {
+            if (orderedIdx < ordered.length) {
+              merged.push(ordered[orderedIdx]!);
+              orderedIdx++;
+            }
+          } else {
+            merged.push(a);
+          }
+        }
+        return { ...d, activities: merged };
+      }));
+
+      if (!options?.suppressEmit) {
+        onPatchEmitRef.current?.({
+          type: 'reorder_activities_in_slot',
+          dayId,
+          slot,
+          activityIdOrder,
+        });
+      }
+    },
   }));
 
 
@@ -1196,32 +1251,55 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
       };
     }));
 
-    // Stage 2e/2f: drag-end commits the slot change; emit replace_activity
-    // so collaborators see the same activity in its new slot.
+    // Stage 2e/2f/2f-hotfix-3: drag-end commits the slot change.
     //
-    // Stage 2f-hotfix-1 boundary: this emits ONLY for cross-slot drag
-    // (e.g. morning → afternoon). Within-slot reorder (position 2 → 4
-    // inside the same slot) has no matching patch type in the 20-type
-    // library and thus does NOT sync to collaborators in real time.
-    // It still applies locally and persists via the debounced save;
-    // collaborators see the new order on next save + reload.
+    // Cross-slot drag (e.g. morning → afternoon) emits replace_activity
+    // so collaborators see the moved activity in its new slot.
     //
-    // TODO Stage 3+: add `reorder_activities_in_slot` patch type with
-    // payload { dayId, slot, activityIdOrder } and remove this guard.
-    if (act && day?.id && typeof active.id === 'string' && from.slot !== to.slot) {
-      emitFromInline({
-        type: 'replace_activity',
-        dayId: day.id,
-        activityId: active.id,
-        newActivity: {
-          id: active.id,
-          slot: to.slot,
-          text: act.text,
-          status: act.status === 'declined' ? 'rejected' : act.status,
-          manuallyAdded: act.manuallyAdded,
-          lunaAdded: act.lunaAdded,
-        },
-      });
+    // Within-slot reorder (position 2 → 4 inside the same slot) emits
+    // reorder_activities_in_slot with the new in-slot id order. This
+    // patch type was added in Stage 2f-hotfix-3 to close the gap left
+    // by Stage 2f.
+    if (act && day?.id && typeof active.id === 'string') {
+      if (from.slot !== to.slot) {
+        emitFromInline({
+          type: 'replace_activity',
+          dayId: day.id,
+          activityId: active.id,
+          newActivity: {
+            id: active.id,
+            slot: to.slot,
+            text: act.text,
+            status: act.status === 'declined' ? 'rejected' : act.status,
+            manuallyAdded: act.manuallyAdded,
+            lunaAdded: act.lunaAdded,
+          },
+        });
+      } else {
+        // Within-slot reorder. Read the post-arrayMove order from the
+        // freshly-updated daysRef (setDays applies synchronously enough
+        // for our refs but we rebuild the order from the data we already
+        // have above — `reordered` is local to the setDays callback, so
+        // we recompute it here from the source-of-truth: days at this
+        // point contains pre-update state, so we replay arrayMove with
+        // the current (pre-update) indices and project the resulting
+        // in-slot id order). Equivalent: take the day's activities,
+        // arrayMove them, then filter to slot.
+        const oldIdx = day.activities.findIndex(a => a.id === active.id);
+        const newIdx = day.activities.findIndex(a => a.id === over.id);
+        if (oldIdx !== -1 && newIdx !== -1) {
+          const reordered = arrayMove(day.activities, oldIdx, newIdx);
+          const activityIdOrder = reordered
+            .filter(a => a.slot === to.slot)
+            .map(a => a.id);
+          emitFromInline({
+            type: 'reorder_activities_in_slot',
+            dayId: day.id,
+            slot: to.slot,
+            activityIdOrder,
+          });
+        }
+      }
     }
   };
 

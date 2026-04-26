@@ -155,6 +155,12 @@ function applyPatchToRef(
     case 'decline_activity':
       handle?.editActivityById?.(p.activityId, { status: 'declined' }, SUPPRESS);
       break;
+    case 'reorder_activities_in_slot':
+      // Stage 2f-hotfix-3: within-slot drag reorder. Dispatched to a
+      // dedicated handle method so the receive side can swap order
+      // without re-broadcasting.
+      handle?.reorderActivitiesInSlot?.(p.dayId, p.slot, p.activityIdOrder, SUPPRESS);
+      break;
     case 'add_note':
     case 'update_note': {
       const dayNum = dayIdToNumber(itineraryRef, p.dayId);
@@ -378,17 +384,18 @@ export function useCollaborativeTrip(
     emittedPatchIdsRef.current.add(patch.id);
     const commutative = isCommutative(payload.type);
 
-    // Commutative: apply locally first so the UI responds immediately.
-    // The local apply came from the user's own action (via ItineraryHandle),
-    // so for same-tab emissions the state is already updated; this branch
-    // is mainly useful for programmatic emissions.
-    if (commutative) {
-      try {
-        applyPatchToRef(patch, itineraryHandleRef.current, currentHotelsRef.current, onHotelsChangeRef.current);
-      } catch (err) {
-        console.error('[useCollaborativeTrip] local commutative apply failed:', err);
-      }
-    }
+    // Stage 2f-hotfix-3: removed local commutative re-apply.
+    // Every emit in the current codebase originates from a user action that
+    // already updated local state via ItineraryHandle (Luna chat add,
+    // drag-drop, accept/decline buttons, note edits, phase rename). The
+    // previous local re-apply was duplicating non-idempotent patches like
+    // add_activity (the dispatcher's add_activity case calls
+    // handle.addActivity again, which generates a NEW random activity id
+    // and pushes a second activity onto the day). The re-apply was only
+    // useful for purely programmatic emissions, which do not exist in the
+    // current codebase. If a programmatic emission path is added later,
+    // that emission site is responsible for applying locally before
+    // calling emitPatch.
 
     // POST to log. Server assigns seq.
     let assignedSeq: number | null = null;

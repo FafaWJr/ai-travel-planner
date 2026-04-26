@@ -46,6 +46,7 @@ export type PatchType =
   | 'accept_activity'
   | 'unaccept_activity'
   | 'decline_activity'
+  | 'reorder_activities_in_slot'
   // Note ops
   | 'add_note'
   | 'update_note'
@@ -123,6 +124,14 @@ export type DeclineActivityPayload = {
   type: 'decline_activity';
   dayId: string;
   activityId: string;
+};
+
+export type ReorderActivitiesInSlotPayload = {
+  type: 'reorder_activities_in_slot';
+  dayId: string;
+  slot: ActivitySlot;
+  /** Ordered list of activity IDs in their new sequence within the slot. */
+  activityIdOrder: string[];
 };
 
 export type AddNotePayload = {
@@ -235,6 +244,7 @@ export type PatchPayload =
   | AcceptActivityPayload
   | UnacceptActivityPayload
   | DeclineActivityPayload
+  | ReorderActivitiesInSlotPayload
   | AddNotePayload
   | UpdateNotePayload
   | RemoveNotePayload
@@ -387,6 +397,8 @@ export function applyPatch(
       return applyUnacceptActivity(tripData, p);
     case 'decline_activity':
       return applyDeclineActivity(tripData, p);
+    case 'reorder_activities_in_slot':
+      return applyReorderActivitiesInSlot(tripData, p);
     case 'add_note':
     case 'update_note':
       return applySetNote(tripData, p);
@@ -493,6 +505,39 @@ function applyDeclineActivity(
   p: DeclineActivityPayload
 ): PatchableTripData {
   return setActivityStatus(td, p.dayId, p.activityId, 'rejected');
+}
+
+/**
+ * Stage 2f-hotfix-3: reorder activities within a single slot of a single day.
+ * Activities in OTHER slots are left untouched. Activities in the target slot
+ * are reordered to match `activityIdOrder`. Unknown ids in the order list are
+ * skipped; activities present in the slot but missing from the order list are
+ * appended at the end (defensive against partial reorders).
+ */
+function applyReorderActivitiesInSlot(
+  td: PatchableTripData,
+  p: ReorderActivitiesInSlotPayload
+): PatchableTripData {
+  if (!Array.isArray(td.itineraryDays)) return td;
+  const days = td.itineraryDays.map((d) => {
+    if (d.id !== p.dayId) return d;
+    if (!Array.isArray(d.activities)) return d;
+    const inSlot = d.activities.filter((a) => a.slot === p.slot);
+    const outOfSlot = d.activities.filter((a) => a.slot !== p.slot);
+    const byId = new Map(inSlot.map((a) => [a.id, a]));
+    const reorderedInSlot: typeof inSlot = [];
+    for (const id of p.activityIdOrder) {
+      const a = byId.get(id);
+      if (a) {
+        reorderedInSlot.push(a);
+        byId.delete(id);
+      }
+    }
+    // Append any in-slot activity not mentioned in the order list (defensive).
+    for (const a of byId.values()) reorderedInSlot.push(a);
+    return { ...d, activities: [...outOfSlot, ...reorderedInSlot] };
+  });
+  return { ...td, itineraryDays: days };
 }
 
 function setActivityStatus(
@@ -652,6 +697,10 @@ export const PATCH_COMMUTATIVITY: Record<PatchType, boolean> = {
   accept_activity: true,
   unaccept_activity: true,
   decline_activity: true,
+  // Reorder is non-commutative: two simultaneous reorders on different
+  // clients in different orders produce different final states. The
+  // server seq counter serializes them.
+  reorder_activities_in_slot: false,
   add_note: true,
   update_note: true,
   remove_note: true,

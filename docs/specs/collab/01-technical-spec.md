@@ -753,6 +753,24 @@ Every collaborative mutation flows through a four-step pipeline:
 
 **Ref-based dispatcher.** Stage 2d uses the existing `ItineraryHandle` imperative API as the dispatch surface. No state-ownership refactor. Six new handle methods (`removeActivityById`, `editActivityById`, `replaceActivityById`, `moveActivityById`, `setNoteForDay`, `setDayExpanded`) fill gaps where received patches target entities by stable id. Existing imperative methods (addActivity, editPhase, splitPhase, mergePhases, reorderPhases) fire `onPatchEmit?` after applying locally so every Luna-chat-driven and programmatic mutation emits a patch. Inline click-handler mutations (accept/decline buttons) do NOT yet emit patches in Stage 2d; Stage 2e or later can add coverage if required.
 
+**Stage 2f-hotfix-3 (25 April 2026): final cleanup after the root-cause fix.**
+
+With Day.id now reliably present after Stage 2f-hotfix-2, three remaining symptoms surfaced:
+
+1. **Sender-side activity duplication.** `emitPatch` was applying commutative patches locally before broadcasting. But every emit in the current codebase already originates from a user action that has already updated local state via the inline handler (drag-drop, accept/decline, suggestion accept, note edit) or the imperative `ItineraryHandle` method (Luna chat add, phase edit). The local re-apply was therefore double-applying non-idempotent patches: the dispatcher's `add_activity` case calls `handle.addActivity` again, which generates a NEW random activity id and pushes a second activity onto the day. Fix: removed the local re-apply block in `useCollaborativeTrip.emitPatch`. Non-commutative patches still apply locally after seq response (unchanged). If a future feature adds programmatic emissions that don't pre-mutate state, that emission site is responsible for applying locally before calling `emitPatch`.
+
+2. **`decline_activity` dispatcher case verified present** (was already added in Stage 2f-hotfix-1; this hotfix only confirms its presence). Receive path: `editActivityById(activityId, { status: 'declined' }, SUPPRESS)`.
+
+3. **`reorder_activities_in_slot` patch type added.** Closes the gap left by Stage 2f-hotfix-1 ("within-slot drag does not sync"). New payload: `{ type: 'reorder_activities_in_slot'; dayId: string; slot: ActivitySlot; activityIdOrder: string[] }`. Marked `non-commutative` in `PATCH_COMMUTATIVITY` (deferred local apply until seq response, ensuring all clients converge on the same final order). Dispatcher routes to a new `ItineraryHandle.reorderActivitiesInSlot(dayId, slot, activityIdOrder, options?)` method that filters the day's activities into in-slot vs out-of-slot, reorders in-slot per `activityIdOrder` (appending unmentioned items defensively at the end), and re-merges preserving original out-of-slot positions. `handleDragEnd` now emits `reorder_activities_in_slot` for `from.slot === to.slot` and continues to emit `replace_activity` for cross-slot drags.
+
+**Patch library now has 21 types** (was 20 after Stage 2f-hotfix-1's `decline_activity`). Non-commutative count: 4 (`split_phase`, `merge_phases`, `reorder_phases`, `reorder_activities_in_slot`).
+
+**Conventions locked:**
+- Every emit site that reaches `emitPatch` must have already applied the change locally. The hook does NOT auto-apply commutative patches on the sender side; it only applies non-commutative patches after seq assignment.
+- Within-slot drag and cross-slot drag emit different patch types. Do not collapse them.
+
+---
+
 **Stage 2f-hotfix-2 (26 April 2026): THE root-cause fix — Day objects had no id.**
 
 The actual root cause of every non-working collab sync was the markdown itinerary parser creating Day objects without an `id` field. Activities got IDs (line 213); days didn't. Every patch type that needs `dayId` to construct a valid payload was silently failing the guard `if (dayIdForPatch && ...)`.
