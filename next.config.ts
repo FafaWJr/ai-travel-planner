@@ -4,6 +4,20 @@ import createNextIntlPlugin from 'next-intl/plugin';
 const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
 
 const nextConfig: NextConfig = {
+  // Opt these packages out of webpack bundling. They are CommonJS packages
+  // that internally require() ESM-only dependencies (@exodus/bytes is
+  // ESM-only at every published version). Bundling them triggers
+  // ERR_REQUIRE_ESM on Vercel's Node 24 runtime because Next.js's bundler
+  // emits a strict externalImport() wrapper that does not support require(esm).
+  // Listing them here makes Next.js leave them as native runtime requires,
+  // which Node 24 handles correctly via its unflagged require(esm) support.
+  // Reference: https://nextjs.org/docs/app/api-reference/config/next-config-js/serverExternalPackages
+  serverExternalPackages: [
+    'isomorphic-dompurify',
+    'jsdom',
+    'html-encoding-sniffer',
+    '@exodus/bytes',
+  ],
   async headers() {
     return [
       {
