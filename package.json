@@ -4,10 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3001",
+    "prebuild": "npm run smoke:render",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
-    "smoke:plan": "node scripts/smoke-plan-route.mjs"
+    "smoke:plan": "node scripts/smoke-plan-route.mjs",
+    "smoke:render": "node --experimental-strip-types scripts/smoke-plan-render.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",
