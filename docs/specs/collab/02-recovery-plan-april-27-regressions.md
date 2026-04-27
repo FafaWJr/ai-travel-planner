@@ -106,8 +106,8 @@ What landed:
 
 ### Item R5: Update CURRENT_STATUS.md and sub-master plan
 
-**Status:** SHIPPED via this commit.
-**Shipped via:** commit `[FILL IN POST-DEPLOY]`, deploy `[FILL IN POST-DEPLOY]`, 27 April 2026.
+**Status:** SHIPPED.
+**Shipped via:** commit `0b7c1af6`, deploy `[backfill once Vercel build completes]`, 27 April 2026.
 
 Adds R1+R2+R4 entries to `CURRENT_STATUS.md`'s "Recent detours" table, adds a recovery-track summary entry, and removes any stale "active detour" references. Marks sub-master plan item #2 (`luna-prose-format-restore.md`) as superseded by R1. Reopens sub-master plan items #3 through #11 from their paused state.
 
