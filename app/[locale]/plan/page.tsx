@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef, Suspense } from 'react';
-import DOMPurify from 'isomorphic-dompurify';
+import sanitizeHtml from 'sanitize-html';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import EditableItinerary, { type ItineraryHandle, type Day } from '@/components/EditableItinerary';
@@ -1683,7 +1683,7 @@ function PlanContent() {
                     <div
                       onMouseOver={handlePlaceMouseOver}
                       onMouseLeave={handlePlaneMouseLeave}
-                      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(markdownToHtml(sectionContent)) }}
+                      dangerouslySetInnerHTML={{ __html: sanitizeHtml(markdownToHtml(sectionContent)) }}
                     />
                   )}
                 </div>
@@ -1744,7 +1744,7 @@ function PlanContent() {
                       ) : (() => {
                         const ideas = parseIdeas(extraIdeas);
                         const days = itineraryRef.current?.getDays() ?? [];
-                        if (ideas.length === 0) return <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(markdownToHtml(extraIdeas)) }} />;
+                        if (ideas.length === 0) return <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(markdownToHtml(extraIdeas)) }} />;
                         return (
                           <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
                             {ideas.map((idea, i) => (
