@@ -1,0 +1,160 @@
+# Luna Collaborative Trips: Sub-Master Plan (Finishing Kit + Remaining Stages)
+
+**Tier 1.5 sub-master plan**
+**Version:** 1.0
+**Date:** 27 April 2026
+**Maintainer:** Wilson
+**Linked from:** `docs/specs/collab/00-master-plan.md` (Tier 1, v2.1)
+**Status:** Active execution tracking
+
+---
+
+## 0. Purpose
+
+The Tier 1 master plan (`00-master-plan.md`) defines the six-stage architecture for Luna Collaborative Trips. By 27 April 2026, Stages 0, 1, and 2 had shipped to production, but Stage 2 left several deliverables untested and two UX gaps surfaced after the saved-trip-load detour:
+
+1. The CSS for `.plan-section` paragraphs lost vertical margins, flattening every bold sub-header in the Overview, Weather, Transport, and Tips tabs (regression discovered 27 April).
+2. The Stage 1 InviteModal Copy buttons have no success feedback (no "Copied" state, no animation), confirmed via live browser inspection 27 April.
+
+This sub-master plan tracks the finishing kit (Tracks A, B, C below) plus the remaining master-plan stages (3, 4, 5) as a single ordered checklist with status per item. It is the single source of truth for "what is left to ship."
+
+When this document and the Tier 1 master plan disagree on stage scope, the master plan wins. When this document and `CURRENT_STATUS.md` disagree on what has shipped, this document wins (it is the more detailed tracker; `CURRENT_STATUS.md` is the executive summary).
+
+---
+
+## 1. Tracking convention
+
+Every item below has one of four statuses:
+
+- `[ ]` Pending: not started.
+- `[~]` In progress: prompt written, not yet shipped or smoke tests not yet passed.
+- `[x]` Done: shipped to production, smoke tests pass, recorded in commit history.
+- `[!]` Blocked: cannot proceed without something else (note the blocker).
+
+When an item ships, update the row with the commit SHA, the date, and tick the box. Update `CURRENT_STATUS.md` in the same commit.
+
+---
+
+## 2. The eleven items, in execution order
+
+### Track C: Stage 1 polish (Copy link UX)
+
+- `[ ]` **#1. Copy link feedback motion** (`luna-copy-link-ux.md`, ~1.5h, very low risk)
+  Adds a "Copied" state with brief animation to both Copy buttons in InviteModal (editor link and viewer link). Includes 1.5s reset timer, accessible aria-live announcement, and EN / PT-BR / ES translations for the new string. Single component touched.
+  Commit: __________  Date: __________
+
+### Track B: Format restore (CSS regression from detour aftermath)
+
+- `[ ]` **#2. Restore prose spacing in `.plan-section`** (`luna-prose-format-restore.md`, ~1.5h, very low risk)
+  Adds proper margins to `<p>` and `<p><strong>` elements inside `.plan-section`. Restores visual hierarchy for AI-written `**bold paragraph**` sub-headers. Single `<style jsx>` block touched in `app/[locale]/plan/page.tsx`. Includes the Bali, Phuket, and one older trip in smoke tests so we cover both shapes.
+  Commit: __________  Date: __________
+
+### Track A: Stage 2 finishing kit (close out master plan Stage 2)
+
+- `[ ]` **#3. Verify second realtime flag** (`luna-stage2-finish-flag-check.md`, ~30m, very low risk)
+  Confirms `NEXT_PUBLIC_COLLAB_REALTIME_ENABLED` exists, defaults to true, and gates the realtime subscribe path correctly. If absent, adds it. Reads master plan section 4 Stage 2 deliverable list as the spec.
+  Commit: __________  Date: __________
+
+- `[ ]` **#4. Patch coverage QA** (`luna-stage2-patch-coverage-qa.md`, ~3h, medium risk)
+  Walks through the 11 patch types coded but never triggered in production: `remove_activity`, `replace_activity`, `unaccept_activity`, `remove_note`, `add_hotel`, `remove_hotel`, `split_phase`, `merge_phases`, `reorder_phases`, `update_budget`, `expand_phase`. Each must produce a `trip_activity_log` row and broadcast to a second browser session. Any failure becomes Stage 2f hotfix #5.
+  Commit (test report): __________  Date: __________  Hotfixes raised: __________
+
+- `[ ]` **#5. Viewer tier end-to-end QA** (`luna-stage2-viewer-tier-qa.md`, ~1h, low risk)
+  Creates a viewer share link, joins from a second browser, confirms read-only enforcement on UI (no edit controls render) and API (forced viewer-side patch attempt returns 403). Viewer tier has zero production usage today.
+  Commit (test report): __________  Date: __________  Hotfixes raised: __________
+
+- `[ ]` **#6. Reconnect replay QA** (`luna-stage2-reconnect-qa.md`, ~1h, low risk)
+  Two sessions, kill one's network, modify state from the other, restore network, confirm replay from `trip_activity_log` since last-seen. Confirms the Stage 2 disconnect/reconnect deliverable.
+  Commit (test report): __________  Date: __________  Hotfixes raised: __________
+
+- `[ ]` **#7. Formal Stage 2 QA pass** (`luna-stage2-formal-qa-pass.md`, ~1h, very low risk)
+  Subagent invocation prompt that runs the 14 numbered checks from master plan section 4 Stage 2 (`/agents luna-qa-agent`) plus the multilingual QA pass. Produces the canonical test report.
+  Commit (test report): __________  Date: __________
+
+### Bookkeeping before Stage 3
+
+- `[ ]` **#8. CLAUDE.md regen** (`luna-claude-md-regen.md`, ~30m, very low risk)
+  Catches up `CLAUDE.md` and `CONVENTIONS.md` with the Stage 2f hotfix arc, the destructive-PATCH guard, the SSR fix, the saved-trip-load fix, this sub-master plan, and any patch types that surfaced through Tracks A.4 / A.5 / A.6 above. Runs the existing `./scripts/update-context.sh`.
+  Commit: __________  Date: __________
+
+### Master plan stages
+
+- `[ ]` **#9. Stage 3: Per-user collaborative Luna chat** (`luna-collab-stage-3.md`, ~10h, low risk)
+  Per master plan section 4 Stage 3. Per-user chat threads, viewer-readonly Luna (mutation tools stripped server-side), cross-awareness summary at end of system prompt, `chat_history` shape migration with dual-read pattern, third feature flag `NEXT_PUBLIC_COLLAB_LUNA_AWARENESS_ENABLED`. Preserves prompt caching by appending the awareness summary at the end.
+  Commit: __________  Date: __________
+
+- `[ ]` **#10. Stage 4: Comments + My Trips + UX polish** (`luna-collab-stage-4.md`, ~18h, low-medium risk)
+  Per master plan section 4 Stage 4. Comments on activities, days, phases, hotels (4 target types). Comment API routes, realtime broadcast as patches, orphan handling on `original_day_id`, count aggregation. My Trips two-section layout (owned + shared) with role badges. CollabToast, leave trip flow, owner dashboard, PDF export collaborator line, mobile responsive audit at 375 / 768 / 1280.
+  Commit: __________  Date: __________
+
+- `[ ]` **#11. Stage 5: Landing page + launch** (`luna-collab-stage-5.md`, ~6h, very low risk)
+  Per master plan section 4 Stage 5. "Plan Together" homepage section, OG image route at `/api/og/trip/[tripId]`, SEO metadata, flag flip `NEXT_PUBLIC_COLLAB_ENABLED=true` in production, 48h Supabase Realtime monitoring window.
+  Commit: __________  Date: __________
+
+---
+
+## 3. Effort estimate
+
+| Item set | Items | Estimated effort |
+|---|---|---|
+| Track C polish | #1 | 1.5h |
+| Track B polish | #2 | 1.5h |
+| Track A finishing kit | #3 to #7 | 6.5h |
+| Bookkeeping | #8 | 0.5h |
+| Stage 3 | #9 | 10h |
+| Stage 4 | #10 | 18h |
+| Stage 5 | #11 | 6h |
+| **Total remaining** | 11 items | **~44h** |
+
+Down from the 78.5h in the original master plan because Stages 0, 1, and 2 are largely shipped.
+
+---
+
+## 4. Order rationale
+
+1. Polish first (#1, #2): smallest, most visible, builds confidence after the long detour day.
+2. Finishing kit next (#3 to #7): closes Stage 2 gaps before Stage 3 starts on top of it. Better to surface latent Stage 2 bugs now, while we still remember the architecture, than during Stage 3 development.
+3. Bookkeeping (#8): keeps me on track in future sessions. The single highest-leverage hour we can spend before Stage 3.
+4. Master plan stages (#9, #10, #11): in the order the master plan defines.
+
+Items #1 and #2 can be shipped on the same day. Items #3 to #7 take roughly a week of part-time exercise. Items #9, #10, #11 are the bulk of the remaining work.
+
+---
+
+## 5. Per-prompt handoff protocol
+
+Each item below ships as a single Claude Code prompt file in `/mnt/user-data/outputs/`. Wilson runs the prompt locally, reviews changes, runs smoke tests, commits, and pushes. Then this document and `CURRENT_STATUS.md` are updated in the same commit.
+
+Claude writes prompts one at a time. The next prompt is not written until the previous has shipped and Wilson confirms it works in production.
+
+This protocol is intentional: it keeps the active context narrow, prevents the eleven-prompt-batch problem, and gives Wilson a natural checkpoint between every item.
+
+---
+
+## 6. Cross-cutting notes
+
+**Detours during this sub-plan.** If a production hotfix is needed mid-track (as happened twice on 27 April), it gets logged in `CURRENT_STATUS.md` under "Recent detours" with a commit SHA. The current sub-master plan item is paused (not abandoned) and resumes after the hotfix ships. No item below is silently dropped.
+
+**QA subagent.** Items #4, #5, #6, #7 produce test reports rather than code changes. The formal subagent QA pass at #7 references the 14 numbered checks in master plan section 4 Stage 2.
+
+**Multilingual.** Items #1 (one new string), #9, #10, #11 require `luna-multilang-translator` subagent passes per master plan section 7. Items #2 to #8 have no user-visible string changes.
+
+**Master plan checkpoints.** Master plan section 6 mandates a `luna-context-updater` subagent pass after every stage merge. That cadence applies to items #9, #10, #11.
+
+---
+
+## 7. Outcomes
+
+When all eleven items are ticked off:
+
+- Stage 2 will be fully verified, not just shipped.
+- The two UX regressions discovered 27 April will be closed.
+- `CLAUDE.md` will be current.
+- Stages 3, 4, and 5 of the master plan will be shipped in production.
+- The collab feature will be live with the flag flipped to `true`.
+
+At that point this sub-master plan can be archived, marked superseded by the next sub-plan if there is one, or closed as complete.
+
+---
+
+*End of sub-master plan v1.0. Linked from Tier 1 master plan section 11 step 5.*
