@@ -233,6 +233,100 @@ const SECTION_KEYWORDS: Record<string, string[]> = {
   tips:          ['Practical Tips', 'Tips', 'Practical'],
 };
 
+/**
+ * sanitize-html configuration for plan content.
+ *
+ * markdownToHtml (line ~298) and inlineMd (line ~282) emit HTML with rich
+ * inline styles that establish the navy-headings, orange-bullet visual
+ * treatment of the Plan page. sanitize-html strips style attributes by
+ * default. This config explicitly allows the style attribute on every tag
+ * markdownToHtml emits, plus the data-place attribute used by inlineMd
+ * for place-name hover affordances.
+ *
+ * The allowedStyles allowlist is intentionally wide (covers every CSS
+ * property markdownToHtml currently uses) but values are constrained to
+ * safe primitives: hex colors, rgb/rgba, pixel/em/rem/percent units,
+ * Poppins/Inter/sans-serif/monospace font families, and a fixed keyword
+ * set. URLs in style values are never allowed (no url() or @import).
+ *
+ * XSS posture preserved: <script>, <iframe>, <object>, <embed>, on*
+ * event handlers, javascript: and data: URIs are still rejected by
+ * sanitize-html's default allowedTags / allowedSchemes.
+ */
+const PLAN_SANITIZE_CONFIG: sanitizeHtml.IOptions = {
+  allowedTags: [
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'p', 'div', 'span', 'br', 'hr',
+    'ul', 'ol', 'li',
+    'strong', 'em', 'b', 'i', 'u', 'code', 'pre',
+    'a',
+    'blockquote',
+  ],
+  allowedAttributes: {
+    '*': ['style'],
+    'a': ['href', 'target', 'rel', 'style'],
+    'strong': ['style', 'data-place'],
+    'span': ['style', 'data-place'],
+  },
+  allowedStyles: {
+    '*': {
+      'color': [/^#(0x)?[0-9a-fA-F]+$/, /^rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(?:,\s*[\d.]+\s*)?\)$/],
+      'background': [/^#(0x)?[0-9a-fA-F]+$/, /^rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(?:,\s*[\d.]+\s*)?\)$/],
+      'background-color': [/^#(0x)?[0-9a-fA-F]+$/, /^rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(?:,\s*[\d.]+\s*)?\)$/],
+      'font-family': [/^['"]?[\w\s\-,]+['"]?(\s*,\s*['"]?[\w\s\-]+['"]?)*$/],
+      'font-weight': [/^(\d+|normal|bold|lighter|bolder)$/],
+      'font-size': [/^[\d.]+(px|em|rem|%|pt)$/],
+      'line-height': [/^[\d.]+(px|em|rem|%)?$/],
+      'text-transform': [/^(none|uppercase|lowercase|capitalize)$/],
+      'text-align': [/^(left|right|center|justify)$/],
+      'text-decoration': [/^(none|underline|line-through|overline)(\s+[\w\s#(),.]+)*$/],
+      'letter-spacing': [/^-?[\d.]+(px|em|rem)$/],
+      'margin': [/^(-?[\d.]+(px|em|rem|%)|0|auto)(\s+(-?[\d.]+(px|em|rem|%)|0|auto)){0,3}$/],
+      'margin-top': [/^(-?[\d.]+(px|em|rem|%)|0|auto)$/],
+      'margin-right': [/^(-?[\d.]+(px|em|rem|%)|0|auto)$/],
+      'margin-bottom': [/^(-?[\d.]+(px|em|rem|%)|0|auto)$/],
+      'margin-left': [/^(-?[\d.]+(px|em|rem|%)|0|auto)$/],
+      'padding': [/^([\d.]+(px|em|rem|%)|0)(\s+([\d.]+(px|em|rem|%)|0)){0,3}$/],
+      'padding-top': [/^([\d.]+(px|em|rem|%)|0)$/],
+      'padding-right': [/^([\d.]+(px|em|rem|%)|0)$/],
+      'padding-bottom': [/^([\d.]+(px|em|rem|%)|0)$/],
+      'padding-left': [/^([\d.]+(px|em|rem|%)|0)$/],
+      'border': [/^[\d.]+px\s+(solid|dashed|dotted|double|none)\s+(#[0-9a-fA-F]+|rgba?\([^)]+\))$/],
+      'border-top': [/^[\d.]+px\s+(solid|dashed|dotted|double|none)\s+(#[0-9a-fA-F]+|rgba?\([^)]+\))$/],
+      'border-right': [/^[\d.]+px\s+(solid|dashed|dotted|double|none)\s+(#[0-9a-fA-F]+|rgba?\([^)]+\))$/],
+      'border-bottom': [/^[\d.]+px\s+(solid|dashed|dotted|double|none)\s+(#[0-9a-fA-F]+|rgba?\([^)]+\))$/],
+      'border-left': [/^[\d.]+px\s+(solid|dashed|dotted|double|none)\s+(#[0-9a-fA-F]+|rgba?\([^)]+\))$/],
+      'border-radius': [/^[\d.]+(px|em|rem|%)(\s+[\d.]+(px|em|rem|%)){0,3}$/],
+      'display': [/^(none|block|inline|inline-block|flex|inline-flex|grid|inline-grid)$/],
+      'position': [/^(static|relative|absolute|fixed|sticky)$/],
+      'top': [/^(-?[\d.]+(px|em|rem|%)|0|auto)$/],
+      'right': [/^(-?[\d.]+(px|em|rem|%)|0|auto)$/],
+      'bottom': [/^(-?[\d.]+(px|em|rem|%)|0|auto)$/],
+      'left': [/^(-?[\d.]+(px|em|rem|%)|0|auto)$/],
+      'width': [/^([\d.]+(px|em|rem|%)|auto)$/],
+      'height': [/^([\d.]+(px|em|rem|%)|auto)$/],
+      'min-width': [/^([\d.]+(px|em|rem|%)|0|auto)$/],
+      'min-height': [/^([\d.]+(px|em|rem|%)|0|auto)$/],
+      'max-width': [/^([\d.]+(px|em|rem|%)|none)$/],
+      'list-style': [/^(none|disc|circle|square|decimal)(\s+(inside|outside))?$/],
+      'list-style-type': [/^(none|disc|circle|square|decimal)$/],
+      'align-items': [/^(flex-start|flex-end|center|stretch|baseline)$/],
+      'justify-content': [/^(flex-start|flex-end|center|space-between|space-around|space-evenly)$/],
+      'cursor': [/^(default|pointer|text|move|grab|grabbing|not-allowed|wait)$/],
+      'transition': [/^[\w\s,()-.]+$/],
+      'counter-reset': [/^[\w-]+$/],
+      'overflow': [/^(visible|hidden|scroll|auto)$/],
+      'white-space': [/^(normal|nowrap|pre|pre-wrap|pre-line)$/],
+      'opacity': [/^[01]?\.?\d+$/],
+    },
+  },
+  allowedSchemes: ['http', 'https', 'mailto', 'tel'],
+  allowedSchemesByTag: {},
+  allowedSchemesAppliedToAttributes: ['href', 'src'],
+  allowProtocolRelative: false,
+  enforceHtmlBoundary: true,
+};
+
 /* ── Extract one section from the plan markdown ── */
 function extractSection(plan: string, sectionId: string, isStreaming: boolean = false): string {
   if (!plan) return '';
@@ -1714,7 +1808,7 @@ function PlanContent() {
                     <div
                       onMouseOver={handlePlaceMouseOver}
                       onMouseLeave={handlePlaneMouseLeave}
-                      dangerouslySetInnerHTML={{ __html: sanitizeHtml(markdownToHtml(sectionContent)) }}
+                      dangerouslySetInnerHTML={{ __html: sanitizeHtml(markdownToHtml(sectionContent), PLAN_SANITIZE_CONFIG) }}
                     />
                   )}
                 </div>
@@ -1775,7 +1869,7 @@ function PlanContent() {
                       ) : (() => {
                         const ideas = parseIdeas(extraIdeas);
                         const days = itineraryRef.current?.getDays() ?? [];
-                        if (ideas.length === 0) return <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(markdownToHtml(extraIdeas)) }} />;
+                        if (ideas.length === 0) return <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(markdownToHtml(extraIdeas), PLAN_SANITIZE_CONFIG) }} />;
                         return (
                           <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
                             {ideas.map((idea, i) => (
