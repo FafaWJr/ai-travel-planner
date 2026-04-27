@@ -2065,16 +2065,36 @@ function PlanContent() {
 }
 
 export default function PlanPage() {
-  const t = useTranslations('plan');
-  return (
-    <Suspense fallback={
-      <div style={{ background:'#F4F7FB', minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:16 }}>
-        <div style={{ width:48, height:48, borderRadius:'50%', border:'3px solid rgba(0,68,123,0.12)', borderTop:'3px solid #FF8210', animation:'spin 1s linear infinite' }} />
-        <p style={{ fontFamily:"'Poppins',sans-serif", color:'#00447B', fontSize:15 }}>{t('loading')}</p>
-        <style>{`@keyframes spin { to { transform:rotate(360deg); } }`}</style>
-      </div>
-    }>
-      <PlanContent />
-    </Suspense>
-  );
+  // [PLAN-SSR-DIAG] Temporary instrumentation - remove with the actual fix.
+  // Production /plan SSR returns 500 with ERR_REQUIRE_ESM; Vercel runtime
+  // log truncation hides the offending package and importer chain. This
+  // try/catch logs the full stack so we can read it un-truncated. Stays
+  // sync (file is 'use client' — async Client Components are invalid).
+  // Caveat: only catches synchronous throws inside this component; module-
+  // load-time require() errors won't surface here. If the [PLAN-SSR-DIAG]
+  // tag never appears in Vercel logs, instrumentation needs to move
+  // somewhere upstream (e.g. error.tsx or root layout).
+  try {
+    const t = useTranslations('plan');
+    return (
+      <Suspense fallback={
+        <div style={{ background:'#F4F7FB', minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:16 }}>
+          <div style={{ width:48, height:48, borderRadius:'50%', border:'3px solid rgba(0,68,123,0.12)', borderTop:'3px solid #FF8210', animation:'spin 1s linear infinite' }} />
+          <p style={{ fontFamily:"'Poppins',sans-serif", color:'#00447B', fontSize:15 }}>{t('loading')}</p>
+          <style>{`@keyframes spin { to { transform:rotate(360deg); } }`}</style>
+        </div>
+      }>
+        <PlanContent />
+      </Suspense>
+    );
+  } catch (err: unknown) {
+    const e = err as Error & { code?: string };
+    console.error("[PLAN-SSR-DIAG] /plan SSR threw", {
+      name: e?.name,
+      message: e?.message,
+      code: e?.code,
+      stack: e?.stack,
+    });
+    throw err;
+  }
 }
