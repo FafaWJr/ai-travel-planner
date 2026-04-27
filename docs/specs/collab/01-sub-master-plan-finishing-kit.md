@@ -3,9 +3,10 @@
 **Tier 1.5 sub-master plan**
 **Version:** 1.0
 **Date:** 27 April 2026
+**Last updated:** 27 April 2026
 **Maintainer:** Wilson
 **Linked from:** `docs/specs/collab/00-master-plan.md` (Tier 1, v2.1)
-**Status:** Active execution tracking
+**Status:** Active. Items #3 through #11 reopened on 27 April 2026 after the recovery track (R1 + R2 + R4) closed. Item #1 shipped. Item #2 superseded by R1. See `docs/specs/collab/02-recovery-plan-april-27-regressions.md`.
 
 ---
 
@@ -39,17 +40,20 @@ When an item ships, update the row with the commit SHA, the date, and tick the b
 
 ### Track C: Stage 1 polish (Copy link UX)
 
-- `[ ]` **#1. Copy link feedback motion** (`luna-copy-link-ux.md`, ~1.5h, very low risk)
+- `[x]` **#1. Copy link feedback motion** (`luna-copy-link-ux.md`, ~1.5h, very low risk)
   Adds a "Copied" state with brief animation to both Copy buttons in InviteModal (editor link and viewer link). Includes 1.5s reset timer, accessible aria-live announcement, and EN / PT-BR / ES translations for the new string. Single component touched.
-  Commit: __________  Date: __________
+  Commit: `ceacd6fa`  Date: 27 April 2026
 
 ### Track B: Format restore (CSS regression from detour aftermath)
 
-- `[ ]` **#2. Restore prose spacing in `.plan-section`** (`luna-prose-format-restore.md`, ~1.5h, very low risk)
-  Adds proper margins to `<p>` and `<p><strong>` elements inside `.plan-section`. Restores visual hierarchy for AI-written `**bold paragraph**` sub-headers. Single `<style jsx>` block touched in `app/[locale]/plan/page.tsx`. Includes the Bali, Phuket, and one older trip in smoke tests so we cover both shapes.
-  Commit: __________  Date: __________
+- `[!]` **#2. Restore prose spacing in `.plan-section`** (`luna-prose-format-restore.md`, ~1.5h, very low risk)
+  **Status:** SUPERSEDED BY R1 (`luna-r1-sanitize-html-style-allowlist.md`, commit `69d271d5`, 27 April 2026).
+  **Why:** This item was based on a wrong root-cause diagnosis (a missing `<style jsx>` block for `.plan-section`). The actual cause was sanitize-html stripping inline styles by default after commit `2a791e34` swapped libraries. R1 fixed the real root cause: an explicit allowlist in `PLAN_SANITIZE_CONFIG`. Do not pursue the original CSS-regeneration approach. The styles were never missing from `markdownToHtml`'s output; they were being stripped at sanitization time. See `docs/specs/collab/02-recovery-plan-april-27-regressions.md` Regression 1 for full diagnosis.
+  Original prompt scope is preserved above for archival reference. Do not execute.
 
 ### Track A: Stage 2 finishing kit (close out master plan Stage 2)
+
+**Track A status (#3 through #7):** Reopened 27 April 2026 after the recovery track (R1 + R2 + R4) closed. These items were paused during the recovery track per the original recovery plan ordering. Original execution order preserved.
 
 - `[ ]` **#3. Verify second realtime flag** (`luna-stage2-finish-flag-check.md`, ~30m, very low risk)
   Confirms `NEXT_PUBLIC_COLLAB_REALTIME_ENABLED` exists, defaults to true, and gates the realtime subscribe path correctly. If absent, adds it. Reads master plan section 4 Stage 2 deliverable list as the spec.
@@ -72,6 +76,8 @@ When an item ships, update the row with the commit SHA, the date, and tick the b
   Commit (test report): __________  Date: __________
 
 ### Bookkeeping before Stage 3
+
+**Bookkeeping + Master plan stages status (#8 through #11):** Reopened 27 April 2026. Queued behind Track A items #3 through #7 per the original execution order.
 
 - `[ ]` **#8. CLAUDE.md regen** (`luna-claude-md-regen.md`, ~30m, very low risk)
   Catches up `CLAUDE.md` and `CONVENTIONS.md` with the Stage 2f hotfix arc, the destructive-PATCH guard, the SSR fix, the saved-trip-load fix, this sub-master plan, and any patch types that surfaced through Tracks A.4 / A.5 / A.6 above. Runs the existing `./scripts/update-context.sh`.

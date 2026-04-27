@@ -14,6 +14,9 @@
 
 Six stages, ~78.5 hours total estimated. Real-time multi-user trip planning with viewer/editor/owner permissions, per-user cross-aware Luna chat, and comments on activities/days/phases/hotels.
 
+**Current stage:** Stage 2 finishing kit. Sub-master plan items #3 through #11 reopened on 27 April 2026 after the recovery track (R1 + R2 + R4) closed. Stage 3 / 4 / 5 remain paused per master plan v2.1 sequence (they unblock after the Stage 2 finishing kit completes).
+**Last shipped release:** R4 plan-render-smoke-guard (commit `e1c6a924`) on 27 April 2026.
+
 ---
 
 ## Stage status
@@ -99,8 +102,14 @@ These are not blockers for moving to Stage 3, but they should be cleared before 
 
 | Detour | Status | Commit | Date | One-line cause |
 |---|---|---|---|---|
+| R5 recovery-track bookkeeping | Closed | (this commit) | 27 Apr | Bookkeeping pass that closed the 27 April recovery track (R1 + R2 + R4 shipped, R3 deferred). Reopened sub-master plan items #3 through #11. |
+| R4 plan-render-smoke-guard | Closed | `e1c6a924` | 27 Apr | Extracted pure rendering pipeline to `lib/plan-render.ts`. Added `prebuild` smoke gate running 32 contract assertions before every webpack build. Wilson scope deviation: SECTIONS stayed in page.tsx because it imports Lucide React icons; internal SECTION_LABEL_MAP serves extractSection's fallback. |
+| R2 empty-plan-save-guard | Closed | `cc769a0a` | 27 Apr | Two-layer guard against saving trips with empty `plan` markdown when `itineraryDays.length > 0`. R2a tightens AI system prompt (H1 confirmed via static analysis). R2b adds client-side validateTripPayloadForSave. R2c adds server-side `REFUSED_INCONSISTENT_TRIP` on POST + PATCH (with collab partial-patch carve-out). R2d adds `plan.errors.emptyPlanFullDays` in EN/PT-BR/ES. |
+| R1 sanitize-html-style-allowlist | Closed | `69d271d5` | 27 Apr | Restored Plan tab visual hierarchy stripped by the SSR fix. Added `PLAN_SANITIZE_CONFIG` with `allowedAttributes` for `style` + `data-place` and a tight `allowedStyles` allowlist. XSS posture preserved. |
 | SSR HTTP 500 on `/plan` | Closed | `2a791e34` | 27 Apr | `isomorphic-dompurify` dragged in ESM-only `@exodus/bytes`. Replaced with `sanitize-html`. |
 | Saved trip view spins forever | Closed | `958ac160` | 27 Apr | Render gate at `app/[locale]/plan/page.tsx` line 1270 required non-empty `plan` markdown. Structured-only AI output produces empty `plan`. Gate now uses `hasContent` (plan or `itineraryDays` or `itineraryPhases`). Loader defensively normalised. |
+
+**2026-04-27 Recovery track summary (R1 + R2 + R4 shipped, R3 deferred, R5 closed bookkeeping).** Wilson reported degraded formatting and empty saved-trip tabs from screenshots. Live diagnosis isolated three regressions: (1) sanitize-html stripping inline styles after the SSR fix swapped libraries, (2) AI generation intermittently emitting only tool_use without text deltas causing empty `plan` saves, (3) the existing `/plan` smoke not catching visual regressions and letting R1 ship undetected for 5 hours. R1 restored the inline-style allowlist; R2 added two-layer guards against empty-plan saves; R4 extracted the rendering pipeline into `lib/plan-render.ts` and added a prebuild smoke gate that runs 32 contract assertions before every webpack build. R3 (backfill of two existing broken test trips) was deferred by Wilson's decision because the trips are personal test data; the saved-trip-load fix from earlier in the day already lets them open without spinning. Full diagnosis and rationale: `docs/specs/collab/02-recovery-plan-april-27-regressions.md`.
 
 ---
 
