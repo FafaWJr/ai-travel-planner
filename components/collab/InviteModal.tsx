@@ -18,6 +18,8 @@ export function InviteModal({
   const [editorToken, setEditorToken] = useState<string | null>(null);
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [loading, setLoading] = useState(true);
+  const [copiedRole, setCopiedRole] = useState<'editor' | 'viewer' | null>(null);
+  const [copyFailedRole, setCopyFailedRole] = useState<'editor' | 'viewer' | null>(null);
 
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
   const viewerUrl = viewerToken ? `${origin}/${locale}/trip/${tripId}?invite=${viewerToken}` : '';
@@ -44,9 +46,20 @@ export function InviteModal({
     loadAll();
   }, [loadAll]);
 
-  async function handleCopy(url: string) {
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+  async function handleCopy(role: 'editor' | 'viewer', url: string) {
+    try {
+      if (typeof navigator === 'undefined' || !navigator.clipboard) {
+        throw new Error('clipboard unavailable');
+      }
       await navigator.clipboard.writeText(url);
+      setCopiedRole(role);
+      setCopyFailedRole(null);
+      setTimeout(() => setCopiedRole(prev => prev === role ? null : prev), 1500);
+    } catch (err) {
+      console.warn('[InviteModal] clipboard write failed', err);
+      setCopyFailedRole(role);
+      setCopiedRole(null);
+      setTimeout(() => setCopyFailedRole(prev => prev === role ? null : prev), 1500);
     }
   }
 
@@ -106,6 +119,25 @@ export function InviteModal({
           {t('title')}
         </h2>
 
+        <div
+          aria-live="polite"
+          aria-atomic="true"
+          style={{
+            position: 'absolute',
+            width: 1,
+            height: 1,
+            padding: 0,
+            margin: -1,
+            overflow: 'hidden',
+            clip: 'rect(0,0,0,0)',
+            whiteSpace: 'nowrap',
+            border: 0,
+          }}
+        >
+          {copiedRole && t('copiedAnnouncement')}
+          {copyFailedRole && t('copyFailedAnnouncement')}
+        </div>
+
         {loading ? (
           <p>{t('loading')}</p>
         ) : (
@@ -119,10 +151,27 @@ export function InviteModal({
                   style={{ flex: 1, padding: '8px 10px', fontSize: 12, border: '1px solid #E5E7EB', borderRadius: 6 }}
                 />
                 <button
-                  onClick={() => handleCopy(editorUrl)}
-                  style={{ padding: '8px 14px', background: '#FF8210', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}
+                  onClick={() => handleCopy('editor', editorUrl)}
+                  aria-label={t('copyEditorAriaLabel')}
+                  style={{
+                    padding: '8px 14px',
+                    background:
+                      copyFailedRole === 'editor' ? '#EF4444' :
+                      copiedRole === 'editor' ? '#10B981' :
+                      '#FF8210',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: 6,
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    minWidth: 88,
+                    transform: copiedRole === 'editor' ? 'scale(1.03)' : 'scale(1)',
+                    transition: 'background 200ms ease, transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1)',
+                  }}
                 >
-                  {t('copyButton')}
+                  {copyFailedRole === 'editor' ? t('copyFailed') :
+                   copiedRole === 'editor' ? t('copied') :
+                   t('copyButton')}
                 </button>
               </div>
               <button
@@ -142,10 +191,27 @@ export function InviteModal({
                   style={{ flex: 1, padding: '8px 10px', fontSize: 12, border: '1px solid #E5E7EB', borderRadius: 6 }}
                 />
                 <button
-                  onClick={() => handleCopy(viewerUrl)}
-                  style={{ padding: '8px 14px', background: '#00447B', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}
+                  onClick={() => handleCopy('viewer', viewerUrl)}
+                  aria-label={t('copyViewerAriaLabel')}
+                  style={{
+                    padding: '8px 14px',
+                    background:
+                      copyFailedRole === 'viewer' ? '#EF4444' :
+                      copiedRole === 'viewer' ? '#10B981' :
+                      '#00447B',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: 6,
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    minWidth: 88,
+                    transform: copiedRole === 'viewer' ? 'scale(1.03)' : 'scale(1)',
+                    transition: 'background 200ms ease, transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1)',
+                  }}
                 >
-                  {t('copyButton')}
+                  {copyFailedRole === 'viewer' ? t('copyFailed') :
+                   copiedRole === 'viewer' ? t('copied') :
+                   t('copyButton')}
                 </button>
               </div>
               <button
