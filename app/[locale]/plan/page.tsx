@@ -930,33 +930,54 @@ function PlanContent() {
   const loadSavedTripById = async (id: string) => {
     setLoading(true);
     try {
-      const { data } = await supabase.from('saved_trips').select('*').eq('id', id).single();
-      if (data && data.trip_data) {
-        const td = data.trip_data as { plan?: string; photos?: string[]; acceptedHotels?: AcceptedHotel[]; itineraryDays?: Day[]; itineraryPhases?: Phase[] };
-        setPlan(td.plan || '');
-        setPhotos(td.photos || []);
-        setAcceptedHotels((td.acceptedHotels as AcceptedHotel[]) || []);
-        if (td.itineraryDays && td.itineraryDays.length > 0) {
-          setInitialItineraryDays(td.itineraryDays);
-        }
-        if (td.itineraryPhases && td.itineraryPhases.length > 0) {
-          setInitialItineraryPhases(td.itineraryPhases);
-          setPagePhasesMirror(td.itineraryPhases);
-        }
-        // Restore chat history if available
-        if (Array.isArray(data.chat_history) && data.chat_history.length > 0) {
-          setChatMessages(data.chat_history as { role: 'user' | 'assistant'; content: string; planUpdated?: boolean; isWelcome?: boolean }[]);
-        }
-        setSavedTripId(data.id as string);
-        if (data.destination) setSavedTripDestination(data.destination as string);
-        // Stage 2e: populate start/end so the destination card has dates
-        // and the day-count badge when the user opens via ?tripId= only.
-        if (data.start_date) setSavedTripStartDate(data.start_date as string);
-        if (data.end_date) setSavedTripEndDate(data.end_date as string);
-      } else {
-        setError('Could not load saved trip.');
+      const { data, error: fetchErr } = await supabase.from('saved_trips').select('*').eq('id', id).single();
+      if (fetchErr) {
+        console.error('[loadSavedTripById] Supabase fetch error:', fetchErr);
+        setError('Failed to load saved trip. Please try again.');
+        return;
       }
-    } catch {
+      if (!data || !data.trip_data) {
+        setError('Could not load saved trip.');
+        return;
+      }
+
+      // Defensive normalization. The trip_data shape has evolved across migrations:
+      //   - Legacy: { plan, photos, prompt, acceptedHotels, itineraryDays }
+      //   - Current: { itineraryDays, itineraryPhases, acceptedHotels } (structured-only)
+      //   - Partial rows may have any subset.
+      // We coerce missing keys to safe defaults so the render gate (hasContent)
+      // can resolve to true whenever any meaningful content exists.
+      const tdRaw = data.trip_data as Record<string, unknown>;
+      const td = {
+        plan: typeof tdRaw.plan === 'string' ? tdRaw.plan : '',
+        photos: Array.isArray(tdRaw.photos) ? (tdRaw.photos as string[]) : [],
+        acceptedHotels: Array.isArray(tdRaw.acceptedHotels) ? (tdRaw.acceptedHotels as AcceptedHotel[]) : [],
+        itineraryDays: Array.isArray(tdRaw.itineraryDays) ? (tdRaw.itineraryDays as Day[]) : [],
+        itineraryPhases: Array.isArray(tdRaw.itineraryPhases) ? (tdRaw.itineraryPhases as Phase[]) : [],
+      };
+
+      setPlan(td.plan);
+      setPhotos(td.photos);
+      setAcceptedHotels(td.acceptedHotels);
+      if (td.itineraryDays.length > 0) {
+        setInitialItineraryDays(td.itineraryDays);
+      }
+      if (td.itineraryPhases.length > 0) {
+        setInitialItineraryPhases(td.itineraryPhases);
+        setPagePhasesMirror(td.itineraryPhases);
+      }
+      // Restore chat history if available
+      if (Array.isArray(data.chat_history) && data.chat_history.length > 0) {
+        setChatMessages(data.chat_history as { role: 'user' | 'assistant'; content: string; planUpdated?: boolean; isWelcome?: boolean }[]);
+      }
+      setSavedTripId(data.id as string);
+      if (data.destination) setSavedTripDestination(data.destination as string);
+      // Stage 2e: populate start/end so the destination card has dates
+      // and the day-count badge when the user opens via ?tripId= only.
+      if (data.start_date) setSavedTripStartDate(data.start_date as string);
+      if (data.end_date) setSavedTripEndDate(data.end_date as string);
+    } catch (err) {
+      console.error('[loadSavedTripById] unexpected error:', err);
       setError('Failed to load saved trip. Please try again.');
     } finally {
       setLoading(false);
@@ -1226,6 +1247,16 @@ function PlanContent() {
 
   const sectionContent = plan ? extractSection(plan, activeSection, isStreaming) : '';
 
+  // Render gate source of truth. A trip is renderable when it has any of:
+  // narrative markdown (legacy shape), structured days, or structured phases.
+  // This prevents render-gate drift if the AI pipeline shape changes again.
+  // See app/[locale]/plan/page.tsx render branches around line 1270 and 1962.
+  const hasContent = Boolean(
+    plan ||
+    (initialItineraryDays && initialItineraryDays.length > 0) ||
+    (initialItineraryPhases && initialItineraryPhases.length > 0)
+  );
+
   return (
     <div style={{ background:'#F4F7FB', minHeight:'100vh', fontFamily:"'Inter',sans-serif" }}>
 
@@ -1267,7 +1298,7 @@ function PlanContent() {
         )}
 
         {/* ── Plan ── */}
-        {!loading && !error && plan && (
+        {!loading && !error && hasContent && (
           <>
           <div className="plan-wrapper" style={{ maxWidth:900, margin:'0 auto', padding:'32px 24px' }}>
 
@@ -1959,7 +1990,7 @@ function PlanContent() {
         )}
 
         {/* ── Empty state ── */}
-        {!loading && !error && !plan && (
+        {!loading && !error && !hasContent && (
           <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'calc(100vh - 68px)' }}>
             {(tripId || (typeof window !== 'undefined' && !!localStorage.getItem('guest_trip_draft'))) ? (
               <div style={{ width:40, height:40, borderRadius:'50%', border:'3px solid rgba(0,68,123,0.12)', borderTop:'3px solid #FF8210', animation:'spin 1s linear infinite' }} />
