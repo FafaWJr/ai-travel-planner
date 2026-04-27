@@ -58,6 +58,35 @@ export async function POST(request: NextRequest) {
   const body = await request.json()
   const { title, destination, start_date, end_date, trip_data, chat_history } = body
 
+  // R2 guard (recovery plan, 2026-04-27). Refuse to create trips with
+  // structured days but no markdown narrative. This is the inconsistent state
+  // where the AI emitted only tool_use events, the client React state has
+  // empty `plan`, and a silent save would create a trip with empty
+  // Overview/Weather/Transport/Tips tabs in the library. The client-side
+  // guard from R2b catches this first; this server-side guard is defense in
+  // depth against direct API calls or future client regressions.
+  if (trip_data && typeof trip_data === 'object') {
+    const td = trip_data as Record<string, unknown>
+    const planText = typeof td.plan === 'string' ? td.plan : ''
+    const days = Array.isArray(td.itineraryDays) ? (td.itineraryDays as unknown[]) : []
+    if (planText.length < 100 && days.length > 0) {
+      console.warn('[POST /api/trips] REFUSED_INCONSISTENT_TRIP', {
+        userId: user.id,
+        planLen: planText.length,
+        daysCount: days.length,
+      })
+      return NextResponse.json(
+        {
+          error: 'REFUSED_INCONSISTENT_TRIP',
+          reason: 'Cannot create trip with structured days but no markdown narrative',
+          planLen: planText.length,
+          daysCount: days.length,
+        },
+        { status: 400 }
+      )
+    }
+  }
+
   // Stage 2c: server-side UUID injection. Every day gets a stable id
   // before trip_data crosses the DB boundary, so Stage 2d patches and
   // Stage 4 comments-on-day have a consistent key. Idempotent: days
@@ -178,6 +207,39 @@ export async function PATCH(request: NextRequest) {
           { status: 400 }
         )
       }
+    }
+  }
+
+  // R2 guard for PATCH (recovery plan, 2026-04-27). Same intent as the
+  // POST-side guard: refuse to update a trip into the inconsistent shape
+  // (structured days, no narrative). Fires regardless of the prior stored
+  // value, so it covers both the "first-time inconsistent save" and "user
+  // retries to commit broken state" cases.
+  //
+  // Critical scoping: this guard ONLY fires when BOTH `plan` and
+  // `itineraryDays` are explicitly in the PATCH body. Collab patches that
+  // send only a subset (e.g. just itineraryDays after an accept_activity
+  // edit) must NOT be blocked by this guard.
+  if (trip_data && typeof trip_data === 'object') {
+    const td = trip_data as Record<string, unknown>
+    const planText = typeof td.plan === 'string' ? td.plan : ''
+    const days = Array.isArray(td.itineraryDays) ? (td.itineraryDays as unknown[]) : []
+    if ('plan' in td && 'itineraryDays' in td && planText.length < 100 && days.length > 0) {
+      console.warn('[PATCH /api/trips] REFUSED_INCONSISTENT_TRIP', {
+        tripId: id,
+        userId: user.id,
+        planLen: planText.length,
+        daysCount: days.length,
+      })
+      return NextResponse.json(
+        {
+          error: 'REFUSED_INCONSISTENT_TRIP',
+          reason: 'Cannot update trip into structured-days-without-narrative state',
+          planLen: planText.length,
+          daysCount: days.length,
+        },
+        { status: 400 }
+      )
     }
   }
 

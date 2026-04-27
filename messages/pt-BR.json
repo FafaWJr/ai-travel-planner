@@ -724,6 +724,9 @@
     }
   },
   "plan": {
+    "errors": {
+      "emptyPlanFullDays": "Viagem não foi totalmente gerada. Por favor, gere novamente antes de salvar."
+    },
     "loading": "Carregando seu plano...",
     "noPrompt": "Nenhum destino informado.",
     "startPlanning": "Começar a planejar",

@@ -577,6 +577,7 @@ When the define_day tool is available, the user prompt will ask you to follow a 
 - PHASE 2: Only after all six narrative sections are complete, call define_day (and define_phase for trips of 15+ days) for the structured itinerary.
 
 Absolute rules:
+- A response containing ONLY tool calls without the six narrative sections is INCOMPLETE and INVALID. A response containing ONLY the narrative without tool calls is also INCOMPLETE and INVALID. Both the markdown narrative AND the tool calls are mandatory in every response. If you find yourself about to call define_day or define_phase before writing all six narrative sections, STOP and write the narrative first.
 - Do NOT write the day-by-day itinerary as markdown text. Use define_day for every day.
 - Do NOT emit any tool call until all six narrative sections are fully written.
 - Do NOT skip the Getting Around section. Do NOT skip the Practical Tips section. Both are required.

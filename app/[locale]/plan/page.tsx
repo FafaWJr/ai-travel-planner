@@ -882,11 +882,41 @@ function PlanContent() {
     return { dest, sd, ed, title, trip_data };
   };
 
+  /**
+   * R2 guard. Detect inconsistent trip state where the AI produced structured
+   * days but no markdown narrative. Saving this state corrupts the user's
+   * library with trips that have empty Overview/Weather/Transport/Tips/Stays
+   * tabs. Returns null if safe to save; otherwise returns a translation key
+   * + context object so the caller can surface a user-visible error.
+   *
+   * Threshold of 100 chars (not 0) covers cases where a partial stream
+   * persists a stray header. Genuine narratives are always > 5000 chars.
+   */
+  const validateTripPayloadForSave = (
+    payload: ReturnType<typeof buildTripPayload>
+  ): { tKey: string; planLen: number; daysCount: number } | null => {
+    const planLen = (payload.trip_data.plan ?? '').length;
+    const daysCount = payload.trip_data.itineraryDays?.length ?? 0;
+    if (planLen < 100 && daysCount > 0) {
+      return { tKey: 'errors.emptyPlanFullDays', planLen, daysCount };
+    }
+    return null;
+  };
+
   const saveTrip = async (): Promise<boolean> => {
     if (!user) { openGate('Save trip'); return false; }
+
+    const payload = buildTripPayload();
+    const validationError = validateTripPayloadForSave(payload);
+    if (validationError) {
+      console.warn('[saveTrip] Refused to save inconsistent payload', validationError);
+      setToast(t(validationError.tKey));
+      return false;
+    }
+
     setSaveLoading(true);
     try {
-      const { dest, sd, ed, title, trip_data } = buildTripPayload();
+      const { dest, sd, ed, title, trip_data } = payload;
       if (savedTripId) {
         const res = await fetch('/api/trips', {
           method: 'PATCH',

@@ -724,6 +724,9 @@
     }
   },
   "plan": {
+    "errors": {
+      "emptyPlanFullDays": "Trip not fully generated. Please regenerate before saving."
+    },
     "loading": "Loading your plan...",
     "noPrompt": "No trip prompt provided.",
     "startPlanning": "Start planning",

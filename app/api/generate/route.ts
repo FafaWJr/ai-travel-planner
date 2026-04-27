@@ -119,7 +119,13 @@ ${buildStructuredItineraryInstruction(tripDays)}
 ## Budget Estimator
 ## Practical Tips
 
-Make each section specific, practical and engaging. Use bullet points and bold text throughout.`;
+Make each section specific, practical and engaging. Use bullet points and bold text throughout.
+
+MANDATORY OUTPUT FORMAT: Your response MUST contain BOTH:
+1. Full markdown narrative for all six sections above (Destination Overview, Travel Season & Weather, Where to Stay, Getting Around, Budget Estimator, Practical Tips). Each section must be a complete H2-headed block with substantive content, bullet points, and bold text. Do not abbreviate, skip, or stub any of the six.
+2. The structured day-by-day itinerary via define_day (and define_phase where required) tool calls.
+
+A response with only tool calls and no markdown narrative is incomplete and will be rejected. A response with only narrative and no tool calls is incomplete and will be rejected. Both are mandatory in every response.`;
 
       let stream: ReadableStream<Uint8Array>;
       try {
@@ -172,7 +178,13 @@ Make each section specific, practical and engaging. Use bullet points and bold t
     const userPromptWithTools = baseUserPrompt.replace(
       /## Personalised Itinerary\n[\s\S]*?(?=\n## Where to Stay)/,
       buildStructuredItineraryInstruction(tripDays) + '\n',
-    );
+    ) + `
+
+MANDATORY OUTPUT FORMAT: Your response MUST contain BOTH:
+1. Full markdown narrative for all six sections (Destination Overview, Travel Season & Weather, Where to Stay, Getting Around, Budget Estimator, Practical Tips). Each section must be a complete H2-headed block with substantive content, bullet points, and bold text. Do not abbreviate, skip, or stub any of the six.
+2. The structured day-by-day itinerary via define_day (and define_phase where required) tool calls.
+
+A response with only tool calls and no markdown narrative is incomplete and will be rejected. A response with only narrative and no tool calls is incomplete and will be rejected. Both are mandatory in every response.`;
 
     let stream: ReadableStream<Uint8Array>;
     try {
