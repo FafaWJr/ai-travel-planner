@@ -474,11 +474,17 @@ export default function FloatingChat({ plan, destination, hotelContext, currentA
     setMsgs(next);
     setLoading(true);
     try {
-      let ctx = plan;
-      if (hotelContext) ctx += `\n\n## Confirmed Accommodation\n${hotelContext}`;
-      if (currentActivities) ctx += `\n\n## Already in Itinerary (NEVER suggest these again)\n${currentActivities}`;
-
-      // === R5 HOTFIX #3 INSTRUMENTATION ===
+      // === Hotfix #5b: assemble phases FIRST.
+      // The server's buildLunaDynamicContext applies sanitizePromptInput
+      // (lib/ai.ts:301) which slices tripContext to 8000 chars. For 7+ day
+      // trips the plan markdown alone can exceed 8000 chars; if the
+      // ## Trip Phases block is appended LAST it gets sliced off entirely
+      // and Luna sees no phases despite phasesFromProp.length > 0. Putting
+      // phases first guarantees they survive the slice. The plan markdown's
+      // tail (which starts at ~1400 chars after phases) gets truncated
+      // instead, but Luna already gets currentActivities as a structural
+      // summary so the lost prose-tail content does not change her
+      // reasoning ability for phase ops, hotel ops, or activity ops.
       const phasesFromProp = (() => {
         try {
           const result = getPhases?.();
@@ -495,6 +501,7 @@ export default function FloatingChat({ plan, destination, hotelContext, currentA
         }
       })();
 
+      let ctx = '';
       if (phasesFromProp.length > 0) {
         const phasesBlock = phasesFromProp.map((p, idx) =>
           `Phase ${idx + 1}:\n` +
@@ -504,12 +511,15 @@ export default function FloatingChat({ plan, destination, hotelContext, currentA
           `  Summary: ${p.summary || '(none)'}\n` +
           (p.highlights?.length ? `  Highlights: ${p.highlights.join(' \u00b7 ')}\n` : '')
         ).join('\n');
-        ctx += `\n\n## Trip Phases (CRITICAL \u2014 phase_id values must be copied exactly for phase editing tools)\n${phasesBlock}`;
-        console.info('[FloatingChat] phase context injected \u2014 ctx length:', ctx.length, 'phases:', phasesFromProp.length);
+        ctx = `## Trip Phases (CRITICAL \u2014 phase_id values must be copied exactly for phase editing tools)\n${phasesBlock}\n\n`;
+        console.info('[FloatingChat] phase context injected at front of ctx, phases:', phasesFromProp.length);
       } else {
         console.warn('[FloatingChat] no phases in context \u2014 Luna will not know about phases for this request');
       }
-      // === END R5 HOTFIX #3 INSTRUMENTATION ===
+
+      ctx += plan;
+      if (hotelContext) ctx += `\n\n## Confirmed Accommodation\n${hotelContext}`;
+      if (currentActivities) ctx += `\n\n## Already in Itinerary (NEVER suggest these again)\n${currentActivities}`;
 
       const res = await fetch('/api/chat', {
         method: 'POST',
