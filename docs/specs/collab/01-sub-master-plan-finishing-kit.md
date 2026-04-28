@@ -59,9 +59,11 @@ When an item ships, update the row with the commit SHA, the date, and tick the b
   Confirms `NEXT_PUBLIC_COLLAB_REALTIME_ENABLED` exists, defaults to true, and gates the realtime subscribe path correctly. **Outcome C** (already correctly wired); only `.env.example` documentation line added plus test report. Test report: `docs/specs/collab/test-reports/stage2-finish-3-flag-check.md`. Live multi-browser smoke tests 1–4 deferred to Wilson runtime QA; source-level verification confirms both subscribe-side (`hooks/useCollaborativeTrip.ts:466`) and broadcast-side (`hooks/useCollaborativeTrip.ts:363`) early-return when `enabled === false`.
   Commit: (this commit)  Date: 28 April 2026
 
-- `[ ]` **#4. Patch coverage QA** (`luna-stage2-patch-coverage-qa.md`, ~3h, medium risk)
-  Walks through the 11 patch types coded but never triggered in production: `remove_activity`, `replace_activity`, `unaccept_activity`, `remove_note`, `add_hotel`, `remove_hotel`, `split_phase`, `merge_phases`, `reorder_phases`, `update_budget`, `expand_phase`. Each must produce a `trip_activity_log` row and broadcast to a second browser session. Any failure becomes Stage 2f hotfix #5.
-  Commit (test report): __________  Date: __________  Hotfixes raised: __________
+- `[~]` **#4. Patch coverage QA** (`luna-stage2-patch-coverage-qa.md`, ~3h, medium risk)
+  Walks through the patch types coded but never triggered in production. **Source-level pre-flight done 28 April 2026** (commit pending): the canonical patch library is 21 types (not 11 as originally listed; 2f hotfix #3 added `decline_activity` and `reorder_activities_in_slot`). Of the 14 untriggered types, **7 are dead by design or deferral** (`add_hotel`, `remove_hotel`, `update_budget`, `expand_phase`, `add_comment`, `edit_comment`, `delete_comment`) and require no exercise. The 7 LIVE untriggered types (`remove_activity`, `replace_activity`, `unaccept_activity`, `remove_note`, `split_phase`, `merge_phases`, `reorder_phases`) are Wilson's exercise targets, with per-type test cards ready in the test report.
+  **Live multi-browser exercise pending Wilson runtime QA.** Each card has emit call site location and UI affordance documented; Wilson runs the cards, fills in PASS/FAIL evidence, and either re-commits the report or asks Claude to amend with captured evidence. Any failure becomes Stage 2f hotfix #5.
+  Test report: `docs/specs/collab/test-reports/stage2-finish-4-patch-coverage-qa.md`.
+  Static-pass commit: (this commit)  Live-pass commit: __________  Date: __________  Hotfixes raised: __________
 
 - `[ ]` **#5. Viewer tier end-to-end QA** (`luna-stage2-viewer-tier-qa.md`, ~1h, low risk)
   Creates a viewer share link, joins from a second browser, confirms read-only enforcement on UI (no edit controls render) and API (forced viewer-side patch attempt returns 403). Viewer tier has zero production usage today.
