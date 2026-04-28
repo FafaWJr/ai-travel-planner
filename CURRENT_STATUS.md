@@ -14,8 +14,8 @@
 
 Six stages, ~78.5 hours total estimated. Real-time multi-user trip planning with viewer/editor/owner permissions, per-user cross-aware Luna chat, and comments on activities/days/phases/hotels.
 
-**Current stage:** Stage 2 finishing kit. Sub-master plan items #3 through #11 reopened on 27 April 2026 after the recovery track (R1 + R2 + R4) closed. Stage 3 / 4 / 5 remain paused per master plan v2.1 sequence (they unblock after the Stage 2 finishing kit completes).
-**Last shipped release:** R4 plan-render-smoke-guard (commit `e1c6a924`) on 27 April 2026.
+**Current stage:** Stage 2 finishing kit. Item #3 done (28 April 2026). Items #4 through #7 next, then #8 (CLAUDE.md regen) and #9-#11 (Stages 3/4/5).
+**Last shipped release:** Stage 2 finish #3 (`stage2-finish-flag-check`) on 28 April 2026. Verification of `NEXT_PUBLIC_COLLAB_REALTIME_ENABLED` flag wiring, no source changes (Outcome C).
 
 ---
 
@@ -102,7 +102,8 @@ These are not blockers for moving to Stage 3, but they should be cleared before 
 
 | Detour | Status | Commit | Date | One-line cause |
 |---|---|---|---|---|
-| R5 recovery-track bookkeeping | Closed | (this commit) | 27 Apr | Bookkeeping pass that closed the 27 April recovery track (R1 + R2 + R4 shipped, R3 deferred). Reopened sub-master plan items #3 through #11. |
+| Stage 2 finish #3 flag check | Closed | (this commit) | 28 Apr | `NEXT_PUBLIC_COLLAB_REALTIME_ENABLED` already correctly wired (Outcome C). Verified definition in `lib/collaboration.ts:37`, composed gate in `app/[locale]/plan/page.tsx:300`, both subscribe + emit call sites in `hooks/useCollaborativeTrip.ts` early-return when `enabled === false`. Added commented documentation to `.env.example`. Test report: `docs/specs/collab/test-reports/stage2-finish-3-flag-check.md`. |
+| R5 recovery-track bookkeeping | Closed | `0b7c1af6` + `4bf7176b` | 27 Apr | Bookkeeping pass that closed the 27 April recovery track (R1 + R2 + R4 shipped, R3 deferred). Reopened sub-master plan items #3 through #11. |
 | R4 plan-render-smoke-guard | Closed | `e1c6a924` | 27 Apr | Extracted pure rendering pipeline to `lib/plan-render.ts`. Added `prebuild` smoke gate running 32 contract assertions before every webpack build. Wilson scope deviation: SECTIONS stayed in page.tsx because it imports Lucide React icons; internal SECTION_LABEL_MAP serves extractSection's fallback. |
 | R2 empty-plan-save-guard | Closed | `cc769a0a` | 27 Apr | Two-layer guard against saving trips with empty `plan` markdown when `itineraryDays.length > 0`. R2a tightens AI system prompt (H1 confirmed via static analysis). R2b adds client-side validateTripPayloadForSave. R2c adds server-side `REFUSED_INCONSISTENT_TRIP` on POST + PATCH (with collab partial-patch carve-out). R2d adds `plan.errors.emptyPlanFullDays` in EN/PT-BR/ES. |
 | R1 sanitize-html-style-allowlist | Closed | `69d271d5` | 27 Apr | Restored Plan tab visual hierarchy stripped by the SSR fix. Added `PLAN_SANITIZE_CONFIG` with `allowedAttributes` for `style` + `data-place` and a tight `allowedStyles` allowlist. XSS posture preserved. |

@@ -53,11 +53,11 @@ When an item ships, update the row with the commit SHA, the date, and tick the b
 
 ### Track A: Stage 2 finishing kit (close out master plan Stage 2)
 
-**Track A status (#3 through #7):** Reopened 27 April 2026 after the recovery track (R1 + R2 + R4) closed. These items were paused during the recovery track per the original recovery plan ordering. Original execution order preserved.
+**Track A status (#3 through #7):** Reopened 27 April 2026 after the recovery track (R1 + R2 + R4) closed. These items were paused during the recovery track per the original recovery plan ordering. Original execution order preserved. **#3 done 28 April 2026.**
 
-- `[ ]` **#3. Verify second realtime flag** (`luna-stage2-finish-flag-check.md`, ~30m, very low risk)
-  Confirms `NEXT_PUBLIC_COLLAB_REALTIME_ENABLED` exists, defaults to true, and gates the realtime subscribe path correctly. If absent, adds it. Reads master plan section 4 Stage 2 deliverable list as the spec.
-  Commit: __________  Date: __________
+- `[x]` **#3. Verify second realtime flag** (`luna-stage2-finish-flag-check.md`, ~30m, very low risk)
+  Confirms `NEXT_PUBLIC_COLLAB_REALTIME_ENABLED` exists, defaults to true, and gates the realtime subscribe path correctly. **Outcome C** (already correctly wired); only `.env.example` documentation line added plus test report. Test report: `docs/specs/collab/test-reports/stage2-finish-3-flag-check.md`. Live multi-browser smoke tests 1–4 deferred to Wilson runtime QA; source-level verification confirms both subscribe-side (`hooks/useCollaborativeTrip.ts:466`) and broadcast-side (`hooks/useCollaborativeTrip.ts:363`) early-return when `enabled === false`.
+  Commit: (this commit)  Date: 28 April 2026
 
 - `[ ]` **#4. Patch coverage QA** (`luna-stage2-patch-coverage-qa.md`, ~3h, medium risk)
   Walks through the 11 patch types coded but never triggered in production: `remove_activity`, `replace_activity`, `unaccept_activity`, `remove_note`, `add_hotel`, `remove_hotel`, `split_phase`, `merge_phases`, `reorder_phases`, `update_budget`, `expand_phase`. Each must produce a `trip_activity_log` row and broadcast to a second browser session. Any failure becomes Stage 2f hotfix #5.
