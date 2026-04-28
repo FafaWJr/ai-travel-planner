@@ -930,7 +930,22 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
           : d
       ));
       if (!options?.suppressEmit) {
-        onPatchEmitRef.current?.({ type: 'merge_phases', phaseIds: [phaseIdA, phaseIdB], mergedLabel: mergedPhase.label });
+        // Stage 2f hotfix #6: carry the full mergedPhase across the wire so
+        // receiving browsers reconstruct the same id/label/summary/highlights
+        // as this originator. Previously only mergedLabel was emitted, which
+        // forced the receiver to reconstruct a minimal phase with empty
+        // summary/highlights and a different id (phaseIdA), creating
+        // content-loss + stable-id divergence on Browser B.
+        onPatchEmitRef.current?.({
+          type: 'merge_phases',
+          phaseIds: [phaseIdA, phaseIdB],
+          mergedPhase: {
+            id: mergedPhase.id,
+            label: mergedPhase.label,
+            summary: mergedPhase.summary,
+            highlights: mergedPhase.highlights,
+          },
+        });
       }
     },
 

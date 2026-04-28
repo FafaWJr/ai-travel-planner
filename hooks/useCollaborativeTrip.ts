@@ -215,14 +215,21 @@ function applyPatchToRef(
         SUPPRESS,
       );
       break;
-    case 'merge_phases':
-      handle?.mergePhases(
-        p.phaseIds[0],
-        p.phaseIds[1],
-        { id: p.phaseIds[0], label: p.mergedLabel ?? '', summary: '', highlights: [] },
-        SUPPRESS,
-      );
+    case 'merge_phases': {
+      // Stage 2f hotfix #6: prefer p.mergedPhase (full content + originator's
+      // chosen merged-id) over the legacy {id: phaseIds[0], label: mergedLabel,
+      // summary: '', highlights: []} reconstruction. Pre-hotfix-6 rows in
+      // trip_activity_log only have mergedLabel, so we fall back to that
+      // shape on replay.
+      const mergedPhase = p.mergedPhase ?? {
+        id: p.phaseIds[0],
+        label: p.mergedLabel ?? '',
+        summary: '',
+        highlights: [],
+      };
+      handle?.mergePhases(p.phaseIds[0], p.phaseIds[1], mergedPhase, SUPPRESS);
       break;
+    }
     case 'reorder_phases':
       handle?.reorderPhases(p.phaseIdOrder, SUPPRESS);
       break;

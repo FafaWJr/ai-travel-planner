@@ -200,6 +200,21 @@ export type SplitPhasePayload = {
 export type MergePhasesPayload = {
   type: 'merge_phases';
   phaseIds: [string, string]; // [earlierPhaseId, laterPhaseId]; later loses its id
+  /**
+   * Stage 2f hotfix #6: the FULL merged phase content. Carries id, label,
+   * summary, highlights so receiving browsers reconstruct the same logical
+   * phase (same id, same content) as the originator. Without this, the
+   * receive side could only reconstruct a minimal {id: phaseIds[0],
+   * label: mergedLabel, summary: '', highlights: []} which loses content
+   * and creates stable-id divergence across browsers (same root-cause
+   * class as the activity-id divergence fixed in hotfix #4).
+   *
+   * Optional for backward compatibility with rows already in
+   * trip_activity_log that pre-date this hotfix. New emits always
+   * populate this field.
+   */
+  mergedPhase?: { id: string; label: string; summary: string; highlights: string[] };
+  /** @deprecated Use mergedPhase.label. Kept for back-compat with pre-hotfix-6 rows. */
   mergedLabel?: string;
 };
 
@@ -651,11 +666,22 @@ function applyMergePhases(
   const earlier = td.itineraryPhases.find((ph) => ph.id === earlierId);
   const later = td.itineraryPhases.find((ph) => ph.id === laterId);
   if (!earlier || !later) return td;
-  const merged: TripPhase = {
-    ...earlier,
-    label: p.mergedLabel ?? earlier.label,
-    dayTo: later.dayTo,
-  };
+  // Stage 2f hotfix #6: prefer p.mergedPhase (full content) over the legacy
+  // p.mergedLabel-only path. Old rows that only have mergedLabel still work.
+  const merged: TripPhase = p.mergedPhase
+    ? {
+        ...earlier,
+        id: p.mergedPhase.id,
+        label: p.mergedPhase.label,
+        summary: p.mergedPhase.summary,
+        highlights: p.mergedPhase.highlights,
+        dayTo: later.dayTo,
+      }
+    : {
+        ...earlier,
+        label: p.mergedLabel ?? earlier.label,
+        dayTo: later.dayTo,
+      };
   const phases = td.itineraryPhases
     .filter((ph) => ph.id !== laterId)
     .map((ph) => (ph.id === earlierId ? merged : ph));
