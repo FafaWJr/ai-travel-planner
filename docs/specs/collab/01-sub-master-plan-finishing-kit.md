@@ -66,15 +66,15 @@ When an item ships, update the row with the commit SHA, the date, and tick the b
   All 14 LIVE patch types now have shipped emit paths; 7 dead types classified.
   Static-pass commit: 28 April 2026 (sub-master plan)  Hotfixes raised: 5, 5b, 6, 7, 7b, 7c, 8  Closed: 29 April 2026
 
-- `[~]` **#5. Viewer tier end-to-end QA** (`luna-stage2-viewer-tier-qa.md`, ~1h, low risk)
-  Source-level pre-flight done 29 April 2026. Strong API enforcement confirmed (`/api/trips/[tripId]/patches` 403s viewers, `/api/chat` strips mutation tools and markers, `requireTripOwner` 403s viewer/editor on share/role-change endpoints). UI gating mostly missing: only the Invite button checks `myRole === 'owner'`. The `isGuest` prop on `EditableItinerary` triggers only for logged-out users (`!user`), not authenticated viewers. Predicted live result: viewers see clickable accept/decline/drag/note/phase controls that silently no-op (server returns 403). Data layer is safe; UX layer leaks.
-  Predicted hotfix #9: viewer UI gating (~2-3h, low risk). Adds a `readOnly` prop to `EditableItinerary` derived from `myRole === 'viewer'`. Wilson confirms scope before implementation.
-  Test report: `docs/specs/collab/test-reports/stage2-finish-5-viewer-tier-qa.md` (pre-flight predictions; live exercise pending Wilson).
-  Static-pass commit: (this commit)  Live-pass commit: __________  Date: __________  Hotfixes raised: __________
+- `[x]` **#5. Viewer tier end-to-end QA** (`luna-stage2-viewer-tier-qa.md`, ~1h, low risk)
+  Source-level pre-flight 29 April 2026 found strong API enforcement and weak UI gating. Hotfix #9 shipped 29 April 2026 (commit `0f6ef49d`) to close the UI gap. All viewer UI checks (V-UI-1 through V-UI-10) PASSED in Wilson's live exercise. Editor regression (V-REG-1, V-REG-2) PASSED. Note: Luna chat 502s observed during this QA pass; tracked separately as a known issue (see CURRENT_STATUS.md). Not viewer-specific and unrelated to hotfix #9.
+  Test report: `docs/specs/collab/test-reports/stage2-finish-5-viewer-tier-qa.md`.
+  Static-pass commit: `e57631f9`  Live-pass commit: `0f6ef49d`  Date: 29 April 2026  Hotfixes raised: 9
 
-- `[ ]` **#6. Reconnect replay QA** (`luna-stage2-reconnect-qa.md`, ~1h, low risk)
-  Two sessions, kill one's network, modify state from the other, restore network, confirm replay from `trip_activity_log` since last-seen. Confirms the Stage 2 disconnect/reconnect deliverable.
-  Commit (test report): __________  Date: __________  Hotfixes raised: __________
+- `[~]` **#6. Reconnect replay QA** (`luna-stage2-reconnect-qa.md`, ~1h, low risk)
+  Source-level pre-flight done 29 April 2026. Reconnect-replay implementation is end-to-end wired in `hooks/useCollaborativeTrip.ts`: `backfillFromApi(sinceSeq)` at line 336, SUBSCRIBED handler at line 563 distinguishes initial connect from reconnect via `wasConnectedRef.current`, gap detection at line 542 self-heals partial broadcast losses without explicit disconnect. Tracking key is `seq` (BIGSERIAL from `trip_activity_log`), not timestamp. Replay endpoint capped at 500 rows with `truncated` flag. Per-test cards (R-1 simple, R-2 no-changes edge, R-3 rapid burst, R-4 backgrounded tab) ready in test report.
+  Test report: `docs/specs/collab/test-reports/stage2-finish-6-reconnect-replay-qa.md` (pre-flight only; live exercise pending Wilson).
+  Static-pass commit: (this commit)  Live-pass commit: __________  Date: __________  Hotfixes raised: __________
 
 - `[ ]` **#7. Formal Stage 2 QA pass** (`luna-stage2-formal-qa-pass.md`, ~1h, very low risk)
   Subagent invocation prompt that runs the 14 numbered checks from master plan section 4 Stage 2 (`/agents luna-qa-agent`) plus the multilingual QA pass. Produces the canonical test report.
