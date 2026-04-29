@@ -698,8 +698,10 @@ FOR ACTIVITY ADDITIONS - emit exactly:
 
 FOR ACTIVITY REMOVALS - emit exactly:
 %%TRIP_UPDATE%%
-{"type":"remove_activity","day":[day number],"timeSlot":"[morning|afternoon|evening|night]","activityIndex":[0-based index]}
+{"type":"remove_activity","day":[day number],"timeSlot":"[morning|afternoon|evening|night]","activityText":"[EXACT text copied from the itinerary, character for character]"}
 %%END_TRIP_UPDATE%%
+
+CRITICAL for remove_activity: the activityText value MUST be copied EXACTLY from the activity text shown in the trip context, character for character. Do NOT paraphrase, summarise, or shorten it. If the activity text in the itinerary is "Arrive at Ngurah Rai Airport and transfer to your Seminyak hotel (30-45 min)", you must emit exactly that string, not "airport arrival" or "arrive at airport". The client matches this text against stored activities, and paraphrased text fails to match. Always include the timeSlot.
 
 FOR HOTEL ADDITIONS - emit exactly:
 %%TRIP_UPDATE%%
@@ -827,8 +829,10 @@ If you confirm adding an activity:
 
 If you confirm removing an activity:
 %%TRIP_UPDATE%%
-{"type":"remove_activity","day":[N],"timeSlot":"[slot]","activityIndex":[0-based index]}
+{"type":"remove_activity","day":[N],"timeSlot":"[slot]","activityText":"[EXACT text copied from the itinerary, character for character]"}
 %%END_TRIP_UPDATE%%
+
+The activityText MUST be the EXACT activity text from the trip context. Do NOT paraphrase or shorten it. Always include the timeSlot.
 
 If you confirm adding a hotel:
 %%TRIP_UPDATE%%

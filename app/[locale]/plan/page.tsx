@@ -4,7 +4,7 @@ import sanitizeHtml from 'sanitize-html';
 import { markdownToHtml, extractSection, PLAN_SANITIZE_CONFIG } from '@/lib/plan-render';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
-import EditableItinerary, { type ItineraryHandle, type Day } from '@/components/EditableItinerary';
+import EditableItinerary, { type ItineraryHandle, type Day, type Activity } from '@/components/EditableItinerary';
 import type { Phase, TripLengthMode } from '@/types';
 import { normalizeDefineDayInput, normalizeDefinePhaseInput, defineDayInputToDay, definePhaseInputToPhase } from '@/lib/normalizeToolInput';
 import { applyStage4Rules, parsePromptContext, type TripRulesContext } from '@/lib/ai';
@@ -1754,20 +1754,20 @@ function PlanContent() {
               }
               if (update.type === 'remove_activity') {
                 // Stage 2f hotfix #7: route through removeActivityById so the
-                // existing emit pipeline fires (POST + broadcast + DB row).
-                // Stage 2f hotfix #7b: matching strategy refined after live QA
-                // showed strict substring fails when Luna paraphrases ("morning
-                // activity") vs the activity's actual title ("**Pool Morning**").
-                // New strategy: (1) strip markdown asterisks before comparing;
-                // (2) detect a time-of-day keyword in Luna's text and narrow
-                // candidates to that slot first; (3) bidirectional substring
-                // match within candidates. Returns true on success, false on
-                // no-match, so FloatingChat can set planUpdated accurately.
+                // emit pipeline fires (POST + broadcast + DB row).
+                // Stage 2f hotfix #7b: bidirectional substring + slot detection
+                // from Luna's text content.
+                // Stage 2f hotfix #7b-revised: live QA showed Luna paraphrases
+                // (emits "airport arrival" while activity is "Arrive at Ngurah
+                // Rai Airport..."). Bidirectional substring still fails because
+                // Luna's "arrival" never appears in the candidate (which uses
+                // "Arrive"). Replaced with multi-strategy matching: exact ->
+                // substring -> reverse substring -> word-overlap >= 50% ->
+                // activityIndex fallback. Slot narrowing now reads
+                // update.timeSlot directly first, falling back to keyword
+                // detection from Luna's text. Returns true on success, false
+                // on no-match for accurate planUpdated semantics.
                 const dayNum = update.day ?? 1;
-                // Tool path puts the text in `activity`. Legacy %%TRIP_UPDATE%%
-                // JSON shapes (per lib/ai.ts:701) use `activity_text` (snake_case);
-                // camelCase `activityText` is also accepted. Final fallback to
-                // `location` for very old chat_history rows.
                 const text = (update.activity || update.activityText || update.activity_text || update.location || '').trim();
                 if (!text) {
                   console.warn('[remove_activity] no activity text provided', update);
@@ -1783,34 +1783,84 @@ function PlanContent() {
                 const norm = (s: string) => s.replace(/\*+/g, '').toLowerCase().trim();
                 const luna = norm(text);
 
-                // (2) Detect time-of-day keyword and narrow candidates to that slot.
+                // Slot narrowing: prefer update.timeSlot from the JSON, then
+                // fall back to keyword detection in Luna's text content.
+                const validSlots: TimeSlot[] = ['morning', 'afternoon', 'evening', 'night'];
+                let resolvedSlot: TimeSlot | null = null;
+                const tsRaw = (update.timeSlot ?? '').toString().toLowerCase().trim();
+                if ((validSlots as string[]).includes(tsRaw)) {
+                  resolvedSlot = tsRaw as TimeSlot;
+                } else if (/\bmorning\b/.test(luna)) resolvedSlot = 'morning';
+                else if (/\bafternoon\b/.test(luna)) resolvedSlot = 'afternoon';
+                else if (/\bevening\b/.test(luna)) resolvedSlot = 'evening';
+                else if (/\bnight\b/.test(luna)) resolvedSlot = 'night';
+
                 let candidates = targetDay.activities;
-                let detectedSlot: TimeSlot | null = null;
-                if (/\bmorning\b/.test(luna)) detectedSlot = 'morning';
-                else if (/\bafternoon\b/.test(luna)) detectedSlot = 'afternoon';
-                else if (/\bevening\b/.test(luna)) detectedSlot = 'evening';
-                else if (/\bnight\b/.test(luna)) detectedSlot = 'night';
-                if (detectedSlot) {
-                  const inSlot = candidates.filter(a => a.slot === detectedSlot);
+                if (resolvedSlot) {
+                  const inSlot = candidates.filter(a => a.slot === resolvedSlot);
                   if (inSlot.length > 0) candidates = inSlot;
                 }
 
-                // (3) Bidirectional substring match across candidates.
-                let targetActivity = candidates.find(a => {
-                  const aLower = norm(a.text);
-                  return aLower.includes(luna) || luna.includes(aLower);
-                });
+                // Multi-strategy matching, most specific first.
+                let targetActivity: Activity | undefined;
 
-                // Final fallback: if Luna detected a slot AND that slot has
-                // exactly one activity, take it (covers "remove the morning
-                // activity from day 1" where Luna's text is too generic to
-                // substring-match the actual activity title).
-                if (!targetActivity && detectedSlot && candidates.length === 1) {
+                // Strategy 1: case-insensitive exact match.
+                targetActivity = candidates.find(a => norm(a.text) === luna);
+
+                // Strategy 2: needle is substring of candidate.
+                if (!targetActivity) {
+                  targetActivity = candidates.find(a => norm(a.text).includes(luna));
+                }
+
+                // Strategy 3: candidate is substring of needle (Luna emitted
+                // a longer paraphrase that includes the activity text).
+                if (!targetActivity) {
+                  targetActivity = candidates.find(a => {
+                    const aLower = norm(a.text);
+                    return aLower.length > 10 && luna.includes(aLower);
+                  });
+                }
+
+                // Strategy 4: word-overlap scoring. Requires at least 50% of
+                // the needle's significant words (length > 2) to appear in
+                // the candidate. Catches "airport arrival" against "Arrive at
+                // Ngurah Rai Airport..." because "airport" matches even
+                // though "arrival" does not. Picks highest-scoring candidate.
+                if (!targetActivity) {
+                  const needleWords = luna.split(/\s+/).filter(w => w.length > 2);
+                  if (needleWords.length > 0) {
+                    let bestScore = 0;
+                    let bestCandidate: Activity | undefined;
+                    for (const a of candidates) {
+                      const aLower = norm(a.text);
+                      const hits = needleWords.filter(w => aLower.includes(w)).length;
+                      const score = hits / needleWords.length;
+                      if (score > bestScore) {
+                        bestScore = score;
+                        bestCandidate = a;
+                      }
+                    }
+                    if (bestScore >= 0.5) targetActivity = bestCandidate;
+                  }
+                }
+
+                // Strategy 5: activityIndex fallback (legacy path; Luna may
+                // still occasionally emit pre-revision shape).
+                if (!targetActivity && typeof update.activityIndex === 'number' && update.activityIndex >= 0) {
+                  const byIndex = candidates[update.activityIndex];
+                  if (byIndex) targetActivity = byIndex;
+                }
+
+                // Strategy 6: single-in-slot fallback. If a slot was resolved
+                // and it has exactly one activity, take it (covers "remove
+                // the morning activity from day 1" where every text strategy
+                // fails to substantively match).
+                if (!targetActivity && resolvedSlot && candidates.length === 1) {
                   targetActivity = candidates[0];
                 }
 
                 if (!targetActivity) {
-                  console.warn('[remove_activity] no activity matched in day', { dayNum, text, detectedSlot, candidates: candidates.map(a => ({ slot: a.slot, text: a.text })) });
+                  console.warn('[remove_activity] no activity matched in day', { dayNum, text, resolvedSlot, candidates: candidates.map(a => ({ slot: a.slot, text: a.text })) });
                   setToast(`No activity matching "${text}" found on Day ${dayNum}`);
                   return false;
                 }
