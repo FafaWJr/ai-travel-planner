@@ -83,9 +83,11 @@ When an item ships, update the row with the commit SHA, the date, and tick the b
 
 **Bookkeeping + Master plan stages status (#8 through #11):** Reopened 27 April 2026. Queued behind Track A items #3 through #7 per the original execution order.
 
-- `[ ]` **#8. CLAUDE.md regen** (`luna-claude-md-regen.md`, ~30m, very low risk)
-  Catches up `CLAUDE.md` and `CONVENTIONS.md` with the Stage 2f hotfix arc, the destructive-PATCH guard, the SSR fix, the saved-trip-load fix, this sub-master plan, and any patch types that surfaced through Tracks A.4 / A.5 / A.6 above. Runs the existing `./scripts/update-context.sh`.
-  Commit: __________  Date: __________
+- `[x]` **#8. CLAUDE.md regen** (`luna-claude-md-regen.md`, ~30m, very low risk)
+  `luna-context-updater` agent run with `--apply`. Captured 18 days of releases since the previous regen on 26 April: SSR fix arc, recovery track R1-R5, Stage 2f hotfixes #1-#9, finishing kit items #3-#7, plus new files (`lib/plan-render.ts`, `scripts/smoke-plan-render.mjs`, `docs/specs/collab/02-recovery-plan-april-27-regressions.md`, 5 test reports). New Critical Patterns subsections: Plan Rendering, Collab Patch Pipeline. Recorded all 9 load-bearing conventions (sanitize-html config, remove_activity index-based, FloatingChat phases-first, Day ids mandatory, patch payloads carry entity ids, drag source slot captured at handleDragStart, viewer readOnly, save guards, prebuild gate). Recorded 5 known limitations (none security) and the untriaged Luna chat 502 issue. Stage status table: 0+1+2 SHIPPED/VERIFIED, Stage 3 BLOCKED on chat 502, 4 and 5 NOT STARTED. Both `scripts/update-context.sh` heredoc and `CLAUDE.md` updated in one pass per agent contract.
+  Commit: (this commit)  Date: 30 April 2026
+
+**Stage 2 finishing kit COMPLETE.** All 8 items closed (#1 done, #2 superseded by R1, #3-#8 done). Phase 2 polish items (visibilitychange listener, empty-plan retry UX, viewer PATCH 403) and Luna chat 502 investigation queued before Stage 3.
 
 ### Master plan stages
 
