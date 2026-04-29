@@ -33,7 +33,8 @@ export interface TripUpdate {
   day?: number;
   timeSlot?: string;
   activity?: string;     // add_activity: new text; remove_activity: text to match; replace_activity: old text to match
-  activityText?: string; // remove_activity legacy %%TRIP_UPDATE%% path: alternate field name for the text-to-match (Stage 2f hotfix #7)
+  activityText?: string; // remove_activity legacy %%TRIP_UPDATE%% path: alternate camelCase field name (Stage 2f hotfix #7)
+  activity_text?: string; // remove_activity legacy %%TRIP_UPDATE%% path: snake_case as documented in lib/ai.ts:701 schema (Stage 2f hotfix #7b)
   newActivity?: string;  // replace_activity: replacement text
   location?: string;
   activityIndex?: number;
@@ -60,7 +61,13 @@ interface Props {
   getPhases?: () => Phase[];
   onAddToItinerary: (text: string, dayNum: number, slot: TimeSlot) => void;
   onPlanUpdate?: (updatedPlan: string) => void;
-  onTripUpdate?: (update: TripUpdate) => void;
+  /**
+   * Stage 2f hotfix #7b: callback may return `boolean` to signal whether the
+   * mutation actually succeeded (true) or was a no-op (false, e.g. text didn't
+   * match any activity). Returning `void` is treated as success for
+   * back-compat with existing branches that don't return anything.
+   */
+  onTripUpdate?: (update: TripUpdate) => boolean | void;
   isGuest?: boolean;
   onGateRequired?: () => void;
   initialMessages?: Msg[];
@@ -179,7 +186,7 @@ function parseAddables(text: string): Addable[] {
  */
 function dispatchToolUse(
   tc: ToolUseEvent,
-  onTripUpdate: ((u: TripUpdate) => void) | undefined,
+  onTripUpdate: ((u: TripUpdate) => boolean | void) | undefined,
 ): { planUpdated: boolean; addable: Addable | null } {
   switch (tc.name) {
     case 'add_activity': {
@@ -188,9 +195,15 @@ function dispatchToolUse(
       return { planUpdated: true, addable: null };
     }
     case 'remove_activity': {
+      // Stage 2f hotfix #7b: read onTripUpdate's return value to set
+      // planUpdated accurately. The handler returns `false` when no activity
+      // matched the requested text (Luna hallucinated success); planUpdated
+      // should NOT be true in that case. Other branches (and onTripUpdate
+      // being undefined) return `void`/`undefined`, which `result !== false`
+      // treats as success for back-compat.
       const i = tc.input as { day: number; activity_text: string };
-      onTripUpdate?.({ type: 'remove_activity', day: i.day, activity: i.activity_text });
-      return { planUpdated: true, addable: null };
+      const result = onTripUpdate?.({ type: 'remove_activity', day: i.day, activity: i.activity_text });
+      return { planUpdated: result !== false, addable: null };
     }
     case 'replace_activity': {
       const i = tc.input as { day: number; timeSlot: string; oldActivity: string; newActivity: string; newLocation?: string };
@@ -550,8 +563,12 @@ export default function FloatingChat({ plan, destination, hotelContext, currentA
       const { update: legacyUpdate, cleanText: afterTripUpdate } = parseTripUpdate(raw);
       if (legacyUpdate && onTripUpdate) {
         console.warn('[Luna] Legacy %%TRIP_UPDATE%% fallback triggered');
-        onTripUpdate(legacyUpdate);
-        planUpdated = true;
+        // Stage 2f hotfix #7b: read return value so planUpdated reflects
+        // whether the mutation actually succeeded. Branches that return
+        // `void` are treated as success; only an explicit `false` (e.g.
+        // remove_activity with no text match) flips planUpdated off.
+        const legacyResult = onTripUpdate(legacyUpdate);
+        if (legacyResult !== false) planUpdated = true;
       }
 
       // Step 3: Fallback — full JSON plan rewrite (rare legacy path)

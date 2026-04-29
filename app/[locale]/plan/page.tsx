@@ -1755,36 +1755,69 @@ function PlanContent() {
               if (update.type === 'remove_activity') {
                 // Stage 2f hotfix #7: route through removeActivityById so the
                 // existing emit pipeline fires (POST + broadcast + DB row).
-                // The pre-hotfix path called removeActivitiesMatching(text)
-                // which (a) filtered across ALL days indiscriminately, not
-                // just the specified one, and (b) only did a local setDays
-                // with no emit, so Browser B never saw the change and zero
-                // remove_activity rows ever landed in trip_activity_log.
+                // Stage 2f hotfix #7b: matching strategy refined after live QA
+                // showed strict substring fails when Luna paraphrases ("morning
+                // activity") vs the activity's actual title ("**Pool Morning**").
+                // New strategy: (1) strip markdown asterisks before comparing;
+                // (2) detect a time-of-day keyword in Luna's text and narrow
+                // candidates to that slot first; (3) bidirectional substring
+                // match within candidates. Returns true on success, false on
+                // no-match, so FloatingChat can set planUpdated accurately.
                 const dayNum = update.day ?? 1;
-                // Tool path puts the text in `activity`; legacy %%TRIP_UPDATE%%
-                // path may put it in `activityText`. Either works.
-                const text = (update.activity || update.activityText || update.location || '').trim();
+                // Tool path puts the text in `activity`. Legacy %%TRIP_UPDATE%%
+                // JSON shapes (per lib/ai.ts:701) use `activity_text` (snake_case);
+                // camelCase `activityText` is also accepted. Final fallback to
+                // `location` for very old chat_history rows.
+                const text = (update.activity || update.activityText || update.activity_text || update.location || '').trim();
                 if (!text) {
                   console.warn('[remove_activity] no activity text provided', update);
-                  return;
+                  return false;
                 }
                 const days = itineraryRef.current?.getDaysSnapshot() ?? [];
                 const targetDay = days.find(d => d.number === dayNum);
                 if (!targetDay) {
                   console.warn('[remove_activity] day not found', { dayNum, available: days.map(d => d.number) });
-                  return;
+                  return false;
                 }
-                const lower = text.toLowerCase();
-                const targetActivity = targetDay.activities.find(a => a.text.toLowerCase().includes(lower));
+
+                const norm = (s: string) => s.replace(/\*+/g, '').toLowerCase().trim();
+                const luna = norm(text);
+
+                // (2) Detect time-of-day keyword and narrow candidates to that slot.
+                let candidates = targetDay.activities;
+                let detectedSlot: TimeSlot | null = null;
+                if (/\bmorning\b/.test(luna)) detectedSlot = 'morning';
+                else if (/\bafternoon\b/.test(luna)) detectedSlot = 'afternoon';
+                else if (/\bevening\b/.test(luna)) detectedSlot = 'evening';
+                else if (/\bnight\b/.test(luna)) detectedSlot = 'night';
+                if (detectedSlot) {
+                  const inSlot = candidates.filter(a => a.slot === detectedSlot);
+                  if (inSlot.length > 0) candidates = inSlot;
+                }
+
+                // (3) Bidirectional substring match across candidates.
+                let targetActivity = candidates.find(a => {
+                  const aLower = norm(a.text);
+                  return aLower.includes(luna) || luna.includes(aLower);
+                });
+
+                // Final fallback: if Luna detected a slot AND that slot has
+                // exactly one activity, take it (covers "remove the morning
+                // activity from day 1" where Luna's text is too generic to
+                // substring-match the actual activity title).
+                if (!targetActivity && detectedSlot && candidates.length === 1) {
+                  targetActivity = candidates[0];
+                }
+
                 if (!targetActivity) {
-                  console.warn('[remove_activity] no activity matched in day', { dayNum, text, available: targetDay.activities.map(a => a.text) });
+                  console.warn('[remove_activity] no activity matched in day', { dayNum, text, detectedSlot, candidates: candidates.map(a => ({ slot: a.slot, text: a.text })) });
                   setToast(`No activity matching "${text}" found on Day ${dayNum}`);
-                  return;
+                  return false;
                 }
                 itineraryRef.current?.removeActivityById(targetActivity.id);
                 setToast(`Activity removed from Day ${dayNum}`);
                 markDirty();
-                return;
+                return true;
               }
               if (update.type === 'replace_activity') {
                 const dayNum = update.day ?? 1;
