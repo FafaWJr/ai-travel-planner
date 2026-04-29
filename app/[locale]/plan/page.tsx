@@ -276,6 +276,11 @@ function PlanContent() {
   const [savedTripId, setSavedTripId] = useState<string | null>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [myRole, setMyRole] = useState<CollabRole | null>(null);
+  // Stage 2f hotfix #9: derives the viewer-mode UI lock. The data layer
+  // already 403s viewer mutations; this boolean closes the UX gap by
+  // hiding edit affordances. Solo trips and editor/owner sessions stay
+  // false. Re-evaluates whenever myRole changes.
+  const isViewerRole = myRole === 'viewer';
 
   useEffect(() => {
     if (!COLLAB_ENABLED || !savedTripId) {
@@ -1318,20 +1323,22 @@ function PlanContent() {
                           {tCollab('button')}
                         </button>
                       )}
-                      <button
-                        onClick={saveTrip}
-                        disabled={saveLoading || (!!savedTripId && !isDirty)}
-                        style={{
-                          background: saveLoading ? 'rgba(255,130,16,0.6)' : (savedTripId && !isDirty) ? '#16A34A' : '#FF8210',
-                          color: '#fff', border: 'none',
-                          fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 14,
-                          padding: '10px 22px', borderRadius: 8,
-                          cursor: (saveLoading || (!!savedTripId && !isDirty)) ? 'default' : 'pointer',
-                          transition: 'background 0.15s', whiteSpace: 'nowrap', flexShrink: 0,
-                        }}
-                      >
-                        {saveLoading ? t('header.saving') : (savedTripId && !isDirty) ? '✓ Saved' : savedTripId ? 'Save changes' : t('header.saveTrip')}
-                      </button>
+                      {!isViewerRole && (
+                        <button
+                          onClick={saveTrip}
+                          disabled={saveLoading || (!!savedTripId && !isDirty)}
+                          style={{
+                            background: saveLoading ? 'rgba(255,130,16,0.6)' : (savedTripId && !isDirty) ? '#16A34A' : '#FF8210',
+                            color: '#fff', border: 'none',
+                            fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 14,
+                            padding: '10px 22px', borderRadius: 8,
+                            cursor: (saveLoading || (!!savedTripId && !isDirty)) ? 'default' : 'pointer',
+                            transition: 'background 0.15s', whiteSpace: 'nowrap', flexShrink: 0,
+                          }}
+                        >
+                          {saveLoading ? t('header.saving') : (savedTripId && !isDirty) ? '✓ Saved' : savedTripId ? 'Save changes' : t('header.saveTrip')}
+                        </button>
+                      )}
                       {COLLAB_ENABLED && inviteOpen && savedTripId && (
                         <InviteModal
                           tripId={savedTripId}
@@ -1442,6 +1449,7 @@ function PlanContent() {
                   onRegeneratePhase={handleRegeneratePhaseClick}
                   regenEnabled={process.env.NEXT_PUBLIC_REGENERATION_ENABLED !== 'false'}
                   onPatchEmit={collab.enabled ? collab.emitPatch : undefined}
+                  readOnly={isViewerRole}
                   tripLengthMode={(() => {
                     // Stage 2e: fall back to savedTripStartDate / savedTripEndDate
                     // so joined collaborators (no `prompt`) still get the right

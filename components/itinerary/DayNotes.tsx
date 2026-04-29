@@ -8,9 +8,14 @@ interface DayNotesProps {
   dayIndex: number;
   initialNote: string;
   onSave: (dayIndex: number, note: string) => void;
+  /** Stage 2f hotfix #9: viewer collaborator UI lock. When true, the
+      whole component returns null when the note is empty (nothing to
+      show), or renders the existing note as static text when present.
+      No textarea, no save button. */
+  readOnly?: boolean;
 }
 
-export default function DayNotes({ dayIndex, initialNote, onSave }: DayNotesProps) {
+export default function DayNotes({ dayIndex, initialNote, onSave, readOnly = false }: DayNotesProps) {
   const t = useTranslations('plan');
   const [text, setText] = useState(initialNote || "");
   const [savedText, setSavedText] = useState(initialNote || "");
@@ -30,6 +35,30 @@ export default function DayNotes({ dayIndex, initialNote, onSave }: DayNotesProp
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
+
+  if (readOnly) {
+    if (!savedText) return null;
+    return (
+      <div style={{ marginTop: "24px", borderTop: "1px solid #e5e7eb", paddingTop: "16px" }}>
+        <p
+          style={{
+            fontSize: "13px",
+            fontWeight: 600,
+            color: "#00447B",
+            fontFamily: "Poppins, sans-serif",
+            marginBottom: "8px",
+            textTransform: "uppercase",
+            letterSpacing: "0.05em",
+          }}
+        >
+          {t('notes.label')}
+        </p>
+        <p style={{ fontFamily: "Inter, Lato, sans-serif", fontSize: "14px", color: "#3b3b3b", whiteSpace: "pre-wrap", margin: 0 }}>
+          {savedText}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div

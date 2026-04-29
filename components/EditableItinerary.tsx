@@ -336,6 +336,14 @@ interface Props {
       local state. Not fired for inline UI handlers (accept/decline button
       clicks) in Stage 2d; those can be wrapped in Stage 2e if needed. */
   onPatchEmit?: (payload: PatchPayload) => void;
+  /** Stage 2f hotfix #9: viewer collaborator UI lock. When true, every edit
+      affordance (accept/decline, drag, move-to-day, notes input, suggestion
+      buttons, day confirm, regen, finalize, phase edit/range/delete,
+      AddPhaseButton) is hidden or disabled. The data layer is already safe
+      (POST /api/trips/[tripId]/patches 403s viewers); this prop closes the
+      UX gap where viewers saw active controls that silently no-op. Solo
+      trips and editor/owner sessions pass false. */
+  readOnly?: boolean;
 }
 
 export interface ItineraryHandle {
@@ -429,6 +437,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
   regenEnabled = false,
   tripLengthMode = 'short',
   onPatchEmit,
+  readOnly = false,
 }, ref) {
   // Stage 2f: hold a ref to the live onPatchEmit prop. The handle methods
   // built inside useImperativeHandle close over this ref (which always
@@ -1570,7 +1579,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
             <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: '#6C6D6F', flexShrink: 0 }}>
               {dayAccepted}/{day.activities.length}
             </span>
-            {regenEnabled && onRegenerateDay && (
+            {!readOnly && regenEnabled && onRegenerateDay && (
               <button
                 onClick={(e) => { e.stopPropagation(); onRegenerateDay(day.number); }}
                 title={`Regenerate Day ${day.number}`}
@@ -1618,11 +1627,12 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
                     onDecline={(id) => setActivityStatus(day.number, id, 'declined')}
                     otherDays={otherDays}
                     onMoveToDay={(actId, toDayNum) => moveActivityToDay(actId, day.number, toDayNum)}
+                    readOnly={readOnly}
                   />
                 );
               })}
 
-              {day.suggestions.length > 0 && (
+              {!readOnly && day.suggestions.length > 0 && (
                 <div style={{ marginTop: 14 }}>
                   <p style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 11, color: '#FF8210', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>💡 Extra Ideas for Day {day.number}</p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -1638,35 +1648,40 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
                 </div>
               )}
 
-              <button
-                onClick={() => fetchMoreIdeas(day.number)}
-                disabled={day.loadingMore}
-                style={{ marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 7, background: 'none', border: '1.5px dashed rgba(0,68,123,0.22)', borderRadius: 100, padding: '7px 16px', cursor: day.loadingMore ? 'default' : 'pointer', fontFamily: "'Poppins',sans-serif", fontWeight: 500, fontSize: 12, color: '#00447B', transition: 'background 0.15s', opacity: day.loadingMore ? 0.6 : 1 }}
-                onMouseEnter={e => { if (!day.loadingMore) e.currentTarget.style.background = 'rgba(0,68,123,0.04)'; }}
-                onMouseLeave={e => (e.currentTarget.style.background = 'none')}
-              >
-                {day.loadingMore ? <><InlineSpinner /> Finding ideas...</> : <><span style={{ fontSize: 15 }}>+</span> {t('itinerary.moreIdeas')}</>}
-              </button>
+              {!readOnly && (
+                <button
+                  onClick={() => fetchMoreIdeas(day.number)}
+                  disabled={day.loadingMore}
+                  style={{ marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 7, background: 'none', border: '1.5px dashed rgba(0,68,123,0.22)', borderRadius: 100, padding: '7px 16px', cursor: day.loadingMore ? 'default' : 'pointer', fontFamily: "'Poppins',sans-serif", fontWeight: 500, fontSize: 12, color: '#00447B', transition: 'background 0.15s', opacity: day.loadingMore ? 0.6 : 1 }}
+                  onMouseEnter={e => { if (!day.loadingMore) e.currentTarget.style.background = 'rgba(0,68,123,0.04)'; }}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                >
+                  {day.loadingMore ? <><InlineSpinner /> Finding ideas...</> : <><span style={{ fontSize: 15 }}>+</span> {t('itinerary.moreIdeas')}</>}
+                </button>
+              )}
 
-              <button
-                onClick={() => toggleConfirmed(day.number)}
-                style={{
-                  marginTop: 14, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  background: day.confirmed ? 'rgba(22,163,74,0.10)' : 'rgba(0,68,123,0.04)',
-                  color: day.confirmed ? '#16A34A' : '#00447B',
-                  border: `1.5px solid ${day.confirmed ? 'rgba(22,163,74,0.30)' : 'rgba(0,68,123,0.15)'}`,
-                  borderRadius: 10, padding: '10px 0',
-                  fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 13,
-                  cursor: 'pointer', transition: 'all 0.2s',
-                }}
-              >
-                {day.confirmed ? `✓ ${t('itinerary.dayAccepted')}` : `✓ ${t('itinerary.acceptDay')}`}
-              </button>
+              {!readOnly && (
+                <button
+                  onClick={() => toggleConfirmed(day.number)}
+                  style={{
+                    marginTop: 14, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    background: day.confirmed ? 'rgba(22,163,74,0.10)' : 'rgba(0,68,123,0.04)',
+                    color: day.confirmed ? '#16A34A' : '#00447B',
+                    border: `1.5px solid ${day.confirmed ? 'rgba(22,163,74,0.30)' : 'rgba(0,68,123,0.15)'}`,
+                    borderRadius: 10, padding: '10px 0',
+                    fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 13,
+                    cursor: 'pointer', transition: 'all 0.2s',
+                  }}
+                >
+                  {day.confirmed ? `✓ ${t('itinerary.dayAccepted')}` : `✓ ${t('itinerary.acceptDay')}`}
+                </button>
+              )}
 
               <DayNotes
                 dayIndex={idx}
                 initialNote={day.notes || ''}
                 onSave={handleNoteChange}
+                readOnly={readOnly}
               />
             </div>
           )}
@@ -1696,22 +1711,24 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
               ? t('itinerary.acceptPrompt')
               : t('itinerary.daysConfirmed', { n: confirmedDays, total: days.length })}
           </span>
-          <button
-            onClick={() => allConfirmed && setShowFinalModal(true)}
-            disabled={!allConfirmed}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 7,
-              background: allConfirmed ? 'linear-gradient(135deg,#FF8210,#FF6B00)' : 'rgba(0,68,123,0.07)',
-              color: allConfirmed ? '#fff' : 'rgba(0,68,123,0.35)',
-              border: 'none', borderRadius: 100, padding: '8px 18px',
-              fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 12,
-              cursor: allConfirmed ? 'pointer' : 'default',
-              transition: 'all 0.2s',
-              boxShadow: allConfirmed ? '0 4px 14px rgba(255,130,16,0.35)' : 'none',
-            }}
-          >
-            🏁 {t('finalize')}
-          </button>
+          {!readOnly && (
+            <button
+              onClick={() => allConfirmed && setShowFinalModal(true)}
+              disabled={!allConfirmed}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 7,
+                background: allConfirmed ? 'linear-gradient(135deg,#FF8210,#FF6B00)' : 'rgba(0,68,123,0.07)',
+                color: allConfirmed ? '#fff' : 'rgba(0,68,123,0.35)',
+                border: 'none', borderRadius: 100, padding: '8px 18px',
+                fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 12,
+                cursor: allConfirmed ? 'pointer' : 'default',
+                transition: 'all 0.2s',
+                boxShadow: allConfirmed ? '0 4px 14px rgba(255,130,16,0.35)' : 'none',
+              }}
+            >
+              🏁 {t('finalize')}
+            </button>
+          )}
         </div>
       </div>
 
@@ -1741,20 +1758,20 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
                       tripDays={tripDays}
                       collapsed={collapsedPhaseIds.has(phase.id)}
                       onToggleCollapse={() => togglePhase(phase.id)}
-                      onGeneratePlan={() => handleGeneratePhase(phase)}
-                      onEditLabel={(lbl) => updatePhaseLabel(phase.id, lbl)}
-                      onEditRange={(from, to) => updatePhaseRange(phase.id, from, to)}
-                      onDeletePhase={() => deletePhase(phase.id)}
-                      onDismissPhases={tripLengthMode === 'medium' ? () => setPhasesDismissed(true) : undefined}
+                      onGeneratePlan={readOnly ? undefined : () => handleGeneratePhase(phase)}
+                      onEditLabel={readOnly ? undefined : (lbl) => updatePhaseLabel(phase.id, lbl)}
+                      onEditRange={readOnly ? undefined : (from, to) => updatePhaseRange(phase.id, from, to)}
+                      onDeletePhase={readOnly ? undefined : () => deletePhase(phase.id)}
+                      onDismissPhases={!readOnly && tripLengthMode === 'medium' ? () => setPhasesDismissed(true) : undefined}
                       tripLengthMode={tripLengthMode}
-                      initialLabelEditing={phase.id === newPhaseId}
+                      initialLabelEditing={!readOnly && phase.id === newPhaseId}
                     />
                     {!collapsedPhaseIds.has(phase.id) && phaseDays.map(day => renderDayCard(day))}
                   </div>
                 );
               })
             }
-            <AddPhaseButton onAdd={createNewPhase} />
+            {!readOnly && <AddPhaseButton onAdd={createNewPhase} />}
           </>
         ) : (
           days.map(day => renderDayCard(day))
@@ -1793,7 +1810,7 @@ export default EditableItinerary;
 /* ─── TimeSlotSection ────────────────────────────────────────── */
 function TimeSlotSection({
   containerId, slotKey, label, icon, activities, activeId,
-  onAccept, onDecline, otherDays, onMoveToDay,
+  onAccept, onDecline, otherDays, onMoveToDay, readOnly = false,
 }: {
   containerId: string;
   slotKey: TimeSlot;
@@ -1805,6 +1822,7 @@ function TimeSlotSection({
   onDecline: (id: string) => void;
   otherDays: { number: number; title: string }[];
   onMoveToDay: (actId: string, toDayNum: number) => void;
+  readOnly?: boolean;
 }) {
   const t = useTranslations('plan');
   const ids = activities.map(a => a.id);
@@ -1833,6 +1851,7 @@ function TimeSlotSection({
                   onDecline={() => onDecline(act.id)}
                   otherDays={otherDays}
                   onMoveToDay={(toDayNum) => onMoveToDay(act.id, toDayNum)}
+                  readOnly={readOnly}
                 />
               ))
           }
@@ -1866,7 +1885,7 @@ function EmptyDropZone({ containerId }: { containerId: string }) {
 
 /* ─── SortableActivityItem ───────────────────────────────────── */
 function SortableActivityItem({
-  act, isDragging, onAccept, onDecline, otherDays, onMoveToDay,
+  act, isDragging, onAccept, onDecline, otherDays, onMoveToDay, readOnly = false,
 }: {
   act: Activity;
   isDragging: boolean;
@@ -1874,11 +1893,12 @@ function SortableActivityItem({
   onDecline: () => void;
   otherDays: { number: number; title: string }[];
   onMoveToDay: (toDayNum: number) => void;
+  readOnly?: boolean;
 }) {
   const t = useTranslations('plan');
   const [showMovePicker, setShowMovePicker] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
-  const { attributes, listeners, setNodeRef, transform, transition, isOver } = useSortable({ id: act.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isOver } = useSortable({ id: act.id, disabled: readOnly });
 
   // Close picker when clicking outside
   useEffect(() => {
@@ -1919,12 +1939,14 @@ function SortableActivityItem({
         }}
       >
         {/* Drag handle */}
-        <span
-          {...attributes}
-          {...listeners}
-          title="Drag to reorder"
-          style={{ color: 'rgba(0,68,123,0.30)', fontSize: 16, cursor: 'grab', flexShrink: 0, paddingTop: 2, userSelect: 'none', touchAction: 'none', lineHeight: 1 }}
-        >⠿</span>
+        {!readOnly && (
+          <span
+            {...attributes}
+            {...listeners}
+            title="Drag to reorder"
+            style={{ color: 'rgba(0,68,123,0.30)', fontSize: 16, cursor: 'grab', flexShrink: 0, paddingTop: 2, userSelect: 'none', touchAction: 'none', lineHeight: 1 }}
+          >⠿</span>
+        )}
 
         {/* Text */}
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -1941,27 +1963,29 @@ function SortableActivityItem({
         </div>
 
         {/* Move to day / Accept / Decline */}
-        <div style={{ display: 'flex', gap: 4, flexShrink: 0, paddingTop: 2, alignItems: 'center' }}>
-          {otherDays.length > 0 && (
-            <button
-              onClick={(e) => { e.stopPropagation(); setShowMovePicker(v => !v); }}
-              onPointerDown={(e) => e.stopPropagation()}
-              title={t('activity.moveToAnotherDay')}
-              style={{
-                width: 26, height: 26, borderRadius: '50%', border: 'none',
-                cursor: 'pointer', fontSize: 12, background: showMovePicker ? 'rgba(0,68,123,0.15)' : 'rgba(0,68,123,0.07)',
-                color: '#00447B', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transition: 'all 0.15s',
-              }}
-            >→</button>
-          )}
-          <RoundBtn active={act.status === 'accepted'} activeColor="#16A34A" idleColor="rgba(22,163,74,0.12)" onClick={onAccept} label={t('activity.accept')} onPointerDown={(e: React.PointerEvent) => e.stopPropagation()}>✓</RoundBtn>
-          <RoundBtn active={act.status === 'declined'} activeColor="#DC2626" idleColor="rgba(220,38,38,0.10)" onClick={onDecline} label={t('activity.remove')} onPointerDown={(e: React.PointerEvent) => e.stopPropagation()}>✕</RoundBtn>
-        </div>
+        {!readOnly && (
+          <div style={{ display: 'flex', gap: 4, flexShrink: 0, paddingTop: 2, alignItems: 'center' }}>
+            {otherDays.length > 0 && (
+              <button
+                onClick={(e) => { e.stopPropagation(); setShowMovePicker(v => !v); }}
+                onPointerDown={(e) => e.stopPropagation()}
+                title={t('activity.moveToAnotherDay')}
+                style={{
+                  width: 26, height: 26, borderRadius: '50%', border: 'none',
+                  cursor: 'pointer', fontSize: 12, background: showMovePicker ? 'rgba(0,68,123,0.15)' : 'rgba(0,68,123,0.07)',
+                  color: '#00447B', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'all 0.15s',
+                }}
+              >→</button>
+            )}
+            <RoundBtn active={act.status === 'accepted'} activeColor="#16A34A" idleColor="rgba(22,163,74,0.12)" onClick={onAccept} label={t('activity.accept')} onPointerDown={(e: React.PointerEvent) => e.stopPropagation()}>✓</RoundBtn>
+            <RoundBtn active={act.status === 'declined'} activeColor="#DC2626" idleColor="rgba(220,38,38,0.10)" onClick={onDecline} label={t('activity.remove')} onPointerDown={(e: React.PointerEvent) => e.stopPropagation()}>✕</RoundBtn>
+          </div>
+        )}
       </div>
 
       {/* Move to day picker */}
-      {showMovePicker && (
+      {!readOnly && showMovePicker && (
         <div ref={pickerRef} style={{
           position: 'absolute', right: 0, top: '100%', zIndex: 50,
           background: '#fff', border: '1.5px solid rgba(0,68,123,0.15)',
