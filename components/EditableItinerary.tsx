@@ -651,6 +651,15 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
   const [showFinalModal, setShowFinalModal] = useState(false);
   const instanceId = useId();
 
+  // Stage 2f-hotfix-8: capture the activity's slot at drag start. handleDragOver
+  // mutates the activity's slot during live drag-preview (line ~1234) for visual
+  // feedback. Without this ref, handleDragEnd reads the post-preview slot and
+  // mistakes a cross-slot drag for an in-place reorder, emitting
+  // `reorder_activities_in_slot` instead of `replace_activity`. The receive side
+  // then drops the activity from its reorder list (the id no longer matches the
+  // declared slot in Browser B). Captured at drag start, cleared at drag end.
+  const dragSourceSlotRef = useRef<TimeSlot | null>(null);
+
   /* dnd sensors — pointer (desktop) + touch (mobile) */
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -1203,7 +1212,13 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
   }, []);
 
   /* ── Drag handlers ── */
-  const handleDragStart = ({ active }: DragStartEvent) => setActiveId(active.id);
+  const handleDragStart = ({ active }: DragStartEvent) => {
+    setActiveId(active.id);
+    // Stage 2f-hotfix-8: capture original slot before handleDragOver's
+    // preview mutation hides the cross-slot intent from handleDragEnd.
+    const source = findContainer(active.id);
+    dragSourceSlotRef.current = source?.slot ?? null;
+  };
 
   const handleDragOver = ({ active, over }: DragOverEvent) => {
     if (isGuest) return;                   // guests cannot move activities
@@ -1285,15 +1300,27 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
 
     // Stage 2e/2f/2f-hotfix-3: drag-end commits the slot change.
     //
-    // Cross-slot drag (e.g. morning → afternoon) emits replace_activity
+    // Cross-slot drag (e.g. morning to afternoon) emits replace_activity
     // so collaborators see the moved activity in its new slot.
     //
-    // Within-slot reorder (position 2 → 4 inside the same slot) emits
+    // Within-slot reorder (position 2 to 4 inside the same slot) emits
     // reorder_activities_in_slot with the new in-slot id order. This
     // patch type was added in Stage 2f-hotfix-3 to close the gap left
     // by Stage 2f.
+    //
+    // Stage 2f-hotfix-8: cross-slot detection uses dragSourceSlotRef
+    // (set in handleDragStart) instead of `from.slot`. handleDragOver
+    // mutates the activity's slot mid-drag for live preview, so by the
+    // time handleDragEnd runs `from.slot === to.slot` and the cross-slot
+    // branch never fired. The DB previously logged cross-slot drags as
+    // reorder_activities_in_slot (with activityIds whose origin slot
+    // differed from the patch's declared slot), and Browser B silently
+    // dropped them.
+    const sourceSlotAtStart = dragSourceSlotRef.current;
+    dragSourceSlotRef.current = null;
     if (act && day?.id && typeof active.id === 'string') {
-      if (from.slot !== to.slot) {
+      const wasCrossSlot = sourceSlotAtStart !== null && sourceSlotAtStart !== to.slot;
+      if (wasCrossSlot) {
         emitFromInline({
           type: 'replace_activity',
           dayId: day.id,

@@ -132,16 +132,13 @@ Each card is self-contained. Run them in order. After each card, fill in the FIL
 
 ### Card 1: `replace_activity` (cross-slot drag)
 
-**Source-level pre-flight (29 April 2026, hotfix #8 attempt):** hotfix #8 was scoped on the assumption that the cross-slot drag did not call `emitPatch`. Source review found the emit pipeline is already wired end-to-end:
+**Stage 2f hotfix #8 shipped 29 April 2026.** Wilson's DB inspection found 4 cross-slot drag rows, all logged as `reorder_activities_in_slot` with `slot: 'afternoon'` and `activityIdOrder` containing IDs whose origin was the morning slot. Browser B's `reorderActivitiesInSlot` dispatcher silently dropped those IDs because they no longer matched any activity in the declared slot, so cross-slot drags failed on the receive side.
 
-- `components/EditableItinerary.tsx:1295-1309`: `handleDragEnd` cross-slot branch fires `emitFromInline({ type: 'replace_activity', dayId, activityId, newActivity: { slot: to.slot, ... } })` immediately after `setDays`.
-- `components/EditableItinerary.tsx:1188-1191`: `emitFromInline` calls `onPatchEmit` when the prop is defined.
-- `app/[locale]/plan/page.tsx:1444`: `onPatchEmit={collab.enabled ? collab.emitPatch : undefined}` threads the hook's `emitPatch` into `EditableItinerary`.
-- `hooks/useCollaborativeTrip.ts:151-161`: dispatcher case for `replace_activity` resolves `dayId` to a day number and calls `replaceActivityById` with `SUPPRESS` to apply the slot change without re-broadcasting.
+Root cause: `handleDragOver` mutates the activity's slot mid-drag for live preview (`components/EditableItinerary.tsx:1234`). By the time `handleDragEnd` ran, `findContainer(active.id)` returned the activity's NEW slot, so `from.slot === to.slot` and the same-slot branch fired.
 
-The original "zero `replace_activity` rows in production" symptom was caused by the line 1295 guard `if (act && day?.id && typeof active.id === 'string')`. Before hotfix #2 (commit `7dde72ce`), markdown-parsed days did not carry `id`, so the guard returned early and no broadcast occurred. After hotfix #2 every Day has a stable id (markdown parser, `defineDayInputToDay`, and the `setDays` backstop all enforce it), so the guard passes and the emit fires.
+Fix: capture the original slot at `handleDragStart` in `dragSourceSlotRef`, read it in `handleDragEnd` to determine `wasCrossSlot`. The cross-slot branch now correctly emits `replace_activity` with the destination slot. Receiver-side dispatcher already routes `replace_activity` to `replaceActivityById`, which updates slot.
 
-No code change shipped for hotfix #8. Card 1 is expected to PASS in live multi-browser QA. If it does not, capture evidence and re-open with a diagnostic prompt.
+Card 1 expected PASS in live multi-browser QA after this fix. Pending Wilson runtime verification.
 
 **Pre-test row count:** `[FILL IN]`
 
@@ -160,7 +157,7 @@ No code change shipped for hotfix #8. Card 1 is expected to PASS in live multi-b
    Expected: 1 new row with `action = 'replace_activity'`. Payload contains `dayId`, `activityId`, `newActivity` with `slot: 'afternoon'`. `[FILL IN: paste relevant fields from the row]`
 6. Activity-ID stability check (Stage 2f hotfix #4 contract): the `activityId` in the payload must equal the activity's id in BOTH Browser A's React state AND Browser B's React state after the patch applies. `[FILL IN: matches / divergent]`
 
-**Verdict:** `[FILL IN: PASS / FAIL]` (expected PASS based on source-level pre-flight)
+**Verdict:** `[FILL IN: PASS / FAIL]`
 
 ---
 
