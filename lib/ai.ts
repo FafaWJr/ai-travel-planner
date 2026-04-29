@@ -698,10 +698,17 @@ FOR ACTIVITY ADDITIONS - emit exactly:
 
 FOR ACTIVITY REMOVALS - emit exactly:
 %%TRIP_UPDATE%%
-{"type":"remove_activity","day":[day number],"timeSlot":"[morning|afternoon|evening|night]","activityText":"[EXACT text copied from the itinerary, character for character]"}
+{"type":"remove_activity","day":[day number],"timeSlot":"[morning|afternoon|evening|night]","activityIndex":[0-based position within slot]}
 %%END_TRIP_UPDATE%%
 
-CRITICAL for remove_activity: the activityText value MUST be copied EXACTLY from the activity text shown in the trip context, character for character. Do NOT paraphrase, summarise, or shorten it. If the activity text in the itinerary is "Arrive at Ngurah Rai Airport and transfer to your Seminyak hotel (30-45 min)", you must emit exactly that string, not "airport arrival" or "arrive at airport". The client matches this text against stored activities, and paraphrased text fails to match. Always include the timeSlot.
+Rules for remove_activity:
+- day: 1-based day number. Day 1 is the first day of the trip.
+- timeSlot: MUST be one of exactly: "morning", "afternoon", "evening", "night". Always specify this.
+- activityIndex: 0-based position of the activity WITHIN that time slot. The first activity in the slot is 0, the second is 1, the third is 2. Count from the top of the slot as shown in the trip context.
+- "Remove the first morning activity" => activityIndex 0. "Remove the second afternoon activity" => activityIndex 1.
+- "Remove all morning activities from day 1" => emit one block PER activity, starting from the LAST index downward so indexes do not shift. If morning has 3 activities, emit index 2 first, then 1, then 0.
+- Do NOT include activityText. The index is the primary identifier.
+- You MUST emit this %%TRIP_UPDATE%% block. Saying "Done" or "Removed" in conversational text without the block does NOTHING. The block is the only mechanism that triggers the actual removal.
 
 FOR HOTEL ADDITIONS - emit exactly:
 %%TRIP_UPDATE%%
@@ -829,10 +836,10 @@ If you confirm adding an activity:
 
 If you confirm removing an activity:
 %%TRIP_UPDATE%%
-{"type":"remove_activity","day":[N],"timeSlot":"[slot]","activityText":"[EXACT text copied from the itinerary, character for character]"}
+{"type":"remove_activity","day":[N],"timeSlot":"[morning|afternoon|evening|night]","activityIndex":[0-based position within slot]}
 %%END_TRIP_UPDATE%%
 
-The activityText MUST be the EXACT activity text from the trip context. Do NOT paraphrase or shorten it. Always include the timeSlot.
+activityIndex is the 0-based position of the activity WITHIN the time slot, counting from the top as shown in the trip context. "First morning activity" is 0, "second" is 1. Always include the timeSlot. Do NOT include activityText. For bulk removals from one slot, emit one block per activity starting from the highest index so positions do not shift.
 
 If you confirm adding a hotel:
 %%TRIP_UPDATE%%
@@ -968,8 +975,10 @@ export const LUNA_CHAT_TOOLS: AnthropicTool[] = [
   {
     name: 'remove_activity',
     description:
-      "Remove an activity from the user's itinerary. Match by description text. " +
-      'Only call when the user has explicitly confirmed the removal.',
+      "Remove an activity from the user's itinerary by position. " +
+      'Match by 0-based position within the time slot, NOT by text. ' +
+      'Only call when the user has explicitly confirmed the removal. ' +
+      'For bulk removals from one slot, call once per activity starting from the highest index so positions do not shift.',
     input_schema: {
       type: 'object',
       properties: {
@@ -977,14 +986,20 @@ export const LUNA_CHAT_TOOLS: AnthropicTool[] = [
           type: 'integer',
           description: '1-indexed day number where the activity currently exists',
         },
-        activity_text: {
+        time_slot: {
           type: 'string',
+          enum: ['morning', 'afternoon', 'evening', 'night'],
+          description: 'The time slot containing the activity to remove.',
+        },
+        activity_index: {
+          type: 'integer',
+          minimum: 0,
           description:
-            'Text or partial text of the activity to remove. Substring match is used. ' +
-            'Should be specific enough to uniquely identify the intended activity.',
+            '0-based position of the activity WITHIN the time slot, counting from the top as shown in the trip context. ' +
+            'The first activity in the slot is 0, the second is 1, etc.',
         },
       },
-      required: ['day', 'activity_text'],
+      required: ['day', 'time_slot', 'activity_index'],
     },
   },
   {

@@ -37,7 +37,7 @@ export interface TripUpdate {
   activity_text?: string; // remove_activity legacy %%TRIP_UPDATE%% path: snake_case as documented in lib/ai.ts:701 schema (Stage 2f hotfix #7b)
   newActivity?: string;  // replace_activity: replacement text
   location?: string;
-  activityIndex?: number;
+  activityIndex?: number; // remove_activity primary identifier (0-based position within slot, Stage 2f hotfix #7c)
   // Phase editing updates (R5)
   phaseId?: string;
   phaseLabel?: string;
@@ -195,14 +195,23 @@ function dispatchToolUse(
       return { planUpdated: true, addable: null };
     }
     case 'remove_activity': {
-      // Stage 2f hotfix #7b: read onTripUpdate's return value to set
-      // planUpdated accurately. The handler returns `false` when no activity
-      // matched the requested text (Luna hallucinated success); planUpdated
-      // should NOT be true in that case. Other branches (and onTripUpdate
-      // being undefined) return `void`/`undefined`, which `result !== false`
-      // treats as success for back-compat.
-      const i = tc.input as { day: number; activity_text: string };
-      const result = onTripUpdate?.({ type: 'remove_activity', day: i.day, activity: i.activity_text });
+      // Stage 2f hotfix #7c: schema is now (day, time_slot, activity_index).
+      // activity_text kept as optional fallback for any in-flight calls
+      // emitted before the prompt update propagated. planUpdated reflects
+      // the handler's actual mutation result.
+      const i = tc.input as {
+        day: number;
+        time_slot?: TimeSlot;
+        activity_index?: number;
+        activity_text?: string;
+      };
+      const result = onTripUpdate?.({
+        type: 'remove_activity',
+        day: i.day,
+        timeSlot: i.time_slot,
+        activityIndex: i.activity_index,
+        activity: i.activity_text,
+      });
       return { planUpdated: result !== false, addable: null };
     }
     case 'replace_activity': {
@@ -314,9 +323,14 @@ function summarizeToolCalls(toolCalls: ToolUseEvent[]): string {
       }
       case 'remove_activity': {
         const day = i.day;
-        const what = typeof i.activity_text === 'string' ? i.activity_text : 'that activity';
-        const cleaned = what.replace(/\*\*/g, '').slice(0, 60);
-        parts.push(`Removed ${cleaned} from Day ${day}.`);
+        const slot = slotLabel(i.time_slot);
+        // Stage 2f hotfix #7c: tool schema no longer carries activity_text.
+        // Fall back to a generic narration.
+        if (typeof i.activity_index === 'number' && slot) {
+          parts.push(`Removed an activity from Day ${day} ${slot}.`);
+        } else {
+          parts.push(`Removed an activity from Day ${day}.`);
+        }
         break;
       }
       case 'add_hotel': {

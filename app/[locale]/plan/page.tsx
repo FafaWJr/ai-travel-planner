@@ -1753,26 +1753,14 @@ function PlanContent() {
                 return;
               }
               if (update.type === 'remove_activity') {
-                // Stage 2f hotfix #7: route through removeActivityById so the
-                // emit pipeline fires (POST + broadcast + DB row).
-                // Stage 2f hotfix #7b: bidirectional substring + slot detection
-                // from Luna's text content.
-                // Stage 2f hotfix #7b-revised: live QA showed Luna paraphrases
-                // (emits "airport arrival" while activity is "Arrive at Ngurah
-                // Rai Airport..."). Bidirectional substring still fails because
-                // Luna's "arrival" never appears in the candidate (which uses
-                // "Arrive"). Replaced with multi-strategy matching: exact ->
-                // substring -> reverse substring -> word-overlap >= 50% ->
-                // activityIndex fallback. Slot narrowing now reads
-                // update.timeSlot directly first, falling back to keyword
-                // detection from Luna's text. Returns true on success, false
-                // on no-match for accurate planUpdated semantics.
+                // Stage 2f hotfix #7c: position-based matching. Three prior
+                // text-based attempts (#7, #7b, #7b-revised) all failed because
+                // Luna paraphrases or hallucinates activity names instead of
+                // copying exact text. Index within the time slot is
+                // deterministic and matches user intent ("the first morning
+                // activity"). Text matching is preserved as a fallback only
+                // for legacy callers that may still emit activityText.
                 const dayNum = update.day ?? 1;
-                const text = (update.activity || update.activityText || update.activity_text || update.location || '').trim();
-                if (!text) {
-                  console.warn('[remove_activity] no activity text provided', update);
-                  return false;
-                }
                 const days = itineraryRef.current?.getDaysSnapshot() ?? [];
                 const targetDay = days.find(d => d.number === dayNum);
                 if (!targetDay) {
@@ -1780,58 +1768,60 @@ function PlanContent() {
                   return false;
                 }
 
-                const norm = (s: string) => s.replace(/\*+/g, '').toLowerCase().trim();
-                const luna = norm(text);
-
-                // Slot narrowing: prefer update.timeSlot from the JSON, then
-                // fall back to keyword detection in Luna's text content.
+                // Slot resolution. Prefer explicit JSON timeSlot, then fall
+                // back through alternative field names a parser might emit,
+                // and finally keyword detection in any provided text.
                 const validSlots: TimeSlot[] = ['morning', 'afternoon', 'evening', 'night'];
+                const candidateText = (update.activity || update.activityText || update.activity_text || update.location || '').trim();
+                const norm = (s: string) => s.replace(/\*+/g, '').toLowerCase().trim();
+                const luna = norm(candidateText);
+
+                const slotRaw = (
+                  update.timeSlot
+                  ?? (update as { slot?: string }).slot
+                  ?? (update as { resolvedSlot?: string }).resolvedSlot
+                  ?? (update as { detectedSlot?: string }).detectedSlot
+                  ?? ''
+                ).toString().toLowerCase().trim();
                 let resolvedSlot: TimeSlot | null = null;
-                const tsRaw = (update.timeSlot ?? '').toString().toLowerCase().trim();
-                if ((validSlots as string[]).includes(tsRaw)) {
-                  resolvedSlot = tsRaw as TimeSlot;
-                } else if (/\bmorning\b/.test(luna)) resolvedSlot = 'morning';
-                else if (/\bafternoon\b/.test(luna)) resolvedSlot = 'afternoon';
-                else if (/\bevening\b/.test(luna)) resolvedSlot = 'evening';
-                else if (/\bnight\b/.test(luna)) resolvedSlot = 'night';
-
-                let candidates = targetDay.activities;
-                if (resolvedSlot) {
-                  const inSlot = candidates.filter(a => a.slot === resolvedSlot);
-                  if (inSlot.length > 0) candidates = inSlot;
+                if ((validSlots as string[]).includes(slotRaw)) {
+                  resolvedSlot = slotRaw as TimeSlot;
+                } else if (luna) {
+                  if (/\bmorning\b/.test(luna)) resolvedSlot = 'morning';
+                  else if (/\bafternoon\b/.test(luna)) resolvedSlot = 'afternoon';
+                  else if (/\bevening\b/.test(luna)) resolvedSlot = 'evening';
+                  else if (/\bnight\b/.test(luna)) resolvedSlot = 'night';
                 }
 
-                // Multi-strategy matching, most specific first.
+                if (!resolvedSlot) {
+                  console.warn('[remove_activity] no timeSlot resolved', { dayNum, update });
+                  setToast(`Couldn't determine which slot to remove from on Day ${dayNum}`);
+                  return false;
+                }
+
+                const slotActivities = targetDay.activities.filter(a => a.slot === resolvedSlot);
+                if (slotActivities.length === 0) {
+                  console.warn('[remove_activity] no activities in slot', { dayNum, slot: resolvedSlot });
+                  setToast(`No ${resolvedSlot} activities on Day ${dayNum}`);
+                  return false;
+                }
+
+                // Primary strategy: position within the slot (0-based).
                 let targetActivity: Activity | undefined;
-
-                // Strategy 1: case-insensitive exact match.
-                targetActivity = candidates.find(a => norm(a.text) === luna);
-
-                // Strategy 2: needle is substring of candidate.
-                if (!targetActivity) {
-                  targetActivity = candidates.find(a => norm(a.text).includes(luna));
+                if (typeof update.activityIndex === 'number' && update.activityIndex >= 0 && update.activityIndex < slotActivities.length) {
+                  targetActivity = slotActivities[update.activityIndex];
                 }
 
-                // Strategy 3: candidate is substring of needle (Luna emitted
-                // a longer paraphrase that includes the activity text).
-                if (!targetActivity) {
-                  targetActivity = candidates.find(a => {
-                    const aLower = norm(a.text);
-                    return aLower.length > 10 && luna.includes(aLower);
-                  });
-                }
-
-                // Strategy 4: word-overlap scoring. Requires at least 50% of
-                // the needle's significant words (length > 2) to appear in
-                // the candidate. Catches "airport arrival" against "Arrive at
-                // Ngurah Rai Airport..." because "airport" matches even
-                // though "arrival" does not. Picks highest-scoring candidate.
-                if (!targetActivity) {
+                // Fallback: word-overlap text matching for legacy callers
+                // that still emit activityText without an index. Threshold
+                // 0.4 is intentionally lower than #7b's 0.5 because this is
+                // a last resort.
+                if (!targetActivity && luna) {
                   const needleWords = luna.split(/\s+/).filter(w => w.length > 2);
                   if (needleWords.length > 0) {
                     let bestScore = 0;
                     let bestCandidate: Activity | undefined;
-                    for (const a of candidates) {
+                    for (const a of slotActivities) {
                       const aLower = norm(a.text);
                       const hits = needleWords.filter(w => aLower.includes(w)).length;
                       const score = hits / needleWords.length;
@@ -1840,28 +1830,25 @@ function PlanContent() {
                         bestCandidate = a;
                       }
                     }
-                    if (bestScore >= 0.5) targetActivity = bestCandidate;
+                    if (bestScore >= 0.4) targetActivity = bestCandidate;
                   }
                 }
 
-                // Strategy 5: activityIndex fallback (legacy path; Luna may
-                // still occasionally emit pre-revision shape).
-                if (!targetActivity && typeof update.activityIndex === 'number' && update.activityIndex >= 0) {
-                  const byIndex = candidates[update.activityIndex];
-                  if (byIndex) targetActivity = byIndex;
-                }
-
-                // Strategy 6: single-in-slot fallback. If a slot was resolved
-                // and it has exactly one activity, take it (covers "remove
-                // the morning activity from day 1" where every text strategy
-                // fails to substantively match).
-                if (!targetActivity && resolvedSlot && candidates.length === 1) {
-                  targetActivity = candidates[0];
+                // Final fallback: single activity in the slot.
+                if (!targetActivity && slotActivities.length === 1) {
+                  targetActivity = slotActivities[0];
                 }
 
                 if (!targetActivity) {
-                  console.warn('[remove_activity] no activity matched in day', { dayNum, text, resolvedSlot, candidates: candidates.map(a => ({ slot: a.slot, text: a.text })) });
-                  setToast(`No activity matching "${text}" found on Day ${dayNum}`);
+                  console.warn('[remove_activity] no activity matched', {
+                    dayNum,
+                    slot: resolvedSlot,
+                    activityIndex: update.activityIndex,
+                    activityText: candidateText || undefined,
+                    slotActivityCount: slotActivities.length,
+                    candidates: slotActivities.map(a => a.text.slice(0, 60)),
+                  });
+                  setToast(`Couldn't find that activity on Day ${dayNum}`);
                   return false;
                 }
                 itineraryRef.current?.removeActivityById(targetActivity.id);
