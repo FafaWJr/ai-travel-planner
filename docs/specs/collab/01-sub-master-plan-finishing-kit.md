@@ -59,15 +59,18 @@ When an item ships, update the row with the commit SHA, the date, and tick the b
   Confirms `NEXT_PUBLIC_COLLAB_REALTIME_ENABLED` exists, defaults to true, and gates the realtime subscribe path correctly. **Outcome C** (already correctly wired); only `.env.example` documentation line added plus test report. Test report: `docs/specs/collab/test-reports/stage2-finish-3-flag-check.md`. Live multi-browser smoke tests 1–4 deferred to Wilson runtime QA; source-level verification confirms both subscribe-side (`hooks/useCollaborativeTrip.ts:466`) and broadcast-side (`hooks/useCollaborativeTrip.ts:363`) early-return when `enabled === false`.
   Commit: (this commit)  Date: 28 April 2026
 
-- `[~]` **#4. Patch coverage QA** (`luna-stage2-patch-coverage-qa.md`, ~3h, medium risk)
-  Walks through the patch types coded but never triggered in production. **Source-level pre-flight done 28 April 2026** (commit pending): the canonical patch library is 21 types (not 11 as originally listed; 2f hotfix #3 added `decline_activity` and `reorder_activities_in_slot`). Of the 14 untriggered types, **7 are dead by design or deferral** (`add_hotel`, `remove_hotel`, `update_budget`, `expand_phase`, `add_comment`, `edit_comment`, `delete_comment`) and require no exercise. The 7 LIVE untriggered types (`remove_activity`, `replace_activity`, `unaccept_activity`, `remove_note`, `split_phase`, `merge_phases`, `reorder_phases`) are Wilson's exercise targets, with per-type test cards ready in the test report.
-  **Live multi-browser exercise pending Wilson runtime QA.** Each card has emit call site location and UI affordance documented; Wilson runs the cards, fills in PASS/FAIL evidence, and either re-commits the report or asks Claude to amend with captured evidence. Any failure becomes Stage 2f hotfix #5.
-  Test report: `docs/specs/collab/test-reports/stage2-finish-4-patch-coverage-qa.md`.
-  Static-pass commit: (this commit)  Live-pass commit: __________  Date: __________  Hotfixes raised: __________
+- `[x]` **#4. Patch coverage QA** (`luna-stage2-patch-coverage-qa.md`, ~3h, medium risk)
+  Walks through the patch types coded but never triggered in production. Source-level pre-flight done 28 April 2026: the canonical patch library is 21 types. Of the 14 untriggered types, **7 are dead by design or deferral** and require no exercise. The 7 LIVE targets each had a per-type test card.
+  **Live exercise produced 4 hotfixes:** Stage 2f hotfix #5 / #5b (Luna phase context), #6 (merge_phases broadcast), #7 / #7b / #7c (remove_activity matching), #8 (cross-slot drag broadcast). Card 1 (replace_activity cross-slot) shipped with hotfix #8 commit `fa4ddca6` on 29 April 2026; root cause was `handleDragOver` mutating slot mid-drag and hiding the cross-slot intent from `handleDragEnd`. Card 3 (remove_activity) shipped with hotfix #7c commit `6e5e8781` on 29 April 2026; switched to position-based `activityIndex` matching after three text-based attempts failed against Luna's paraphrasing.
+  Test report: `docs/specs/collab/test-reports/stage2-finish-4-patch-coverage-qa.md` (Card 1 evidence captured).
+  All 14 LIVE patch types now have shipped emit paths; 7 dead types classified.
+  Static-pass commit: 28 April 2026 (sub-master plan)  Hotfixes raised: 5, 5b, 6, 7, 7b, 7c, 8  Closed: 29 April 2026
 
-- `[ ]` **#5. Viewer tier end-to-end QA** (`luna-stage2-viewer-tier-qa.md`, ~1h, low risk)
-  Creates a viewer share link, joins from a second browser, confirms read-only enforcement on UI (no edit controls render) and API (forced viewer-side patch attempt returns 403). Viewer tier has zero production usage today.
-  Commit (test report): __________  Date: __________  Hotfixes raised: __________
+- `[~]` **#5. Viewer tier end-to-end QA** (`luna-stage2-viewer-tier-qa.md`, ~1h, low risk)
+  Source-level pre-flight done 29 April 2026. Strong API enforcement confirmed (`/api/trips/[tripId]/patches` 403s viewers, `/api/chat` strips mutation tools and markers, `requireTripOwner` 403s viewer/editor on share/role-change endpoints). UI gating mostly missing: only the Invite button checks `myRole === 'owner'`. The `isGuest` prop on `EditableItinerary` triggers only for logged-out users (`!user`), not authenticated viewers. Predicted live result: viewers see clickable accept/decline/drag/note/phase controls that silently no-op (server returns 403). Data layer is safe; UX layer leaks.
+  Predicted hotfix #9: viewer UI gating (~2-3h, low risk). Adds a `readOnly` prop to `EditableItinerary` derived from `myRole === 'viewer'`. Wilson confirms scope before implementation.
+  Test report: `docs/specs/collab/test-reports/stage2-finish-5-viewer-tier-qa.md` (pre-flight predictions; live exercise pending Wilson).
+  Static-pass commit: (this commit)  Live-pass commit: __________  Date: __________  Hotfixes raised: __________
 
 - `[ ]` **#6. Reconnect replay QA** (`luna-stage2-reconnect-qa.md`, ~1h, low risk)
   Two sessions, kill one's network, modify state from the other, restore network, confirm replay from `trip_activity_log` since last-seen. Confirms the Stage 2 disconnect/reconnect deliverable.
