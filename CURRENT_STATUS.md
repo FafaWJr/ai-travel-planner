@@ -2,7 +2,7 @@
 
 > **Purpose.** This file is the single source of truth for which Luna project is active, which stage we are on, what shipped last, what is pending, and which detours are active. Upload this at the start of any working session. If a session-memory claim disagrees with this file, this file wins.
 
-**Last updated:** 29 April 2026
+**Last updated:** 30 April 2026
 **Maintainer:** Wilson
 **Repo location:** root of `ai-travel-planner` (commit alongside `CLAUDE.md` and `CONVENTIONS.md`)
 
@@ -14,8 +14,8 @@
 
 Six stages, ~78.5 hours total estimated. Real-time multi-user trip planning with viewer/editor/owner permissions, per-user cross-aware Luna chat, and comments on activities/days/phases/hotels.
 
-**Current stage:** Stage 2 finishing kit. Items #3, #4, #5 done. Item #6 static-pass shipped 29 April; live four-test exercise pending Wilson runtime QA. Item #7 (formal Stage 2 QA pass) queued, then #8 (CLAUDE.md regen) and #9-#11 (Stages 3/4/5).
-**Last shipped release:** Stage 2f hotfix #9 (`stage2f-hotfix-9-viewer-readonly-ui`) on 29 April 2026 commit `0f6ef49d`. Threads a `readOnly` prop into `EditableItinerary` and `DayNotes` derived from `myRole === 'viewer'`. Hides accept/decline/drag/move/notes/phase/save/finalize/regen affordances for viewer collaborators. API layer (already 403ing viewer mutations) and Luna chat (already strips mutation tools server-side) unchanged. Closes sub-master plan #5.
+**Current stage:** Stage 2 finishing kit complete through #7. Stage 2 is **VERIFIED** per master plan v2.1 section 4 (12 PASS, 1 PASS with limitation, 1 N/A by design). Item #8 (CLAUDE.md regen) is the last finishing kit item. Phase 2 polish items + Luna chat 502 investigation queued before Stage 3 starts. Then #9-#11 (Stages 3/4/5).
+**Last shipped release:** Stage 2 finish #7 (`stage2-finish-formal-qa-pass`) on 30 April 2026. Documentation only. Maps all 14 master-plan checks to finishing-kit + hotfix evidence. Closes sub-master plan #6 (reconnect replay R-1/R-2/R-3 PASS, R-4 carry-forward) and #7 (formal QA gate).
 
 ---
 
@@ -102,7 +102,8 @@ These are not blockers for moving to Stage 3, but they should be cleared before 
 
 | Detour | Status | Commit | Date | One-line cause |
 |---|---|---|---|---|
-| Stage 2 finish #6 reconnect replay QA (static pass) | Static-pass shipped, live-pass pending | (this commit) | 29 Apr | Source-level pre-flight: reconnect-replay end-to-end wired in `hooks/useCollaborativeTrip.ts`. `backfillFromApi(sinceSeq)` (line 336), SUBSCRIBED handler (line 563) detects reconnect via `wasConnectedRef`, gap detection (line 542) self-heals partial losses. Tracking key is `seq` (BIGSERIAL), not timestamp. 500-row cap with `truncated` flag for very long disconnects. Test cards R-1 through R-4 ready for Wilson's live exercise. Test report: `docs/specs/collab/test-reports/stage2-finish-6-reconnect-replay-qa.md`. |
+| Stage 2 finish #7 formal Stage 2 QA pass | Closed | (this commit) | 30 Apr | Maps all 14 master-plan v2.1 section 4 checks to finishing-kit + hotfix evidence. **12 PASS, 1 PASS with limitation (check 6 / R-4 tab refocus), 1 N/A by design (check 12 / `expand_phase` is per-user UI state).** Six known limitations carried forward, none security issues. Stage 2 considered shipped and verified. Test report: `docs/specs/collab/test-reports/stage2-finish-7-formal-qa-pass.md`. |
+| Stage 2 finish #6 reconnect replay QA | Closed | `0faff17d` (static) + (this commit) (live) | 29-30 Apr | Source-level pre-flight: reconnect-replay end-to-end wired in `hooks/useCollaborativeTrip.ts`. `backfillFromApi(sinceSeq)` (line 336), SUBSCRIBED handler (line 563) detects reconnect via `wasConnectedRef`, gap detection (line 542) self-heals partial losses. Tracking key is `seq` (BIGSERIAL), not timestamp. 500-row cap with `truncated` flag. Live exercise: R-1/R-2/R-3 PASS, R-4 carry-forward. Test report: `docs/specs/collab/test-reports/stage2-finish-6-reconnect-replay-qa.md`. |
 | Stage 2f hotfix #9 viewer read-only UI | Closed | `0f6ef49d` | 29 Apr | Threads `readOnly` prop into `EditableItinerary` (and `DayNotes`) derived from `myRole === 'viewer'`. Hides accept/decline/drag/move/notes/phase/save/finalize/regen affordances for viewer collaborators. API layer already enforced 403 for viewer mutations; this closes the UX leak where viewers saw active controls that silently no-op. |
 | Stage 2 finish #5 viewer tier QA | Closed (hotfix #9 shipped) | `e57631f9` + `0f6ef49d` | 29 Apr | Source-level pre-flight predicted UI gap; Wilson's live exercise confirmed. Hotfix #9 closed the gap. Luna chat 502s observed during exercise; tracked as known issue, not viewer-specific. |
 | Stage 2f hotfix #8 cross-slot drag broadcast | Closed | `fa4ddca6` | 29 Apr | Cross-slot drag was emitting `reorder_activities_in_slot` instead of `replace_activity` because `handleDragOver` mutated the activity's slot mid-drag, hiding the cross-slot intent from `handleDragEnd`. Captured original slot at `handleDragStart` in a ref. |

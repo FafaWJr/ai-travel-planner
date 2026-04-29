@@ -71,14 +71,13 @@ When an item ships, update the row with the commit SHA, the date, and tick the b
   Test report: `docs/specs/collab/test-reports/stage2-finish-5-viewer-tier-qa.md`.
   Static-pass commit: `e57631f9`  Live-pass commit: `0f6ef49d`  Date: 29 April 2026  Hotfixes raised: 9
 
-- `[~]` **#6. Reconnect replay QA** (`luna-stage2-reconnect-qa.md`, ~1h, low risk)
-  Source-level pre-flight done 29 April 2026. Reconnect-replay implementation is end-to-end wired in `hooks/useCollaborativeTrip.ts`: `backfillFromApi(sinceSeq)` at line 336, SUBSCRIBED handler at line 563 distinguishes initial connect from reconnect via `wasConnectedRef.current`, gap detection at line 542 self-heals partial broadcast losses without explicit disconnect. Tracking key is `seq` (BIGSERIAL from `trip_activity_log`), not timestamp. Replay endpoint capped at 500 rows with `truncated` flag. Per-test cards (R-1 simple, R-2 no-changes edge, R-3 rapid burst, R-4 backgrounded tab) ready in test report.
-  Test report: `docs/specs/collab/test-reports/stage2-finish-6-reconnect-replay-qa.md` (pre-flight only; live exercise pending Wilson).
-  Static-pass commit: (this commit)  Live-pass commit: __________  Date: __________  Hotfixes raised: __________
+- `[x]` **#6. Reconnect replay QA** (`luna-stage2-reconnect-qa.md`, ~1h, low risk)
+  Source-level pre-flight 29 April 2026 mapped the reconnect-replay path end to end (`backfillFromApi`, SUBSCRIBED handler, gap detection, seq tracking). Live exercise: R-1 (simple disconnect, three mutations) PASS, R-2 (no-changes edge case) PASS, R-3 (rapid burst of five mutations) PASS, R-4 (backgrounded tab) carry-forward as Phase 2 item 4 (visibilitychange listener). Test report: `docs/specs/collab/test-reports/stage2-finish-6-reconnect-replay-qa.md`.
+  Static-pass commit: `0faff17d`  Live-pass commit: (this commit)  Date: 30 April 2026  Hotfixes raised: 0
 
-- `[ ]` **#7. Formal Stage 2 QA pass** (`luna-stage2-formal-qa-pass.md`, ~1h, very low risk)
-  Subagent invocation prompt that runs the 14 numbered checks from master plan section 4 Stage 2 (`/agents luna-qa-agent`) plus the multilingual QA pass. Produces the canonical test report.
-  Commit (test report): __________  Date: __________
+- `[x]` **#7. Formal Stage 2 QA pass** (`luna-stage2-formal-qa-pass.md`, ~1h, very low risk)
+  Final Stage 2 verification gate. Maps all 14 master-plan checks to evidence from finishing kit items #3 through #6 plus the Stage 2f hotfix arc. **12 PASS, 1 PASS with documented limitation (check 6 / R-4 tab refocus), 1 N/A by design (check 12 / `expand_phase` is per-user UI state).** Six known limitations carried forward, none security issues. Test report: `docs/specs/collab/test-reports/stage2-finish-7-formal-qa-pass.md`.
+  Commit (test report): (this commit)  Date: 30 April 2026
 
 ### Bookkeeping before Stage 3
 
