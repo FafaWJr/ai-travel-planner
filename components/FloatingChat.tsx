@@ -33,6 +33,7 @@ export interface TripUpdate {
   day?: number;
   timeSlot?: string;
   activity?: string;     // add_activity: new text; remove_activity: text to match; replace_activity: old text to match
+  activityText?: string; // remove_activity legacy %%TRIP_UPDATE%% path: alternate field name for the text-to-match (Stage 2f hotfix #7)
   newActivity?: string;  // replace_activity: replacement text
   location?: string;
   activityIndex?: number;

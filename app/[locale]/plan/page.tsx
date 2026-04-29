@@ -1753,9 +1753,35 @@ function PlanContent() {
                 return;
               }
               if (update.type === 'remove_activity') {
+                // Stage 2f hotfix #7: route through removeActivityById so the
+                // existing emit pipeline fires (POST + broadcast + DB row).
+                // The pre-hotfix path called removeActivitiesMatching(text)
+                // which (a) filtered across ALL days indiscriminately, not
+                // just the specified one, and (b) only did a local setDays
+                // with no emit, so Browser B never saw the change and zero
+                // remove_activity rows ever landed in trip_activity_log.
                 const dayNum = update.day ?? 1;
-                const text = update.activity || update.location || '';
-                if (text) itineraryRef.current?.removeActivitiesMatching(text);
+                // Tool path puts the text in `activity`; legacy %%TRIP_UPDATE%%
+                // path may put it in `activityText`. Either works.
+                const text = (update.activity || update.activityText || update.location || '').trim();
+                if (!text) {
+                  console.warn('[remove_activity] no activity text provided', update);
+                  return;
+                }
+                const days = itineraryRef.current?.getDaysSnapshot() ?? [];
+                const targetDay = days.find(d => d.number === dayNum);
+                if (!targetDay) {
+                  console.warn('[remove_activity] day not found', { dayNum, available: days.map(d => d.number) });
+                  return;
+                }
+                const lower = text.toLowerCase();
+                const targetActivity = targetDay.activities.find(a => a.text.toLowerCase().includes(lower));
+                if (!targetActivity) {
+                  console.warn('[remove_activity] no activity matched in day', { dayNum, text, available: targetDay.activities.map(a => a.text) });
+                  setToast(`No activity matching "${text}" found on Day ${dayNum}`);
+                  return;
+                }
+                itineraryRef.current?.removeActivityById(targetActivity.id);
                 setToast(`Activity removed from Day ${dayNum}`);
                 markDirty();
                 return;
