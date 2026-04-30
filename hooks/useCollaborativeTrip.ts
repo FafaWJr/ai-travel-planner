@@ -625,6 +625,40 @@ export function useCollaborativeTrip(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, tripId, userId]);
 
+  // P2-2: tab refocus catchup. The Supabase Realtime WebSocket stays
+  // "connected" while a tab is backgrounded, so no SUBSCRIBED event fires
+  // on return and the reconnect-replay path never runs. But Chrome
+  // throttles or silently drops messages on background tabs (especially
+  // after ~5 minutes), so the receiver can miss patches without ever
+  // disconnecting. This listener runs the same catchup query as the
+  // reconnect-replay (backfillFromApi) when the tab becomes visible.
+  // Idempotent: returns zero rows if nothing was missed.
+  useEffect(() => {
+    if (!enabled || !tripId) return;
+
+    let isActive = true;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState !== 'visible' || !isActive) return;
+      // Skip if we never applied any patches yet (initial connect or no
+      // realtime activity at all). Mirrors the SUBSCRIBED handler's gate.
+      if (lastAppliedSeqRef.current <= 0) return;
+      // 500ms delay lets Chrome reprioritise the tab's network after
+      // foregrounding before we issue the HTTP catchup query.
+      setTimeout(() => {
+        if (!isActive) return;
+        console.log('[useCollaborativeTrip] Tab refocused, running catchup query');
+        void backfillFromApi(lastAppliedSeqRef.current);
+      }, 500);
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      isActive = false;
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [enabled, tripId, backfillFromApi]);
+
   if (!enabled) {
     return {
       tripData: initialTripData,
