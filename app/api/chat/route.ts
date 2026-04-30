@@ -4,6 +4,7 @@ import { streamCompletion } from '@/lib/ai-stream';
 import { buildLunaChatSystemBlocks, buildLunaChatTools } from '@/lib/ai';
 import { createClient } from '@/lib/supabase/server';
 import { getRequestUserAndRole } from '@/lib/collaboration';
+import { getRecentCollaboratorActivity, buildCollaboratorContextBlock } from '@/lib/collab-awareness';
 
 export const maxDuration = 60;
 
@@ -82,6 +83,16 @@ export async function POST(request: NextRequest) {
       userName,
       locale ?? 'en',
     );
+
+    // Stage 3b: append COLLABORATOR CONTEXT to the dynamic block (block 1).
+    // Block 0 is cached (cache_control: ephemeral) and must not be touched.
+    // Block 1 is rebuilt every turn; appending here never breaks caching.
+    if (tripId && user) {
+      const recentActivity = await getRecentCollaboratorActivity(supabase, tripId, user.id);
+      if (recentActivity && recentActivity.length > 0) {
+        systemBlocks[1].text += buildCollaboratorContextBlock(recentActivity);
+      }
+    }
 
     let stream: ReadableStream<Uint8Array>;
     try {

@@ -1,7 +1,7 @@
 # Luna Let's Go - Claude Code Context
-**Last Updated:** 2026-04-30 23:10:00
+**Last Updated:** 2026-04-30 23:40:56
 **Current Branch:** main
-**Last Commit:** ed377cf0 feat(collab): per-user Luna chat threads with dual-read migration (Stage 3a)
+**Last Commit:** f62b3f7e fix(collab): persist collaborator chat threads via dedicated endpoint (Stage 3a hotfix)
 **Deployment:** https://www.lunaletsgo.com
 
 ---
@@ -101,7 +101,8 @@ app/auth/signup/page.tsx
 ## Recent Changes (Last 10 Commits)
 
 ```
-ed377cf0 (HEAD -> main, origin/main, origin/HEAD) feat(collab): per-user Luna chat threads with dual-read migration (Stage 3a)
+f62b3f7e (HEAD -> main, origin/main, origin/HEAD) fix(collab): persist collaborator chat threads via dedicated endpoint (Stage 3a hotfix)
+ed377cf0 feat(collab): per-user Luna chat threads with dual-read migration (Stage 3a)
 e2c6cdc9 fix(collab): reposition + drop dead day-id gate in replace_activity (P2-3b)
 2e8230d6 feat(collab): catchup on tab refocus via visibilitychange (P2-2)
 27674047 fix(plan): server-side merge in PATCH + visible R2b error toast (P2-1)
@@ -110,7 +111,6 @@ d28ee72f docs: regenerate CLAUDE.md with 18 days of releases (Stage 2 finish #8)
 0faff17d docs(collab): reconnect replay QA pre-flight + close #5 (Stage 2 finish #6)
 0f6ef49d fix(collab): hide edit affordances for viewer role (Stage 2f hotfix #9)
 e57631f9 docs(collab): viewer tier QA pre-flight + close out #4 (Stage 2 finish #5)
-fa4ddca6 fix(collab): broadcast cross-slot drag as replace_activity (Stage 2f hotfix #8)
 ```
 
 ---
