@@ -259,7 +259,12 @@ function PlanContent() {
   const [extraIdeas,      setExtraIdeas]      = useState('');
   const [extraIdeasLoading, setExtraIdeasLoading] = useState(false);
   const [showExtraIdeas,  setShowExtraIdeas]  = useState(false);
-  const [toast,           setToast]           = useState<string | null>(null);
+  // P2-1: toast carries a variant so the R2b refusal renders as an error
+  // (red, longer duration) rather than a success (green ✓).
+  const [toast, setToastInternal] = useState<{ message: string; variant: 'success' | 'error' } | null>(null);
+  const setToast = (message: string | null, variant: 'success' | 'error' = 'success') => {
+    setToastInternal(message === null ? null : { message, variant });
+  };
   const [acceptedHotels,  setAcceptedHotels]  = useState<AcceptedHotel[]>([]);
   const [seenIdeaNames,   setSeenIdeaNames]   = useState<string[]>([]);
   const [itineraryVersion, setItineraryVersion] = useState(0);
@@ -607,7 +612,13 @@ function PlanContent() {
         window.location.href = pendingDestination;
       }
     } else {
-      setUnsavedModal(prev => ({ ...prev, isSaving: false }));
+      // P2-1: close the modal on save failure so the error toast set by
+      // saveTrip becomes visible. Previously the modal stayed open and the
+      // toast (which now has zIndex 10000) sat in front of it but the modal
+      // looped indefinitely with no path to recovery. Closing the modal
+      // returns the user to the plan page where they can read the error and
+      // regenerate the trip.
+      setUnsavedModal({ isOpen: false, pendingDestination: '', pendingType: 'link', isSaving: false });
     }
   };
 
@@ -658,10 +669,13 @@ function PlanContent() {
     const title = `${dest}${numDays ? ` · ${numDays} days` : ''}`;
     const snapshot = itineraryRef.current?.getDaysSnapshot() ?? [];
     const phases = itineraryRef.current?.getPhases() ?? [];
+    // P2-1: always include itineraryPhases (even as []) so the server-side
+    // merge can clear phases consistently. Without the key, the merge would
+    // preserve any stale phases on the existing row.
     const trip_data = {
       plan, photos, acceptedHotels, prompt,
       itineraryDays: snapshot,
-      ...(phases.length > 0 ? { itineraryPhases: phases } : {}),
+      itineraryPhases: phases,
     };
     return { dest, sd, ed, title, trip_data };
   };
@@ -694,7 +708,9 @@ function PlanContent() {
     const validationError = validateTripPayloadForSave(payload);
     if (validationError) {
       console.warn('[saveTrip] Refused to save inconsistent payload', validationError);
-      setToast(t(validationError.tKey));
+      // P2-1: error variant so the user sees a visible red error rather than
+      // a green-checkmark toast that reads as success.
+      setToast(t(validationError.tKey), 'error');
       return false;
     }
 
@@ -723,7 +739,7 @@ function PlanContent() {
       return true;
     } catch (err) {
       console.error('[saveTrip] error:', err);
-      setToast('Could not save trip. Please try again.');
+      setToast('Could not save trip. Please try again.', 'error');
       return false;
     } finally {
       setSaveLoading(false);
@@ -1719,7 +1735,7 @@ function PlanContent() {
             </div>
           </div>
 
-          {toast && <Toast message={toast} onDismiss={() => setToast(null)} />}
+          {toast && <Toast message={toast.message} variant={toast.variant} onDismiss={() => setToast(null)} />}
 
           <FloatingChat
             plan={plan}

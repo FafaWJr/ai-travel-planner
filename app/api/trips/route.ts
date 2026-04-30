@@ -145,6 +145,26 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Missing trip id' }, { status: 400 })
   }
 
+  // ── Current-row fetch (P2-1, 2026-04-30) ────────────────────────────────
+  // Hoisted above the guards so the same fetched row feeds both the
+  // destructive-PATCH check and the trip_data merge below. One DB roundtrip
+  // covers both. Uses the same RLS-scoped client used for the update below.
+  let currentTripData: Record<string, unknown> | null = null
+  if (trip_data !== undefined && trip_data !== null && typeof trip_data === 'object') {
+    const { data: current, error: currentErr } = await supabase
+      .from('saved_trips')
+      .select('trip_data')
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (currentErr) {
+      console.error('[PATCH /api/trips] current-row fetch failed:', currentErr)
+      return NextResponse.json({ error: currentErr.message }, { status: 500 })
+    }
+    currentTripData = (current?.trip_data ?? null) as Record<string, unknown> | null
+  }
+
   // ── Destructive-PATCH guard (plan-ssr-fix, 2026-04-27) ──────────────────
   // Defense-in-depth: refuse any PATCH that would replace a non-empty
   // plan/photos with an empty value. Triggered when a layout-level autosave
@@ -156,8 +176,6 @@ export async function PATCH(request: NextRequest) {
   //     `plan` (or `photos`) key with an empty value. A collab save (which
   //     writes only `itineraryDays/Phases/hotels` and omits `plan/photos`)
   //     is NOT affected.
-  //   - Compares against the current row's stored value, fetched with the
-  //     same RLS-scoped client used for the update below.
   //
   // To genuinely clear a plan in the future, send an explicit
   // `trip_data.allowEmpty: true` flag and extend this guard accordingly.
@@ -169,21 +187,8 @@ export async function PATCH(request: NextRequest) {
     const incomingPhotos = hasPhotosKey && Array.isArray(incoming.photos) ? incoming.photos : null
 
     if (hasPlanKey || hasPhotosKey) {
-      const { data: current, error: currentErr } = await supabase
-        .from('saved_trips')
-        .select('trip_data')
-        .eq('id', id)
-        .eq('user_id', user.id)
-        .maybeSingle()
-
-      if (currentErr) {
-        console.error('[PATCH /api/trips] guard: current-row fetch failed:', currentErr)
-        return NextResponse.json({ error: currentErr.message }, { status: 500 })
-      }
-
-      const currentTd = (current?.trip_data ?? null) as Record<string, unknown> | null
-      const currentPlan = typeof currentTd?.plan === 'string' ? currentTd.plan : ''
-      const currentPhotos = Array.isArray(currentTd?.photos) ? (currentTd.photos as unknown[]) : []
+      const currentPlan = typeof currentTripData?.plan === 'string' ? currentTripData.plan : ''
+      const currentPhotos = Array.isArray(currentTripData?.photos) ? (currentTripData.photos as unknown[]) : []
 
       const isDestructivePlan = hasPlanKey && currentPlan.length > 0 && (incomingPlan ?? '').length === 0
       const isDestructivePhotos = hasPhotosKey && currentPhotos.length > 0 && (incomingPhotos?.length ?? 0) === 0
@@ -246,8 +251,24 @@ export async function PATCH(request: NextRequest) {
   const updatePayload: Record<string, unknown> = { updated_at: new Date().toISOString() }
   if (title !== undefined) updatePayload.title = title
   if (trip_data !== undefined) {
+    // P2-1 (2026-04-30): merge incoming trip_data into the existing row's
+    // trip_data instead of replacing the entire JSONB column. Without this
+    // merge, a partial collab debounced save (hooks/useCollaborativeTrip.ts:
+    // scheduleDebouncedSave) sends only { itineraryDays, itineraryPhases,
+    // acceptedHotels } and Supabase .update() replaces trip_data wholesale,
+    // wiping plan/photos/prompt. The destructive-PATCH guard above does not
+    // catch this because the collab payload omits the plan/photos keys
+    // entirely (rather than sending them empty). 4 of 7 trips saved on
+    // 29 April had this exact 3-key signature with plan/photos/prompt absent.
+    //
+    // Safe for the manual save path because buildTripPayload sends all 6
+    // keys; merging incoming over existing yields the same result as
+    // replacing.
+    const incomingTd = trip_data as Record<string, unknown>
+    const existingTd = (currentTripData ?? {}) as Record<string, unknown>
+    const mergedTd = { ...existingTd, ...incomingTd }
     // Stage 2c: server-side UUID injection (idempotent). See POST handler.
-    updatePayload.trip_data = injectMissingDayIds(trip_data as TripData)
+    updatePayload.trip_data = injectMissingDayIds(mergedTd as TripData)
   }
   if (chat_history !== undefined) updatePayload.chat_history = chat_history
 
