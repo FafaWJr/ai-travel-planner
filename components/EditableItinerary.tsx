@@ -1040,15 +1040,33 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
       // Stage 2f-hotfix-1: read dayId synchronously before setDays.
       const dayIdForPatch = daysRef.current.find(d => d.activities.some(a => a.id === activityId))?.id;
 
+      // P2-3b: when the slot changes, reposition the activity to the end of
+      // the day's activities array so it appears at the end of the new slot
+      // when filtered by the renderer (line 1615: filter(a => a.slot === key)).
+      // The previous in-place update kept the activity at its old index,
+      // which placed it at the wrong position within the destination slot
+      // (e.g. dropping into afternoon would render it BEFORE existing
+      // afternoon activities if its index was lower). Same-slot calls
+      // (Luna text swap) preserve original position.
       setDays(prev => prev.map(d => {
-        if (!d.activities.some(a => a.id === activityId)) return d;
+        const existing = d.activities.find(a => a.id === activityId);
+        if (!existing) return d;
+        const updated = {
+          ...existing,
+          text: newActivity.text,
+          slot: newActivity.slot,
+          manuallyAdded: newActivity.manuallyAdded,
+          lunaAdded: newActivity.lunaAdded,
+        };
+        if (existing.slot !== newActivity.slot) {
+          return {
+            ...d,
+            activities: [...d.activities.filter(a => a.id !== activityId), updated],
+          };
+        }
         return {
           ...d,
-          activities: d.activities.map(a =>
-            a.id === activityId
-              ? { ...a, text: newActivity.text, slot: newActivity.slot, manuallyAdded: newActivity.manuallyAdded, lunaAdded: newActivity.lunaAdded }
-              : a
-          ),
+          activities: d.activities.map(a => (a.id === activityId ? updated : a)),
         };
       }));
       if (dayIdForPatch && !options?.suppressEmit) {

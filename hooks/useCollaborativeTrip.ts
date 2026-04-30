@@ -149,8 +149,13 @@ function applyPatchToRef(
       handle?.removeActivityById?.(p.activityId, SUPPRESS);
       break;
     case 'replace_activity': {
-      const dayNum = dayIdToNumber(itineraryRef, p.dayId);
-      if (dayNum == null) return;
+      // P2-3b: do NOT early-return on dayIdToNumber. replaceActivityById
+      // scans all days for the activity by global id; it doesn't need the
+      // day number. The previous gate silently dropped the patch on
+      // Browser B if day ids drifted across browsers (rare in normal
+      // collab but possible if a trip pre-dates hotfix #2's id stability
+      // convention). Symptom: "wrong slot" because the dispatcher never
+      // ran and Browser B kept the activity in its old slot.
       handle?.replaceActivityById?.(p.activityId, {
         text: p.newActivity.text,
         slot: p.newActivity.slot as TimeSlot,
