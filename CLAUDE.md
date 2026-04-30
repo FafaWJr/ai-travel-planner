@@ -1,7 +1,7 @@
 # Luna Let's Go - Claude Code Context
-**Last Updated:** 2026-04-30 09:18:20
+**Last Updated:** 2026-04-30 17:06:25
 **Current Branch:** main
-**Last Commit:** 37a10f87 docs(collab): formal Stage 2 QA pass, 14 checks mapped (Stage 2 finish #7)
+**Last Commit:** e2c6cdc9 fix(collab): reposition + drop dead day-id gate in replace_activity (P2-3b)
 **Deployment:** https://www.lunaletsgo.com
 
 ---
@@ -100,16 +100,16 @@ app/auth/signup/page.tsx
 ## Recent Changes (Last 10 Commits)
 
 ```
-37a10f87 (HEAD -> main, origin/main, origin/HEAD) docs(collab): formal Stage 2 QA pass, 14 checks mapped (Stage 2 finish #7)
+e2c6cdc9 (HEAD -> main, origin/main, origin/HEAD) fix(collab): reposition + drop dead day-id gate in replace_activity (P2-3b)
+2e8230d6 feat(collab): catchup on tab refocus via visibilitychange (P2-2)
+27674047 fix(plan): server-side merge in PATCH + visible R2b error toast (P2-1)
+d28ee72f docs: regenerate CLAUDE.md with 18 days of releases (Stage 2 finish #8)
+37a10f87 docs(collab): formal Stage 2 QA pass, 14 checks mapped (Stage 2 finish #7)
 0faff17d docs(collab): reconnect replay QA pre-flight + close #5 (Stage 2 finish #6)
 0f6ef49d fix(collab): hide edit affordances for viewer role (Stage 2f hotfix #9)
 e57631f9 docs(collab): viewer tier QA pre-flight + close out #4 (Stage 2 finish #5)
 fa4ddca6 fix(collab): broadcast cross-slot drag as replace_activity (Stage 2f hotfix #8)
 2001b6b4 docs(collab): record source-level pre-flight for Stage 2f hotfix #8
-6e5e8781 fix: switch remove_activity to index-based matching (Stage 2f hotfix #7c)
-3e4d7505 fix(chat): robust text matching for remove_activity (Stage 2f hotfix #7b revised)
-c899d261 fix(chat): slot-aware remove_activity match + accurate planUpdated (hotfix #7b)
-48e1c7a5 fix(chat): wire remove_activity end-to-end through Luna chat (Stage 2f hotfix #7)
 ```
 
 ---

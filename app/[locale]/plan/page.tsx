@@ -27,6 +27,13 @@ import { COLLAB_ENABLED, COLLAB_REALTIME_ENABLED, type CollabRole } from '@/lib/
 import { InviteModal } from '@/components/collab/InviteModal';
 import { CollaboratorAvatars } from '@/components/collab/CollaboratorAvatars';
 import { useCollaborativeTrip } from '@/hooks/useCollaborativeTrip';
+import {
+  readUserChatHistory,
+  writeUserChatHistory,
+  isKeyedHistory,
+  migrateToKeyed,
+  type ChatHistory,
+} from '@/lib/chat-history';
 
 /* Map next-intl locale codes to JS Intl locale codes for date formatting */
 function toDateLocale(locale: string): string {
@@ -339,6 +346,12 @@ function PlanContent() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [unsavedModal, setUnsavedModal] = useState<{ isOpen: boolean; pendingDestination: string; pendingType: 'link' | 'popstate'; isSaving: boolean }>({ isOpen: false, pendingDestination: '', pendingType: 'link', isSaving: false });
   const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'assistant'; content: string; planUpdated?: boolean; isWelcome?: boolean }[]>([]);
+  // Stage 3a: per-user chat threads. fullChatHistory holds the complete keyed
+  // object (all users' threads); chatMessages holds only THIS user's flat thread
+  // for rendering. Collab-trip saves write the keyed shape; solo trips stay flat.
+  const [fullChatHistory, setFullChatHistory] = useState<ChatHistory | null>(null);
+  const [tripIsCollaborative, setTripIsCollaborative] = useState(false);
+  const [tripOwnerId, setTripOwnerId] = useState<string | null>(null);
   const chatSyncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const markDirty = () => setIsDirty(true);
 
@@ -717,23 +730,33 @@ function PlanContent() {
     setSaveLoading(true);
     try {
       const { dest, sd, ed, title, trip_data } = payload;
+      // Stage 3a: build keyed shape for collab trips, flat for solo.
+      const baseHistory = isKeyedHistory(fullChatHistory)
+        ? fullChatHistory
+        : (tripIsCollaborative && tripOwnerId && Array.isArray(fullChatHistory) && (fullChatHistory as unknown[]).length > 0
+            ? migrateToKeyed(fullChatHistory as Parameters<typeof migrateToKeyed>[0], tripOwnerId)
+            : fullChatHistory);
+      const chatToSave = user
+        ? writeUserChatHistory(baseHistory, user.id, chatMessages, tripIsCollaborative)
+        : chatMessages;
       if (savedTripId) {
         const res = await fetch('/api/trips', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: savedTripId, title, trip_data, chat_history: chatMessages }),
+          body: JSON.stringify({ id: savedTripId, title, trip_data, chat_history: chatToSave }),
         });
         if (!res.ok) throw new Error((await res.json()).error || 'Update failed');
       } else {
         const res = await fetch('/api/trips', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title, destination: dest, start_date: sd, end_date: ed, trip_data, chat_history: chatMessages }),
+          body: JSON.stringify({ title, destination: dest, start_date: sd, end_date: ed, trip_data, chat_history: chatToSave }),
         });
         if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
         const json = await res.json();
         if (json.id) setSavedTripId(json.id);
       }
+      setFullChatHistory(chatToSave);
       setIsDirty(false);
       setToast(savedTripId ? 'Trip updated! ✓' : 'Trip saved! ✓');
       return true;
@@ -890,9 +913,19 @@ function PlanContent() {
         setInitialItineraryPhases(td.itineraryPhases);
         setPagePhasesMirror(td.itineraryPhases);
       }
-      // Restore chat history if available
-      if (Array.isArray(data.chat_history) && data.chat_history.length > 0) {
-        setChatMessages(data.chat_history as { role: 'user' | 'assistant'; content: string; planUpdated?: boolean; isWelcome?: boolean }[]);
+      // Stage 3a: per-user chat threads.
+      const isCollab = Boolean(data.is_collaborative);
+      const ownerId = (data.user_id as string) ?? null;
+      setTripIsCollaborative(isCollab);
+      setTripOwnerId(ownerId);
+      const rawChatHistory = data.chat_history as ChatHistory | null | undefined;
+      setFullChatHistory(rawChatHistory ?? null);
+      const currentUserId = user?.id ?? '';
+      const userThread = rawChatHistory
+        ? readUserChatHistory(rawChatHistory, currentUserId, { isCollaborative: isCollab, ownerId: ownerId ?? undefined })
+        : [];
+      if (userThread.length > 0) {
+        setChatMessages(userThread);
       }
       setSavedTripId(data.id as string);
       if (data.destination) setSavedTripDestination(data.destination as string);
@@ -956,10 +989,18 @@ function PlanContent() {
     if (!user || !savedTripId || chatMessages.length === 0) return;
     if (chatSyncTimer.current) clearTimeout(chatSyncTimer.current);
     chatSyncTimer.current = setTimeout(async () => {
+      // Stage 3a: build keyed shape for collab trips; flat for solo.
+      const existingFull = isKeyedHistory(fullChatHistory)
+        ? fullChatHistory
+        : (tripIsCollaborative && tripOwnerId && Array.isArray(fullChatHistory) && (fullChatHistory as unknown[]).length > 0
+            ? migrateToKeyed(fullChatHistory as Parameters<typeof migrateToKeyed>[0], tripOwnerId)
+            : fullChatHistory);
+      const chatToSave = writeUserChatHistory(existingFull, user.id, chatMessages, tripIsCollaborative);
+      setFullChatHistory(chatToSave);
       await fetch('/api/trips', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: savedTripId, chat_history: chatMessages }),
+        body: JSON.stringify({ id: savedTripId, chat_history: chatToSave }),
       });
     }, 2000);
     return () => { if (chatSyncTimer.current) clearTimeout(chatSyncTimer.current); };
