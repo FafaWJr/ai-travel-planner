@@ -1,7 +1,7 @@
 # Luna Let's Go - Claude Code Context
-**Last Updated:** 2026-04-30 17:06:25
+**Last Updated:** 2026-04-30 23:10:00
 **Current Branch:** main
-**Last Commit:** e2c6cdc9 fix(collab): reposition + drop dead day-id gate in replace_activity (P2-3b)
+**Last Commit:** ed377cf0 feat(collab): per-user Luna chat threads with dual-read migration (Stage 3a)
 **Deployment:** https://www.lunaletsgo.com
 
 ---
@@ -55,6 +55,7 @@ app/api/hotel-photos/route.ts
 app/api/hotel-suggestions/route.ts
 app/api/place-photo/route.ts
 app/api/regenerate-day/route.ts
+app/api/trips/[tripId]/chat-history/route.ts
 app/api/trips/[tripId]/collaborators/[userId]/route.ts
 app/api/trips/[tripId]/collaborators/route.ts
 app/api/trips/[tripId]/join/route.ts
@@ -100,7 +101,8 @@ app/auth/signup/page.tsx
 ## Recent Changes (Last 10 Commits)
 
 ```
-e2c6cdc9 (HEAD -> main, origin/main, origin/HEAD) fix(collab): reposition + drop dead day-id gate in replace_activity (P2-3b)
+ed377cf0 (HEAD -> main, origin/main, origin/HEAD) feat(collab): per-user Luna chat threads with dual-read migration (Stage 3a)
+e2c6cdc9 fix(collab): reposition + drop dead day-id gate in replace_activity (P2-3b)
 2e8230d6 feat(collab): catchup on tab refocus via visibilitychange (P2-2)
 27674047 fix(plan): server-side merge in PATCH + visible R2b error toast (P2-1)
 d28ee72f docs: regenerate CLAUDE.md with 18 days of releases (Stage 2 finish #8)
@@ -109,7 +111,6 @@ d28ee72f docs: regenerate CLAUDE.md with 18 days of releases (Stage 2 finish #8)
 0f6ef49d fix(collab): hide edit affordances for viewer role (Stage 2f hotfix #9)
 e57631f9 docs(collab): viewer tier QA pre-flight + close out #4 (Stage 2 finish #5)
 fa4ddca6 fix(collab): broadcast cross-slot drag as replace_activity (Stage 2f hotfix #8)
-2001b6b4 docs(collab): record source-level pre-flight for Stage 2f hotfix #8
 ```
 
 ---

@@ -987,6 +987,8 @@ function PlanContent() {
   // Auto-sync chat history when messages change (debounced, only when trip is saved)
   useEffect(() => {
     if (!user || !savedTripId || chatMessages.length === 0) return;
+    // Viewers don't save chat_history (read-only queries only)
+    if (myRole === 'viewer') return;
     if (chatSyncTimer.current) clearTimeout(chatSyncTimer.current);
     chatSyncTimer.current = setTimeout(async () => {
       // Stage 3a: build keyed shape for collab trips; flat for solo.
@@ -997,11 +999,24 @@ function PlanContent() {
             : fullChatHistory);
       const chatToSave = writeUserChatHistory(existingFull, user.id, chatMessages, tripIsCollaborative);
       setFullChatHistory(chatToSave);
-      await fetch('/api/trips', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: savedTripId, chat_history: chatToSave }),
-      });
+
+      const isOwner = !tripIsCollaborative || user.id === tripOwnerId;
+      if (isOwner) {
+        // Owner path: /api/trips PATCH filter matches user_id (already works)
+        await fetch('/api/trips', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: savedTripId, chat_history: chatToSave }),
+        });
+      } else {
+        // Stage 3a hotfix: collaborator path — dedicated endpoint that
+        // server-merges the keyed thread without the owner user_id filter.
+        await fetch(`/api/trips/${savedTripId}/chat-history`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chat_history: chatToSave }),
+        });
+      }
     }, 2000);
     return () => { if (chatSyncTimer.current) clearTimeout(chatSyncTimer.current); };
   }, [chatMessages]); // eslint-disable-line
