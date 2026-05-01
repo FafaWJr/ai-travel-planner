@@ -78,6 +78,11 @@ export type UseCollaborativeTripArgs = {
    * received hotel patches.
    */
   currentHotels?: AcceptedHotel[];
+  /**
+   * Stage 4a: called when a comment patch is received (add/edit/delete).
+   * The caller should refetch /api/trips/[tripId]/comments to get fresh data.
+   */
+  onCommentsChanged?: () => void;
 };
 
 export type UseCollaborativeTripReturn = {
@@ -114,7 +119,8 @@ function applyPatchToRef(
   patch: Patch,
   itineraryRef: React.RefObject<ItineraryHandle | null> | undefined,
   currentHotels: AcceptedHotel[] | undefined,
-  onHotelsChange: ((next: AcceptedHotel[]) => void) | undefined
+  onHotelsChange: ((next: AcceptedHotel[]) => void) | undefined,
+  onCommentsChanged: (() => void) | undefined
 ): void {
   const handle = itineraryRef?.current;
   const p = patch.payload;
@@ -252,8 +258,9 @@ function applyPatchToRef(
     case 'add_comment':
     case 'edit_comment':
     case 'delete_comment':
-      // Comments live in trip_comments and are rendered by Stage 4
-      // via a separate subscription. This dispatcher is a no-op.
+      // Comments live in trip_comments. Trigger a refetch from the caller
+      // rather than applying optimistically (Stage 4a: server is source of truth).
+      onCommentsChanged?.();
       break;
     default: {
       const _never: never = p;
@@ -276,6 +283,7 @@ export function useCollaborativeTrip(
     itineraryRef,
     onHotelsChange,
     currentHotels,
+    onCommentsChanged,
   } = args;
 
   const [tripData] = useState<PatchableTripData>(initialTripData);
@@ -303,9 +311,11 @@ export function useCollaborativeTrip(
   // the broadcast handler (captured once per subscription) see fresh values.
   const currentHotelsRef = useRef(currentHotels);
   const onHotelsChangeRef = useRef(onHotelsChange);
+  const onCommentsChangedRef = useRef(onCommentsChanged);
   const itineraryHandleRef = useRef(itineraryRef);
   useEffect(() => { currentHotelsRef.current = currentHotels; }, [currentHotels]);
   useEffect(() => { onHotelsChangeRef.current = onHotelsChange; }, [onHotelsChange]);
+  useEffect(() => { onCommentsChangedRef.current = onCommentsChanged; }, [onCommentsChanged]);
   useEffect(() => { itineraryHandleRef.current = itineraryRef; }, [itineraryRef]);
 
   // Schedule a debounced PATCH /api/trips with materialized trip_data.
@@ -357,6 +367,7 @@ export function useCollaborativeTrip(
             itineraryHandleRef.current,
             currentHotelsRef.current,
             onHotelsChangeRef.current,
+            onCommentsChangedRef.current,
           );
           if (entry.seq > lastAppliedSeqRef.current) {
             lastAppliedSeqRef.current = entry.seq;
@@ -454,7 +465,7 @@ export function useCollaborativeTrip(
     // Non-commutative: apply locally only after we have the seq.
     if (!commutative) {
       try {
-        applyPatchToRef(patch, itineraryHandleRef.current, currentHotelsRef.current, onHotelsChangeRef.current);
+        applyPatchToRef(patch, itineraryHandleRef.current, currentHotelsRef.current, onHotelsChangeRef.current, onCommentsChangedRef.current);
       } catch (err) {
         console.error('[useCollaborativeTrip] non-commutative apply failed:', err);
       }
@@ -559,7 +570,7 @@ export function useCollaborativeTrip(
       }
 
       try {
-        applyPatchToRef(incoming, itineraryHandleRef.current, currentHotelsRef.current, onHotelsChangeRef.current);
+        applyPatchToRef(incoming, itineraryHandleRef.current, currentHotelsRef.current, onHotelsChangeRef.current, onCommentsChangedRef.current);
         if (seq > lastAppliedSeqRef.current) lastAppliedSeqRef.current = seq;
         dirtyRef.current = true;
         scheduleDebouncedSave();

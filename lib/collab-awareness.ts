@@ -93,6 +93,13 @@ function formatActionDetail(
     }
     case 'split_phase':   return 'split a phase into two';
     case 'merge_phases':  return 'merged multiple phases together';
+    case 'add_comment': {
+      const preview = (inner.commentText as string)?.slice(0, 40) || '';
+      const targetLabel = (inner.targetType as string) || 'an item';
+      return `commented on ${targetLabel}${preview ? `: "${preview}"` : ''}`;
+    }
+    case 'edit_comment':   return 'edited a comment';
+    case 'delete_comment': return 'deleted a comment';
     default:              return action.replace(/_/g, ' ');
   }
 }
