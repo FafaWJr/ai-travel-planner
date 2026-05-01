@@ -56,7 +56,7 @@ interface Props {
   plan: string;
   destination?: string;
   hotelContext?: string;
-  currentActivities?: string;
+  getCurrentActivities?: () => string;
   /** R5: Called right before each chat request to get current phase state for context injection. */
   getPhases?: () => Phase[];
   onAddToItinerary: (text: string, dayNum: number, slot: TimeSlot) => void;
@@ -405,7 +405,7 @@ function renderContent(text: string): React.ReactNode {
   });
 }
 
-export default function FloatingChat({ plan, destination, hotelContext, currentActivities, getPhases, onAddToItinerary, onPlanUpdate, onTripUpdate, isGuest = false, onGateRequired, initialMessages, savedTripId, onMessagesChange, pendingPrompt, onPendingPromptConsumed, injectedAssistantMessage, onInjectedMessageConsumed }: Props) {
+export default function FloatingChat({ plan, destination, hotelContext, getCurrentActivities, getPhases, onAddToItinerary, onPlanUpdate, onTripUpdate, isGuest = false, onGateRequired, initialMessages, savedTripId, onMessagesChange, pendingPrompt, onPendingPromptConsumed, injectedAssistantMessage, onInjectedMessageConsumed }: Props) {
   const locale = useLocale();
   const t = useTranslations('plan');
 
@@ -546,8 +546,8 @@ export default function FloatingChat({ plan, destination, hotelContext, currentA
       }
 
       // === STRUCTURED ITINERARY (PRIMARY SOURCE OF TRUTH) ===
-      // Reflects live user edits (accepts, declines, additions, removals).
-      // Positioned before plan narrative so it survives sanitizePromptInput truncation.
+      // Called fresh at send time so Luna always gets live state, not a stale render snapshot.
+      const currentActivities = getCurrentActivities?.() ?? '';
       if (currentActivities) {
         ctx += `## Current Itinerary (SOURCE OF TRUTH for all days, slots, and activities)\nRead this section FIRST. Each day shows its slots (MORNING, AFTERNOON, EVENING, NIGHT) with numbered activities. The number in brackets [0], [1], [2] is the activityIndex for remove_activity tool calls. This section reflects the LIVE state of the itinerary including all user edits.\n\n${currentActivities}\n\n`;
       }

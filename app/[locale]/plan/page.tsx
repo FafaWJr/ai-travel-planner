@@ -797,7 +797,7 @@ function PlanContent() {
     }
   };
 
-  const liveActivitiesText = React.useMemo(() => {
+  const getActivitiesText = React.useCallback(() => {
     const days = itineraryRef.current?.getDaysSnapshot() ?? [];
     if (days.length === 0) return '';
 
@@ -830,7 +830,7 @@ function PlanContent() {
       });
       return `${dayHeader}\n${slotBlocks.join('\n')}`;
     }).join('\n\n');
-  }, [itineraryVersion]); // eslint-disable-line
+  }, []);
 
   // Place photo popup
   const [popup, setPopup] = useState<{ name:string; x:number; y:number } | null>(null);
@@ -1830,7 +1830,7 @@ function PlanContent() {
                 ).join('\n')
               : undefined
             }
-            currentActivities={liveActivitiesText}
+            getCurrentActivities={getActivitiesText}
             getPhases={() => {
               const refPhases = itineraryRef.current?.getPhases() ?? [];
               if (refPhases.length > 0) return refPhases;
