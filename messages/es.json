@@ -890,6 +890,20 @@
       "acceptDay": "Aceptar este día",
       "dayAccepted": "Día aceptado — haz clic para deshacer",
       "moreIdeas": "Más ideas para este día"
+    },
+    "comments": {
+      "placeholder": "Agregar un comentario...",
+      "submit": "Publicar",
+      "cancel": "Cancelar",
+      "save": "Guardar",
+      "edit": "Editar",
+      "delete": "Eliminar",
+      "deleteConfirm": "¿Eliminar este comentario?",
+      "showMore": "Mostrar {count} anteriores",
+      "charCount": "{current}/500",
+      "orphanedTitle": "Comentarios huérfanos ({count})",
+      "orphanedSubtitle": "Este comentario se refería a un elemento que fue eliminado.",
+      "noComments": "Sin comentarios aún"
     }
   },
   "legal": {

@@ -10,6 +10,8 @@ import type { AcceptedHotel } from './StayTab';
 import type { Phase, TripLengthMode } from '@/types';
 import { formatSlotHours, type SlotName } from '@/lib/ai';
 import type { PatchPayload } from '@/lib/trip-patches';
+import type { CommentConfig } from '@/lib/comment-types';
+import CommentThread, { dayCommentCount, orphanedActivityComments } from './comments/CommentThread';
 
 /**
  * Stage 2d hotfix #1: optional trailing parameter on every imperative
@@ -344,6 +346,9 @@ interface Props {
       UX gap where viewers saw active controls that silently no-op. Solo
       trips and editor/owner sessions pass false. */
   readOnly?: boolean;
+  /** Stage 4b: comment config. When set (collab trips only), CommentThread
+      icons appear on activities, day headers, and phase headers. */
+  commentConfig?: CommentConfig;
 }
 
 export interface ItineraryHandle {
@@ -440,6 +445,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
   tripLengthMode = 'short',
   onPatchEmit,
   readOnly = false,
+  commentConfig,
 }, ref) {
   // Stage 2f: hold a ref to the live onPatchEmit prop. The handle methods
   // built inside useImperativeHandle close over this ref (which always
@@ -1671,6 +1677,20 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
             </svg>
           </div>
 
+          {/* Stage 4b: day-level comment thread (aggregated count = day + activities) */}
+          {commentConfig && day.id && (
+            <div style={{ padding: '0 14px 8px', borderTop: '1px solid rgba(0,68,123,0.05)' }}>
+              <CommentThread
+                config={commentConfig}
+                targetType="day"
+                targetId={day.id}
+                countOverride={dayCommentCount(day.id, day.activities.map(a => a.id ?? '').filter(Boolean), commentConfig.comments)}
+                orphanedComments={orphanedActivityComments(day.id, day.activities.map(a => a.id ?? '').filter(Boolean), commentConfig.comments)}
+                t={t as Parameters<typeof CommentThread>[0]['t']}
+              />
+            </div>
+          )}
+
           {day.open && (
             <div style={{ padding: '14px 14px 16px' }}>
               {SLOTS.map(({ key, label, icon }) => {
@@ -1690,6 +1710,8 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
                     otherDays={otherDays}
                     onMoveToDay={(actId, toDayNum) => moveActivityToDay(actId, day.number, toDayNum)}
                     readOnly={readOnly}
+                    commentConfig={commentConfig}
+                    dayId={day.id}
                   />
                 );
               })}
@@ -1827,6 +1849,8 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
                       onDismissPhases={!readOnly && tripLengthMode === 'medium' ? () => setPhasesDismissed(true) : undefined}
                       tripLengthMode={tripLengthMode}
                       initialLabelEditing={!readOnly && phase.id === newPhaseId}
+                      commentConfig={commentConfig}
+                      phaseDayIds={phaseDays.map(d => d.id ?? '').filter(Boolean) as string[]}
                     />
                     {!collapsedPhaseIds.has(phase.id) && phaseDays.map(day => renderDayCard(day))}
                   </div>
@@ -1873,6 +1897,7 @@ export default EditableItinerary;
 function TimeSlotSection({
   containerId, slotKey, label, icon, activities, activeId,
   onAccept, onDecline, otherDays, onMoveToDay, readOnly = false,
+  commentConfig, dayId,
 }: {
   containerId: string;
   slotKey: TimeSlot;
@@ -1885,6 +1910,8 @@ function TimeSlotSection({
   otherDays: { number: number; title: string }[];
   onMoveToDay: (actId: string, toDayNum: number) => void;
   readOnly?: boolean;
+  commentConfig?: CommentConfig;
+  dayId?: string;
 }) {
   const t = useTranslations('plan');
   const ids = activities.map(a => a.id);
@@ -1914,6 +1941,8 @@ function TimeSlotSection({
                   otherDays={otherDays}
                   onMoveToDay={(toDayNum) => onMoveToDay(act.id, toDayNum)}
                   readOnly={readOnly}
+                  commentConfig={commentConfig}
+                  dayId={dayId}
                 />
               ))
           }
@@ -1948,6 +1977,7 @@ function EmptyDropZone({ containerId }: { containerId: string }) {
 /* ─── SortableActivityItem ───────────────────────────────────── */
 function SortableActivityItem({
   act, isDragging, onAccept, onDecline, otherDays, onMoveToDay, readOnly = false,
+  commentConfig, dayId,
 }: {
   act: Activity;
   isDragging: boolean;
@@ -1956,6 +1986,8 @@ function SortableActivityItem({
   otherDays: { number: number; title: string }[];
   onMoveToDay: (toDayNum: number) => void;
   readOnly?: boolean;
+  commentConfig?: CommentConfig;
+  dayId?: string;
 }) {
   const t = useTranslations('plan');
   const [showMovePicker, setShowMovePicker] = useState(false);
@@ -2071,6 +2103,19 @@ function SortableActivityItem({
               <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: '#333', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.title}</span>
             </button>
           ))}
+        </div>
+      )}
+
+      {/* Stage 4b: per-activity comment thread */}
+      {commentConfig && dayId && (
+        <div style={{ paddingLeft: 4, marginTop: 2 }}>
+          <CommentThread
+            config={commentConfig}
+            targetType="activity"
+            targetId={act.id}
+            originalDayId={dayId}
+            t={t as Parameters<typeof CommentThread>[0]['t']}
+          />
         </div>
       )}
     </div>

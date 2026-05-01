@@ -3,6 +3,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import type { ItineraryHandle } from '@/components/EditableItinerary';
 import { bookingComLink } from '@/lib/affiliate';
 import { useTranslations } from 'next-intl';
+import type { CommentConfig } from '@/lib/comment-types';
+import CommentThread from './comments/CommentThread';
 
 type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'night';
 
@@ -43,6 +45,7 @@ interface Props {
   onRemoveActivitiesMatching: (pattern: string) => void;
   onHotelsConfirmed: (hotels: AcceptedHotel[]) => void;
   externalAccepted?: AcceptedHotel[];
+  commentConfig?: CommentConfig;
 }
 
 /* ─── Quick filter options ───────────────────────────────────── */
@@ -138,13 +141,14 @@ function PhotoGallery({ photos, name }: { photos: string[] | null | '__loading__
 
 /* ─── Hotel card ─────────────────────────────────────────────── */
 function HotelCard({
-  hotel, isConfirmed, onChoose, photos, destination,
+  hotel, isConfirmed, onChoose, photos, destination, commentConfig,
 }: {
   hotel: Hotel;
   isConfirmed: boolean;
   onChoose: () => void;
   photos: string[] | null | '__loading__';
   destination: string;
+  commentConfig?: CommentConfig;
 }) {
   const t = useTranslations('plan');
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hotel.googleMapsQuery)}`;
@@ -224,19 +228,30 @@ function HotelCard({
           </svg>
           Book on Booking.com
         </a>
+        {commentConfig && (
+          <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px solid rgba(0,68,123,0.08)' }}>
+            <CommentThread
+              config={commentConfig}
+              targetType="hotel"
+              targetId={hotel.id}
+              t={t as Parameters<typeof CommentThread>[0]['t']}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
 /* ─── Hotel carousel ─────────────────────────────────────────── */
-function HotelCarousel({ hotels, segment, segConfirmed, chooseHotel, photoCache, destination }: {
+function HotelCarousel({ hotels, segment, segConfirmed, chooseHotel, photoCache, destination, commentConfig }: {
   hotels: Hotel[];
   segment: LocationSegment;
   segConfirmed: AcceptedHotel | undefined;
   chooseHotel: (hotel: Hotel, segment: LocationSegment) => void;
   photoCache: Record<string, string[] | null | '__loading__'>;
   destination: string;
+  commentConfig?: CommentConfig;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const scroll = (dir: -1 | 1) => trackRef.current?.scrollBy({ left: dir * 316, behavior: 'smooth' });
@@ -270,6 +285,7 @@ function HotelCarousel({ hotels, segment, segConfirmed, chooseHotel, photoCache,
               onChoose={() => chooseHotel(hotel, segment)}
               photos={photoCache[hotel.id] ?? '__loading__'}
               destination={destination}
+              commentConfig={commentConfig}
             />
           </div>
         ))}
@@ -348,7 +364,7 @@ async function fetchHotelPhotosFromAPI(hotelName: string, city: string): Promise
 }
 
 /* ─── Main component ─────────────────────────────────────────── */
-export default function StayTab({ prompt, destination, checkIn, checkOut, budget, itineraryRef, onAddToItinerary, onRemoveActivitiesMatching, onHotelsConfirmed, externalAccepted }: Props) {
+export default function StayTab({ prompt, destination, checkIn, checkOut, budget, itineraryRef, onAddToItinerary, onRemoveActivitiesMatching, onHotelsConfirmed, externalAccepted, commentConfig }: Props) {
   const t = useTranslations('plan');
   const [segments,      setSegments]      = useState<LocationSegment[]>([]);
   const [seenIds,       setSeenIds]       = useState<Set<string>>(new Set());
@@ -622,6 +638,7 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
               chooseHotel={chooseHotel}
               photoCache={photoCache}
               destination={segment.location || destination}
+              commentConfig={commentConfig}
             />
           </div>
         );

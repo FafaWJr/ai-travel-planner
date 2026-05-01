@@ -890,6 +890,20 @@
       "acceptDay": "Accept this day",
       "dayAccepted": "Day accepted — click to undo",
       "moreIdeas": "More ideas for this day"
+    },
+    "comments": {
+      "placeholder": "Add a comment...",
+      "submit": "Post",
+      "cancel": "Cancel",
+      "save": "Save",
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleteConfirm": "Delete this comment?",
+      "showMore": "Show {count} earlier",
+      "charCount": "{current}/500",
+      "orphanedTitle": "Orphaned comments ({count})",
+      "orphanedSubtitle": "This comment referred to an item that was removed.",
+      "noComments": "No comments yet"
     }
   },
   "legal": {

@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense, useCallback } from 'react';
 import sanitizeHtml from 'sanitize-html';
 import { markdownToHtml, extractSection, PLAN_SANITIZE_CONFIG } from '@/lib/plan-render';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -24,6 +24,7 @@ import { generateTripPDF } from '@/lib/generateTripPDF';
 import UnsavedChangesModal from '@/components/UnsavedChangesModal';
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 import { COLLAB_ENABLED, COLLAB_REALTIME_ENABLED, type CollabRole } from '@/lib/collaboration';
+import type { Comment, CommentConfig } from '@/lib/comment-types';
 import { InviteModal } from '@/components/collab/InviteModal';
 import { CollaboratorAvatars } from '@/components/collab/CollaboratorAvatars';
 import { useCollaborativeTrip } from '@/hooks/useCollaborativeTrip';
@@ -310,6 +311,25 @@ function PlanContent() {
     })();
   }, [savedTripId]);
 
+  const [tripIsCollaborative, setTripIsCollaborative] = useState(false);
+  const [tripOwnerId, setTripOwnerId] = useState<string | null>(null);
+
+  // Stage 4b: comments state — declared here so fetchComments is available
+  // before the collab hook call (hook takes onCommentsChanged: fetchComments).
+  const [comments, setComments] = useState<Comment[]>([]);
+  const fetchComments = useCallback(async () => {
+    if (!savedTripId || !tripIsCollaborative || !COLLAB_ENABLED) return;
+    try {
+      const res = await fetch(`/api/trips/${savedTripId}/comments`);
+      if (res.ok) {
+        const data = await res.json();
+        setComments(data.comments ?? []);
+      }
+    } catch (err) {
+      console.error('[comments] fetch failed:', err);
+    }
+  }, [savedTripId, tripIsCollaborative]);
+
   // Collab realtime hook. Dual-mode: hook owns state when enabled,
   // passthrough otherwise. Solo trips are unaffected.
   // Stage 2b: presence + subscription only. emitPatch is stubbed.
@@ -334,6 +354,7 @@ function PlanContent() {
     itineraryRef,
     onHotelsChange: setAcceptedHotels,
     currentHotels: acceptedHotels,
+    onCommentsChanged: fetchComments,
   });
 
   const [savedTripDestination, setSavedTripDestination] = useState<string>('');
@@ -350,10 +371,10 @@ function PlanContent() {
   // object (all users' threads); chatMessages holds only THIS user's flat thread
   // for rendering. Collab-trip saves write the keyed shape; solo trips stay flat.
   const [fullChatHistory, setFullChatHistory] = useState<ChatHistory | null>(null);
-  const [tripIsCollaborative, setTripIsCollaborative] = useState(false);
-  const [tripOwnerId, setTripOwnerId] = useState<string | null>(null);
   const chatSyncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const markDirty = () => setIsDirty(true);
+
+  useEffect(() => { fetchComments(); }, [fetchComments]);
 
   // R4: Regeneration modal state
   const [regenModal, setRegenModal] = useState<{
@@ -1550,6 +1571,13 @@ function PlanContent() {
                   regenEnabled={process.env.NEXT_PUBLIC_REGENERATION_ENABLED !== 'false'}
                   onPatchEmit={collab.enabled ? collab.emitPatch : undefined}
                   readOnly={isViewerRole}
+                  commentConfig={COLLAB_ENABLED && tripIsCollaborative && savedTripId ? {
+                    tripId: savedTripId,
+                    comments,
+                    currentUserId: user?.id ?? '',
+                    isOwner: !tripIsCollaborative || myRole === 'owner',
+                    onRefresh: fetchComments,
+                  } as CommentConfig : undefined}
                   tripLengthMode={(() => {
                     // Stage 2e: fall back to savedTripStartDate / savedTripEndDate
                     // so joined collaborators (no `prompt`) still get the right
@@ -1677,6 +1705,13 @@ function PlanContent() {
                       }}
                       externalAccepted={acceptedHotels}
                       onHotelsConfirmed={(hotels) => { setAcceptedHotels(hotels); markDirty(); }}
+                      commentConfig={COLLAB_ENABLED && tripIsCollaborative && savedTripId ? {
+                        tripId: savedTripId,
+                        comments,
+                        currentUserId: user?.id ?? '',
+                        isOwner: !tripIsCollaborative || myRole === 'owner',
+                        onRefresh: fetchComments,
+                      } as CommentConfig : undefined}
                     />
                   </div>
                 );
