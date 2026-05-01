@@ -1530,14 +1530,17 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
   };
 
   const toggleConfirmed = (dayNum: number) => {
-    let emittedDayId = '';
-    let emittedConfirmed = false;
+    // Read from current days snapshot BEFORE setDays (same pattern as
+    // setActivityStatus). setDays updaters run in React's batch queue,
+    // AFTER the current synchronous code, so any variable captured inside
+    // the updater is unavailable at the emit call site. Pre-computing here
+    // is the convention (CLAUDE.md hotfix-1).
+    const day = days.find(d => d.number === dayNum);
+    if (!day) return;
+    const nowConfirmed = !day.confirmed;
 
     setDays(prev => prev.map(d => {
       if (d.number !== dayNum) return d;
-      const nowConfirmed = !d.confirmed;
-      emittedDayId = d.id ?? '';
-      emittedConfirmed = nowConfirmed;
       return {
         ...d,
         confirmed: nowConfirmed,
@@ -1548,8 +1551,8 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
       };
     }));
 
-    if (emittedDayId) {
-      emitFromInline({ type: 'confirm_day', dayId: emittedDayId, confirmed: emittedConfirmed });
+    if (day.id) {
+      emitFromInline({ type: 'confirm_day', dayId: day.id, confirmed: nowConfirmed });
     }
   };
 

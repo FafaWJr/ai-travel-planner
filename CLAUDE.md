@@ -1,7 +1,7 @@
 # Luna Let's Go - Claude Code Context
-**Last Updated:** 2026-05-01 11:55:46
+**Last Updated:** 2026-05-01 12:17:24
 **Current Branch:** main
-**Last Commit:** 6db87dbd feat(collab): cross-awareness summary in Luna chat (Stage 3b)
+**Last Commit:** 4cdefdc6 feat(collab): wire 'Accept this day' into broadcast pipeline
 **Deployment:** https://www.lunaletsgo.com
 
 ---
@@ -101,7 +101,8 @@ app/auth/signup/page.tsx
 ## Recent Changes (Last 10 Commits)
 
 ```
-6db87dbd (HEAD -> main, origin/main, origin/HEAD) feat(collab): cross-awareness summary in Luna chat (Stage 3b)
+4cdefdc6 (HEAD -> main, origin/main, origin/HEAD) feat(collab): wire 'Accept this day' into broadcast pipeline
+6db87dbd feat(collab): cross-awareness summary in Luna chat (Stage 3b)
 f62b3f7e fix(collab): persist collaborator chat threads via dedicated endpoint (Stage 3a hotfix)
 ed377cf0 feat(collab): per-user Luna chat threads with dual-read migration (Stage 3a)
 e2c6cdc9 fix(collab): reposition + drop dead day-id gate in replace_activity (P2-3b)
@@ -110,7 +111,6 @@ e2c6cdc9 fix(collab): reposition + drop dead day-id gate in replace_activity (P2
 d28ee72f docs: regenerate CLAUDE.md with 18 days of releases (Stage 2 finish #8)
 37a10f87 docs(collab): formal Stage 2 QA pass, 14 checks mapped (Stage 2 finish #7)
 0faff17d docs(collab): reconnect replay QA pre-flight + close #5 (Stage 2 finish #6)
-0f6ef49d fix(collab): hide edit affordances for viewer role (Stage 2f hotfix #9)
 ```
 
 ---
