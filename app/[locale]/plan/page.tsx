@@ -1967,11 +1967,36 @@ function PlanContent() {
               if (update.type === 'replace_activity') {
                 const dayNum = update.day ?? 1;
                 const slot = (update.timeSlot?.toLowerCase() ?? 'afternoon') as TimeSlot;
-                if (update.activity) itineraryRef.current?.removeActivitiesMatching(update.activity);
-                const text = update.location
+                const newText = update.location
                   ? `${update.newActivity} (${update.location})`
                   : (update.newActivity ?? '');
-                if (text) itineraryRef.current?.addActivity(text, dayNum, slot, false, true);
+
+                // Route through replaceActivityById so the removal is wired to
+                // onPatchEmitRef and broadcasts to collaborators. The old path
+                // used removeActivitiesMatching which was a direct setDays call
+                // with no broadcast (root cause: Browser B only saw the add).
+                const days = itineraryRef.current?.getDaysSnapshot() ?? [];
+                const targetDay = days.find(d => d.number === dayNum);
+                const oldLower = (update.activity ?? '').toLowerCase().trim();
+                const oldActivity = oldLower
+                  ? targetDay?.activities.find(a => a.text.toLowerCase().includes(oldLower))
+                  : undefined;
+
+                if (oldActivity && newText) {
+                  itineraryRef.current?.replaceActivityById(oldActivity.id, {
+                    text: newText,
+                    slot,
+                    lunaAdded: true,
+                    manuallyAdded: false,
+                  });
+                } else {
+                  // Fallback: old activity not matched by text (e.g. not in this
+                  // day, or update.activity absent). Remove by text pattern (no
+                  // collab broadcast for removal) then add.
+                  if (update.activity) itineraryRef.current?.removeActivitiesMatching(update.activity);
+                  if (newText) itineraryRef.current?.addActivity(newText, dayNum, slot, false, true);
+                }
+
                 setToast(`Swapped activity on Day ${dayNum}`);
                 markDirty();
                 return;
