@@ -94,6 +94,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Stage 3c: viewer-readonly instruction. Appended to dynamic block only.
+    // Tells Luna to explain the limitation instead of silently failing when
+    // a viewer asks for a mutation.
+    if (isViewer) {
+      systemBlocks[1].text += '\n\nIMPORTANT: This user is a VIEWER on this collaborative trip. They cannot modify the itinerary. If they ask you to add, remove, swap, or change any activity, hotel, or day, respond with a brief, friendly explanation that they are in viewer mode and should ask an editor or the trip owner to make the change. You can still answer questions, suggest ideas, describe activities, and have a normal conversation about the trip. Do not attempt any mutations.';
+    }
+
     let stream: ReadableStream<Uint8Array>;
     try {
       stream = await streamCompletion(

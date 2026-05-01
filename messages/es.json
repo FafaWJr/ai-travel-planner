@@ -774,7 +774,9 @@
       "welcomeTrip": "Ya he echado un vistazo a tu viaje a {destination} y estoy muy emocionada.",
       "welcomeGeneric": "Ya he echado un vistazo a tu itinerario y estoy muy emocionada.",
       "welcomeIntro": "Soy Luna, tu asistente de viaje personal en Luna Let's Go.",
-      "welcomeCta": "¿Necesitas añadir un hotel, cambiar una actividad o quieres mi opinión honesta sobre qué merece la pena? Solo pregunta, estoy aquí para todo. ¡Hagamos este viaje absolutamente inolvidable!"
+      "welcomeCta": "¿Necesitas añadir un hotel, cambiar una actividad o quieres mi opinión honesta sobre qué merece la pena? Solo pregunta, estoy aquí para todo. ¡Hagamos este viaje absolutamente inolvidable!",
+      "viewerReadOnly": "Estás viendo este viaje en modo solo lectura. Pide a un editor o al creador del viaje que haga los cambios.",
+      "viewerReadOnlyHint": "Modo visualización: solo sugerencias"
     },
     "stays": {
       "tabLabel": "Dónde Alojarse",
