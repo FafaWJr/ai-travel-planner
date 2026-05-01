@@ -545,9 +545,20 @@ export default function FloatingChat({ plan, destination, hotelContext, currentA
         console.warn('[FloatingChat] no phases in context \u2014 Luna will not know about phases for this request');
       }
 
-      ctx += plan;
-      if (hotelContext) ctx += `\n\n## Confirmed Accommodation\n${hotelContext}`;
-      if (currentActivities) ctx += `\n\n## Already in Itinerary (NEVER suggest these again)\n${currentActivities}`;
+      // === STRUCTURED ITINERARY (PRIMARY SOURCE OF TRUTH) ===
+      // Reflects live user edits (accepts, declines, additions, removals).
+      // Positioned before plan narrative so it survives sanitizePromptInput truncation.
+      if (currentActivities) {
+        ctx += `## Current Itinerary (SOURCE OF TRUTH for all days, slots, and activities)\nRead this section FIRST. Each day shows its slots (MORNING, AFTERNOON, EVENING, NIGHT) with numbered activities. The number in brackets [0], [1], [2] is the activityIndex for remove_activity tool calls. This section reflects the LIVE state of the itinerary including all user edits.\n\n${currentActivities}\n\n`;
+      }
+
+      if (hotelContext) ctx += `## Confirmed Accommodation\n${hotelContext}\n\n`;
+
+      // === PLAN NARRATIVE (BACKGROUND CONTEXT ONLY) ===
+      // Original generation prose. Useful for destination info, weather, transport,
+      // budget, and tips. NOT the source of truth for which activities are in which
+      // slots. If this section differs from Current Itinerary above, Current Itinerary wins.
+      ctx += `## Background Trip Narrative (for destination info, weather, transport, budget, tips only. Do NOT use this section for activity data — use the Current Itinerary section above instead)\n${plan}`;
 
       const res = await fetch('/api/chat', {
         method: 'POST',

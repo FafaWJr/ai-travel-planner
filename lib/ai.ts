@@ -298,7 +298,7 @@ export function getLanguageInstruction(locale: string): string {
  * Sanitizes user-supplied context before injection into AI prompts.
  * Prevents prompt injection via oversized or newline-heavy payloads.
  */
-export function sanitizePromptInput(input: unknown, maxLength = 8000): string {
+export function sanitizePromptInput(input: unknown, maxLength = 12000): string {
   if (typeof input !== 'string') return '';
   return input
     .slice(0, maxLength)
