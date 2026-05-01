@@ -772,10 +772,24 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
     },
     removeActivitiesMatching(pattern: string) {
       const lower = pattern.toLowerCase();
+      // Snapshot matching activities before setDays (hotfix-1 pattern: read
+      // synchronously before the state update is scheduled).
+      const toRemove: { dayId: string; activityId: string }[] = [];
+      for (const d of daysRef.current) {
+        if (!d.id) continue;
+        for (const a of d.activities) {
+          if (a.text.toLowerCase().includes(lower)) {
+            toRemove.push({ dayId: d.id, activityId: a.id });
+          }
+        }
+      }
       setDays(prev => prev.map(d => ({
         ...d,
         activities: d.activities.filter(a => !a.text.toLowerCase().includes(lower)),
       })));
+      for (const { dayId, activityId } of toRemove) {
+        onPatchEmitRef.current?.({ type: 'remove_activity', dayId, activityId });
+      }
     },
     getDays() {
       // Stage 2f-hotfix-1: read from ref so callers see live state.

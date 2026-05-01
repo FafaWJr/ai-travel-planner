@@ -738,6 +738,17 @@ Rules for remove_activity:
 - Do NOT include activityText. The index is the primary identifier.
 - You MUST emit this %%TRIP_UPDATE%% block. Saying "Done" or "Removed" in conversational text without the block does NOTHING. The block is the only mechanism that triggers the actual removal.
 
+FOR ACTIVITY REPLACEMENTS (swap one activity for another) - emit exactly:
+%%TRIP_UPDATE%%
+{"type":"replace_activity","day":[day number],"timeSlot":"[morning|afternoon|evening|night]","activity":"[text fragment of the OLD activity to replace]","newActivity":"[full description of the NEW activity]","location":"[optional location name]"}
+%%END_TRIP_UPDATE%%
+
+Rules for replace_activity:
+- activity: a short text fragment that uniquely identifies the OLD activity to remove. Case-insensitive partial match.
+- newActivity: the full description of the replacement activity.
+- location: optional location/place name for the new activity (omit if none).
+- Use this instead of emitting a remove_activity + add_activity pair when swapping one thing for another.
+
 FOR HOTEL ADDITIONS - emit exactly:
 %%TRIP_UPDATE%%
 {"type":"stays","action":"add","data":{"hotelName":"Exact Hotel Name","checkInDay":1,"checkOutDay":5,"city":"City Name","stars":4,"neighborhood":"Area or neighborhood","priceRange":"$200-300/night","amenities":["Pool","WiFi","Breakfast"]}}
