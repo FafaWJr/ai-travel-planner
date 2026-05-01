@@ -124,6 +124,10 @@ These NEVER change:
 - \`getLanguageInstruction(locale)\` is appended at END of system prompts on all AI routes: locale instructions placed earlier get buried under trip context
 - **FloatingChat context assembly: phases first.** \`## Trip Phases\` block goes at the FRONT of the context string assembled for FloatingChat. \`sanitizePromptInput\` truncates from the end; plan markdown follows phases. Without this ordering, Luna does not see phases on long trips and emits stale \`merge_phases\` / \`split_phase\` payloads.
 - **\`remove_activity\` is index-based, not text-based.** System prompt instructs Luna to count positions within the time slot (first = 0, second = 1, ...). Bulk removal emits highest index first. Field name is \`activityIndex\` in both \`%%TRIP_UPDATE%%\` shape and the \`remove_activity\` tool schema. \`activityText\` survives as a fallback for legacy callers only. Three text-matching attempts all failed against Luna paraphrasing; position is deterministic (hotfix #7c, 29 April 2026).
+- **Slot-structured itinerary context.** Luna's itinerary context is sent as a slot-structured block (Morning / Afternoon / Evening per day), not a flat list. Slot labels and 0-based indices are included so Luna can correctly compute \`activityIndex\` for \`remove_activity\`. Declined activities are included so Luna can reference items the user mentioned. Prompt rule: Luna MUST NOT reclassify a user-specified slot based on activity type (e.g. cocktail bar stays in its assigned slot, not moved to night). (P0, commit \`5b10b289\`, 1 May 2026).
+- **Structured itinerary is primary source of truth in FloatingChat context.** Context assembly order: (1) \`## Trip Phases\`, (2) structured slot-itinerary labelled SOURCE OF TRUTH, (3) plan markdown labelled supplementary. \`sanitizePromptInput\` truncates from the end, so structured itinerary survives for all trip lengths. The stale plan prose is no longer Luna's primary source; user edits are now reflected. (P0-hotfix-1, commit \`537e12b1\`, 1 May 2026).
+- **\`liveActivitiesText\` computed at send time, not at render time.** Replaced \`React.useMemo\` (keyed on \`itineraryVersion\`) with a \`useCallback\` getter. Initial generation and saved-trip loading never increment \`itineraryVersion\`, so the memo was caching an empty string from the first render and never recomputing. \`FloatingChat.send()\` calls the getter inside \`send()\` at message-send time, not at render time. (P0-hotfix-2, commit \`aec6d545\`, 1 May 2026).
+- **\`%%TRIP_UPDATE%%\` instructions include \`replace_activity\` format.** \`lib/ai.ts\` system prompt block documents the \`replace_activity\` shape between the \`remove_activity\` rules and the hotel block. Without this, Sonnet's fallback-to-marker path for cross-slot drag had no template and emitted nothing. (commit \`97c7eb51\`, 2 May 2026).
 
 ### Photo Pipeline
 - Tier 1: Unsplash (randomize via \`page\` param 1-5 + shuffle 5 results, pick 3)
@@ -146,6 +150,9 @@ These NEVER change:
 - **Viewer \`readOnly\` prop.** New edit affordances must check \`!readOnly\` before rendering. The page-level Save button is also gated by \`!isViewerRole\`. Luna chat stays visible (the API strips mutation tools server-side for viewers) (hotfix #9, 29 April 2026).
 - **Save guards.** Client \`validateTripPayloadForSave\` blocks save when \`planLen < 100 AND itineraryDays.length > 0\`. Server \`REFUSED_INCONSISTENT_TRIP\` on POST + PATCH \`/api/trips\` fires only when BOTH \`plan\` and \`itineraryDays\` are in the body, so collab partial-patches are not blocked (R2, 27 April 2026).
 - **\`emitPatch\` does NOT auto-apply commutative patches on the sender.** Every emit site must have already applied the change locally before calling \`emitPatch\` (hotfix #3 convention). Within-slot vs cross-slot drag emit different patch types: do not collapse them.
+- **Pre-compute values from \`daysRef.current\` before \`setDays\`.** React 18 runs functional state updaters in the batch queue after the synchronous function body completes. Any value captured inside a \`setState(prev => ...)\` updater runs asynchronously. If the emit guard or payload construction depends on those values, reads inside the updater will see stale initial values. Pattern: snapshot \`dayId\`, \`confirmed\`, \`activityId\`, etc. from \`daysRef.current\` in the function body, then pass them into the updater by closure. (confirm_day hotfix, commit \`7ebe7c8c\`, 1 May 2026).
+- **\`removeActivitiesMatching\` broadcasts.** It was the only imperative handle method without an \`onPatchEmitRef\` call. Snapshot matching activities before \`setDays\`, then emit a \`remove_activity\` patch for each. This covers the replace_activity fallback path, hotel remove, and stays component removals. (commit \`97c7eb51\`, 2 May 2026).
+- **\`confirm_day\` patch type is commutative.** Patch library now has 22 types. \`confirm_day\` carries \`{ dayId, confirmed }\`. Commutative: true (idempotent toggle). Receive case in \`useCollaborativeTrip\` calls \`setDayConfirmed\` handle method.
 
 ### Favicon
 - \`app/favicon.ico\` is the Luna logo (handled by Next.js with content hash)
@@ -233,7 +240,7 @@ Full rollout complete. All user-facing pages under \`app/[locale]/\` render from
 
 ---
 
-## Collaborative Trips (Stages 0+1+2 shipped; Stage 3 blocked)
+## Collaborative Trips (Stages 0+1+2+3 shipped; Stage 4 not started)
 
 Six-stage sprint adding real-time collaborative trip planning. Master plan: \`docs/specs/collab/00-master-plan.md\`. Technical spec: \`docs/specs/collab/01-technical-spec.md\`.
 
@@ -303,24 +310,54 @@ Six-stage sprint adding real-time collaborative trip planning. Master plan: \`do
 - #7 \`37a10f87\` formal Stage 2 QA pass: 12 PASS, 1 PASS-with-limitation (check 6/R-4 backgrounded tab), 1 N/A by design (check 12/\`expand_phase\` is per-user UI state not synced). Report: \`docs/specs/collab/test-reports/stage2-finish-7-formal-qa-pass.md\`.
 
 **Stage 2 known limitations (not security issues; Phase 2 backlog):**
-- Backgrounded tab does not auto-replay missed patches on tab refocus. Fix: \`visibilitychange\` listener calling \`backfillFromApi(lastAppliedSeqRef.current)\`.
+- Backgrounded tab catchup via \`visibilitychange\`: **SHIPPED** (commit \`2e8230d6\`, 30 April 2026). \`useCollaborativeTrip\` now calls \`backfillFromApi(lastAppliedSeqRef.current)\` on \`document.visibilityState === 'visible'\`. Closes Stage 2 R-4 carry-forward.
+- Server-side PATCH merge + R2b error toast: **SHIPPED** (commit \`27674047\`, 30 April 2026). Collab PATCH now server-merges trip_data preserving all keys. R2b empty-tab bug resolved. Visible toast added.
 - \`expand_phase\` is per-user UI state; not synced by design. Master plan v2.2 should reclassify.
-- AI intermittently produces only structured data; R2b guard blocks save but user is stuck. Fix: retry-on-empty + toast + "Regenerate overview" affordance.
 - \`PATCH /api/trips\` returns 200 silent no-op for viewer (0 rows match). Phase 2 polish: explicit 403.
 - \`trip_activity_log\` RLS allows any collaborator to INSERT; role enforcement is API-layer only. Phase 2 hardening: tighten RLS + dispatcher-side ignore of viewer patches.
 
-**Untriaged known issue:** Luna chat 502s on \`POST /api/chat\` (observed 29 April 2026 during viewer QA). Affects editor and viewer equally. Not related to hotfix #9 (UI-only). **Blocks Stage 3 implementation.** Investigation queued.
+**Previously untriaged issue (resolved):** Luna chat 502s on \`POST /api/chat\` (observed 29 April 2026). Root cause resolved as part of Stage 3 P2-1 pre-blocker work (server-side merge in PATCH, commit \`27674047\`). Stage 3 unblocked and shipped (30 April - 2 May 2026).
+
+**Stage 3 pre-blocker (shipped 30 April 2026):**
+- **P2-1 \`27674047\`** server-side merge in PATCH: collab PATCH \`/api/trips\` now server-merges trip_data with service-role client preserving all keys. Fixes empty Overview/Weather/Transport/Tips tabs on saved trips where only 3 of 6 keys were written. Visible R2b error toast added.
+- **P2-2 \`2e8230d6\`** tab-refocus catchup: \`visibilitychange\` listener calls \`backfillFromApi(lastAppliedSeqRef.current)\` when tab returns to foreground. Closes Stage 2 R-4 carry-forward.
+- **P2-3b \`e2c6cdc9\`** \`replace_activity\` dispatcher: dropped dead day-id gate; repositioned \`sourceSlot\` read to use \`patch.sourceSlot\` (not the live activity slot). Browser B now applies cross-slot drags in the correct position and slot.
+
+**Stage 3a shipped 30 April 2026** (\`ed377cf0\` + hotfix \`f62b3f7e\`):
+- Per-user chat threads. \`lib/chat-history.ts\` added. Chat history shape changed from flat array to keyed object: \`{ userId: [messages...] }\`. Dual-read: \`readUserChatHistory\` tries keyed access first, falls back to flat array for legacy solo trips. Zero data rewrite required.
+- Collaborator persistence hotfix: dedicated \`PATCH /api/trips/[tripId]/chat-history\` endpoint. Editors route through this (uses service-role client to merge the caller's thread without overwriting other users' threads). General PATCH \`/api/trips\` uses \`.eq('user_id', ...)\` and matches only the owner row; editors were silently dropped.
+
+**Stage 3b shipped 30 April 2026** (\`6db87dbd\`):
+- Cross-awareness summary. \`lib/collab-awareness.ts\` queries \`trip_activity_log\` for last 10 minutes of other collaborators' actions (capped at 5, newest first). Formats as COLLABORATOR CONTEXT block. Appended to END of Luna's dynamic system prompt block (block 1), preserving prompt caching on the stable block (block 0). Gated by \`NEXT_PUBLIC_COLLAB_LUNA_AWARENESS_ENABLED\`.
+
+**Stage 3c shipped 1 May 2026** (\`2745a1d0\`):
+- Viewer-readonly Luna instruction appended to dynamic system prompt for viewer role. Luna explains she cannot modify the trip and suggests asking an editor or owner instead of silently failing when tools are stripped server-side.
+- Locale strings \`viewerReadOnly\` + \`viewerReadOnlyHint\` added in \`plan.chat\` namespace in EN/PT-BR/ES.
+- Stage 3 QA pass: 11 PASS, 2 N/A (checks 7+8 depend on Stage 4 comments). Multilingual QA: PASS.
+
+**Stage 3 \`confirm_day\` patch shipped 1 May 2026** (\`4cdefdc6\` + hotfix \`7ebe7c8c\`):
+- \`confirm_day\` added to \`PatchType\` union, \`ConfirmDayPayload\` shape, \`applyPatch\` exhaustive switch, \`PATCH_COMMUTATIVITY\` (commutative: true). \`toggleConfirmed\` in \`EditableItinerary\` wired to \`emitFromInline\`. \`setDayConfirmed\` handle method added to \`ItineraryHandle\`. Receive case added in \`useCollaborativeTrip\`.
+- Hotfix: pre-compute \`dayId\` and \`nowConfirmed\` from \`daysRef.current\` BEFORE the \`setDays\` call. React 18 runs functional state updaters in the batch queue after the synchronous function body returns; reading captured variables inside the updater sees stale values. Convention extended: pre-compute ALL values from refs before \`setDays\` when those values are needed post-setDays.
+
+**Stage 3 \`replace_activity\` fixes shipped 1-2 May 2026** (\`032b889f\` + \`97c7eb51\`):
+- Root cause A (\`97c7eb51\`): \`lib/ai.ts\` \`%%TRIP_UPDATE%%\` instructions lacked the \`replace_activity\` format block. When Sonnet falls back from tool-use to the legacy marker path, Luna had no template and emitted nothing. Format block added between \`remove_activity\` rules and the hotel block.
+- Root cause B (\`97c7eb51\`): \`removeActivitiesMatching\` in \`EditableItinerary\` was the only imperative handle method without an \`onPatchEmitRef\` call. Removals via this path (replace_activity fallback, hotel remove, stays component) never broadcast to collaborators. Now snapshots matching activities before \`setDays\` and emits a \`remove_activity\` patch for each.
+- Root cause C (\`032b889f\`): \`%%TRIP_UPDATE%%\` instruction for \`replace_activity\` missing from system prompt; Luna broadcast path wired for \`addActivity\` but not for the remove side of \`replace_activity\`.
+
+**New files (Stage 3):**
+- \`lib/chat-history.ts\`: \`readUserChatHistory\`, \`writeUserChatHistory\`, \`mergeChatHistory\` dual-read helpers.
+- \`lib/collab-awareness.ts\`: \`buildCollabAwarenessContext(supabase, tripId, userId)\` cross-awareness query + formatter.
+- \`app/api/trips/[tripId]/chat-history/route.ts\`: editor chat persistence endpoint (PATCH only, viewers 403).
 
 **Stage status:**
 - Stage 0 (foundation): SHIPPED.
 - Stage 1 (share + invite): SHIPPED.
 - Stage 2 (realtime sync, role-gated mutations): **SHIPPED AND VERIFIED** (30 April 2026).
-- Stage 3 (per-user collaborative Luna chat): NOT STARTED. Blocked by Luna chat 502 investigation.
-- Stage 4 (comments, My Trips polish): NOT STARTED.
+- Stage 3 (per-user collaborative Luna chat): **SHIPPED AND VERIFIED** (2 May 2026). QA: 11 PASS, 2 N/A (Stage 4 comments dependencies).
+- Stage 4 (comments, My Trips polish): NOT STARTED. Plan written: \`docs/specs/collab/luna-collab-stage-4-plan.md\`.
 - Stage 5 (landing page, OG image, flag flip): NOT STARTED. \`NEXT_PUBLIC_COLLAB_ENABLED\` still false in production.
 
-**Stages remaining after Stage 3 unblocks:**
-- Stage 3 (~10h): per-user Luna with cross-awareness, viewer read-only.
+**Stages remaining:**
 - Stage 4 (~18h): comments on activity/day/phase/hotel, My Trips integration polish, mobile polish.
 - Stage 5 (~6h): landing page, OG image, flag flip.
 
@@ -420,10 +457,15 @@ After Claude Code finishes changes:
 - Save guard added: \`validateTripPayloadForSave\` + server-side \`REFUSED_INCONSISTENT_TRIP\` block saves with empty plan when structured days are present (R2, commit \`cc769a0a\`).
 - Plan render pipeline extracted to \`lib/plan-render.ts\` with 32-assertion prebuild smoke gate (R4, commit \`e1c6a924\`).
 - Collab Stage 2 fully shipped and QA verified (30 April 2026). All Stage 2f hotfixes #1-#9 landed.
+- Collab Stage 3 fully shipped and QA verified (2 May 2026): per-user chat threads (\`lib/chat-history.ts\`), cross-awareness summary (\`lib/collab-awareness.ts\`), viewer-readonly Luna instruction, confirm_day broadcast, replace_activity dual root-cause fix.
+- Luna intelligence recovery (1-2 May 2026): slot-structured itinerary context, structured itinerary as PRIMARY source of truth in FloatingChat, liveActivitiesText computed at send time via useCallback getter (was stale useMemo).
+- Stage 2 P2 backlog items shipped: tab-refocus catchup via visibilitychange (commit \`2e8230d6\`), server-side PATCH merge preserving all trip_data keys (commit \`27674047\`).
 
 **Current Work:**
-- Collaborative Trips Stages 0+1+2 **shipped and verified**. \`NEXT_PUBLIC_COLLAB_ENABLED=false\` still in production pending Stage 5 launch.
-- Stage 3 (per-user collaborative Luna): NOT STARTED. Blocked by Luna chat 502 on POST /api/chat (observed 29 April 2026). Investigation queued.
+- Collaborative Trips Stages 0+1+2+3 **shipped and verified**. \`NEXT_PUBLIC_COLLAB_ENABLED=false\` still in production pending Stage 5 launch.
+- Collab Stage 3 fully shipped (2 May 2026): per-user chat threads, cross-awareness summary, viewer-readonly Luna, confirm_day broadcast, replace_activity dual fix. 13-check QA pass: 11 PASS, 2 N/A.
+- Stage 4 (comments, My Trips polish): NOT STARTED. Plan written: \`docs/specs/collab/luna-collab-stage-4-plan.md\`.
+- Luna intelligence recovery shipped (1-2 May 2026): slot-structured context, structured itinerary as primary source of truth, liveActivitiesText computed at send time.
 - Brevo email integration (list ID 17, /api/brevo-sync/route.ts)
 - PDF export (jsPDF + html2canvas, branded itinerary)
 
