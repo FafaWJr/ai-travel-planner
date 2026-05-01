@@ -799,9 +799,37 @@ function PlanContent() {
 
   const liveActivitiesText = React.useMemo(() => {
     const days = itineraryRef.current?.getDaysSnapshot() ?? [];
-    return days
-      .flatMap(d => d.activities.filter(a => a.status !== 'declined').map(a => `Day ${d.number}: ${a.text.replace(/\*\*/g, '')}`))
-      .join('\n');
+    if (days.length === 0) return '';
+
+    const slotOrder: Array<'morning' | 'afternoon' | 'evening' | 'night'> = [
+      'morning', 'afternoon', 'evening', 'night',
+    ];
+    const slotLabels: Record<string, string> = {
+      morning: 'MORNING (6am-12pm)',
+      afternoon: 'AFTERNOON (12pm-6pm)',
+      evening: 'EVENING (6pm-9pm)',
+      night: 'NIGHT (9pm onwards)',
+    };
+
+    return days.map(d => {
+      const dayHeader = `DAY ${d.number}: ${d.title || 'Untitled'}`;
+      const slotBlocks = slotOrder.map(slot => {
+        const slotActivities = d.activities.filter(a => a.slot === slot);
+        const label = slotLabels[slot];
+        if (slotActivities.length === 0) {
+          return `  ${label}:\n    (empty)`;
+        }
+        const lines = slotActivities.map((a, idx) => {
+          const statusTag = a.status === 'declined' ? ' [DECLINED]'
+                          : a.status === 'pending' ? ' [PENDING]'
+                          : '';
+          const text = a.text.replace(/\*\*/g, '').replace(/^\s*[-*]\s*/, '').trim();
+          return `    [${idx}] ${text}${statusTag}`;
+        });
+        return `  ${label}:\n${lines.join('\n')}`;
+      });
+      return `${dayHeader}\n${slotBlocks.join('\n')}`;
+    }).join('\n\n');
   }, [itineraryVersion]); // eslint-disable-line
 
   // Place photo popup

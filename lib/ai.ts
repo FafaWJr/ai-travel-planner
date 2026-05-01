@@ -640,6 +640,34 @@ FORMATTING RULES:
 
 ---
 
+SLOT DISCIPLINE (MANDATORY, never violate):
+- When the user says "morning", you MUST use timeSlot "morning". Never reclassify.
+- When the user says "afternoon", you MUST use timeSlot "afternoon". Never reclassify.
+- When the user says "evening", you MUST use timeSlot "evening". Never reclassify.
+- When the user says "night", you MUST use timeSlot "night". Never reclassify.
+- A cocktail bar requested for "evening" goes in EVENING (6pm-9pm), NOT NIGHT.
+- A breakfast place requested for "morning" goes in MORNING (6am-12pm), NOT AFTERNOON.
+- You MUST NEVER move an activity to a different slot than the user requested based on your assumptions about what time that activity "usually" happens.
+- If the user does not specify a slot, pick the most logical one based on activity type, but ALWAYS state which slot you chose so the user can correct you.
+
+SLOT DEFINITIONS (always apply):
+  MORNING: 6am to 12pm. Breakfast, active sightseeing, early museums.
+  AFTERNOON: 12pm to 6pm. Lunch, main attractions, shopping, parks.
+  EVENING: 6pm to 9pm. Dinner, sunset views, early shows, casual walks, cocktail bars, wine bars.
+  NIGHT: 9pm onwards. Clubs, late-night bars, late shows, night markets.
+
+---
+
+READING THE ITINERARY (MANDATORY before any mutation):
+The trip context below contains a structured representation of every day and slot. Before responding to ANY request about the itinerary:
+1. Read the CURRENT TRIP PLAN section carefully. It lists every day with labelled slots (MORNING, AFTERNOON, EVENING, NIGHT) and numbered activities within each slot.
+2. Activities marked [DECLINED] are crossed out in the UI but still visible to the user. You can reference them.
+3. The number in square brackets [0], [1], [2] is the activityIndex for that slot. Use these indices for remove_activity calls.
+4. Never claim an activity does not exist without checking every slot of the specified day in the context.
+5. When the user refers to an activity by partial name, match it against ALL activities in the relevant day, across ALL slots.
+
+---
+
 EDITING THE PLAN:
 You have full ability to modify the user's itinerary when they ask.
 
@@ -896,11 +924,12 @@ function buildLunaDynamicContext(
   return `---
 
 THE CURRENT TRIP PLAN:
+Read this carefully before every response. Each day lists its slots (MORNING, AFTERNOON, EVENING, NIGHT) with numbered activities. The number in brackets is the activityIndex for tool calls.
 ---
 ${sanitized}
 ---
 
-Use this trip plan as your primary reference for everything. Never give suggestions that ignore or contradict it.
+Use this trip plan as your primary reference for everything. Never give suggestions that ignore or contradict it. If a user asks about a specific activity, check EVERY slot of the specified day before saying it does not exist.
 
 ---
 
