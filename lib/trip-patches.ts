@@ -46,6 +46,7 @@ export type PatchType =
   | 'accept_activity'
   | 'unaccept_activity'
   | 'decline_activity'
+  | 'confirm_day'
   | 'reorder_activities_in_slot'
   // Note ops
   | 'add_note'
@@ -124,6 +125,12 @@ export type DeclineActivityPayload = {
   type: 'decline_activity';
   dayId: string;
   activityId: string;
+};
+
+export type ConfirmDayPayload = {
+  type: 'confirm_day';
+  dayId: string;
+  confirmed: boolean;
 };
 
 export type ReorderActivitiesInSlotPayload = {
@@ -259,6 +266,7 @@ export type PatchPayload =
   | AcceptActivityPayload
   | UnacceptActivityPayload
   | DeclineActivityPayload
+  | ConfirmDayPayload
   | ReorderActivitiesInSlotPayload
   | AddNotePayload
   | UpdateNotePayload
@@ -438,6 +446,24 @@ export function applyPatch(
       // not a trip_data mutation. Returns unchanged; the hook
       // handles the UI toggle separately.
       return tripData;
+    case 'confirm_day': {
+      const days = tripData.itineraryDays ?? [];
+      return {
+        ...tripData,
+        itineraryDays: days.map(d => {
+          if (d.id !== p.dayId) return d;
+          return {
+            ...d,
+            confirmed: p.confirmed,
+            activities: p.confirmed
+              ? (d.activities ?? []).map(a =>
+                  a.status === 'pending' ? { ...a, status: 'accepted' as const } : a
+                )
+              : d.activities,
+          };
+        }),
+      };
+    }
     case 'add_comment':
     case 'edit_comment':
     case 'delete_comment':
@@ -723,6 +749,7 @@ export const PATCH_COMMUTATIVITY: Record<PatchType, boolean> = {
   accept_activity: true,
   unaccept_activity: true,
   decline_activity: true,
+  confirm_day: true,
   // Reorder is non-commutative: two simultaneous reorders on different
   // clients in different orders produce different final states. The
   // server seq counter serializes them.

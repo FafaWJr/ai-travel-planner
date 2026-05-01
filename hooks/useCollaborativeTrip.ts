@@ -167,6 +167,9 @@ function applyPatchToRef(
     case 'accept_activity':
       handle?.editActivityById?.(p.activityId, { status: 'accepted' }, SUPPRESS);
       break;
+    case 'confirm_day':
+      handle?.setDayConfirmed?.(p.dayId, p.confirmed, SUPPRESS);
+      break;
     case 'unaccept_activity':
       handle?.editActivityById?.(p.activityId, { status: 'pending' }, SUPPRESS);
       break;

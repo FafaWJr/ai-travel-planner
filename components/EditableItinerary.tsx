@@ -415,6 +415,8 @@ export interface ItineraryHandle {
   setNoteForDay: (dayNumber: number, note: string, options?: MutationOptions) => void;
   /** Stage 2d: imperatively set day expansion (open/close) state. */
   setDayExpanded: (dayNumber: number, expanded: boolean, options?: MutationOptions) => void;
+  /** collab-fix-confirm-day: set a day's confirmed state by stable day id. */
+  setDayConfirmed: (dayId: string, confirmed: boolean, options?: MutationOptions) => void;
   /** Stage 2f-hotfix-3: reorder activities within a single slot of a day.
       activityIdOrder is the desired in-slot order. Activities outside the
       slot are unaffected; activities in the slot but missing from
@@ -1189,6 +1191,21 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
         });
       }
     },
+
+    setDayConfirmed(dayId, confirmed, options?: MutationOptions) {
+      setDays(prev => prev.map(d => {
+        if (d.id !== dayId) return d;
+        return {
+          ...d,
+          confirmed,
+          activities: confirmed
+            ? d.activities.map(a => a.status === 'pending' ? { ...a, status: 'accepted' as const } : a)
+            : d.activities,
+        };
+      }));
+      // Receive path passes suppressEmit:true; inline path is handled by
+      // toggleConfirmed which calls emitFromInline directly (not this method).
+    },
   }));
 
 
@@ -1512,10 +1529,15 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
     });
   };
 
-  const toggleConfirmed = (dayNum: number) =>
+  const toggleConfirmed = (dayNum: number) => {
+    let emittedDayId = '';
+    let emittedConfirmed = false;
+
     setDays(prev => prev.map(d => {
       if (d.number !== dayNum) return d;
       const nowConfirmed = !d.confirmed;
+      emittedDayId = d.id ?? '';
+      emittedConfirmed = nowConfirmed;
       return {
         ...d,
         confirmed: nowConfirmed,
@@ -1525,6 +1547,11 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
           : d.activities,
       };
     }));
+
+    if (emittedDayId) {
+      emitFromInline({ type: 'confirm_day', dayId: emittedDayId, confirmed: emittedConfirmed });
+    }
+  };
 
   const handleNoteChange = (dayIndex: number, note: string) => {
     // Apply locally immediately for responsive typing.
