@@ -2041,24 +2041,39 @@ function SortableActivityItem({
           )}
         </div>
 
-        {/* Move to day / Accept / Decline */}
-        {!readOnly && (
-          <div style={{ display: 'flex', gap: 4, flexShrink: 0, paddingTop: 2, alignItems: 'center' }}>
-            {otherDays.length > 0 && (
-              <button
-                onClick={(e) => { e.stopPropagation(); setShowMovePicker(v => !v); }}
-                onPointerDown={(e) => e.stopPropagation()}
-                title={t('activity.moveToAnotherDay')}
-                style={{
-                  width: 26, height: 26, borderRadius: '50%', border: 'none',
-                  cursor: 'pointer', fontSize: 12, background: showMovePicker ? 'rgba(0,68,123,0.15)' : 'rgba(0,68,123,0.07)',
-                  color: '#00447B', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  transition: 'all 0.15s',
-                }}
-              >→</button>
+        {/* Comment / Move to day / Accept / Decline */}
+        {(commentConfig || !readOnly) && (
+          <div style={{ display: 'flex', gap: 4, flexShrink: 0, paddingTop: 2, alignItems: 'flex-start' }}>
+            {commentConfig && dayId && (
+              <div onPointerDown={(e) => e.stopPropagation()}>
+                <CommentThread
+                  config={commentConfig}
+                  targetType="activity"
+                  targetId={act.id}
+                  originalDayId={dayId}
+                  t={t as Parameters<typeof CommentThread>[0]['t']}
+                />
+              </div>
             )}
-            <RoundBtn active={act.status === 'accepted'} activeColor="#16A34A" idleColor="rgba(22,163,74,0.12)" onClick={onAccept} label={t('activity.accept')} onPointerDown={(e: React.PointerEvent) => e.stopPropagation()}>✓</RoundBtn>
-            <RoundBtn active={act.status === 'declined'} activeColor="#DC2626" idleColor="rgba(220,38,38,0.10)" onClick={onDecline} label={t('activity.remove')} onPointerDown={(e: React.PointerEvent) => e.stopPropagation()}>✕</RoundBtn>
+            {!readOnly && (
+              <>
+                {otherDays.length > 0 && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setShowMovePicker(v => !v); }}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    title={t('activity.moveToAnotherDay')}
+                    style={{
+                      width: 26, height: 26, borderRadius: '50%', border: 'none',
+                      cursor: 'pointer', fontSize: 12, background: showMovePicker ? 'rgba(0,68,123,0.15)' : 'rgba(0,68,123,0.07)',
+                      color: '#00447B', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      transition: 'all 0.15s',
+                    }}
+                  >→</button>
+                )}
+                <RoundBtn active={act.status === 'accepted'} activeColor="#16A34A" idleColor="rgba(22,163,74,0.12)" onClick={onAccept} label={t('activity.accept')} onPointerDown={(e: React.PointerEvent) => e.stopPropagation()}>✓</RoundBtn>
+                <RoundBtn active={act.status === 'declined'} activeColor="#DC2626" idleColor="rgba(220,38,38,0.10)" onClick={onDecline} label={t('activity.remove')} onPointerDown={(e: React.PointerEvent) => e.stopPropagation()}>✕</RoundBtn>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -2091,18 +2106,6 @@ function SortableActivityItem({
         </div>
       )}
 
-      {/* Stage 4b: per-activity comment thread */}
-      {commentConfig && dayId && (
-        <div style={{ paddingLeft: 4, marginTop: 2 }}>
-          <CommentThread
-            config={commentConfig}
-            targetType="activity"
-            targetId={act.id}
-            originalDayId={dayId}
-            t={t as Parameters<typeof CommentThread>[0]['t']}
-          />
-        </div>
-      )}
     </div>
   );
 }

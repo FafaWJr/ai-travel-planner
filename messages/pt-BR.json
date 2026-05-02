@@ -746,6 +746,7 @@
     "crafting": "Criando seu roteiro perfeito...",
     "usuallyTakes": "Isso geralmente leva cerca de 30 segundos",
     "newTrip": "Nova viagem",
+    "shareRequiresSave": "Sua viagem precisa ser salva antes de compartilhar. Salvar agora?",
     "timeOfDay": {
       "morning": "Manhã",
       "afternoon": "Tarde",

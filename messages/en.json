@@ -746,6 +746,7 @@
     "crafting": "Crafting your perfect trip...",
     "usuallyTakes": "This usually takes about 30 seconds",
     "newTrip": "New trip",
+    "shareRequiresSave": "Your trip needs to be saved before sharing. Save now?",
     "timeOfDay": {
       "morning": "Morning",
       "afternoon": "Afternoon",

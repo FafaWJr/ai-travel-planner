@@ -25,6 +25,7 @@ import UnsavedChangesModal from '@/components/UnsavedChangesModal';
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 import { COLLAB_ENABLED, COLLAB_REALTIME_ENABLED, type CollabRole } from '@/lib/collaboration';
 import type { Comment, CommentConfig } from '@/lib/comment-types';
+import { Share2 } from 'lucide-react';
 import { InviteModal } from '@/components/collab/InviteModal';
 import { CollaboratorAvatars } from '@/components/collab/CollaboratorAvatars';
 import CollabToast from '@/components/CollabToast';
@@ -737,6 +738,18 @@ function PlanContent() {
       return { tKey: 'errors.emptyPlanFullDays', planLen, daysCount };
     }
     return null;
+  };
+
+  const handleShareClick = async () => {
+    if (!savedTripId) {
+      const shouldSave = window.confirm(t('shareRequiresSave'));
+      if (shouldSave) {
+        const success = await saveTrip();
+        if (success) setInviteOpen(true);
+      }
+      return;
+    }
+    setInviteOpen(true);
   };
 
   const leaveTrip = async () => {
@@ -1454,26 +1467,29 @@ function PlanContent() {
                           />
                         </div>
                       )}
-                      {COLLAB_ENABLED && myRole === 'owner' && savedTripId && (
+                      {COLLAB_ENABLED && myRole === 'owner' && (
                         <button
-                          onClick={() => setInviteOpen(true)}
+                          onClick={handleShareClick}
+                          aria-label={tCollab('button')}
+                          title={tCollab('button')}
                           style={{
-                            background: '#FF8210',
-                            color: '#fff',
+                            background: 'none',
                             border: 'none',
-                            fontFamily: "'Poppins',sans-serif",
-                            fontWeight: 600,
-                            fontSize: 14,
-                            padding: '10px 18px',
-                            borderRadius: 8,
                             cursor: 'pointer',
-                            transition: 'background 0.15s',
-                            whiteSpace: 'nowrap',
+                            padding: '6px 8px',
+                            borderRadius: 8,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#00447B',
                             flexShrink: 0,
-                            marginRight: 8,
+                            marginRight: 4,
+                            transition: 'opacity 0.15s',
                           }}
+                          onMouseEnter={e => { e.currentTarget.style.opacity = '0.6'; }}
+                          onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
                         >
-                          {tCollab('button')}
+                          <Share2 size={22} />
                         </button>
                       )}
                       {COLLAB_ENABLED && tripIsCollaborative && savedTripId && myRole && myRole !== 'owner' && (

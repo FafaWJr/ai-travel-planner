@@ -43,7 +43,7 @@ export default function MyTripsPage() {
   const [loading,      setLoading]      = useState(true);
   const [deletingId,   setDeletingId]   = useState<string | null>(null);
   const [collabCounts, setCollabCounts] = useState<Record<string, number>>({});
-  const [sharedTrips, setSharedTrips] = useState<Array<{ id: string; title: string | null; destination: string | null; role: CollabRole; ownerName: string }>>([]);
+  const [sharedTrips, setSharedTrips] = useState<Array<{ id: string; title: string | null; destination: string | null; role: CollabRole; ownerName: string; start_date: string | null; end_date: string | null; created_at: string | null }>>([]);
 
   useEffect(() => {
     if (!COLLAB_ENABLED || !user) {
@@ -331,15 +331,25 @@ export default function MyTripsPage() {
                     padding: 20,
                     transition: 'box-shadow 0.15s',
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
                       <h3 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 16, color: '#00447B', margin: 0, flex: 1 }}>
                         {trip.title || trip.destination || t('untitled')}
                       </h3>
                       <RoleBadge role={trip.role} />
                     </div>
-                    <p style={{ margin: 0, fontSize: 13, color: '#6B7280' }}>
+                    <p style={{ margin: '0 0 4px', fontSize: 13, color: '#6B7280' }}>
                       {t('sharedBy', { name: trip.ownerName })}
                     </p>
+                    {(trip.start_date || trip.end_date) && (
+                      <p style={{ margin: '0 0 2px', fontFamily: "'Inter',sans-serif", fontSize: 13, color: '#6C6D6F' }}>
+                        {fmtDate(trip.start_date)}{trip.start_date && trip.end_date ? ' → ' : ''}{fmtDate(trip.end_date)}
+                      </p>
+                    )}
+                    {trip.created_at && (
+                      <p style={{ margin: 0, fontFamily: "'Inter',sans-serif", fontSize: 12, color: '#C0C0C0' }}>
+                        {t('tripCard.saved', { date: fmtDate(trip.created_at) })}
+                      </p>
+                    )}
                   </div>
                 </Link>
               ))}

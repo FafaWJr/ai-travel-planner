@@ -32,7 +32,7 @@ export async function GET() {
   const tripIds = collabRows.map((r) => r.trip_id);
   const { data: trips } = await serviceSupabase
     .from('saved_trips')
-    .select('id, title, destination, user_id, profiles:user_id(full_name, email)')
+    .select('id, title, destination, user_id, start_date, end_date, created_at, profiles:user_id(full_name, email)')
     .in('id', tripIds);
 
   type TripRow = {
@@ -40,6 +40,9 @@ export async function GET() {
     title: string | null;
     destination: string | null;
     user_id: string;
+    start_date: string | null;
+    end_date: string | null;
+    created_at: string;
     profiles: { full_name: string | null; email: string | null } | null;
   };
 
@@ -51,6 +54,9 @@ export async function GET() {
       destination: t.destination,
       role: collab?.role,
       ownerName: t.profiles?.full_name || t.profiles?.email || 'Unknown',
+      start_date: t.start_date,
+      end_date: t.end_date,
+      created_at: t.created_at,
     };
   });
 
