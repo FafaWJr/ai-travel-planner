@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
 import type { Comment } from '@/lib/comment-types';
+import type { PatchPayload } from '@/lib/trip-patches';
 
 function relativeTime(iso: string): string {
   const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
@@ -38,12 +39,13 @@ interface CommentItemProps {
   deleteConfirmText: string;
   isOrphaned?: boolean;
   orphanedSubtitle?: string;
+  emitPatch?: (payload: PatchPayload) => void;
 }
 
 export default function CommentItem({
   comment, currentUserId, isOwner, tripId, onUpdated,
   saveLabel, cancelLabel, editLabel, deleteLabel, deleteConfirmText,
-  isOrphaned, orphanedSubtitle,
+  isOrphaned, orphanedSubtitle, emitPatch,
 }: CommentItemProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(comment.comment_text);
@@ -64,6 +66,7 @@ export default function CommentItem({
         body: JSON.stringify({ comment_text: draft.trim() }),
       });
       onUpdated();
+      emitPatch?.({ type: 'edit_comment', commentId: comment.id, commentText: draft.trim() });
       setEditing(false);
     } finally {
       setSaving(false);
@@ -74,6 +77,7 @@ export default function CommentItem({
     if (!window.confirm(deleteConfirmText)) return;
     await fetch(`/api/trips/${tripId}/comments/${comment.id}`, { method: 'DELETE' });
     onUpdated();
+    emitPatch?.({ type: 'delete_comment', commentId: comment.id });
   };
 
   return (

@@ -15,6 +15,8 @@ export interface Comment {
   } | null;
 }
 
+import type { PatchPayload } from '@/lib/trip-patches';
+
 /** Grouped comment props passed as a single optional object through the component tree. */
 export interface CommentConfig {
   tripId: string;
@@ -22,4 +24,6 @@ export interface CommentConfig {
   currentUserId: string;
   isOwner: boolean;
   onRefresh: () => void;
+  /** When set, called after any comment mutation to broadcast to collaborators. */
+  emitPatch?: (payload: PatchPayload) => void;
 }

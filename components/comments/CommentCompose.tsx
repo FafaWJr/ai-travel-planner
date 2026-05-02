@@ -7,7 +7,7 @@ interface CommentComposeProps {
   targetType: 'activity' | 'day' | 'phase' | 'hotel';
   targetId: string;
   originalDayId?: string;
-  onSubmitted: () => void;
+  onSubmitted: (commentId: string) => void;
   placeholder: string;
   submitLabel: string;
 }
@@ -33,8 +33,9 @@ export default function CommentCompose({
         body: JSON.stringify(body),
       });
       if (res.ok) {
+        const data = await res.json();
         setText('');
-        onSubmitted();
+        onSubmitted(data.comment?.id ?? '');
       }
     } finally {
       setLoading(false);

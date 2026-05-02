@@ -3,8 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import type { Phase, TripLengthMode } from '@/types';
-import type { CommentConfig } from '@/lib/comment-types';
-import CommentThread from './comments/CommentThread';
 
 interface PhaseCardProps {
   phase: Phase;
@@ -26,10 +24,6 @@ interface PhaseCardProps {
   tripLengthMode?: TripLengthMode;
   /** Auto-open label editor (for newly created phases). */
   initialLabelEditing?: boolean;
-  /** Stage 4b: comment config for phase-level CommentThread. */
-  commentConfig?: CommentConfig;
-  /** Day ids belonging to this phase (for count aggregation). */
-  phaseDayIds?: string[];
 }
 
 export default function PhaseCard({
@@ -45,8 +39,6 @@ export default function PhaseCard({
   onDismissPhases,
   tripLengthMode = 'long',
   initialLabelEditing = false,
-  commentConfig,
-  phaseDayIds = [],
 }: PhaseCardProps) {
   const t = useTranslations('plan');
   const totalDays = phase.dayTo - phase.dayFrom + 1;
@@ -208,26 +200,7 @@ export default function PhaseCard({
           )}
         </div>
 
-        {/* Stage 4b: phase comment thread */}
-        {commentConfig && (
-          <div style={{ flexShrink: 0, alignSelf: 'flex-start', marginTop: 4 }}>
-            <CommentThread
-              config={commentConfig}
-              targetType="phase"
-              targetId={phase.id}
-              countOverride={commentConfig.comments.filter(c =>
-                (c.target_type === 'phase' && c.target_id === phase.id) ||
-                (c.target_type === 'day' && phaseDayIds.includes(c.target_id)) ||
-                (c.target_type === 'activity' && commentConfig.comments.some(
-                  dc => dc.target_type === 'day' && phaseDayIds.includes(dc.target_id) && dc.target_id === c.original_day_id
-                ))
-              ).length}
-              t={t as Parameters<typeof CommentThread>[0]['t']}
-            />
-          </div>
-        )}
-
-        {/* Right: action buttons */}
+{/* Right: action buttons */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, marginTop: 2 }}>
           {/* Generate / Regenerate button */}
           {onGeneratePlan && (

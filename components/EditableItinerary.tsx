@@ -11,7 +11,7 @@ import type { Phase, TripLengthMode } from '@/types';
 import { formatSlotHours, type SlotName } from '@/lib/ai';
 import type { PatchPayload } from '@/lib/trip-patches';
 import type { CommentConfig } from '@/lib/comment-types';
-import CommentThread, { dayCommentCount, orphanedActivityComments } from './comments/CommentThread';
+import CommentThread from './comments/CommentThread';
 
 /**
  * Stage 2d hotfix #1: optional trailing parameter on every imperative
@@ -1677,19 +1677,6 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
             </svg>
           </div>
 
-          {/* Stage 4b: day-level comment thread (aggregated count = day + activities) */}
-          {commentConfig && day.id && (
-            <div style={{ padding: '0 14px 8px', borderTop: '1px solid rgba(0,68,123,0.05)' }}>
-              <CommentThread
-                config={commentConfig}
-                targetType="day"
-                targetId={day.id}
-                countOverride={dayCommentCount(day.id, day.activities.map(a => a.id ?? '').filter(Boolean), commentConfig.comments)}
-                orphanedComments={orphanedActivityComments(day.id, day.activities.map(a => a.id ?? '').filter(Boolean), commentConfig.comments)}
-                t={t as Parameters<typeof CommentThread>[0]['t']}
-              />
-            </div>
-          )}
 
           {day.open && (
             <div style={{ padding: '14px 14px 16px' }}>
@@ -1849,8 +1836,6 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
                       onDismissPhases={!readOnly && tripLengthMode === 'medium' ? () => setPhasesDismissed(true) : undefined}
                       tripLengthMode={tripLengthMode}
                       initialLabelEditing={!readOnly && phase.id === newPhaseId}
-                      commentConfig={commentConfig}
-                      phaseDayIds={phaseDays.map(d => d.id ?? '').filter(Boolean) as string[]}
                     />
                     {!collapsedPhaseIds.has(phase.id) && phaseDays.map(day => renderDayCard(day))}
                   </div>

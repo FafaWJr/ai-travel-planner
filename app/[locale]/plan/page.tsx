@@ -1577,6 +1577,7 @@ function PlanContent() {
                     currentUserId: user?.id ?? '',
                     isOwner: !tripIsCollaborative || myRole === 'owner',
                     onRefresh: fetchComments,
+                    emitPatch: collab.enabled ? collab.emitPatch : undefined,
                   } as CommentConfig : undefined}
                   tripLengthMode={(() => {
                     // Stage 2e: fall back to savedTripStartDate / savedTripEndDate

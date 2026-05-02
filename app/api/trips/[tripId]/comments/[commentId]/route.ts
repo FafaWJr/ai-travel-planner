@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
 import { getRequestUserAndRole } from '@/lib/collaboration';
 
@@ -110,7 +111,11 @@ export async function DELETE(
     return NextResponse.json({ error: 'Forbidden: only the author or trip owner can delete a comment' }, { status: 403 });
   }
 
-  const { error: deleteErr } = await supabase
+  const serviceSupabase = createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+  const { error: deleteErr } = await serviceSupabase
     .from('trip_comments')
     .update({ deleted_at: new Date().toISOString() })
     .eq('id', commentId);

@@ -80,6 +80,7 @@ export default function CommentThread({
               isOwner={isOwner}
               tripId={tripId}
               onUpdated={onRefresh}
+              emitPatch={config.emitPatch}
               saveLabel={t('comments.save')}
               cancelLabel={t('comments.cancel')}
               editLabel={t('comments.edit')}
@@ -93,7 +94,12 @@ export default function CommentThread({
             targetType={targetType}
             targetId={targetId}
             originalDayId={originalDayId}
-            onSubmitted={onRefresh}
+            onSubmitted={(commentId) => {
+              onRefresh();
+              if (commentId) {
+                config.emitPatch?.({ type: 'add_comment', commentId, targetType, targetId, commentText: '' });
+              }
+            }}
             placeholder={t('comments.placeholder')}
             submitLabel={t('comments.submit')}
           />
@@ -120,6 +126,7 @@ export default function CommentThread({
                       isOwner={isOwner}
                       tripId={tripId}
                       onUpdated={onRefresh}
+                      emitPatch={config.emitPatch}
                       saveLabel={t('comments.save')}
                       cancelLabel={t('comments.cancel')}
                       editLabel={t('comments.edit')}
