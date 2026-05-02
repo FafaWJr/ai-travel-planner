@@ -665,9 +665,22 @@
     "deleteConfirm": "Excluir esta viagem? Isso não pode ser desfeito.",
     "sharedSection": "Compartilhadas comigo",
     "sharedBy": "Compartilhada por {name}",
+    "sharedWith": "Compartilhada com {count, plural, one {# pessoa} other {# pessoas}}",
+    "leaveTrip": "Sair desta viagem",
+    "leaveConfirm": "Tem certeza de que deseja sair desta viagem? Você perderá o acesso.",
     "untitled": "Viagem sem título"
   },
   "collab": {
+    "toast": {
+      "activityAccepted": "{name} aceitou uma atividade",
+      "activityDeclined": "{name} recusou uma atividade",
+      "activityAdded": "{name} adicionou uma atividade",
+      "activityRemoved": "{name} removeu uma atividade",
+      "dayConfirmed": "{name} confirmou um dia",
+      "notesUpdated": "{name} atualizou as notas",
+      "madeChange": "{name} fez uma alteração",
+      "madeChanges": "{name} fez {count} alterações"
+    },
     "roles": {
       "owner": "Dono",
       "editor": "Editor",
@@ -878,7 +891,9 @@
       "saveTripAndLeave": "Salvar viagem e sair",
       "saving": "Salvando...",
       "exportPdf": "Exportar PDF",
-      "generatingPdf": "Gerando PDF..."
+      "generatingPdf": "Gerando PDF...",
+      "leaveTrip": "Sair da viagem",
+      "leaveConfirm": "Tem certeza de que deseja sair desta viagem? Você perderá o acesso."
     },
     "itinerary": {
       "accepted": "aceito",

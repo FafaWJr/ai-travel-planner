@@ -22,6 +22,7 @@ function isTripExpired(startDate?: string | null, endDate?: string | null): bool
 
 interface SavedTrip {
   id: string;
+  user_id: string;
   title: string;
   destination: string;
   start_date: string | null;
@@ -38,21 +39,31 @@ export default function MyTripsPage() {
   const t = useTranslations('myTrips');
 
   const locale = useLocale();
-  const [trips,      setTrips]      = useState<SavedTrip[]>([]);
-  const [loading,    setLoading]    = useState(true);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [trips,        setTrips]        = useState<SavedTrip[]>([]);
+  const [loading,      setLoading]      = useState(true);
+  const [deletingId,   setDeletingId]   = useState<string | null>(null);
+  const [collabCounts, setCollabCounts] = useState<Record<string, number>>({});
   const [sharedTrips, setSharedTrips] = useState<Array<{ id: string; title: string | null; destination: string | null; role: CollabRole; ownerName: string }>>([]);
 
   useEffect(() => {
     if (!COLLAB_ENABLED || !user) {
       setSharedTrips([]);
+      setCollabCounts({});
       return;
     }
     (async () => {
-      const res = await fetch('/api/trips/shared');
-      if (!res.ok) return;
-      const body = await res.json();
-      setSharedTrips(body.trips ?? []);
+      const [sharedRes, countsRes] = await Promise.all([
+        fetch('/api/trips/shared'),
+        fetch('/api/trips/collab-counts'),
+      ]);
+      if (sharedRes.ok) {
+        const body = await sharedRes.json();
+        setSharedTrips(body.trips ?? []);
+      }
+      if (countsRes.ok) {
+        const body = await countsRes.json();
+        setCollabCounts(body.counts ?? {});
+      }
     })();
   }, [user]);
 
@@ -61,14 +72,15 @@ export default function MyTripsPage() {
     if (!authLoading && !user) router.replace('/auth/login?next=/my-trips');
   }, [user, authLoading]); // eslint-disable-line
 
-  /* Fetch trips once we have a user */
+  /* Fetch trips once we have a user — only owned trips (user_id match) */
   useEffect(() => {
     if (!user) return;
     (async () => {
       setLoading(true);
       const { data } = await supabase
         .from('saved_trips')
-        .select('*')
+        .select('id, user_id, title, destination, start_date, end_date, is_favorite, created_at, trip_data')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
       setTrips((data as SavedTrip[]) || []);
       setLoading(false);
@@ -203,15 +215,26 @@ export default function MyTripsPage() {
                       </svg>
                     </button>
                   </div>
-                  {numDays(trip) && (
-                    <span style={{
-                      display: 'inline-block', marginTop: 8,
-                      background: 'rgba(255,255,255,0.15)', borderRadius: 100, padding: '3px 10px',
-                      fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 11, color: 'rgba(255,255,255,0.9)',
-                    }}>
-                      {t('tripCard.days', { n: numDays(trip)! })}
-                    </span>
-                  )}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+                    {numDays(trip) && (
+                      <span style={{
+                        display: 'inline-block',
+                        background: 'rgba(255,255,255,0.15)', borderRadius: 100, padding: '3px 10px',
+                        fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 11, color: 'rgba(255,255,255,0.9)',
+                      }}>
+                        {t('tripCard.days', { n: numDays(trip)! })}
+                      </span>
+                    )}
+                    {COLLAB_ENABLED && collabCounts[trip.id] > 0 && (
+                      <span style={{
+                        display: 'inline-block',
+                        background: 'rgba(255,189,89,0.25)', borderRadius: 100, padding: '3px 10px',
+                        fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 11, color: 'rgba(255,255,255,0.9)',
+                      }}>
+                        {t('sharedWith', { count: collabCounts[trip.id] })}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Card body */}

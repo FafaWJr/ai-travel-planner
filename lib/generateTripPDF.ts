@@ -21,6 +21,11 @@ interface ItineraryDay {
   activities: Activity[];
 }
 
+interface TripCollaborator {
+  name: string;
+  role: string;
+}
+
 interface TripData {
   destination: string;
   startDate?: string;
@@ -28,6 +33,7 @@ interface TripData {
   itinerary: ItineraryDay[];
   travelers?: number;
   budget?: string;
+  collaborators?: TripCollaborator[];
 }
 
 export async function generateTripPDF(tripData: TripData): Promise<void> {
@@ -108,6 +114,15 @@ export async function generateTripPDF(tripData: TripData): Promise<void> {
   if (tripData.travelers) summaryParts.push(`${tripData.travelers} traveler${tripData.travelers > 1 ? 's' : ''}`);
   if (tripData.budget) summaryParts.push(`Budget: ${tripData.budget}`);
   if (summaryParts.length) pdf.text(summaryParts.join('   |   '), margin + 6, y + 17);
+
+  if (tripData.collaborators && tripData.collaborators.length > 0) {
+    const collabLine = 'Collaborators: ' + tripData.collaborators.map(c => `${c.name} (${c.role})`).join(', ');
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(gray);
+    const collabLines = pdf.splitTextToSize(collabLine, contentWidth - 12);
+    pdf.text(collabLines, margin + 6, y + 24);
+  }
 
   pdf.setFillColor(...orange);
   pdf.circle(margin + 2, y + 8, 1.5, 'F');

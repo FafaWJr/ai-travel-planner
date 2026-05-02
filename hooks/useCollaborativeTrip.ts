@@ -83,6 +83,11 @@ export type UseCollaborativeTripArgs = {
    * The caller should refetch /api/trips/[tripId]/comments to get fresh data.
    */
   onCommentsChanged?: () => void;
+  /**
+   * Stage 4c: called with each successfully applied incoming patch from
+   * another collaborator. Use to drive toast notifications.
+   */
+  onIncomingPatch?: (patch: Patch) => void;
 };
 
 export type UseCollaborativeTripReturn = {
@@ -284,6 +289,7 @@ export function useCollaborativeTrip(
     onHotelsChange,
     currentHotels,
     onCommentsChanged,
+    onIncomingPatch,
   } = args;
 
   const [tripData] = useState<PatchableTripData>(initialTripData);
@@ -312,10 +318,12 @@ export function useCollaborativeTrip(
   const currentHotelsRef = useRef(currentHotels);
   const onHotelsChangeRef = useRef(onHotelsChange);
   const onCommentsChangedRef = useRef(onCommentsChanged);
+  const onIncomingPatchRef = useRef(onIncomingPatch);
   const itineraryHandleRef = useRef(itineraryRef);
   useEffect(() => { currentHotelsRef.current = currentHotels; }, [currentHotels]);
   useEffect(() => { onHotelsChangeRef.current = onHotelsChange; }, [onHotelsChange]);
   useEffect(() => { onCommentsChangedRef.current = onCommentsChanged; }, [onCommentsChanged]);
+  useEffect(() => { onIncomingPatchRef.current = onIncomingPatch; }, [onIncomingPatch]);
   useEffect(() => { itineraryHandleRef.current = itineraryRef; }, [itineraryRef]);
 
   // Schedule a debounced PATCH /api/trips with materialized trip_data.
@@ -574,6 +582,7 @@ export function useCollaborativeTrip(
         if (seq > lastAppliedSeqRef.current) lastAppliedSeqRef.current = seq;
         dirtyRef.current = true;
         scheduleDebouncedSave();
+        onIncomingPatchRef.current?.(incoming);
       } catch (err) {
         console.error('[useCollaborativeTrip] received patch apply failed:', err);
       }

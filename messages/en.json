@@ -665,9 +665,22 @@
     "deleteConfirm": "Delete this trip? This cannot be undone.",
     "sharedSection": "Shared with me",
     "sharedBy": "Shared by {name}",
+    "sharedWith": "Shared with {count, plural, one {# person} other {# people}}",
+    "leaveTrip": "Leave this trip",
+    "leaveConfirm": "Are you sure you want to leave this trip? You will lose access.",
     "untitled": "Untitled trip"
   },
   "collab": {
+    "toast": {
+      "activityAccepted": "{name} accepted an activity",
+      "activityDeclined": "{name} declined an activity",
+      "activityAdded": "{name} added an activity",
+      "activityRemoved": "{name} removed an activity",
+      "dayConfirmed": "{name} confirmed a day",
+      "notesUpdated": "{name} updated notes",
+      "madeChange": "{name} made a change",
+      "madeChanges": "{name} made {count} changes"
+    },
     "roles": {
       "owner": "Owner",
       "editor": "Editor",
@@ -878,7 +891,9 @@
       "saveTripAndLeave": "Save trip and leave",
       "saving": "Saving...",
       "exportPdf": "Export PDF",
-      "generatingPdf": "Generating PDF..."
+      "generatingPdf": "Generating PDF...",
+      "leaveTrip": "Leave trip",
+      "leaveConfirm": "Are you sure you want to leave this trip? You will lose access."
     },
     "itinerary": {
       "accepted": "accepted",

@@ -27,7 +27,9 @@ import { COLLAB_ENABLED, COLLAB_REALTIME_ENABLED, type CollabRole } from '@/lib/
 import type { Comment, CommentConfig } from '@/lib/comment-types';
 import { InviteModal } from '@/components/collab/InviteModal';
 import { CollaboratorAvatars } from '@/components/collab/CollaboratorAvatars';
+import CollabToast from '@/components/CollabToast';
 import { useCollaborativeTrip } from '@/hooks/useCollaborativeTrip';
+import type { Patch } from '@/lib/trip-patches';
 import {
   readUserChatHistory,
   writeUserChatHistory,
@@ -289,6 +291,7 @@ function PlanContent() {
   const [savedTripId, setSavedTripId] = useState<string | null>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [myRole, setMyRole] = useState<CollabRole | null>(null);
+  const [collabIncomingPatch, setCollabIncomingPatch] = useState<Patch | null>(null);
   // Stage 2f hotfix #9: derives the viewer-mode UI lock. The data layer
   // already 403s viewer mutations; this boolean closes the UX gap by
   // hiding edit affordances. Solo trips and editor/owner sessions stay
@@ -355,6 +358,7 @@ function PlanContent() {
     onHotelsChange: setAcceptedHotels,
     currentHotels: acceptedHotels,
     onCommentsChanged: fetchComments,
+    onIncomingPatch: setCollabIncomingPatch,
   });
 
   const [savedTripDestination, setSavedTripDestination] = useState<string>('');
@@ -735,6 +739,18 @@ function PlanContent() {
     return null;
   };
 
+  const leaveTrip = async () => {
+    if (!savedTripId) return;
+    if (!window.confirm(t('leaveConfirm'))) return;
+    const res = await fetch(`/api/trips/${savedTripId}/leave`, { method: 'POST' });
+    if (res.ok) {
+      router.push('/my-trips');
+    } else {
+      const body = await res.json().catch(() => ({}));
+      alert(body.error ?? 'Could not leave trip. Please try again.');
+    }
+  };
+
   const saveTrip = async (): Promise<boolean> => {
     if (!user) { openGate('Save trip'); return false; }
 
@@ -798,6 +814,21 @@ function PlanContent() {
       const coM = prompt.match(/to (\d{4}-\d{2}-\d{2})/);
       const dest = prompt.replace(/^plan a (trip to |)?/i,'').replace(/\b(from \d{4}-\d{2}-\d{2}.*)$/i,'').trim().split(' ').slice(0,5).join(' ');
       const days = itineraryRef.current?.getDaysSnapshot() ?? [];
+
+      // For collaborative trips, fetch collaborator names and roles for the PDF
+      let collaborators: Array<{ name: string; role: string }> | undefined;
+      if (COLLAB_ENABLED && tripIsCollaborative && savedTripId) {
+        const res = await fetch(`/api/trips/${savedTripId}/collaborators`).catch(() => null);
+        if (res?.ok) {
+          const body = await res.json().catch(() => ({}));
+          const collabs: Array<{ full_name: string | null; email: string | null; role: string }> = body.collaborators ?? [];
+          collaborators = collabs.map(c => ({
+            name: c.full_name ?? c.email ?? 'Unknown',
+            role: c.role,
+          }));
+        }
+      }
+
       await generateTripPDF({
         destination: dest,
         startDate: ciM?.[1],
@@ -809,6 +840,7 @@ function PlanContent() {
             .filter(a => a.status !== 'declined')
             .map(a => ({ name: a.text.replace(/\*\*/g, '') })),
         })),
+        collaborators,
       });
     } catch (err) {
       console.error('PDF export failed:', err);
@@ -1444,6 +1476,30 @@ function PlanContent() {
                           {tCollab('button')}
                         </button>
                       )}
+                      {COLLAB_ENABLED && tripIsCollaborative && savedTripId && myRole && myRole !== 'owner' && (
+                        <button
+                          onClick={leaveTrip}
+                          style={{
+                            background: 'none',
+                            color: '#6C6D6F',
+                            border: '1.5px solid rgba(108,109,111,0.35)',
+                            fontFamily: "'Poppins',sans-serif",
+                            fontWeight: 600,
+                            fontSize: 13,
+                            padding: '8px 14px',
+                            borderRadius: 8,
+                            cursor: 'pointer',
+                            transition: 'color 0.15s, border-color 0.15s',
+                            whiteSpace: 'nowrap',
+                            flexShrink: 0,
+                            marginRight: 8,
+                          }}
+                          onMouseEnter={e => { e.currentTarget.style.color = '#DC2626'; e.currentTarget.style.borderColor = '#DC2626'; }}
+                          onMouseLeave={e => { e.currentTarget.style.color = '#6C6D6F'; e.currentTarget.style.borderColor = 'rgba(108,109,111,0.35)'; }}
+                        >
+                          {t('header.leaveTrip')}
+                        </button>
+                      )}
                       {!isViewerRole && (
                         <button
                           onClick={saveTrip}
@@ -1857,6 +1913,8 @@ function PlanContent() {
           </div>
 
           {toast && <Toast message={toast.message} variant={toast.variant} onDismiss={() => setToast(null)} />}
+
+          {COLLAB_ENABLED && tripIsCollaborative && <CollabToast patch={collabIncomingPatch} />}
 
           <FloatingChat
             plan={plan}
