@@ -310,7 +310,7 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
               <div style={{ display:'flex', gap:8, alignItems:'center' }}>
                 <div style={{ position:'relative', flex:1, minWidth:0 }}>
                   <input type="date" value={dep} min={today}
-                    onChange={e=>{setDep(e.target.value);if(ret&&e.target.value>ret)setRet('');if(e.target.value)setErrors(p=>({...p,dep:''}));}}
+                    onChange={e=>{const v=e.target.value;if(v&&v<today){setDep('');return;}setDep(v);if(ret&&v>ret)setRet('');if(v)setErrors(p=>({...p,dep:''}));}}
                     style={{...inp,borderColor:errors.dep?'#E53E3E':'rgba(0,68,123,0.15)'}}
                     onFocus={e=>(e.target.style.borderColor=errors.dep?'#E53E3E':'var(--navy)')}
                     onBlur={e=>(e.target.style.borderColor=errors.dep?'#E53E3E':'rgba(0,68,123,0.15)')} />
@@ -331,7 +331,7 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
               <div style={{ display:'flex', gap:8, alignItems:'center' }}>
                 <div style={{ position:'relative', flex:1, minWidth:0 }}>
                   <input type="date" value={ret} min={dep || today}
-                    onChange={e=>setRet(e.target.value)}
+                    onChange={e=>{const v=e.target.value;if(v&&v<(dep||today)){setRet('');return;}setRet(v);}}
                     style={inp}
                     onFocus={e=>(e.target.style.borderColor='var(--navy)')}
                     onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} />
