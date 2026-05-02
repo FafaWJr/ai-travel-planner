@@ -381,6 +381,15 @@ function PlanContent() {
 
   useEffect(() => { fetchComments(); }, [fetchComments]);
 
+  // When a new collaborator joins the presence channel mid-session, the owner's
+  // page may still have tripIsCollaborative=false from initial load. Detect the
+  // join via presence growing to >1 and flip the flag so comment icons appear.
+  useEffect(() => {
+    if (COLLAB_ENABLED && collab.enabled && collab.presence.length > 1 && !tripIsCollaborative) {
+      setTripIsCollaborative(true);
+    }
+  }, [collab.enabled, collab.presence.length, tripIsCollaborative]);
+
   // R4: Regeneration modal state
   const [regenModal, setRegenModal] = useState<{
     isOpen: boolean;
@@ -1455,7 +1464,7 @@ function PlanContent() {
                           <button onClick={()=>router.push('/')} style={{ background:'#00447B', color:'#fff', fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:13, padding:'8px 20px', borderRadius:100, cursor:'pointer', border:'none' }}>
                             {t('newTrip')}
                           </button>
-                          {COLLAB_ENABLED && myRole === 'owner' && (
+                          {COLLAB_ENABLED && myRole !== 'editor' && myRole !== 'viewer' && (
                             <button
                               onClick={handleShareClick}
                               aria-label={tCollab('button')}
