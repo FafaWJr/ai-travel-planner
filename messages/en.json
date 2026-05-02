@@ -91,6 +91,12 @@
     "feat4Body": " No subscriptions, no paywalls. Luna is yours from the very first message.",
     "cta": "Plan with Luna"
   },
+  "planTogether": {
+    "label": "Plan Together",
+    "headline": "Plan together, from anywhere",
+    "subhead": "Share your trip with friends and family. Everyone edits the same itinerary in real time, Luna keeps up with all of you.",
+    "cta": "Start Planning Together"
+  },
   "tripIdeas": {
     "label": "Inspiration",
     "title": "Trip ideas to get you started",

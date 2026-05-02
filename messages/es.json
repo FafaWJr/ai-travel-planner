@@ -91,6 +91,12 @@
     "feat4Body": " Sin suscripciones, sin barreras de pago. Luna es tuya desde el primer mensaje.",
     "cta": "Planear con Luna"
   },
+  "planTogether": {
+    "label": "Planificar Juntos",
+    "headline": "Planifica junto, desde cualquier lugar",
+    "subhead": "Comparte tu viaje con amigos y familia. Todos editan el mismo itinerario en tiempo real, Luna los acompaña a todos.",
+    "cta": "Empieza a Planificar Juntos"
+  },
   "tripIdeas": {
     "label": "Inspiracion",
     "title": "Ideas de viaje para empezar",

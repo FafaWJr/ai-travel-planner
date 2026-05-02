@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     template: '%s | Luna Let\'s Go',
   },
   description:
-    'Luna Let\'s Go is the AI travel planner that creates personalised, day-by-day itineraries tailored to your style, budget, group, and dates — in under 30 seconds. Plan beach trips, city breaks, family holidays, adventure travel, and more.',
+    'Luna Let\'s Go is the AI travel planner that creates personalised, day-by-day itineraries tailored to your style, budget, group, and dates — in under 30 seconds. Plan trips solo or invite friends and family for real-time collaborative planning. Beach trips, city breaks, family holidays, adventure travel, and more.',
 
   keywords: [
     'AI travel planner',

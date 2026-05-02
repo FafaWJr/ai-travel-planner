@@ -240,7 +240,7 @@ Full rollout complete. All user-facing pages under \`app/[locale]/\` render from
 
 ---
 
-## Collaborative Trips (Stages 0+1+2+3 shipped; Stage 4 not started)
+## Collaborative Trips (Stages 0+1+2+3+4 shipped; Stage 5 not started)
 
 Six-stage sprint adding real-time collaborative trip planning. Master plan: \`docs/specs/collab/00-master-plan.md\`. Technical spec: \`docs/specs/collab/01-technical-spec.md\`.
 
@@ -349,16 +349,64 @@ Six-stage sprint adding real-time collaborative trip planning. Master plan: \`do
 - \`lib/collab-awareness.ts\`: \`buildCollabAwarenessContext(supabase, tripId, userId)\` cross-awareness query + formatter.
 - \`app/api/trips/[tripId]/chat-history/route.ts\`: editor chat persistence endpoint (PATCH only, viewers 403).
 
+**New files (Stage 4):**
+- \`lib/comment-types.ts\`: \`Comment\` and \`CommentConfig\` shared types.
+- \`components/comments/CommentIcon.tsx\`: MessageCircle icon with count badge.
+- \`components/comments/CommentCompose.tsx\`: textarea with 500-char limit and Cmd/Ctrl+Enter submit.
+- \`components/comments/CommentItem.tsx\`: comment row with initials avatar, relative timestamp, hover-reveal edit/delete.
+- \`components/comments/CommentThread.tsx\`: expandable wrapper with "Show N earlier", compose bottom, orphaned section.
+- \`components/CollabToast.tsx\`: throttled incoming-patch notification, bottom-left, batches burst.
+- \`app/api/trips/[tripId]/comments/route.ts\`: POST/GET comments (all roles can create/read).
+- \`app/api/trips/[tripId]/comments/[commentId]/route.ts\`: PATCH/DELETE comments (author edit/delete; owner delete any).
+- \`app/api/trips/collab-counts/route.ts\`: GET collaborator count per owned trip for My Trips badge.
+
+**Stage 4a shipped 2 May 2026** (\`c4a36439\`):
+- Comment CRUD API. Two new routes: \`POST/GET /api/trips/[tripId]/comments\` and \`PATCH/DELETE /api/trips/[tripId]/comments/[commentId]\`.
+- All three roles can create/read comments. Author can edit/delete own. Owner can soft-delete any comment.
+- RLS migration: \`trip_is_owned_by_user\` SECURITY DEFINER helper added; \`trip_comments_update\` policy updated.
+- \`onCommentsChanged\` callback wired into \`useCollaborativeTrip\`. \`applyPatchToRef\` gains \`onCommentsChanged\` param.
+- \`add_comment\`/\`edit_comment\`/\`delete_comment\` patch types (already scaffolded in Stage 2) now active.
+- \`lib/collab-awareness.ts\` gains comment action detail cases.
+
+**Stage 4b shipped 2 May 2026** (\`4b948f26\` + hotfix-1 \`3d5ca993\` + hotfix-2 \`72fb4fdc\`):
+- Four new components in \`components/comments/\`: \`CommentIcon\`, \`CommentCompose\`, \`CommentItem\`, \`CommentThread\`.
+- \`CommentThread\`: expandable, max 5 visible + "Show N earlier", compose at bottom, orphaned comments section.
+- \`CommentCompose\`: 500-char limit, Cmd/Ctrl+Enter submit.
+- \`CommentItem\`: initials-fallback avatar, relative timestamp, hover-reveal edit/delete (author-only edit; author/owner delete).
+- Shared type: \`lib/comment-types.ts\` (\`Comment\` + \`CommentConfig\`).
+- Integration: activity cards in \`EditableItinerary\`, hotels in \`StayTab\`/\`HotelCard\`. Day-level and phase-level threads removed in hotfix-1 (scope reduction).
+- \`CommentConfig.emitPatch\` added in hotfix-1 so add/edit/delete mutations broadcast to collaborators.
+- Soft-delete 500 fix (hotfix-1): use service-role client for UPDATE to bypass RLS WITH CHECK on \`deleted_at IS NULL\`.
+- \`emitPatch\` wired into \`StayTab\` \`commentConfig\` (hotfix-2): the hotfix-1 replace missed the deeper-indented StayTab instance.
+- Locale strings: \`plan.comments\` namespace, 12 keys in EN/PT-BR/ES.
+
+**Stage 4c shipped 2 May 2026** (\`418c7131\`):
+- My Trips owned/shared split: owned trips filtered via \`.eq('user_id')\`; collaborated trips no longer bleed into main section.
+- Collab count badge ("Shared with N people") on owned trip cards via new \`GET /api/trips/collab-counts\` endpoint.
+- \`CollabToast\` component: throttled (1 per 3s) bottom-left notification on incoming patches. Batches rapid bursts. Wired via new \`onIncomingPatch\` callback in \`useCollaborativeTrip\`.
+- Leave Trip button in plan page header for editor/viewer roles. Confirm dialog then redirect to /my-trips.
+- PDF export: optional collaborators line (name + role) in trip summary box for collaborative trips.
+- Mobile: \`CollabToast\` bottom offset avoids overlap with save-toast (bottom: 24 vs bottom: 80). \`InviteModal\` 90% width.
+- i18n: \`sharedWith\`, \`leaveTrip\`, \`leaveConfirm\` added to \`myTrips\` + plan header namespaces; \`collab.toast\` sub-namespace (8 keys) in EN/PT-BR/ES.
+- Stage 4 complete.
+
+**Stage 4 UI polish shipped 2-3 May 2026** (\`baa199c8\` + \`47eba6a3\` + \`a95fd9e1\`):
+- Share icon: replaced orange Invite button with Lucide \`Share\` icon (navy). Always visible for owners, including unsaved trips (broadened from \`myRole === 'owner'\` to exclude only editor/viewer).
+- Share icon positioned in secondary actions row (Export PDF / New trip row), right-aligned.
+- Comment icon moved inline with accept/decline/move buttons inside activity card action row; thread panel expands below card via local state in \`EditableItinerary\`.
+- Shared trip cards in My Trips now show trip dates (start to end) and "Saved [date]". \`/api/trips/shared\` updated to return \`start_date\`, \`end_date\`, \`created_at\`.
+- Comment icons render without page refresh when a collaborator joins mid-session: \`useEffect\` watches \`collab.presence.length\`; flips \`tripIsCollaborative=true\` and reruns \`fetchComments\` automatically.
+- i18n: \`shareRequiresSave\` added to plan namespace in EN/PT-BR/ES.
+
 **Stage status:**
 - Stage 0 (foundation): SHIPPED.
 - Stage 1 (share + invite): SHIPPED.
 - Stage 2 (realtime sync, role-gated mutations): **SHIPPED AND VERIFIED** (30 April 2026).
-- Stage 3 (per-user collaborative Luna chat): **SHIPPED AND VERIFIED** (2 May 2026). QA: 11 PASS, 2 N/A (Stage 4 comments dependencies).
-- Stage 4 (comments, My Trips polish): NOT STARTED. Plan written: \`docs/specs/collab/luna-collab-stage-4-plan.md\`.
+- Stage 3 (per-user collaborative Luna chat): **SHIPPED AND VERIFIED** (2 May 2026). QA: 11 PASS, 2 N/A.
+- Stage 4 (comments, My Trips polish): **SHIPPED** (2-3 May 2026). Stages 4a + 4b + 4c + UI polish all landed.
 - Stage 5 (landing page, OG image, flag flip): NOT STARTED. \`NEXT_PUBLIC_COLLAB_ENABLED\` still false in production.
 
 **Stages remaining:**
-- Stage 4 (~18h): comments on activity/day/phase/hotel, My Trips integration polish, mobile polish.
 - Stage 5 (~6h): landing page, OG image, flag flip.
 
 ---
@@ -460,12 +508,11 @@ After Claude Code finishes changes:
 - Collab Stage 3 fully shipped and QA verified (2 May 2026): per-user chat threads (\`lib/chat-history.ts\`), cross-awareness summary (\`lib/collab-awareness.ts\`), viewer-readonly Luna instruction, confirm_day broadcast, replace_activity dual root-cause fix.
 - Luna intelligence recovery (1-2 May 2026): slot-structured itinerary context, structured itinerary as PRIMARY source of truth in FloatingChat, liveActivitiesText computed at send time via useCallback getter (was stale useMemo).
 - Stage 2 P2 backlog items shipped: tab-refocus catchup via visibilitychange (commit \`2e8230d6\`), server-side PATCH merge preserving all trip_data keys (commit \`27674047\`).
+- Collab Stage 4 fully shipped (2-3 May 2026): comments data layer and API (Stage 4a), comments UI components (Stage 4b), My Trips owned/shared split + CollabToast + Leave Trip + PDF collaborators line (Stage 4c), share icon + comment icon UI polish.
 
 **Current Work:**
-- Collaborative Trips Stages 0+1+2+3 **shipped and verified**. \`NEXT_PUBLIC_COLLAB_ENABLED=false\` still in production pending Stage 5 launch.
-- Collab Stage 3 fully shipped (2 May 2026): per-user chat threads, cross-awareness summary, viewer-readonly Luna, confirm_day broadcast, replace_activity dual fix. 13-check QA pass: 11 PASS, 2 N/A.
-- Stage 4 (comments, My Trips polish): NOT STARTED. Plan written: \`docs/specs/collab/luna-collab-stage-4-plan.md\`.
-- Luna intelligence recovery shipped (1-2 May 2026): slot-structured context, structured itinerary as primary source of truth, liveActivitiesText computed at send time.
+- Collaborative Trips Stages 0+1+2+3+4 **shipped**. \`NEXT_PUBLIC_COLLAB_ENABLED=false\` still in production pending Stage 5 launch.
+- Stage 5 (landing page, OG image, flag flip): NOT STARTED. \`NEXT_PUBLIC_COLLAB_ENABLED\` still false.
 - Brevo email integration (list ID 17, /api/brevo-sync/route.ts)
 - PDF export (jsPDF + html2canvas, branded itinerary)
 

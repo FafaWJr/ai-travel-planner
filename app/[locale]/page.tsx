@@ -10,6 +10,7 @@ export default function HomePage() {
   const tFeat = useTranslations('features');
   const tYW = useTranslations('yourway');
   const tML = useTranslations('meetLuna');
+  const tPT = useTranslations('planTogether');
   const tTI = useTranslations('tripIdeas');
   const tQuiz = useTranslations('quiz');
   const tFaq = useTranslations('faq');
@@ -147,6 +148,12 @@ export default function HomePage() {
         .luna-feat strong{color:white;font-weight:700}
         .btn-letsgo-white{background:var(--orange);color:white;border:none;border-radius:50px;padding:16px 44px;font-family:'Poppins',sans-serif;font-size:16px;font-weight:500;cursor:pointer;display:inline-block;text-decoration:none;margin-top:32px;transition:background .2s}
         .btn-letsgo-white:hover{background:#e06e00}
+        /* PLAN TOGETHER */
+        .plan-together{background:var(--bg-navy-tint);text-align:center}
+        .plan-together-inner{max-width:680px;margin:0 auto}
+        .plan-together-icon{width:64px;height:64px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;margin:0 auto 28px}
+        .btn-plan-together{background:var(--orange);color:white;border:none;border-radius:50px;padding:16px 44px;font-family:'Poppins',sans-serif;font-size:17px;font-weight:500;cursor:pointer;display:inline-block;text-decoration:none;margin-top:32px;transition:background .2s}
+        .btn-plan-together:hover{background:#e06e00}
         /* TRIP IDEAS */
         .trip-ideas{background:white}
         .ideas-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:52px}
@@ -441,6 +448,24 @@ export default function HomePage() {
             </div>
             <Link href="/start" className="btn-letsgo-white">{tML('cta')} &rarr;</Link>
           </div>
+        </div>
+      </section>
+
+      {/* PLAN TOGETHER */}
+      <section className="section plan-together" id="plan-together">
+        <div className="plan-together-inner">
+          <div className="plan-together-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+          </div>
+          <div className="section-label">{tPT('label')}</div>
+          <h2 className="section-title" style={{fontSize:36,marginBottom:16}}>{tPT('headline')}</h2>
+          <p className="section-sub centered">{tPT('subhead')}</p>
+          <Link href="/start" className="btn-plan-together">{tPT('cta')} &rarr;</Link>
         </div>
       </section>
 
