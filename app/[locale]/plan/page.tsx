@@ -1712,6 +1712,7 @@ function PlanContent() {
                         currentUserId: user?.id ?? '',
                         isOwner: !tripIsCollaborative || myRole === 'owner',
                         onRefresh: fetchComments,
+                        emitPatch: collab.enabled ? collab.emitPatch : undefined,
                       } as CommentConfig : undefined}
                     />
                   </div>
