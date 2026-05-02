@@ -25,7 +25,7 @@ import UnsavedChangesModal from '@/components/UnsavedChangesModal';
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 import { COLLAB_ENABLED, COLLAB_REALTIME_ENABLED, type CollabRole } from '@/lib/collaboration';
 import type { Comment, CommentConfig } from '@/lib/comment-types';
-import { Share2 } from 'lucide-react';
+import { Share } from 'lucide-react';
 import { InviteModal } from '@/components/collab/InviteModal';
 import { CollaboratorAvatars } from '@/components/collab/CollaboratorAvatars';
 import CollabToast from '@/components/CollabToast';
@@ -1443,7 +1443,7 @@ function PlanContent() {
                             </span>
                           </div>
                         )}
-                        {/* Secondary actions — Export PDF + New trip */}
+                        {/* Secondary actions — Export PDF + New trip + Share */}
                         <div style={{ display:'flex', gap:8, alignItems:'center', marginTop:4, flexWrap:'wrap' }}>
                           <button
                             onClick={handleExportPDF}
@@ -1455,6 +1455,31 @@ function PlanContent() {
                           <button onClick={()=>router.push('/')} style={{ background:'#00447B', color:'#fff', fontFamily:"'Poppins',sans-serif", fontWeight:600, fontSize:13, padding:'8px 20px', borderRadius:100, cursor:'pointer', border:'none' }}>
                             {t('newTrip')}
                           </button>
+                          {COLLAB_ENABLED && myRole === 'owner' && (
+                            <button
+                              onClick={handleShareClick}
+                              aria-label={tCollab('button')}
+                              title={tCollab('button')}
+                              style={{
+                                marginLeft: 'auto',
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                padding: '6px 8px',
+                                borderRadius: 8,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: '#00447B',
+                                flexShrink: 0,
+                                transition: 'opacity 0.15s',
+                              }}
+                              onMouseEnter={e => { e.currentTarget.style.opacity = '0.6'; }}
+                              onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
+                            >
+                              <Share size={20} />
+                            </button>
+                          )}
                         </div>
                       </div>
                       {/* Right — Presence avatars + Invite (owner only, flag-gated) + Save */}
@@ -1466,31 +1491,6 @@ function PlanContent() {
                             maxVisible={3}
                           />
                         </div>
-                      )}
-                      {COLLAB_ENABLED && myRole === 'owner' && (
-                        <button
-                          onClick={handleShareClick}
-                          aria-label={tCollab('button')}
-                          title={tCollab('button')}
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            padding: '6px 8px',
-                            borderRadius: 8,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: '#00447B',
-                            flexShrink: 0,
-                            marginRight: 4,
-                            transition: 'opacity 0.15s',
-                          }}
-                          onMouseEnter={e => { e.currentTarget.style.opacity = '0.6'; }}
-                          onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
-                        >
-                          <Share2 size={22} />
-                        </button>
                       )}
                       {COLLAB_ENABLED && tripIsCollaborative && savedTripId && myRole && myRole !== 'owner' && (
                         <button

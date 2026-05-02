@@ -11,7 +11,9 @@ import type { Phase, TripLengthMode } from '@/types';
 import { formatSlotHours, type SlotName } from '@/lib/ai';
 import type { PatchPayload } from '@/lib/trip-patches';
 import type { CommentConfig } from '@/lib/comment-types';
-import CommentThread from './comments/CommentThread';
+import CommentIcon from './comments/CommentIcon';
+import CommentItem from './comments/CommentItem';
+import CommentCompose from './comments/CommentCompose';
 
 /**
  * Stage 2d hotfix #1: optional trailing parameter on every imperative
@@ -1976,8 +1978,17 @@ function SortableActivityItem({
 }) {
   const t = useTranslations('plan');
   const [showMovePicker, setShowMovePicker] = useState(false);
+  const [commentExpanded, setCommentExpanded] = useState(false);
+  const [showAllComments, setShowAllComments] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
   const { attributes, listeners, setNodeRef, transform, transition, isOver } = useSortable({ id: act.id, disabled: readOnly });
+
+  const filteredComments = commentConfig
+    ? commentConfig.comments.filter(c => c.target_type === 'activity' && c.target_id === act.id)
+    : [];
+  const visibleComments = showAllComments || filteredComments.length <= 5
+    ? filteredComments : filteredComments.slice(-5);
+  const hiddenCount = filteredComments.length - visibleComments.length;
 
   // Close picker when clicking outside
   useEffect(() => {
@@ -2046,12 +2057,10 @@ function SortableActivityItem({
           <div style={{ display: 'flex', gap: 4, flexShrink: 0, paddingTop: 2, alignItems: 'flex-start' }}>
             {commentConfig && dayId && (
               <div onPointerDown={(e) => e.stopPropagation()}>
-                <CommentThread
-                  config={commentConfig}
-                  targetType="activity"
-                  targetId={act.id}
-                  originalDayId={dayId}
-                  t={t as Parameters<typeof CommentThread>[0]['t']}
+                <CommentIcon
+                  count={filteredComments.length}
+                  isExpanded={commentExpanded}
+                  onClick={(e) => { e.stopPropagation(); setCommentExpanded(v => !v); }}
                 />
               </div>
             )}
@@ -2077,6 +2086,63 @@ function SortableActivityItem({
           </div>
         )}
       </div>
+
+      {/* Comment thread panel — below the activity card */}
+      {commentConfig && dayId && commentExpanded && (
+        <div
+          onPointerDown={(e) => e.stopPropagation()}
+          style={{
+            marginTop: 6, padding: '10px 12px',
+            background: 'rgba(0,68,123,0.03)',
+            border: '1px solid rgba(0,68,123,0.10)',
+            borderRadius: 10,
+          }}
+        >
+          {filteredComments.length === 0 && (
+            <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: '#9CA3AF', margin: '0 0 8px', textAlign: 'center' }}>
+              {t('comments.noComments')}
+            </p>
+          )}
+          {hiddenCount > 0 && (
+            <button
+              onClick={() => setShowAllComments(true)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Inter',sans-serif", fontSize: 12, color: '#00447B', padding: '0 0 8px', textDecoration: 'underline' }}
+            >
+              {t('comments.showMore', { count: hiddenCount })}
+            </button>
+          )}
+          {visibleComments.map(c => (
+            <CommentItem
+              key={c.id}
+              comment={c}
+              currentUserId={commentConfig.currentUserId}
+              isOwner={commentConfig.isOwner}
+              tripId={commentConfig.tripId}
+              onUpdated={commentConfig.onRefresh}
+              emitPatch={commentConfig.emitPatch}
+              saveLabel={t('comments.save')}
+              cancelLabel={t('comments.cancel')}
+              editLabel={t('comments.edit')}
+              deleteLabel={t('comments.delete')}
+              deleteConfirmText={t('comments.deleteConfirm')}
+            />
+          ))}
+          <CommentCompose
+            tripId={commentConfig.tripId}
+            targetType="activity"
+            targetId={act.id}
+            originalDayId={dayId}
+            onSubmitted={(commentId) => {
+              commentConfig.onRefresh();
+              if (commentId) {
+                commentConfig.emitPatch?.({ type: 'add_comment', commentId, targetType: 'activity', targetId: act.id, commentText: '' });
+              }
+            }}
+            placeholder={t('comments.placeholder')}
+            submitLabel={t('comments.submit')}
+          />
+        </div>
+      )}
 
       {/* Move to day picker */}
       {!readOnly && showMovePicker && (
