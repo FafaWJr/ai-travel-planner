@@ -56,6 +56,7 @@ export default function Footer() {
             <FooterLink href="/blog">{tNav('blog')}</FooterLink>
             <FooterLink href="/deals">{tNav('deals')}</FooterLink>
             <FooterLink href="/about">{tFooter('aboutUs')}</FooterLink>
+            <FooterLink href="/how-to-use-luna">{tFooter('howToUseLuna')}</FooterLink>
             <FooterLink href="/my-trips">{tNav('myTrips')}</FooterLink>
           </div>
         </div>
