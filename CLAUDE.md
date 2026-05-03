@@ -1,7 +1,7 @@
 # Luna Let's Go - Claude Code Context
-**Last Updated:** 2026-05-03 16:01:45
+**Last Updated:** 2026-05-03 16:54:05
 **Current Branch:** collab-stage-5-launch
-**Last Commit:** 177d1024 feat: upgrade itinerary generation system prompt and schema enforcement
+**Last Commit:** f549d1a1 feat(itinerary): UX clarity pass -- one-sentence descriptions, food prefixes, duration hints
 **Deployment:** https://www.lunaletsgo.com
 
 ---
@@ -104,7 +104,9 @@ app/auth/signup/page.tsx
 ## Recent Changes (Last 10 Commits)
 
 ```
-177d1024 (HEAD -> collab-stage-5-launch, origin/collab-stage-5-launch) feat: upgrade itinerary generation system prompt and schema enforcement
+f549d1a1 (HEAD -> collab-stage-5-launch, origin/collab-stage-5-launch) feat(itinerary): UX clarity pass -- one-sentence descriptions, food prefixes, duration hints
+2c0fbe0f fix: recover itinerary UX quality with rich descriptions and formatted output
+177d1024 feat: upgrade itinerary generation system prompt and schema enforcement
 97e21507 feat(collab): Plan Together homepage section + OG image + launch prep (Stage 5)
 e5e1d18e (origin/main, origin/HEAD, main) fix: enforce date picker min constraints on mobile (iOS Safari)
 a95fd9e1 fix(collab): share icon always visible + comment icons on join
@@ -112,8 +114,6 @@ a95fd9e1 fix(collab): share icon always visible + comment icons on join
 baa199c8 style(collab): share icon + comment icon placement + shared card dates
 418c7131 feat(collab): My Trips owned/shared split + UX polish (Stage 4c)
 72fb4fdc fix(collab): wire emitPatch into StayTab commentConfig (missed in hotfix-1)
-3d5ca993 fix(collab): Stage 4b hotfix-1 — DELETE 500, comment broadcast, scope reduction
-4b948f26 feat(collab): comments UI components (Stage 4b)
 ```
 
 ---
