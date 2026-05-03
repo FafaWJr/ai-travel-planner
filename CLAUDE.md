@@ -1,7 +1,7 @@
 # Luna Let's Go - Claude Code Context
-**Last Updated:** 2026-05-03 00:31:35
-**Current Branch:** main
-**Last Commit:** a95fd9e1 fix(collab): share icon always visible + comment icons on join
+**Last Updated:** 2026-05-03 14:29:29
+**Current Branch:** collab-stage-5-launch
+**Last Commit:** 97e21507 feat(collab): Plan Together homepage section + OG image + launch prep (Stage 5)
 **Deployment:** https://www.lunaletsgo.com
 
 ---
@@ -104,7 +104,9 @@ app/auth/signup/page.tsx
 ## Recent Changes (Last 10 Commits)
 
 ```
-a95fd9e1 (HEAD -> main, origin/main, origin/HEAD) fix(collab): share icon always visible + comment icons on join
+97e21507 (HEAD -> collab-stage-5-launch, origin/collab-stage-5-launch) feat(collab): Plan Together homepage section + OG image + launch prep (Stage 5)
+e5e1d18e (origin/main, origin/HEAD, main) fix: enforce date picker min constraints on mobile (iOS Safari)
+a95fd9e1 fix(collab): share icon always visible + comment icons on join
 47eba6a3 style(collab): fix share icon placement + split comment icon/panel
 baa199c8 style(collab): share icon + comment icon placement + shared card dates
 418c7131 feat(collab): My Trips owned/shared split + UX polish (Stage 4c)
@@ -112,8 +114,6 @@ baa199c8 style(collab): share icon + comment icon placement + shared card dates
 3d5ca993 fix(collab): Stage 4b hotfix-1 — DELETE 500, comment broadcast, scope reduction
 4b948f26 feat(collab): comments UI components (Stage 4b)
 c4a36439 feat(collab): comments data layer and API (Stage 4a)
-df8b30ba chore: regenerate CLAUDE.md post-Stage 3
-97c7eb51 fix(collab): replace_activity dual root cause
 ```
 
 ---

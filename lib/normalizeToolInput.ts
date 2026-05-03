@@ -46,12 +46,69 @@ export function definePhaseInputToPhase(input: DefinePhaseInput): Phase {
 }
 
 /**
+ * Shape emitted by DEFINE_DAY_TOOL schema v2 (itinerary-generation-v2).
+ * Each slot contains activity objects instead of plain strings.
+ */
+type ActivityObject = {
+  activity?: unknown;
+  location?: unknown;
+  description?: unknown;
+  durationMinutes?: unknown;
+  category?: unknown;
+};
+
+/**
+ * Convert a v2 activity object to a display string.
+ * Format: "ActivityName (Location)" — concise and informative.
+ */
+function activityObjectToString(obj: ActivityObject): string {
+  const name = typeof obj.activity === 'string' ? obj.activity.trim() : '';
+  const loc  = typeof obj.location === 'string' ? obj.location.trim() : '';
+  if (!name) return '';
+  return loc ? `${name} (${loc})` : name;
+}
+
+/**
  * Coerce a raw tool input object to a typed DefineDayInput.
- * Returns null if required fields are missing.
+ * Handles two schema formats:
+ *   v2 (itinerary-generation-v2): { dayNumber, dayTitle, slots: { morning, … } }
+ *   v1 (legacy):                  { day, title, morning, … } as string arrays
+ * Returns null if required fields are missing in both formats.
  */
 export function normalizeDefineDayInput(
   raw: Record<string, unknown>,
 ): DefineDayInput | null {
+  // ── v2 schema: dayNumber + dayTitle + slots object ─────────────────────────
+  if (typeof raw.dayNumber === 'number' && typeof raw.dayTitle === 'string') {
+    const day   = raw.dayNumber;
+    const title = raw.dayTitle.trim();
+    if (!title) return null;
+
+    const slots = (raw.slots && typeof raw.slots === 'object') ? (raw.slots as Record<string, unknown>) : {};
+
+    const slotToStrings = (val: unknown): string[] => {
+      if (!Array.isArray(val)) return [];
+      return (val as unknown[])
+        .map(item => {
+          if (typeof item === 'string') return item.trim();
+          if (item && typeof item === 'object') return activityObjectToString(item as ActivityObject);
+          return '';
+        })
+        .filter(Boolean);
+    };
+
+    return {
+      day,
+      title,
+      morning:   slotToStrings(slots.morning),
+      afternoon: slotToStrings(slots.afternoon),
+      evening:   slotToStrings(slots.evening),
+      night:     slotToStrings(slots.night),
+      phase_id:  typeof raw.phase_id === 'string' ? raw.phase_id : undefined,
+    };
+  }
+
+  // ── v1 schema (legacy): flat string arrays ─────────────────────────────────
   const day   = typeof raw.day   === 'number' ? raw.day   : null;
   const title = typeof raw.title === 'string' ? raw.title.trim() : '';
 

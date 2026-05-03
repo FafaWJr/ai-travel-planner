@@ -1,7 +1,18 @@
 import { NextRequest } from 'next/server';
 import { tripFormSchema } from '@/lib/validators';
 import { getWeather } from '@/lib/weather';
-import { buildTravelPrompt, SYSTEM_PROMPT, getLanguageInstruction, buildGenerateTools, parsePromptContext, buildStage4RulesBlock } from '@/lib/ai';
+import {
+  buildTravelPrompt,
+  SYSTEM_PROMPT,
+  getLanguageInstruction,
+  buildGenerateTools,
+  parsePromptContext,
+  buildStage4RulesBlock,
+  derivePace,
+  validatePacing,
+  buildGenerateSystemBlocks,
+} from '@/lib/ai';
+import type { SystemContentBlock } from '@/lib/ai-stream';
 import { streamCompletion } from '@/lib/ai-stream';
 import { createClient } from '@/lib/supabase/server';
 
@@ -92,10 +103,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     const locale = (body.locale as string) || 'en';
-    const langInstruction = getLanguageInstruction(locale);
-    const systemPromptWithLang = langInstruction
-      ? `${SYSTEM_PROMPT}\n\n${langInstruction}`
-      : SYSTEM_PROMPT;
 
     /* ── Simple prompt mode (used by the homepage search bar) ── */
     if (typeof body.prompt === 'string' && body.prompt.trim()) {
@@ -106,6 +113,29 @@ export async function POST(request: NextRequest) {
       // R2: parse audience context from the prompt string and inject rules block
       const parsedCtx = parsePromptContext(rawPrompt);
       const rulesBlock = buildStage4RulesBlock(parsedCtx);
+
+      // Pace classification for simple prompt mode (logging only — per-day
+      // validatePacing requires server-side tool extraction, which is not possible
+      // in the current streaming architecture; tool results are parsed client-side).
+      const simplePace = derivePace(parsedCtx.tripStyles, parsedCtx.notes);
+      console.log(`[Luna Generate] pace=${simplePace} destination=${parsedCtx.destination || 'unknown'} days=${tripDays} (simple-prompt mode)`);
+
+      // System blocks: cached static methodology + simple dynamic context.
+      const langInstruction = getLanguageInstruction(locale);
+      const dynamicContext = `TRIP DETAILS FOR THIS REQUEST:
+- Destination: ${parsedCtx.destination || 'unspecified'}
+- Duration: approximately ${tripDays} days
+- Adults: ${parsedCtx.adultAges.length > 0 ? `${parsedCtx.adultAges.length} (ages: ${parsedCtx.adultAges.join(', ')})` : 'unspecified'}
+- Children: ${parsedCtx.childrenAges.length > 0 ? `${parsedCtx.childrenAges.length} (ages: ${parsedCtx.childrenAges.join(', ')})` : '0'}
+- Trip styles: ${parsedCtx.tripStyles.join(', ') || 'unspecified'}
+- Locale: ${locale}
+
+Based on this profile, your internal pace classification is: ${simplePace}${langInstruction ? `\n\n---\n\n${langInstruction}` : ''}`;
+
+      const simpleSystemBlocks: SystemContentBlock[] = [
+        { type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } },
+        { type: 'text', text: dynamicContext },
+      ];
 
       const structuredPrompt = rawPrompt + (rulesBlock ? `\n${rulesBlock}` : '') + `
 
@@ -131,7 +161,7 @@ A response with only tool calls and no markdown narrative is incomplete and will
       try {
         stream = await streamCompletion(
           [
-            { role: 'system', content: systemPromptWithLang },
+            { role: 'system', content: simpleSystemBlocks },
             { role: 'user', content: structuredPrompt },
           ],
           'generate',
@@ -172,6 +202,17 @@ A response with only tool calls and no markdown narrative is incomplete and will
     const tripDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
     const tools = buildGenerateTools(tripDays);
 
+    // Pace classification — log before stream. Per-day validatePacing requires
+    // server-side tool extraction which is not possible in the streaming
+    // architecture; validatePacing is available client-side if needed in Stage 5.
+    const pace = derivePace(formData.tripStyles as string[], formData.notes);
+    console.log(`[Luna Generate] pace=${pace} destination=${formData.destination} days=${tripDays} budget=${formData.budgetLevel}`);
+
+    // System blocks: cached static methodology (Block 0) + per-request trip
+    // context with pace classification (Block 1). Enables Anthropic prompt
+    // caching on the generate route for the first time.
+    const systemBlocks = buildGenerateSystemBlocks(formData, locale);
+
     // buildTravelPrompt produces the base structured user prompt.
     // We patch the Personalised Itinerary section to use tool calls.
     const baseUserPrompt = buildTravelPrompt(formData, weather);
@@ -190,7 +231,7 @@ A response with only tool calls and no markdown narrative is incomplete and will
     try {
       stream = await streamCompletion(
         [
-          { role: 'system', content: systemPromptWithLang },
+          { role: 'system', content: systemBlocks },
           { role: 'user', content: userPromptWithTools },
         ],
         'generate',
