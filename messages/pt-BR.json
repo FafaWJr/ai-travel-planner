@@ -963,91 +963,128 @@
       "tipBody": "A Luna funciona melhor quando você a trata como uma parceira de conversa. Não há forma errada de perguntar. Basta dizer o que você quer, e ela cuida do resto."
     },
     "featureCards": {
-      "sectionLabel": "O Que Você Pode Fazer",
-      "heading": "A Luna pode ajudar com tudo isso",
-      "exampleLabel": "Experimente perguntar:"
+      "sectionLabel": "Recursos",
+      "heading": "O Que Você Pode Fazer com a Luna",
+      "subheading": "Aqui está tudo que a Luna pode ajudar, com exemplos de como perguntar."
     },
     "planTrip": {
       "heading": "Planejar sua viagem",
-      "body": "A Luna cria um roteiro completo dia a dia com base no seu destino, datas, estilo de viagem e orçamento. Basta descrever o que você procura e ela cuida do resto.",
-      "example1": "Planeje uma viagem de 7 dias ao Japão para duas pessoas que adoram gastronomia e cultura.",
-      "example2": "Quero um feriado relaxante na praia em Bali por 10 dias com orçamento médio.",
-      "example3": "Me dê um roteiro adequado para famílias em Paris com crianças de 6 e 10 anos."
+      "body": "Comece dizendo à Luna seu destino, datas e estilo de viagem. Ela vai gerar um roteiro completo organizado por dia, com atividades nos períodos da manhã, tarde, noite e madrugada.",
+      "tipTitle": "Quanto mais você compartilhar, mais pessoal será sua viagem",
+      "tipBody": "A Luna cria seu roteiro com base no que você conta. Um simples '5 dias em Tóquio' já gera um bom plano inicial. Mas se você contar com quem vai viajar, o que gosta de fazer, como prefere se deslocar e outros detalhes, ela vai criar algo que realmente combina com você. Mencione seu orçamento, suas culinárias favoritas, se prefere caminhadas ou táxi, se precisa de opções para crianças ou se quer manhãs calmas ou noites animadas. Cada detalhe ajuda a Luna a planejar uma viagem do seu jeito.",
+      "bullet1": "Escolha seu ritmo: relaxado, padrão ou aventureiro",
+      "bullet2": "Defina preferências como família, romântico, econômico ou luxo",
+      "bullet3": "Inclua interesses específicos como gastronomia, cultura, natureza ou vida noturna",
+      "bullet4": "Informe com quem vai viajar: sozinho, casal, família ou amigos",
+      "bullet5": "Compartilhe restrições alimentares, necessidades de mobilidade ou qualquer detalhe importante",
+      "example1": "Planeje uma viagem de 5 dias em Tóquio para um casal",
+      "example2": "Quero um feriado relaxante na praia em Bali",
+      "example3": "Viagem em família para Portugal com dois filhos menores de 10 anos",
+      "example4": "Escapada romântica, adoramos gastronomia e trilhas"
     },
     "editItinerary": {
       "heading": "Editar seu roteiro",
-      "body": "Peça à Luna para adicionar, remover ou trocar qualquer atividade do seu roteiro. Você pode ser específico ou vago — ela vai resolver os detalhes.",
-      "example1": "Substitua a visita ao museu no Dia 3 por algo mais aventureiro.",
-      "example2": "Adicione uma aula de culinária em algum momento da viagem.",
-      "example3": "Remova o passeio de barco no Dia 5 — não estou animado com isso."
+      "body": "Seu plano nunca é definitivo. Peça à Luna para mudar qualquer coisa a qualquer hora. Ela pode adicionar atividades, remover o que você não quer ou trocar por algo mais adequado.",
+      "bullet1": "Adicionar algo novo em um dia e período específico",
+      "bullet2": "Remover uma atividade que não lhe interessa",
+      "bullet3": "Trocar uma atividade por outra mais adequada",
+      "bullet4": "Substituir uma seção inteira por uma com outro clima",
+      "example1": "Adicione um beach club no Dia 3 à tarde",
+      "example2": "Remova o museu do Dia 1",
+      "example3": "Substitua isso por algo mais relaxado",
+      "example4": "Troque a trilha pela manhã por um spa"
     },
     "dayStructure": {
       "heading": "Modificar a estrutura do dia",
-      "body": "Diga à Luna se um dia parece muito cheio ou muito vazio, ou se você quer ajustar o ritmo. Ela pode distribuir as atividades, consolidar dias ou reestruturar todo o roteiro.",
-      "example1": "O Dia 4 está muito cheio. Você pode distribuir essas atividades pelos outros dias?",
-      "example2": "Deixe o Dia 2 mais tranquilo e relaxado.",
-      "example3": "Quero as manhãs livres todos os dias para poder dormir mais."
+      "body": "Quer uma manhã mais tranquila? Uma noite livre? A Luna pode reformular o fluxo do seu dia. Ela ajusta o ritmo e a estrutura para combinar com o tipo de dia que você realmente quer ter.",
+      "bullet1": "Tornar um dia agitado mais relaxado, ou um dia calmo mais ativo",
+      "bullet2": "Liberar um período específico para descanso ou planos próprios",
+      "bullet3": "Pedir à Luna para reorganizar as atividades do dia para um fluxo melhor",
+      "example1": "Deixe o Dia 2 mais relaxado",
+      "example2": "Deixe a noite livre no Dia 4",
+      "example3": "Quero uma manhã tranquila e uma tarde ativa"
     },
     "phases": {
       "heading": "Organizar as fases da viagem",
-      "body": "Para viagens mais longas, a Luna organiza seu roteiro em fases que cobrem diferentes locais ou temas. Você pode renomear as fases, reordená-las ou pedir à Luna que planeje cada uma separadamente.",
-      "example1": "Divida a viagem em uma fase em Tóquio e uma fase em Kyoto.",
-      "example2": "Renomeie a Fase 2 para 'O Litoral' e adicione mais dois dias a ela.",
-      "example3": "Gere o plano completo para a Fase 3."
+      "body": "Para viagens mais longas, seu roteiro é dividido em fases. Por exemplo, uma viagem de 14 dias pelo Japão pode ter fases como Tóquio, Kyoto e Osaka. Você pode renomear, dividir, mesclar ou reordenar essas fases para organizar sua viagem do jeito que preferir. Isso pode ser feito diretamente no roteiro ou conversando com a Luna.",
+      "bullet1": "Renomear uma fase para refletir o seu plano",
+      "bullet2": "Dividir uma fase longa em duas mais curtas",
+      "bullet3": "Mesclar fases que ficam melhor combinadas",
+      "bullet4": "Reordenar as fases para mudar o fluxo da viagem",
+      "example1": "Renomeie a primeira fase para Chegada e Exploração",
+      "example2": "Divida a fase de Kyoto em Templos e Natureza",
+      "example3": "Mova a fase de Osaka para antes de Kyoto",
+      "tipTitle": "Dica",
+      "tipBody": "Você também pode editar os nomes das fases e reordená-las diretamente no roteiro sem conversar com a Luna. As duas formas funcionam."
     },
     "explore": {
       "heading": "Explorar mais opções",
-      "body": "Não sabe o que fazer? Peça à Luna mais ideias para qualquer parte da sua viagem. Ela pode sugerir alternativas com base nos seus interesses, na região ou no que está disponível naquela época do ano.",
-      "example1": "O que mais posso fazer em Lisboa além do que já está no meu plano?",
-      "example2": "Me dê algumas opções fora do roteiro turístico para o Dia 6.",
-      "example3": "Quais são as melhores coisas para fazer em Chiang Mai em janeiro?"
+      "body": "Não sabe o que fazer? Peça à Luna alternativas ou novas ideias. Ela pode sugerir lugares próximos, descobertas especiais ou opções completamente diferentes para um período específico.",
+      "bullet1": "Pedir alternativas para qualquer atividade do seu plano",
+      "bullet2": "Descobrir locais fora do roteiro turístico e favoritos dos moradores",
+      "bullet3": "Obter ideias com base nos seus interesses: arte, natureza, gastronomia, aventura",
+      "example1": "O que mais posso fazer perto de Shibuya?",
+      "example2": "Me dê alternativas para essa tarde",
+      "example3": "Tem algum lugar especial perto do meu hotel?"
     },
     "learnMore": {
-      "heading": "Conhecer as atividades",
-      "body": "Peça à Luna mais detalhes sobre qualquer lugar, atividade ou atração do seu roteiro. Ela pode explicar o que esperar, quanto tempo passar lá, dicas para a visita e tudo mais que você quiser saber.",
-      "example1": "Me conte mais sobre a Sagrada Família. O que devo saber antes de ir?",
-      "example2": "Quanto tempo devo passar em Angkor Wat?",
-      "example3": "Vale a pena visitar o mercado de peixe de Tsukiji cedo pela manhã?"
+      "heading": "Saber mais sobre atividades",
+      "body": "Ficou curioso sobre um lugar do seu roteiro? Peça à Luna mais detalhes. Ela pode explicar o que é, por que foi recomendado, o que esperar e se vale a pena visitar.",
+      "example1": "Me conte mais sobre o TeamLab Planets",
+      "example2": "Esse lugar vale a pena visitar?",
+      "example3": "O que esperar no Senso-ji?",
+      "example4": "Quanto tempo devo ficar aqui?"
     },
     "food": {
-      "heading": "Gastronomia e restaurantes",
-      "body": "A Luna pode recomendar restaurantes específicos, comida de rua, mercados locais e experiências gastronômicas em qualquer ponto da sua viagem. Diga suas preferências e ela encontra algo que combina.",
-      "example1": "Adicione um ótimo restaurante de ramen ao Dia 2 em Tóquio.",
-      "example2": "Encontre um bar na cobertura para drinks na última noite em Bangkok.",
-      "example3": "Qual é a melhor comida local para experimentar na Cidade do México?"
+      "heading": "Sugestões de gastronomia e restaurantes",
+      "body": "A Luna pode recomendar restaurantes, cafés e comida de rua adaptados ao seu gosto. Seja um jantar romântico, um almoço econômico ou a melhor culinária local, é só pedir.",
+      "bullet1": "Culinárias específicas: local, japonesa, italiana, frutos do mar, vegana",
+      "bullet2": "Ocasiões: jantar romântico, adequado para famílias, almoço casual",
+      "bullet3": "Orçamento: opções acessíveis, intermediárias ou de alto padrão",
+      "example1": "Sugira um local romântico para jantar no Dia 3",
+      "example2": "Onde posso encontrar um bom ramen perto daqui?",
+      "example3": "Adicione um almoço econômico ao Dia 2"
     },
     "generalHelp": {
       "heading": "Ajuda geral de viagem",
-      "body": "A Luna pode responder perguntas sobre vistos, transporte, clima, moeda, segurança, costumes locais e logística prática para qualquer destino. Pergunte qualquer coisa que você normalmente pesquisaria antes de viajar.",
-      "example1": "Preciso de visto para o Japão se tiver passaporte australiano?",
-      "example2": "Qual é a melhor forma de ir do aeroporto ao centro de Bangkok?",
-      "example3": "O que devo levar na mala para uma viagem à Islândia no inverno?"
+      "body": "A Luna não é apenas uma planejadora. Ela é uma companheira de viagem com quem você pode tirar qualquer dúvida. Perguntas sobre destinos, logística, dicas culturais ou clima são todas bem-vindas.",
+      "example1": "Qual é a melhor época para visitar Kyoto?",
+      "example2": "Preciso de visto para o Japão?",
+      "example3": "O que devo levar para Bali em agosto?",
+      "example4": "Como faço para ir do aeroporto ao centro?"
     },
     "communication": {
-      "sectionLabel": "Como Falar com a Luna",
-      "heading": "Dicas de conversa",
-      "tip1Title": "Seja natural",
-      "tip1Body": "Fale com a Luna como falaria com um amigo que entende muito de viagens. Mensagens simples e conversacionais funcionam melhor. Não há necessidade de frases formais ou comandos.",
-      "tip2Title": "Seja específico quando importa",
-      "tip2Body": "Quanto mais contexto você der, melhor a Luna pode personalizar seu plano. Mencione seu estilo de viagem, orçamento, com quem vai viajar e o que você não pode perder.",
-      "tip3Title": "Faça perguntas de acompanhamento",
-      "tip3Body": "Se a Luna sugerir algo que você quer saber mais, é só perguntar. Ela mantém o contexto completo da sua viagem em mente durante toda a conversa.",
-      "tip4Title": "Solicite mudanças diretamente",
-      "tip4Body": "Você não precisa reformular as coisas com cuidado. Basta dizer o que quer mudar e a Luna vai descobrir como aplicar ao seu roteiro."
+      "sectionLabel": "Comunicação",
+      "heading": "Como Falar com a Luna",
+      "body": "Não há comandos especiais nem sintaxe específica. Fale com a Luna como você falaria com um amigo que é um excelente planejador de viagens.",
+      "step1Title": "Use linguagem natural",
+      "step1Body": "Escreva com suas próprias palavras. Frases completas, expressões informais ou pedidos rápidos funcionam igualmente bem.",
+      "step2Title": "Seja específico quando possível",
+      "step2Body": "Quanto mais detalhes você der, melhor a Luna pode atender às suas expectativas.",
+      "step3Title": "Faça perguntas de acompanhamento",
+      "step3Body": "A Luna lembra da conversa. Construa sobre o que ela sugere com perguntas adicionais.",
+      "exampleTitle": "Exemplo de conversa",
+      "youLabel": "Você:",
+      "lunaLabel": "Luna:",
+      "you1": "Pode deixar o Dia 4 mais tranquilo? Vou estar cansado de tanto caminhar.",
+      "luna1": "Entendido! Troquei o roteiro cheio do Shibuya por um dia mais calmo com cafés e jardins. Confira.",
+      "you2": "Perfeito, mas adicione um bom restaurante para o jantar dessa noite.",
+      "luna2": "Feito! Adicionei um restaurante de yakitori bem avaliado na região."
     },
     "tips": {
-      "sectionLabel": "Dicas para Melhores Resultados",
-      "heading": "Aproveite ao máximo a Luna",
-      "tip1": "Comece com seu destino, datas e uma breve descrição do seu estilo de viagem. Isso dá à Luna o suficiente para criar um bom rascunho inicial.",
-      "tip2": "Revise o roteiro após a geração e refine a partir daí. A Luna funciona melhor como parte de uma conversa iterativa.",
-      "tip3": "Se não gostar de uma sugestão, basta dizer. A Luna não vai repetir.",
-      "tip4": "Você pode aceitar ou rejeitar atividades individuais diretamente no roteiro, ou pedir à Luna para trocá-las.",
-      "tip5": "Para viagens longas, concentre-se em uma fase por vez. A Luna gera cada fase sob demanda.",
-      "tip6": "Salve sua viagem sempre que estiver satisfeito. Você pode voltar e continuar editando depois."
+      "sectionLabel": "Dicas Profissionais",
+      "heading": "Dicas para Melhores Resultados",
+      "body": "Aqui estão algumas coisas para ter em mente para aproveitar ao máximo a Luna.",
+      "tip1": "Comece de forma ampla e vá refinando. Deixe a Luna gerar um plano completo primeiro. Depois revise dia a dia e peça ajustes. Essa abordagem iterativa produz os melhores resultados.",
+      "tip2": "Diga suas preferências cedo. Estilo de viagem, ritmo, necessidades alimentares, interesses e com quem vai viajar ajudam a Luna a personalizar o plano desde o início.",
+      "tip3": "Não hesite em pedir mudanças. Não há limite para quantas vezes você pode modificar seu roteiro. A Luna foi criada exatamente para esse tipo de troca.",
+      "tip4": "Seja específico quando importa. Dizer \"Adicione algo divertido\" funciona, mas \"Adicione um bar na cobertura com vista perto de Shibuya\" dá muito mais contexto para a Luna trabalhar.",
+      "tip5": "Use a Luna durante todo o planejamento. Ela não é um gerador único. Volte sempre para refinar, tirar dúvidas ou explorar alternativas quando a inspiração surgir.",
+      "tip6": "Informe o dia específico. Ao adicionar ou mudar uma atividade, mencione o dia exato. Isso ajuda a Luna a colocá-la exatamente no lugar certo."
     },
     "footerCta": {
       "body": "Pronto para planejar sua próxima aventura? Abra sua viagem e comece a conversar com a Luna.",
-      "button": "Começar a Planejar"
+      "linkLabel": "www.lunaletsgo.com"
     }
   }
 }
