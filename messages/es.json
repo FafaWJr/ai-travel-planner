@@ -178,7 +178,7 @@
     "label": "FAQ",
     "title": "Preguntas Frecuentes",
     "q1": "Que es Luna Let's Go?",
-    "a1": "Luna Let's Go es un planificador de viajes con IA totalmente gratuito que crea itinerarios personalizados, dia a dia, en menos de 30 segundos. Le dices a Luna tu destino, las fechas de viaje, el tamano del grupo, el presupuesto y el estilo de viaje, y la IA construye un plan completo y detallado con actividades, sugerencias de alojamiento, opciones de transporte, estimaciones de costos y consejos locales.",
+    "a1": "Luna Let's Go es un planificador de viajes con IA totalmente gratuito que crea itinerarios personalizados, dia a dia, en aproximadamente 90 segundos. Le dices a Luna tu destino, las fechas de viaje, el tamano del grupo, el presupuesto y el estilo de viaje, y la IA construye un plan completo y detallado con actividades, sugerencias de alojamiento, opciones de transporte, estimaciones de costos y consejos locales.",
     "q2": "Como funciona el planificador de viajes con IA?",
     "a2": "Ingresa los detalles de tu viaje: destino, fechas, numero de viajeros, nivel de presupuesto y estilos preferidos (playa, aventura, cultura, familia, romance, etc.). La IA de Luna analiza tus preferencias y genera un itinerario personalizado completo con programa dia a dia, recomendaciones de hoteles, consejos de transporte, desglose del presupuesto y consejos practicos para tu destino.",
     "q3": "Es gratuito usar Luna Let's Go?",
@@ -188,7 +188,7 @@
     "q5": "Puede Luna planear viajes familiares con ninos?",
     "a5": "Por supuesto. Puedes especificar las edades de tus hijos, y Luna adapta todas las actividades para que sean apropiadas para la edad y amigables para la familia, ajustando el ritmo, los tipos de actividades y las recomendaciones de alojamiento para familias que viajan con ninos.",
     "q6": "¿Cuánto tiempo tarda en generar un itinerario de viaje?",
-    "a6": "Luna genera un itinerario de viaje completo y detallado en menos de 30 segundos. El plan incluye programa día a día, opciones de alojamiento, consejos de transporte, desglose del presupuesto y consejos locales, todo personalizado para tu viaje.",
+    "a6": "Luna genera un itinerario de viaje completo y detallado en aproximadamente 90 segundos. El plan incluye programa día a día, opciones de alojamiento, consejos de transporte, desglose del presupuesto y consejos locales, todo personalizado para tu viaje.",
     "q7": "¿Puedo planear un viaje con amigos o familia?",
     "a7": "Sí. Después de generar tu itinerario, puedes compartirlo con un enlace. Tu grupo de viaje puede unirse y editar el mismo plan en tiempo real. Cada persona también puede hablar con Luna individualmente. Funciona para hasta 10 colaboradores.",
     "q8": "¿En qué se diferencia Luna de ChatGPT u otras herramientas de IA?",
@@ -212,8 +212,8 @@
     "howToUseLuna": "Como Usar Luna"
   },
   "start": {
-    "title": "Planea tu viaje perfecto",
-    "subtitle": "Completa los detalles y Luna creará tu itinerario personalizado en menos de 30 segundos.",
+    "title": "Cuéntale a Luna sobre tu viaje",
+    "subtitle": "Comparte algunos detalles y Luna creará un itinerario personalizado solo para ti.",
     "step1": "Dónde y Cuándo",
     "step2": "Estilo de Viaje",
     "step3": "Presupuesto y Viaje",
@@ -689,7 +689,7 @@
     "nextPhoto": "Foto siguiente",
     "photoN": "Foto {n}",
     "ctaH2": "¿Listo para planear tu próxima aventura?",
-    "ctaSubtitle": "Únete a miles de viajeros que dejan que Luna diseñe su viaje perfecto en 30 segundos.",
+    "ctaSubtitle": "Únete a miles de viajeros que dejan que Luna diseñe su viaje perfecto en aproximadamente 90 segundos.",
     "ctaBtn": "Planear mi viaje ahora",
     "stats": {
       "stat1": "Para generar tu plan completo",
@@ -699,7 +699,7 @@
     },
     "features": {
       "feature1": {
-        "title": "Viaje completo en 30 segundos",
+        "title": "Viaje completo en ~90 segundos",
         "desc": "Dinos a dónde vas y Luna crea un plan completo y personalizado casi al instante. Sin pestañas infinitas, sin guías genéricos."
       },
       "feature2": {
@@ -821,8 +821,8 @@
     "loading": "Cargando tu plan...",
     "noPrompt": "No se proporcionó ningún destino.",
     "startPlanning": "Empezar a planificar",
-    "crafting": "Creando tu viaje perfecto...",
-    "usuallyTakes": "Esto suele tardar unos 30 segundos",
+    "crafting": "Luna está preparando tu viaje...",
+    "usuallyTakes": "Esto no tardará mucho",
     "newTrip": "Nuevo viaje",
     "shareRequiresSave": "Tu viaje debe guardarse antes de compartir. ¿Guardar ahora?",
     "timeOfDay": {

@@ -178,7 +178,7 @@
     "label": "FAQ",
     "title": "Frequently Asked Questions",
     "q1": "What is Luna Let's Go?",
-    "a1": "Luna Let's Go is a free AI travel planner that creates personalised, day-by-day trip itineraries in under 30 seconds. You tell Luna your destination, travel dates, group size, budget, and travel style, and the AI builds a complete, detailed plan including activities, accommodation suggestions, getting around, budget estimates, and local tips.",
+    "a1": "Luna Let's Go is a free AI travel planner that creates personalised, day-by-day trip itineraries in about 90 seconds. You tell Luna your destination, travel dates, group size, budget, and travel style, and the AI builds a complete, detailed plan including activities, accommodation suggestions, getting around, budget estimates, and local tips.",
     "q2": "How does the AI travel planner work?",
     "a2": "Enter your trip details: destination, travel dates, number of travellers, budget level, and preferred travel styles (beach, adventure, culture, family, romance, etc.). Luna's AI analyses your preferences and generates a complete personalised itinerary with a day-by-day schedule, hotel recommendations, transport tips, a budget breakdown, and practical advice for your destination.",
     "q3": "Is Luna Let's Go free to use?",
@@ -188,7 +188,7 @@
     "q5": "Can Luna plan family trips with children?",
     "a5": "Absolutely. You can specify the ages of your children, and Luna tailors all activities to be age-appropriate and family-friendly, adjusting the pace, activity types, and accommodation recommendations to suit families travelling with kids.",
     "q6": "How long does it take to generate a travel itinerary?",
-    "a6": "Luna generates a complete, detailed travel itinerary in under 30 seconds. The plan includes a day-by-day schedule, accommodation options, transport advice, budget breakdown, and local tips, all personalised to your trip.",
+    "a6": "Luna generates a complete, detailed travel itinerary in about 90 seconds. The plan includes a day-by-day schedule, accommodation options, transport advice, budget breakdown, and local tips, all personalised to your trip.",
     "q7": "Can I plan a trip with friends or family?",
     "a7": "Yes. After generating your itinerary, you can share it with a link. Your travel group can join and edit the same plan in real time. Each person can also chat with Luna individually. It works for up to 10 collaborators.",
     "q8": "How is Luna different from ChatGPT or other AI tools?",
@@ -212,8 +212,8 @@
     "howToUseLuna": "How to Use Luna"
   },
   "start": {
-    "title": "Plan your perfect trip",
-    "subtitle": "Fill in the details and Luna will build your personalised itinerary in under 30 seconds.",
+    "title": "Tell Luna about your trip",
+    "subtitle": "Share a few details and Luna will craft a personalised itinerary just for you.",
     "step1": "Where & When",
     "step2": "Travel Style",
     "step3": "Budget & Trip",
@@ -689,7 +689,7 @@
     "nextPhoto": "Next photo",
     "photoN": "Photo {n}",
     "ctaH2": "Ready to plan your next adventure?",
-    "ctaSubtitle": "Join thousands of travellers who let Luna craft their perfect trip in 30 seconds flat.",
+    "ctaSubtitle": "Join thousands of travellers who let Luna craft their perfect trip in about 90 seconds.",
     "ctaBtn": "Plan my trip now",
     "stats": {
       "stat1": "To generate your full plan",
@@ -699,7 +699,7 @@
     },
     "features": {
       "feature1": {
-        "title": "Full trip in 30 seconds",
+        "title": "Full trip in ~90 seconds",
         "desc": "Tell us where you are going and Luna crafts a complete, personalised plan almost instantly. No endless tabs, no generic guides."
       },
       "feature2": {
@@ -821,8 +821,8 @@
     "loading": "Loading your plan...",
     "noPrompt": "No trip prompt provided.",
     "startPlanning": "Start planning",
-    "crafting": "Crafting your perfect trip...",
-    "usuallyTakes": "This usually takes about 30 seconds",
+    "crafting": "Luna is building your trip...",
+    "usuallyTakes": "Sit tight, this won't take long",
     "newTrip": "New trip",
     "shareRequiresSave": "Your trip needs to be saved before sharing. Save now?",
     "timeOfDay": {

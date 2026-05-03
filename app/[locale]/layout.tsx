@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     template: '%s | Luna Let\'s Go',
   },
   description:
-    'Luna Let\'s Go is the AI travel planner that creates personalised, day-by-day itineraries tailored to your style, budget, group, and dates — in under 30 seconds. Plan trips solo or invite friends and family for real-time collaborative planning. Beach trips, city breaks, family holidays, adventure travel, and more.',
+    'Luna Let\'s Go is the AI travel planner that creates personalised, day-by-day itineraries tailored to your style, budget, group, and dates — in about 90 seconds. Plan trips solo or invite friends and family for real-time collaborative planning. Beach trips, city breaks, family holidays, adventure travel, and more.',
 
   keywords: [
     'AI travel planner',
@@ -77,7 +77,7 @@ export const metadata: Metadata = {
     siteName: 'Luna Let\'s Go',
     title: 'Luna Let\'s Go — AI Travel Planner | Personalised Itineraries in Seconds',
     description:
-      'Get a detailed, personalised travel itinerary in under 30 seconds. Tell Luna your destination, dates, style, and budget — and she builds your perfect trip.',
+      'Get a detailed, personalised travel itinerary in about 90 seconds. Tell Luna your destination, dates, style, and budget — and she builds your perfect trip.',
     images: [
       {
         url: '/lunaletsgo-logo.jpeg',
@@ -93,7 +93,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Luna Let\'s Go — AI Travel Planner',
     description:
-      'Personalised day-by-day itineraries in under 30 seconds. Tailored to your style, budget, and group. Try it free.',
+      'Personalised day-by-day itineraries in about 90 seconds. Tailored to your style, budget, and group. Try it free.',
     images: ['/lunaletsgo-logo.jpeg'],
     creator: '@lunaletsgo',
     site: '@lunaletsgo',
@@ -177,7 +177,7 @@ export default async function LocaleLayout({
         applicationCategory: 'TravelApplication',
         operatingSystem: 'Web',
         description:
-          "AI travel planner that generates personalised day-by-day itineraries in under 30 seconds. Covers flights, hotels, activities, budget, and local tips — all tailored to the traveller's preferences.",
+          "AI travel planner that generates personalised day-by-day itineraries in about 90 seconds. Covers flights, hotels, activities, budget, and local tips — all tailored to the traveller's preferences.",
         offers: {
           '@type': 'Offer',
           price: '0',
@@ -209,7 +209,7 @@ export default async function LocaleLayout({
             name: 'What is Luna Let\'s Go?',
             acceptedAnswer: {
               '@type': 'Answer',
-              text: "Luna Let's Go is a free AI travel planner that creates personalised, day-by-day trip itineraries in under 30 seconds. You tell Luna your destination, travel dates, group size, budget, and travel style — and the AI builds a complete, detailed plan including activities, accommodation suggestions, getting around, budget estimates, and local tips.",
+              text: "Luna Let's Go is a free AI travel planner that creates personalised, day-by-day trip itineraries in about 90 seconds. You tell Luna your destination, travel dates, group size, budget, and travel style — and the AI builds a complete, detailed plan including activities, accommodation suggestions, getting around, budget estimates, and local tips.",
             },
           },
           {
@@ -249,7 +249,7 @@ export default async function LocaleLayout({
             name: 'How quickly does Luna generate a travel itinerary?',
             acceptedAnswer: {
               '@type': 'Answer',
-              text: "Luna generates a complete, detailed travel itinerary in under 30 seconds. The plan includes a day-by-day schedule, accommodation options, transport advice, budget breakdown, and local tips — all personalised to your trip.",
+              text: "Luna generates a complete, detailed travel itinerary in about 90 seconds. The plan includes a day-by-day schedule, accommodation options, transport advice, budget breakdown, and local tips — all personalised to your trip.",
             },
           },
           {
