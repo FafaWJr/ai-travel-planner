@@ -57,26 +57,58 @@ type ActivityObject = {
   category?: unknown;
 };
 
+function formatDurationHint(minutes: number): string {
+  if (minutes < 60) return `~${minutes} min`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (m === 0) return `~${h} hour${h > 1 ? 's' : ''}`;
+  return `~${h}h ${m}min`;
+}
+
+const MEAL_CONTEXT_WORDS = [
+  'restaurant', 'cafe', 'coffee', 'bar', 'bistro', 'brasserie', 'bakery',
+  'diner', 'ramen', 'sushi', 'tapas', 'grill', 'kitchen', 'eatery',
+  'lunch', 'dinner', 'breakfast', 'brunch', 'market', 'stall', 'food',
+  'izakaya', 'trattoria', 'pizzeria', 'pub', 'tavern', 'cantina',
+];
+
+function getMealPrefix(name: string, category: string, timeSlot?: string): string {
+  if (category !== 'food') return '';
+  const lower = name.toLowerCase();
+  if (MEAL_CONTEXT_WORDS.some(w => lower.includes(w))) return '';
+  switch (timeSlot) {
+    case 'morning':   return 'Breakfast at ';
+    case 'afternoon': return 'Lunch at ';
+    case 'evening':   return 'Dinner at ';
+    case 'night':     return 'Late-night eats at ';
+    default:          return '';
+  }
+}
+
 /**
- * Convert a v2 activity object to a rich display string.
- * Format: "Name (Location) - Description"
- * Falls back to "Name (Location)" when description is absent.
- * Falls back to "Name" when location is also absent.
- *
- * The description is appended inline because the rendering pipeline uses
- * plain strings (Approach A). Structured activity objects (Approach B) with
- * separate description/category/duration fields are a future enhancement
- * once the rendering pipeline supports them.
+ * Convert a v2 activity object to a multi-part display string.
+ * Format: "Title\nDescription\nDuration" joined by newlines so the
+ * rendering component can split and style each part separately.
+ * Falls back gracefully when description or duration are absent.
+ * The timeSlot parameter enables food-meal prefix logic.
  */
-function activityObjectToString(obj: ActivityObject): string {
-  const name = typeof obj.activity    === 'string' ? obj.activity.trim()    : '';
-  const loc  = typeof obj.location    === 'string' ? obj.location.trim()    : '';
-  const desc = typeof obj.description === 'string' ? obj.description.trim() : '';
+function activityObjectToString(obj: ActivityObject, timeSlot?: string): string {
+  const name     = typeof obj.activity        === 'string' ? obj.activity.trim()    : '';
+  const loc      = typeof obj.location        === 'string' ? obj.location.trim()    : '';
+  const desc     = typeof obj.description     === 'string' ? obj.description.trim() : '';
+  const duration = typeof obj.durationMinutes === 'number' ? obj.durationMinutes    : 0;
+  const category = typeof obj.category        === 'string' ? obj.category           : '';
 
   if (!name) return '';
 
-  const base = loc ? `${name} (${loc})` : name;
-  return desc ? `${base} - ${desc}` : base;
+  const prefix = getMealPrefix(name, category, timeSlot);
+  const title  = loc ? `${prefix}${name} (${loc})` : `${prefix}${name}`;
+
+  const parts: string[] = [title];
+  if (desc) parts.push(desc);
+  if (duration > 0) parts.push(formatDurationHint(duration));
+
+  return parts.join('\n');
 }
 
 /**
@@ -97,12 +129,12 @@ export function normalizeDefineDayInput(
 
     const slots = (raw.slots && typeof raw.slots === 'object') ? (raw.slots as Record<string, unknown>) : {};
 
-    const slotToStrings = (val: unknown): string[] => {
+    const slotToStrings = (val: unknown, slot: string): string[] => {
       if (!Array.isArray(val)) return [];
       return (val as unknown[])
         .map(item => {
           if (typeof item === 'string') return item.trim();
-          if (item && typeof item === 'object') return activityObjectToString(item as ActivityObject);
+          if (item && typeof item === 'object') return activityObjectToString(item as ActivityObject, slot);
           return '';
         })
         .filter(Boolean);
@@ -111,10 +143,10 @@ export function normalizeDefineDayInput(
     return {
       day,
       title,
-      morning:   slotToStrings(slots.morning),
-      afternoon: slotToStrings(slots.afternoon),
-      evening:   slotToStrings(slots.evening),
-      night:     slotToStrings(slots.night),
+      morning:   slotToStrings(slots.morning,   'morning'),
+      afternoon: slotToStrings(slots.afternoon, 'afternoon'),
+      evening:   slotToStrings(slots.evening,   'evening'),
+      night:     slotToStrings(slots.night,     'night'),
       phase_id:  typeof raw.phase_id === 'string' ? raw.phase_id : undefined,
     };
   }

@@ -750,32 +750,27 @@ OUTPUT RULES:
    Every activity in a define_day call must include:
    - activity: A specific name. "Senso-ji Temple" not "visit a temple". "Tsukiji Outer Market" not "explore a market".
    - location: The neighbourhood or area. "Asakusa" not "Tokyo".
-   - description: 1-2 sentences explaining what makes this worth doing and any practical tips. Mention what the traveller will see, taste, or experience.
+   - description: ONE sentence naming what makes this worth doing. State the type of place, the key experience, and what sets it apart. Never empty.
    - durationMinutes: Realistic estimate. Round to nearest 15 minutes.
    - category: One of: sightseeing, food, culture, nature, adventure, shopping, nightlife, wellness, transport-experience, accommodation
 
    DESCRIPTION QUALITY RULES:
-   - Every activity MUST include a description. Never emit an activity with an empty or missing description.
-   - The description must clearly communicate:
-     - WHAT the place is (restaurant, cafe, bar, temple, museum, market, beach, park, trail, etc.)
-     - WHY it is recommended for this traveller (matches their style, locally famous, seasonal opportunity, etc.)
-     - WHAT makes it special (signature dish, unique architecture, best views, hidden gem, etc.)
-   - For food and drink places: the description MUST state the type (restaurant, cafe, bar, street food stall, bakery, food market) and mention at least one specific dish, cuisine, or food experience.
-   - For sightseeing and culture: the description MUST mention what the traveller will actually see or experience.
-   - Avoid generic phrases: "nice place", "great spot", "worth visiting", "popular destination", "must-see" are banned. Be specific about what makes THIS place worth the traveller's time.
-   - Descriptions should be 1-2 sentences. Not a paragraph. Not three words. One to two clear, specific sentences.
+   - Maximum ONE sentence. If you want to write two sentences, join them with a comma or "and" into one. Never emit an empty description.
+   - For food and drink: name the type (cafe, bar, street stall, izakaya, trattoria) and at least one specific dish, drink, or cuisine.
+   - For sightseeing and culture: say what the traveller will see or experience, not just that the place exists.
+   - Banned words: "nice", "great", "popular", "worth visiting", "must-see", "hidden gem". Be specific instead.
 
-   GOOD DESCRIPTIONS:
-   - "Iconic neighborhood sandwich bar open since 1956. Order the crab and cream cheese combo at the counter, a Copacabana institution."
-   - "Edo-period Buddhist temple with a towering 5-story pagoda. Best visited before 9am when morning light hits the vermillion gates and crowds are thin."
-   - "Rooftop cocktail bar on the 52nd floor with floor-to-ceiling views of the harbour. Known for its Japanese whisky collection."
+   GOOD (one sentence, specific):
+   - "Iconic neighbourhood sandwich counter open since 1956, famous for the crab and cream cheese combo at the bar."
+   - "Edo-period Buddhist temple with a towering 5-story pagoda, best before 9am when morning light hits the vermillion gates."
+   - "52nd-floor rooftop bar with unobstructed harbour views and one of the city's best Japanese whisky collections."
 
-   BAD DESCRIPTIONS (never write these):
-   - "Great restaurant" (what cuisine? what dish? why here?)
+   BAD (never write these):
+   - "Great restaurant" (what food? what dish? why here?)
    - "Nice bar" (what kind? what view? what drink?)
-   - "Famous temple" (famous for what? what will I see?)
-   - "Popular with locals" (doing what? eating what? why should I care?)
-   - "" (empty, unacceptable)
+   - "Famous temple worth visiting" (banned words, no specifics)
+   - "Popular izakaya near the station. Try the karaage." (two sentences -- merge: "Neighbourhood izakaya near the station, known for its crispy karaage chicken.")
+   - "" (empty, never acceptable)
 
 4. TRANSPORT-AS-EXPERIENCE
    The only time transport appears as an activity is when the journey itself is the experience:

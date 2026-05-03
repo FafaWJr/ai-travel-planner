@@ -1859,7 +1859,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
               boxShadow: '0 8px 28px rgba(0,68,123,0.18)',
               fontFamily: "'Inter',sans-serif", fontSize: 13, lineHeight: 1.65, color: '#333',
             }}
-              dangerouslySetInnerHTML={{ __html: inlineMd(activeActivity.text) }}
+              dangerouslySetInnerHTML={{ __html: inlineMd(activeActivity.text.split('\n')[0]) }}
             />
           )}
         </DragOverlay>
@@ -1879,6 +1879,38 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
 });
 
 export default EditableItinerary;
+
+/* ─── renderActivityParts ───────────────────────────────────── */
+function renderActivityParts(text: string, declined: boolean) {
+  const parts = text.split('\n');
+  const pStyle = {
+    fontFamily: "'Inter',sans-serif",
+    fontSize: 13,
+    lineHeight: 1.65,
+    color: '#333',
+    margin: 0,
+    textDecoration: declined ? 'line-through' : 'none',
+  } as const;
+  if (parts.length < 2) {
+    return <p style={pStyle} dangerouslySetInnerHTML={{ __html: inlineMd(text) }} />;
+  }
+  const [title, description, duration] = parts;
+  return (
+    <p style={pStyle}>
+      <span dangerouslySetInnerHTML={{ __html: inlineMd(title) }} />
+      {description && (
+        <span style={{ display: 'block', color: '#555', fontSize: '0.85em', marginTop: 2 }}>
+          {description}
+        </span>
+      )}
+      {duration && (
+        <span style={{ display: 'block', color: '#6C6D6F', fontSize: '0.78em', marginTop: 2 }}>
+          {duration}
+        </span>
+      )}
+    </p>
+  );
+}
 
 /* ─── TimeSlotSection ────────────────────────────────────────── */
 function TimeSlotSection({
@@ -2040,10 +2072,7 @@ function SortableActivityItem({
 
         {/* Text */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p
-            style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, lineHeight: 1.65, color: '#333', margin: 0, textDecoration: act.status === 'declined' ? 'line-through' : 'none' }}
-            dangerouslySetInnerHTML={{ __html: inlineMd(act.text) }}
-          />
+          {renderActivityParts(act.text, act.status === 'declined')}
           {act.manuallyAdded && (
             <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 10, color: '#FF8210', fontWeight: 600, letterSpacing: 0.3 }}>✦ {t('activity.addedByYou')}</span>
           )}
