@@ -15,6 +15,9 @@ export default function HomePage() {
   const tQuiz = useTranslations('quiz');
   const tFaq = useTranslations('faq');
   const tCta = useTranslations('finalCta');
+  const tPS = useTranslations('proofStrip');
+  const tTL = useTranslations('talkToLuna');
+  const tWL = useTranslations('whyLuna');
 
   const carouselRef = useRef<HTMLDivElement>(null);
   const autoPlayRef = useRef<NodeJS.Timeout | null>(null);
@@ -94,10 +97,18 @@ export default function HomePage() {
         .hero-pill.orange .pill-title{color:#FF8210}
         .hero-pill .pill-sub{font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;color:white;margin-top:2px}
         .hero-pill.orange .pill-sub{color:white}
-        .btn-letsgo{background:var(--orange);color:white;border:none;border-radius:50px;padding:18px 56px;font-family:'Poppins',sans-serif;font-size:18px;font-weight:500;cursor:pointer;letter-spacing:0.02em;display:inline-block;text-decoration:none;transition:background .2s;margin-bottom:48px}
+        .btn-letsgo{background:var(--orange);color:white;border:none;border-radius:50px;padding:18px 56px;font-family:'Poppins',sans-serif;font-size:18px;font-weight:500;cursor:pointer;letter-spacing:0.02em;display:inline-block;text-decoration:none;transition:background .2s;margin-bottom:10px}
         .btn-letsgo:hover{background:#e06e00}
+        .hero-microcopy{font-family:'Lato',sans-serif;font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:32px}
         .see-more{color:rgba(255,255,255,0.4);font-family:'Lato',sans-serif;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px}
         .see-more-arrow{color:rgba(255,255,255,0.4);font-size:22px;line-height:1}
+        /* PROOF STRIP */
+        .proof-strip{background:var(--bg-soft);border-top:1px solid rgba(0,68,123,0.08);border-bottom:1px solid rgba(0,68,123,0.08)}
+        .proof-inner{max-width:900px;margin:0 auto;padding:36px 40px;text-align:center}
+        .proof-headline{font-family:'Lato',sans-serif;font-size:15px;font-weight:400;color:var(--gray-dark);margin-bottom:24px}
+        .proof-stats{display:flex;justify-content:center;gap:48px;flex-wrap:wrap}
+        .proof-stat-num{font-family:'Poppins',sans-serif;font-size:32px;font-weight:700;color:var(--navy);line-height:1}
+        .proof-stat-label{font-family:'Lato',sans-serif;font-size:13px;font-weight:400;color:var(--gray-dark);margin-top:4px}
         /* SECTION COMMON */
         .section{padding:80px 60px}
         .section-label{font-family:'Lato',sans-serif;font-size:12px;font-weight:700;color:var(--orange);letter-spacing:0.12em;text-transform:uppercase;border-bottom:2px solid var(--orange);display:inline-block;padding-bottom:3px;margin-bottom:16px}
@@ -116,6 +127,9 @@ export default function HomePage() {
         .features{background:white}
         .features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:52px}
         .feat-card{background:var(--bg-soft);border-radius:14px;padding:28px 24px;border:0.5px solid rgba(0,68,123,0.06)}
+        .feat-card.highlight{background:var(--navy);border-color:var(--navy)}
+        .feat-card.highlight h3{color:white}
+        .feat-card.highlight p{color:rgba(255,255,255,0.7)}
         .feat-icon{width:44px;height:44px;margin-bottom:14px}
         .feat-card h3{font-size:18px;font-weight:600;color:var(--navy);margin-bottom:8px}
         .feat-card p{font-family:'Lato',sans-serif;font-size:14px;font-weight:400;color:var(--gray-dark);line-height:1.6}
@@ -149,11 +163,42 @@ export default function HomePage() {
         .btn-letsgo-white{background:var(--orange);color:white;border:none;border-radius:50px;padding:16px 44px;font-family:'Poppins',sans-serif;font-size:16px;font-weight:500;cursor:pointer;display:inline-block;text-decoration:none;margin-top:32px;transition:background .2s}
         .btn-letsgo-white:hover{background:#e06e00}
         /* PLAN TOGETHER */
-        .plan-together{background:var(--bg-navy-tint);text-align:center}
-        .plan-together-inner{max-width:680px;margin:0 auto}
-        .plan-together-icon{width:64px;height:64px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;margin:0 auto 28px}
-        .btn-plan-together{background:var(--orange);color:white;border:none;border-radius:50px;padding:16px 44px;font-family:'Poppins',sans-serif;font-size:17px;font-weight:500;cursor:pointer;display:inline-block;text-decoration:none;margin-top:32px;transition:background .2s}
+        .plan-together{background:var(--bg-navy-tint)}
+        .pt-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;margin-top:36px}
+        .pt-points{display:flex;flex-direction:column;gap:18px;margin-top:16px}
+        .pt-point{display:flex;gap:14px;align-items:flex-start}
+        .pt-num{width:28px;height:28px;border-radius:50%;background:var(--navy);color:white;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .pt-point p{font-family:'Lato',sans-serif;font-size:15px;color:var(--gray-dark);line-height:1.6;margin:0}
+        .pt-point strong{color:var(--navy)}
+        .pt-visual{background:white;border-radius:16px;padding:24px;border:0.5px solid rgba(0,68,123,0.1)}
+        .pt-avatar{width:36px;height:36px;border-radius:50%;border:2.5px solid white;display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;color:white;margin-left:-8px}
+        .pt-avatar:first-child{margin-left:0}
+        .pt-live{display:inline-flex;align-items:center;gap:6px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:20px;padding:4px 12px}
+        .pt-live-dot{width:6px;height:6px;border-radius:50%;background:#10b981}
+        .pt-live span{font-family:'Lato',sans-serif;font-size:12px;font-weight:700;color:#10b981}
+        .pt-activity{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;background:var(--bg-soft);margin-bottom:8px;font-family:'Lato',sans-serif;font-size:13px;color:var(--gray-dark)}
+        .pt-activity-badge{font-family:'Lato',sans-serif;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;margin-left:auto;white-space:nowrap}
+        .btn-plan-together{background:var(--orange);color:white;border:none;border-radius:50px;padding:14px 40px;font-family:'Poppins',sans-serif;font-size:16px;font-weight:500;cursor:pointer;display:inline-block;text-decoration:none;margin-top:28px;transition:background .2s}
         .btn-plan-together:hover{background:#e06e00}
+        /* TALK TO LUNA */
+        .talk-luna{background:white}
+        .prompts-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:32px}
+        .prompt-card{background:var(--bg-navy-tint);border-radius:14px;padding:18px 20px;font-family:'Lato',sans-serif;font-size:14px;color:var(--navy);line-height:1.5;border:1px solid rgba(0,68,123,0.08)}
+        .prompt-card::before{content:'"';font-family:'Poppins',sans-serif;font-size:28px;font-weight:700;color:var(--orange);line-height:1;display:block;margin-bottom:4px}
+        .tip-card{background:#FFF8F0;border-radius:14px;border:1.5px solid rgba(255,130,16,0.2);padding:20px 24px;margin-top:24px;max-width:660px}
+        .tip-card-title{font-family:'Poppins',sans-serif;font-size:14px;font-weight:600;color:var(--orange);margin-bottom:6px}
+        .tip-card p{font-family:'Lato',sans-serif;font-size:14px;color:var(--gray-dark);line-height:1.6}
+        /* DIFFERENTIATION */
+        .diff{background:var(--bg-soft)}
+        .diff-table{width:100%;border-collapse:separate;border-spacing:0;margin-top:40px;border-radius:14px;overflow:hidden;border:1px solid rgba(0,68,123,0.08);background:white}
+        .diff-table th{font-family:'Poppins',sans-serif;font-size:14px;font-weight:600;padding:18px 24px;text-align:left}
+        .diff-table th:first-child{background:white;color:var(--gray-dark);width:180px}
+        .diff-table th:nth-child(2){background:var(--navy);color:white}
+        .diff-table th:nth-child(3){background:#f0f0f0;color:var(--gray-dark)}
+        .diff-table td{font-family:'Lato',sans-serif;font-size:14px;padding:16px 24px;border-top:1px solid rgba(0,68,123,0.08);vertical-align:top;line-height:1.55}
+        .diff-table td:first-child{font-family:'Poppins',sans-serif;font-weight:600;color:var(--navy);font-size:13px}
+        .diff-table td:nth-child(2){color:var(--navy);background:rgba(0,68,123,0.02)}
+        .diff-table td:nth-child(3){color:#888}
         /* TRIP IDEAS */
         .trip-ideas{background:white}
         .ideas-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:52px}
@@ -205,16 +250,24 @@ export default function HomePage() {
           .meet-luna{padding:60px 24px}
           .meet-luna-inner{grid-template-columns:1fr;gap:32px}
           .luna-avatar-wrap img{height:280px}
+          .pt-grid{grid-template-columns:1fr;gap:28px}
+          .prompts-grid{grid-template-columns:1fr 1fr}
+          .diff-table{font-size:12px}
+          .diff-table th,.diff-table td{padding:12px 14px}
           .ideas-grid{grid-template-columns:1fr 1fr}
           .final-cta{padding:60px 24px}
           .final-cta h2{font-size:36px}
           footer{padding:48px 24px 24px}
           .footer-grid{grid-template-columns:1fr 1fr;gap:28px}
+          .proof-inner{padding:28px 24px}
+          .proof-stats{gap:28px}
         }
         @media(max-width:540px){
           .hero-title{font-size:36px;letter-spacing:-1px}
           .features-grid{grid-template-columns:1fr}
           .persona-cards{flex-direction:column;align-items:center}
+          .prompts-grid{grid-template-columns:1fr}
+          .proof-stats{flex-direction:column;gap:20px}
         }
         /* CAROUSEL */
         .ideas-carousel-wrap{position:relative;margin-top:52px}
@@ -269,12 +322,34 @@ export default function HomePage() {
             </div>
           </div>
           <Link href="/start" className="btn-letsgo">{tHero('cta')} &rarr;</Link>
-          <div style={{ cursor: 'pointer' }} onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}>
+          <p className="hero-microcopy">{tHero('microCopy')}</p>
+          <div style={{ cursor: 'pointer' }} onClick={() => document.getElementById('proof-strip')?.scrollIntoView({ behavior: 'smooth' })}>
             <div className="see-more">{tHero('seeMore')}</div>
             <div className="see-more-arrow">↓</div>
           </div>
         </div>
       </section>
+
+      {/* SOCIAL PROOF STRIP */}
+      <div className="proof-strip" id="proof-strip">
+        <div className="proof-inner">
+          <p className="proof-headline">{tPS('headline')}</p>
+          <div className="proof-stats">
+            <div style={{textAlign:'center'}}>
+              <div className="proof-stat-num">{tPS('stat1Num')}</div>
+              <div className="proof-stat-label">{tPS('stat1Label')}</div>
+            </div>
+            <div style={{textAlign:'center'}}>
+              <div className="proof-stat-num">{tPS('stat2Num')}</div>
+              <div className="proof-stat-label">{tPS('stat2Label')}</div>
+            </div>
+            <div style={{textAlign:'center'}}>
+              <div className="proof-stat-num">{tPS('stat3Num')}</div>
+              <div className="proof-stat-label">{tPS('stat3Label')}</div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* HOW IT WORKS */}
       <section className="section how" id="how-it-works">
@@ -306,6 +381,8 @@ export default function HomePage() {
         <h2 className="section-title">{tFeat('title')}</h2>
         <p className="section-sub">{tFeat('subtitle')}</p>
         <div className="features-grid">
+
+          {/* 1 - Personalised itineraries */}
           <div className="feat-card">
             <svg className="feat-icon" viewBox="0 0 44 44" fill="none">
               <rect width="44" height="44" rx="10" fill="#EEF4FB" />
@@ -314,9 +391,33 @@ export default function HomePage() {
               <line x1="16" y1="20" x2="28" y2="20" stroke="#00447B" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.4" />
               <line x1="16" y1="24" x2="22" y2="24" stroke="#00447B" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.4" />
             </svg>
-            <h3>{tFeat('itineraryTitle')}</h3>
-            <p>{tFeat('itineraryBody')}</p>
+            <h3>{tFeat('personalisedTitle')}</h3>
+            <p>{tFeat('personalisedBody')}</p>
           </div>
+
+          {/* 2 - Smart pacing */}
+          <div className="feat-card">
+            <svg className="feat-icon" viewBox="0 0 44 44" fill="none">
+              <rect width="44" height="44" rx="10" fill="#FFF5EC" />
+              <circle cx="22" cy="22" r="10" stroke="#FF8210" strokeWidth="1.5" />
+              <path d="M22 16v6l4 2" stroke="#FF8210" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+            <h3>{tFeat('pacingTitle')}</h3>
+            <p>{tFeat('pacingBody')}</p>
+          </div>
+
+          {/* 3 - Add, swap, remove */}
+          <div className="feat-card">
+            <svg className="feat-icon" viewBox="0 0 44 44" fill="none">
+              <rect width="44" height="44" rx="10" fill="#EEF4FB" />
+              <path d="M16 22h12M22 16v12" stroke="#00447B" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M14 28l3 3 5-5" stroke="#FF8210" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <h3>{tFeat('editingTitle')}</h3>
+            <p>{tFeat('editingBody')}</p>
+          </div>
+
+          {/* 4 - Hotel suggestions */}
           <div className="feat-card">
             <svg className="feat-icon" viewBox="0 0 44 44" fill="none">
               <rect width="44" height="44" rx="10" fill="#FFF5EC" />
@@ -327,29 +428,8 @@ export default function HomePage() {
             <h3>{tFeat('hotelsTitle')}</h3>
             <p>{tFeat('hotelsBody')}</p>
           </div>
-          <div className="feat-card">
-            <svg className="feat-icon" viewBox="0 0 44 44" fill="none">
-              <rect width="44" height="44" rx="10" fill="#EEF4FB" />
-              <circle cx="22" cy="20" r="8" stroke="#00447B" strokeWidth="1.5" />
-              <path d="M18 20c0-2.2 1.8-4 4-4" stroke="#FF8210" strokeWidth="1.5" strokeLinecap="round" />
-              <path d="M22 32v2" stroke="#00447B" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.4" />
-              <path d="M14 22l-2 2" stroke="#00447B" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.4" />
-              <path d="M30 22l2 2" stroke="#00447B" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.4" />
-            </svg>
-            <h3>{tFeat('weatherTitle')}</h3>
-            <p>{tFeat('weatherBody')}</p>
-          </div>
-          <div className="feat-card">
-            <svg className="feat-icon" viewBox="0 0 44 44" fill="none">
-              <rect width="44" height="44" rx="10" fill="#FFF5EC" />
-              <circle cx="14" cy="30" r="3" stroke="#FF8210" strokeWidth="1.5" />
-              <circle cx="30" cy="30" r="3" stroke="#FF8210" strokeWidth="1.5" />
-              <path d="M8 28h4v-6h16v6h4" stroke="#FF8210" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M12 22v-4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v4" stroke="#FF8210" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-            <h3>{tFeat('transportTitle')}</h3>
-            <p>{tFeat('transportBody')}</p>
-          </div>
+
+          {/* 5 - Budget breakdown */}
           <div className="feat-card">
             <svg className="feat-icon" viewBox="0 0 44 44" fill="none">
               <rect width="44" height="44" rx="10" fill="#EEF4FB" />
@@ -361,6 +441,35 @@ export default function HomePage() {
             <h3>{tFeat('budgetTitle')}</h3>
             <p>{tFeat('budgetBody')}</p>
           </div>
+
+          {/* 6 - Weather */}
+          <div className="feat-card">
+            <svg className="feat-icon" viewBox="0 0 44 44" fill="none">
+              <rect width="44" height="44" rx="10" fill="#FFF5EC" />
+              <circle cx="22" cy="20" r="8" stroke="#FF8210" strokeWidth="1.5" />
+              <path d="M18 20c0-2.2 1.8-4 4-4" stroke="#00447B" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M22 32v2" stroke="#FF8210" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.4" />
+              <path d="M14 22l-2 2" stroke="#FF8210" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.4" />
+              <path d="M30 22l2 2" stroke="#FF8210" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.4" />
+            </svg>
+            <h3>{tFeat('weatherTitle')}</h3>
+            <p>{tFeat('weatherBody')}</p>
+          </div>
+
+          {/* 7 - Getting around */}
+          <div className="feat-card">
+            <svg className="feat-icon" viewBox="0 0 44 44" fill="none">
+              <rect width="44" height="44" rx="10" fill="#EEF4FB" />
+              <circle cx="14" cy="30" r="3" stroke="#00447B" strokeWidth="1.5" />
+              <circle cx="30" cy="30" r="3" stroke="#00447B" strokeWidth="1.5" />
+              <path d="M8 28h4v-6h16v6h4" stroke="#00447B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M12 22v-4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v4" stroke="#00447B" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+            <h3>{tFeat('transportTitle')}</h3>
+            <p>{tFeat('transportBody')}</p>
+          </div>
+
+          {/* 8 - Chat with Luna */}
           <div className="feat-card">
             <svg className="feat-icon" viewBox="0 0 44 44" fill="none">
               <rect width="44" height="44" rx="10" fill="#FFF5EC" />
@@ -371,6 +480,19 @@ export default function HomePage() {
             <h3>{tFeat('chatTitle')}</h3>
             <p>{tFeat('chatBody')}</p>
           </div>
+
+          {/* 9 - Plan together (highlight) */}
+          <div className="feat-card highlight">
+            <svg className="feat-icon" viewBox="0 0 44 44" fill="none">
+              <rect width="44" height="44" rx="10" fill="rgba(255,255,255,0.15)" />
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="white" strokeWidth="1.5" strokeLinecap="round" transform="translate(10,8) scale(0.85)" />
+              <circle cx="21.5" cy="17.5" r="3.5" stroke="white" strokeWidth="1.5" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" strokeLinecap="round" transform="translate(10,8) scale(0.85)" />
+            </svg>
+            <h3>{tFeat('planTogetherTitle')}</h3>
+            <p>{tFeat('planTogetherBody')}</p>
+          </div>
+
         </div>
       </section>
 
@@ -445,6 +567,10 @@ export default function HomePage() {
                 <div className="luna-feat-check"></div>
                 <p><strong>{tML('feat4Bold')}</strong>{tML('feat4Body')}</p>
               </div>
+              <div className="luna-feat">
+                <div className="luna-feat-check"></div>
+                <p><strong>{tML('feat5Bold')}</strong>{tML('feat5Body')}</p>
+              </div>
             </div>
             <Link href="/start" className="btn-letsgo-white">{tML('cta')} &rarr;</Link>
           </div>
@@ -453,20 +579,109 @@ export default function HomePage() {
 
       {/* PLAN TOGETHER */}
       <section className="section plan-together" id="plan-together">
-        <div className="plan-together-inner">
-          <div className="plan-together-icon">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
+        <div className="pt-grid">
+          <div>
+            <div className="section-label">{tPT('label')}</div>
+            <h2 className="section-title">{tPT('headline')}</h2>
+            <p className="section-sub">{tPT('subhead')}</p>
+            <div className="pt-points">
+              <div className="pt-point">
+                <div className="pt-num">1</div>
+                <p><strong>{tPT('point1Bold')}</strong>{tPT('point1Body')}</p>
+              </div>
+              <div className="pt-point">
+                <div className="pt-num">2</div>
+                <p><strong>{tPT('point2Bold')}</strong>{tPT('point2Body')}</p>
+              </div>
+              <div className="pt-point">
+                <div className="pt-num">3</div>
+                <p><strong>{tPT('point3Bold')}</strong>{tPT('point3Body')}</p>
+              </div>
+              <div className="pt-point">
+                <div className="pt-num">4</div>
+                <p><strong>{tPT('point4Bold')}</strong>{tPT('point4Body')}</p>
+              </div>
+            </div>
+            <Link href="/start" className="btn-plan-together">{tPT('cta')} &rarr;</Link>
           </div>
-          <div className="section-label">{tPT('label')}</div>
-          <h2 className="section-title" style={{fontSize:36,marginBottom:16}}>{tPT('headline')}</h2>
-          <p className="section-sub centered">{tPT('subhead')}</p>
-          <Link href="/start" className="btn-plan-together">{tPT('cta')} &rarr;</Link>
+          <div className="pt-visual">
+            <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:16}}>
+              <div style={{display:'flex'}}>
+                <div className="pt-avatar" style={{background:'var(--orange)'}}>W</div>
+                <div className="pt-avatar" style={{background:'var(--navy)'}}>F</div>
+                <div className="pt-avatar" style={{background:'var(--navy-mid)'}}>M</div>
+              </div>
+              <div className="pt-live"><div className="pt-live-dot"></div><span>3 editing now</span></div>
+            </div>
+            <div style={{fontFamily:"'Poppins',sans-serif",fontSize:13,fontWeight:600,color:'var(--navy)',marginBottom:12}}>Day 2 - Asakusa and Ueno</div>
+            <div className="pt-activity">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" strokeWidth="2" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Senso-ji Temple, morning
+              <span className="pt-activity-badge" style={{background:'rgba(16,185,129,0.1)',color:'#10b981'}}>Accepted</span>
+            </div>
+            <div className="pt-activity">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" strokeWidth="2" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Ueno Park, afternoon
+              <span className="pt-activity-badge" style={{background:'rgba(16,185,129,0.1)',color:'#10b981'}}>Accepted</span>
+            </div>
+            <div className="pt-activity">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gray-light)" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/></svg>
+              <span style={{textDecoration:'line-through',color:'var(--gray-light)'}}>Robot Restaurant, evening</span>
+              <span className="pt-activity-badge" style={{background:'rgba(239,68,68,0.1)',color:'#ef4444'}}>Removed</span>
+            </div>
+            <div style={{marginTop:14,padding:'10px 14px',background:'var(--bg-navy-tint)',borderRadius:10,fontFamily:"'Lato',sans-serif",fontSize:12,color:'var(--navy)'}}>
+              <strong style={{color:'var(--orange)'}}>F:</strong> &quot;Let&apos;s swap Robot Restaurant for a local izakaya instead&quot;
+            </div>
+          </div>
         </div>
+      </section>
+
+      {/* TALK TO LUNA */}
+      <section className="section talk-luna" id="talk-to-luna">
+        <div className="section-label">{tTL('label')}</div>
+        <h2 className="section-title">{tTL('title')}</h2>
+        <p className="section-sub">{tTL('subtitle')}</p>
+        <div className="prompts-grid">
+          <div className="prompt-card">{tTL('prompt1')}</div>
+          <div className="prompt-card">{tTL('prompt2')}</div>
+          <div className="prompt-card">{tTL('prompt3')}</div>
+          <div className="prompt-card">{tTL('prompt4')}</div>
+          <div className="prompt-card">{tTL('prompt5')}</div>
+          <div className="prompt-card">{tTL('prompt6')}</div>
+        </div>
+        <div className="tip-card">
+          <div className="tip-card-title">{tTL('tipTitle')}</div>
+          <p>{tTL('tipBody')}</p>
+        </div>
+        <div style={{marginTop:16}}>
+          <Link href="/how-to-use-luna" style={{fontFamily:"'Lato',sans-serif",fontSize:14,fontWeight:700,color:'var(--orange)',textDecoration:'none'}}>{tTL('guideLink')} &rarr;</Link>
+        </div>
+      </section>
+
+      {/* WHY LUNA - DIFFERENTIATION */}
+      <section className="section diff" id="why-luna">
+        <div style={{textAlign:'center'}}>
+          <div className="section-label">{tWL('label')}</div>
+          <h2 className="section-title" style={{textAlign:'center'}}>{tWL('title')}</h2>
+        </div>
+        <table className="diff-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>{tWL('colLuna')}</th>
+              <th>{tWL('colOther')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(['1','2','3','4','5','6'] as const).map((n) => (
+              <tr key={n}>
+                <td>{tWL(`row${n}Label` as Parameters<typeof tWL>[0])}</td>
+                <td>{tWL(`row${n}Luna` as Parameters<typeof tWL>[0])}</td>
+                <td>{tWL(`row${n}Other` as Parameters<typeof tWL>[0])}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </section>
 
       {/* TRIP IDEAS */}
@@ -552,7 +767,7 @@ export default function HomePage() {
             {tFaq('title')}
           </h2>
           <div itemScope itemType="https://schema.org/FAQPage">
-            {(['1','2','3','4','5','6'] as const).map((n) => (
+            {(['1','2','3','4','5','6','7','8'] as const).map((n) => (
               <div
                 key={n}
                 itemScope
@@ -585,6 +800,7 @@ export default function HomePage() {
         <h2>{tCta('title')}</h2>
         <p>{tCta('subtitle')}</p>
         <Link href="/start" className="btn-cta-white">{tCta('cta')} &rarr;</Link>
+        <p style={{fontFamily:"'Lato',sans-serif",fontSize:13,color:'rgba(255,255,255,0.55)',marginTop:12}}>{tCta('microCopy')}</p>
       </section>
 
     </>
