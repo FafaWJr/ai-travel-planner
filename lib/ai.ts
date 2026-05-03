@@ -754,6 +754,29 @@ OUTPUT RULES:
    - durationMinutes: Realistic estimate. Round to nearest 15 minutes.
    - category: One of: sightseeing, food, culture, nature, adventure, shopping, nightlife, wellness, transport-experience, accommodation
 
+   DESCRIPTION QUALITY RULES:
+   - Every activity MUST include a description. Never emit an activity with an empty or missing description.
+   - The description must clearly communicate:
+     - WHAT the place is (restaurant, cafe, bar, temple, museum, market, beach, park, trail, etc.)
+     - WHY it is recommended for this traveller (matches their style, locally famous, seasonal opportunity, etc.)
+     - WHAT makes it special (signature dish, unique architecture, best views, hidden gem, etc.)
+   - For food and drink places: the description MUST state the type (restaurant, cafe, bar, street food stall, bakery, food market) and mention at least one specific dish, cuisine, or food experience.
+   - For sightseeing and culture: the description MUST mention what the traveller will actually see or experience.
+   - Avoid generic phrases: "nice place", "great spot", "worth visiting", "popular destination", "must-see" are banned. Be specific about what makes THIS place worth the traveller's time.
+   - Descriptions should be 1-2 sentences. Not a paragraph. Not three words. One to two clear, specific sentences.
+
+   GOOD DESCRIPTIONS:
+   - "Iconic neighborhood sandwich bar open since 1956. Order the crab and cream cheese combo at the counter, a Copacabana institution."
+   - "Edo-period Buddhist temple with a towering 5-story pagoda. Best visited before 9am when morning light hits the vermillion gates and crowds are thin."
+   - "Rooftop cocktail bar on the 52nd floor with floor-to-ceiling views of the harbour. Known for its Japanese whisky collection."
+
+   BAD DESCRIPTIONS (never write these):
+   - "Great restaurant" (what cuisine? what dish? why here?)
+   - "Nice bar" (what kind? what view? what drink?)
+   - "Famous temple" (famous for what? what will I see?)
+   - "Popular with locals" (doing what? eating what? why should I care?)
+   - "" (empty, unacceptable)
+
 4. TRANSPORT-AS-EXPERIENCE
    The only time transport appears as an activity is when the journey itself is the experience:
    - Shinkansen bullet train between cities

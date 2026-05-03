@@ -58,14 +58,25 @@ type ActivityObject = {
 };
 
 /**
- * Convert a v2 activity object to a display string.
- * Format: "ActivityName (Location)" — concise and informative.
+ * Convert a v2 activity object to a rich display string.
+ * Format: "Name (Location) - Description"
+ * Falls back to "Name (Location)" when description is absent.
+ * Falls back to "Name" when location is also absent.
+ *
+ * The description is appended inline because the rendering pipeline uses
+ * plain strings (Approach A). Structured activity objects (Approach B) with
+ * separate description/category/duration fields are a future enhancement
+ * once the rendering pipeline supports them.
  */
 function activityObjectToString(obj: ActivityObject): string {
-  const name = typeof obj.activity === 'string' ? obj.activity.trim() : '';
-  const loc  = typeof obj.location === 'string' ? obj.location.trim() : '';
+  const name = typeof obj.activity    === 'string' ? obj.activity.trim()    : '';
+  const loc  = typeof obj.location    === 'string' ? obj.location.trim()    : '';
+  const desc = typeof obj.description === 'string' ? obj.description.trim() : '';
+
   if (!name) return '';
-  return loc ? `${name} (${loc})` : name;
+
+  const base = loc ? `${name} (${loc})` : name;
+  return desc ? `${base} - ${desc}` : base;
 }
 
 /**
