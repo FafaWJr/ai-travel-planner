@@ -263,11 +263,22 @@ export default function HomePage() {
           .proof-stats{gap:28px}
         }
         @media(max-width:540px){
+          .hero{padding:70px 20px 50px;min-height:80vh}
           .hero-title{font-size:36px;letter-spacing:-1px}
+          .hero-pill{padding:8px 14px}
+          .btn-letsgo{padding:14px 36px;font-size:16px}
+          .section-title{font-size:28px;letter-spacing:-0.3px}
+          .luna-copy .section-title{font-size:30px!important}
+          .luna-avatar-wrap img{height:220px}
+          .final-cta h2{font-size:28px}
+          .btn-cta-white{padding:14px 36px;font-size:16px}
           .features-grid{grid-template-columns:1fr}
-          .persona-cards{flex-direction:column;align-items:center}
           .prompts-grid{grid-template-columns:1fr}
           .proof-stats{flex-direction:column;gap:20px}
+          .footer-grid{grid-template-columns:1fr}
+          .persona-cards{display:grid!important;grid-template-columns:1fr 1fr;gap:8px}
+          .persona-card{min-width:0}
+          .diff-table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
         }
         /* CAROUSEL */
         .ideas-carousel-wrap{position:relative;margin-top:52px}
@@ -664,6 +675,7 @@ export default function HomePage() {
           <div className="section-label">{tWL('label')}</div>
           <h2 className="section-title" style={{textAlign:'center'}}>{tWL('title')}</h2>
         </div>
+        <div className="diff-table-scroll">
         <table className="diff-table">
           <thead>
             <tr>
@@ -682,6 +694,7 @@ export default function HomePage() {
             ))}
           </tbody>
         </table>
+        </div>
       </section>
 
       {/* TRIP IDEAS */}

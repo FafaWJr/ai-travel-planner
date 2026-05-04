@@ -317,6 +317,17 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
   const STEPS = [t('step1'), t('step2'), t('step3')];
 
   return (
+    <>
+    <style>{`
+      @media (max-width: 640px) {
+        .step-header { padding: 12px 16px !important; }
+        .step-label { display: none !important; }
+        .hf-content { padding: 18px 16px !important; }
+        .hf-time-cell { display: none !important; }
+        .hf-companion-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        .hf-budget-grid { grid-template-columns: repeat(2, 1fr) !important; }
+      }
+    `}</style>
     <div style={{ background:'#fff', borderRadius:'var(--r-lg)', boxShadow:'0 32px 80px rgba(0,0,0,0.28)', overflow:'hidden', textAlign:'left' }}>
       {/* Step header */}
       <div className="step-header" style={{ background:'var(--navy)', padding:'14px 28px', display:'flex', alignItems:'center' }}>
@@ -333,7 +344,7 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
         ))}
       </div>
 
-      <div style={{ padding:'24px 28px' }}>
+      <div className="hf-content" style={{ padding:'24px 28px' }}>
         {/* Step 0: Where & When */}
         {step===0 && (
           <div style={{ display:'flex',flexDirection:'column',gap:14 }}>
@@ -353,8 +364,8 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
                     onFocus={e=>(e.target.style.borderColor=errors.dep?'#E53E3E':'var(--navy)')}
                     onBlur={e=>(e.target.style.borderColor=errors.dep?'#E53E3E':'rgba(0,68,123,0.15)')} />
                 </div>
-                <span style={{ fontFamily:'var(--font-body)',fontSize:11,color:'var(--gray-dark)',whiteSpace:'nowrap',flexShrink:0 }}>{t('estArrival')}</span>
-                <div style={{ position:'relative', width:110, flexShrink:0 }}>
+                <span className="hf-time-cell" style={{ fontFamily:'var(--font-body)',fontSize:11,color:'var(--gray-dark)',whiteSpace:'nowrap',flexShrink:0 }}>{t('estArrival')}</span>
+                <div className="hf-time-cell" style={{ position:'relative', width:110, flexShrink:0 }}>
                   <input type="time" value={depTime} onChange={e=>setDepTime(e.target.value)}
                     style={{...inp,padding:'11px 8px'}}
                     onFocus={e=>(e.target.style.borderColor='var(--navy)')}
@@ -374,8 +385,8 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
                     onFocus={e=>(e.target.style.borderColor=errors.ret?'#E53E3E':'var(--navy)')}
                     onBlur={e=>(e.target.style.borderColor=errors.ret?'#E53E3E':'rgba(0,68,123,0.15)')} />
                 </div>
-                <span style={{ fontFamily:'var(--font-body)',fontSize:11,color:'var(--gray-dark)',whiteSpace:'nowrap',flexShrink:0 }}>{t('estReturn')}</span>
-                <div style={{ position:'relative', width:110, flexShrink:0 }}>
+                <span className="hf-time-cell" style={{ fontFamily:'var(--font-body)',fontSize:11,color:'var(--gray-dark)',whiteSpace:'nowrap',flexShrink:0 }}>{t('estReturn')}</span>
+                <div className="hf-time-cell" style={{ position:'relative', width:110, flexShrink:0 }}>
                   <input type="time" value={retTime} onChange={e=>setRetTime(e.target.value)}
                     style={{...inp,padding:'11px 8px'}}
                     onFocus={e=>(e.target.style.borderColor='var(--navy)')}
@@ -432,7 +443,7 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
           <div style={{ display:'flex',flexDirection:'column',gap:18 }}>
             <div>
               <label style={{ ...lbl,marginBottom:10 }}>{t('travellingWith')}</label>
-              <div style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8 }}>
+              <div className="hf-companion-grid" style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8 }}>
                 {companionOpts.map(opt=>{
                   const active=companion===opt.v;
                   return (
@@ -470,7 +481,7 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
           <div style={{ display:'flex',flexDirection:'column',gap:18 }}>
             <div>
               <label style={{ ...lbl,marginBottom:10 }}>{t('budgetLevel')}</label>
-              <div style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8 }}>
+              <div className="hf-budget-grid" style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8 }}>
                 {budgetOpts.map(b=>{
                   const active=budget===b.v;
                   return (
@@ -547,5 +558,6 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
         </div>
       )}
     </div>
+    </>
   );
 }
