@@ -1,7 +1,7 @@
 # Luna Let's Go - Claude Code Context
-**Last Updated:** 2026-05-04 19:14:26
+**Last Updated:** 2026-05-04 19:21:57
 **Current Branch:** main
-**Last Commit:** 31700e8e feat: place preview database foundation and types
+**Last Commit:** d6eb9b7c feat: place preview resolver, cache layer, and resolve API route
 **Deployment:** https://www.lunaletsgo.com
 
 ---
@@ -54,6 +54,7 @@ app/api/generate/route.ts
 app/api/hotel-photos/route.ts
 app/api/hotel-suggestions/route.ts
 app/api/place-photo/route.ts
+app/api/places/photo/[placeId]/[index]/route.ts
 app/api/places/resolve/route.ts
 app/api/regenerate-day/route.ts
 app/api/trips/[tripId]/chat-history/route.ts
@@ -106,7 +107,8 @@ app/auth/signup/page.tsx
 ## Recent Changes (Last 10 Commits)
 
 ```
-31700e8e (HEAD -> main, origin/main, origin/HEAD) feat: place preview database foundation and types
+d6eb9b7c (HEAD -> main, origin/main, origin/HEAD) feat: place preview resolver, cache layer, and resolve API route
+31700e8e feat: place preview database foundation and types
 dae10c97 fix(mobile): align date/time grid, fix hidden title, add time i18n key
 35ca27e5 fix: mobile form heading sizing and time input visibility
 798f73bb fix(mobile): polish /start form to match approved prototype
@@ -115,7 +117,6 @@ a14d40c6 fix(mobile): responsive fixes for homepage and /start form
 bf656a69 feat: redesign /start form page + remove all 30-second references
 edc6b123 chore: remove 30-second claims, update form and loading copy
 d2e26263 (origin/collab-stage-5-launch, collab-stage-5-launch) feat: homepage v2 redesign, Part 1
-44afbef6 fix(how-to-use-luna): rebuild page and i18n to match HTML reference
 ```
 
 ---
