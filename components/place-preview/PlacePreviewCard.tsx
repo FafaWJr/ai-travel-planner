@@ -10,6 +10,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { MapPin, Star, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { CachedPlace } from '@/lib/places/types';
 import { GoogleAttribution } from './GoogleAttribution';
+import { UnsplashAttribution } from './UnsplashAttribution';
 
 // ─── Photo gallery (universal: hotels up to 5, all others up to 3) ────────────
 
@@ -271,6 +272,127 @@ export function PlacePreviewCard({
   const bookingUrl = isHotel
     ? (place.metadata?.bookingAffiliateUrl as string) ?? null
     : null;
+
+  // ── Destination card: hero photo with name overlay, Unsplash attribution ──
+  const isDestination = place.entityType === 'destination';
+  if (isDestination) {
+    const unsplashUrl = place.metadata?.unsplashPhotoUrl as string | undefined;
+    const unsplashSmallUrl = place.metadata?.unsplashPhotoUrlSmall as string | undefined;
+    const unsplashAuthor = place.metadata?.unsplashAuthorName as string | undefined;
+    const unsplashAuthorUrl = place.metadata?.unsplashAuthorUrl as string | undefined;
+    const unsplashPhotoPage = place.metadata?.unsplashPhotoPage as string | undefined;
+    const heroSrc = unsplashUrl || primaryPhotoUrl;
+
+    return (
+      <div
+        style={{
+          width: 320,
+          borderRadius: 12,
+          overflow: 'hidden',
+          background: '#FFFFFF',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
+          border: '1px solid #E8E8E8',
+          fontFamily: 'Inter, sans-serif',
+        }}
+      >
+        {/* Hero photo with gradient overlay and name */}
+        <div style={{ width: '100%', height: 200, position: 'relative', background: '#F0F0F0', overflow: 'hidden' }}>
+          {/* Blur placeholder — small version stacked below full image */}
+          {unsplashSmallUrl && (
+            <img
+              src={unsplashSmallUrl}
+              alt=""
+              aria-hidden="true"
+              style={{
+                position: 'absolute', top: 0, left: 0,
+                width: '100%', height: '100%',
+                objectFit: 'cover',
+                filter: 'blur(20px)',
+                transform: 'scale(1.1)',
+              }}
+            />
+          )}
+          {heroSrc && (
+            <img
+              src={heroSrc}
+              alt={place.displayName}
+              loading="lazy"
+              decoding="async"
+              style={{
+                position: 'absolute', top: 0, left: 0,
+                width: '100%', height: '100%',
+                objectFit: 'cover',
+                display: 'block',
+              }}
+            />
+          )}
+          {/* Gradient for text readability */}
+          <div style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0,
+            height: '55%',
+            background: 'linear-gradient(transparent, rgba(0,0,0,0.65))',
+          }} />
+          {/* Name overlay */}
+          <div style={{ position: 'absolute', bottom: 12, left: 16, right: 16 }}>
+            <div style={{
+              fontFamily: 'Poppins, sans-serif',
+              fontWeight: 700, fontSize: 20, color: '#FFFFFF',
+              lineHeight: 1.2, textShadow: '0 1px 3px rgba(0,0,0,0.4)',
+            }}>
+              {place.displayName}
+            </div>
+            {shortAddress && (
+              <div style={{
+                fontFamily: 'Inter, sans-serif',
+                fontSize: 13, color: 'rgba(255,255,255,0.85)', marginTop: 2,
+              }}>
+                {shortAddress}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Rating + Maps link */}
+        <div style={{ padding: '10px 16px 4px' }}>
+          {ratingDisplay && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, fontSize: 13 }}>
+              <Star size={14} fill="#FF8210" color="#FF8210" style={{ flexShrink: 0 }} />
+              <span style={{ color: '#FF8210', fontWeight: 500 }}>{ratingDisplay}</span>
+              {reviewCount && <span style={{ color: '#6C6D6F' }}>({reviewCount})</span>}
+            </div>
+          )}
+          {place.googleMapsUri && (
+            <a
+              href={place.googleMapsUri}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+                fontSize: 13, fontWeight: 500, color: '#00447B',
+                textDecoration: 'none', marginBottom: 4,
+              }}
+            >
+              <ExternalLink size={13} color="#00447B" />
+              View on Google Maps
+            </a>
+          )}
+        </div>
+
+        {unsplashAuthor ? (
+          <UnsplashAttribution
+            authorName={unsplashAuthor}
+            authorUrl={unsplashAuthorUrl}
+            photoUrl={unsplashPhotoPage}
+          />
+        ) : (
+          <GoogleAttribution
+            authorName={photoAuthorName}
+            authorUri={photoAuthorUri}
+          />
+        )}
+      </div>
+    );
+  }
 
   return (
     <div

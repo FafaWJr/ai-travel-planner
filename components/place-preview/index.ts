@@ -4,3 +4,4 @@ export { PlacePreviewTrigger } from './PlacePreviewTrigger';
 export { PlacePreviewCard } from './PlacePreviewCard';
 export { PlacePreviewSkeleton } from './PlacePreviewSkeleton';
 export { GoogleAttribution } from './GoogleAttribution';
+export { UnsplashAttribution } from './UnsplashAttribution';

@@ -66,9 +66,9 @@ export async function resolvePlace(
         // Background refresh can be added later if needed.
         return {
           place: cached,
-          primaryPhotoUrl: cached.photoCount > 0
-            ? buildPhotoProxyUrl(cached.googlePlaceId, 0)
-            : null,
+          primaryPhotoUrl:
+            (cached.metadata.unsplashPhotoUrl as string | undefined) ??
+            (cached.photoCount > 0 ? buildPhotoProxyUrl(cached.googlePlaceId, 0) : null),
           source: 'cache',
         };
       }
@@ -94,6 +94,23 @@ export async function resolvePlace(
 
   // 4. Build metadata
   const metadata = buildMetadata(googleResult, entityType);
+
+  // 4a. For destinations, augment metadata with an Unsplash travel photo
+  if (entityType === 'destination') {
+    const rawName = googleResult.displayName;
+    const destName = typeof rawName === 'object' && rawName !== null
+      ? (rawName.text ?? '')
+      : (typeof rawName === 'string' ? rawName : req.query);
+    const unsplashData = await fetchUnsplashDestinationPhoto(destName || req.query);
+    if (unsplashData) {
+      metadata.unsplashPhotoUrl = unsplashData.photoUrl;
+      metadata.unsplashPhotoUrlSmall = unsplashData.photoUrlSmall;
+      metadata.unsplashAuthorName = unsplashData.authorName;
+      metadata.unsplashAuthorUrl = unsplashData.authorUrl;
+      metadata.unsplashPhotoPage = unsplashData.photoPage;
+      metadata.unsplashDownloadLocation = unsplashData.downloadLocation;
+    }
+  }
 
   // 5. Resolve displayName — Google returns either { text, languageCode } or a plain string
   const rawName = googleResult.displayName;
@@ -143,10 +160,10 @@ export async function resolvePlace(
 
   return {
     place,
-    primaryPhotoUrl:
-      place && place.photoCount > 0
-        ? buildPhotoProxyUrl(place.googlePlaceId, 0)
-        : null,
+    primaryPhotoUrl: place
+      ? ((place.metadata.unsplashPhotoUrl as string | undefined) ??
+         (place.photoCount > 0 ? buildPhotoProxyUrl(place.googlePlaceId, 0) : null))
+      : null,
     source: 'google',
   };
 }
@@ -281,6 +298,73 @@ function mapPriceLevel(
   };
   return map[priceLevel] ?? null;
 }
+
+// ---------------------------------------------------------------------------
+// Unsplash destination photo fetcher
+// ---------------------------------------------------------------------------
+
+interface UnsplashPhotoData {
+  photoUrl: string;
+  photoUrlSmall: string;
+  authorName: string;
+  authorUrl: string;
+  photoPage: string;
+  downloadLocation: string;
+}
+
+async function fetchUnsplashDestinationPhoto(
+  destinationName: string
+): Promise<UnsplashPhotoData | null> {
+  const apiKey = process.env.UNSPLASH_ACCESS_KEY;
+  if (!apiKey) {
+    console.warn('[PlaceResolver] UNSPLASH_ACCESS_KEY not set, skipping Unsplash');
+    return null;
+  }
+
+  try {
+    const query = encodeURIComponent(`${destinationName} travel`);
+    const res = await fetch(
+      `https://api.unsplash.com/search/photos?query=${query}&orientation=landscape&per_page=1&content_filter=high`,
+      {
+        headers: { Authorization: `Client-ID ${apiKey}` },
+        signal: AbortSignal.timeout(6000),
+      }
+    );
+
+    if (!res.ok) {
+      console.error('[PlaceResolver] Unsplash search failed:', res.status);
+      return null;
+    }
+
+    const data = await res.json() as { results?: Record<string, unknown>[] };
+    const photo = data.results?.[0] as Record<string, unknown> | undefined;
+    if (!photo) return null;
+
+    const utmParams = '?utm_source=lunaletsgo&utm_medium=referral';
+    const urls = photo.urls as Record<string, string>;
+    const links = photo.links as Record<string, string>;
+    const user = photo.user as { name: string; links: { html: string } };
+
+    // Fire download_location ping required by Unsplash ToS — fire and forget
+    fetch(links.download_location, {
+      headers: { Authorization: `Client-ID ${apiKey}` },
+    }).catch(() => {});
+
+    return {
+      photoUrl: urls.regular,
+      photoUrlSmall: urls.small,
+      authorName: user.name,
+      authorUrl: `${user.links.html}${utmParams}`,
+      photoPage: `${links.html}${utmParams}`,
+      downloadLocation: links.download_location,
+    };
+  } catch (err) {
+    console.error('[PlaceResolver] Unsplash fetch error:', err);
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
 
 function buildMetadata(
   result: GooglePlaceResult,

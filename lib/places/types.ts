@@ -43,6 +43,18 @@ export interface PlaceMetadata {
   category?: string;
   /** Destination-specific: iconic landmarks for hero selection */
   iconicLandmarks?: string[];
+  /** Destination-specific: Unsplash hero photo URL (hotlinked, not rehosted) */
+  unsplashPhotoUrl?: string;
+  /** Destination-specific: Unsplash small photo URL for blur placeholder */
+  unsplashPhotoUrlSmall?: string;
+  /** Destination-specific: Unsplash photographer display name */
+  unsplashAuthorName?: string;
+  /** Destination-specific: Unsplash photographer profile URL (with UTM params) */
+  unsplashAuthorUrl?: string;
+  /** Destination-specific: Unsplash photo page URL (with UTM params) */
+  unsplashPhotoPage?: string;
+  /** Destination-specific: Unsplash download_location URL for ToS tracking ping */
+  unsplashDownloadLocation?: string;
   /** Any additional fields from Google not captured in top-level columns */
   [key: string]: unknown;
 }
