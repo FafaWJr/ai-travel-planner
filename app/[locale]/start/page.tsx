@@ -70,18 +70,18 @@ export default function StartPage() {
         <h1 style={{
           fontFamily: "'Poppins', sans-serif",
           fontWeight: 700,
-          fontSize: 26,
+          fontSize: 28,
           color: '#00447B',
-          marginBottom: 8,
+          marginBottom: 10,
           lineHeight: 1.2,
         }}>
           {t('title')}
         </h1>
         <p style={{
           fontFamily: "'Inter', sans-serif",
-          fontSize: 14,
+          fontSize: 15,
           color: '#6C6D6F',
-          lineHeight: 1.5,
+          lineHeight: 1.55,
           margin: 0,
         }}>
           {t('subtitle')}
@@ -230,7 +230,7 @@ export default function StartPage() {
         @media (max-width: 640px) {
           .start-mobile-head {
             display: block;
-            padding: 28px 20px 0;
+            padding: 28px 20px 16px;
             background: #F8F9FB;
           }
           .start-left {

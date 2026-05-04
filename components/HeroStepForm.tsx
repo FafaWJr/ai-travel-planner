@@ -338,7 +338,7 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
         .step-header { padding: 12px 16px !important; }
         .step-label { display: none !important; }
         .hf-content { padding: 18px 16px !important; }
-        .hf-time-cell { display: none !important; }
+        div.hf-time-cell { width: 100px !important; }
         .hf-companion-grid { grid-template-columns: repeat(2, 1fr) !important; }
         .hf-budget-grid { grid-template-columns: repeat(2, 1fr) !important; }
       }
