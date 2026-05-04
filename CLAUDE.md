@@ -1,7 +1,7 @@
 # Luna Let's Go - Claude Code Context
-**Last Updated:** 2026-05-04 15:06:16
+**Last Updated:** 2026-05-04 18:46:23
 **Current Branch:** main
-**Last Commit:** 35ca27e5 fix: mobile form heading sizing and time input visibility
+**Last Commit:** dae10c97 fix(mobile): align date/time grid, fix hidden title, add time i18n key
 **Deployment:** https://www.lunaletsgo.com
 
 ---
@@ -105,7 +105,8 @@ app/auth/signup/page.tsx
 ## Recent Changes (Last 10 Commits)
 
 ```
-35ca27e5 (HEAD -> main, origin/main, origin/HEAD) fix: mobile form heading sizing and time input visibility
+dae10c97 (HEAD -> main, origin/main, origin/HEAD) fix(mobile): align date/time grid, fix hidden title, add time i18n key
+35ca27e5 fix: mobile form heading sizing and time input visibility
 798f73bb fix(mobile): polish /start form to match approved prototype
 a14d40c6 fix(mobile): responsive fixes for homepage and /start form
 9eda8c7a fix: form page tweaks - mandatory return date, stable pills, SVG icons
@@ -114,7 +115,6 @@ edc6b123 chore: remove 30-second claims, update form and loading copy
 d2e26263 (origin/collab-stage-5-launch, collab-stage-5-launch) feat: homepage v2 redesign, Part 1
 44afbef6 fix(how-to-use-luna): rebuild page and i18n to match HTML reference
 99d3cc84 feat: add How to Use Luna guide page with footer link
-8065deac chore: update context after push to main
 ```
 
 ---

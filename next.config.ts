@@ -70,6 +70,11 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'upload.wikimedia.org' },
       { protocol: 'https', hostname: 'picsum.photos' },
       { protocol: 'https', hostname: 'fastly.picsum.photos' },
+      {
+        protocol: 'https',
+        hostname: 'qhpxejzoxfruuositwzo.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
     ],
   },
 };
