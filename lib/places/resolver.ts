@@ -216,7 +216,14 @@ async function searchGooglePlaces(
 
     if (!res.ok) {
       const errBody = await res.text();
-      console.error(`[PlaceResolver] HTTP${res.status} ${errBody.slice(0, 300)}`);
+      try {
+        const e = JSON.parse(errBody);
+        const gcpStatus = e?.error?.status ?? 'UNKNOWN';
+        const gcpMsg = (e?.error?.message ?? '').slice(0, 120);
+        console.error(`[PlaceResolver] GCP ${res.status} ${gcpStatus}: ${gcpMsg}`);
+      } catch {
+        console.error(`[PlaceResolver] GCP ${res.status} non-JSON: ${errBody.slice(0, 100)}`);
+      }
       return null;
     }
 
