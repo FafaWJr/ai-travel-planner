@@ -161,6 +161,15 @@ const IC = (paths: React.ReactNode, size=16) => (
   </svg>
 );
 
+const CalIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF8210" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink:0 }}>
+    <rect x="3" y="4" width="18" height="18" rx="2"/>
+    <line x1="16" y1="2" x2="16" y2="6"/>
+    <line x1="8" y1="2" x2="8" y2="6"/>
+    <line x1="3" y1="10" x2="21" y2="10"/>
+  </svg>
+);
+
 /* ── HeroStepForm ── */
 export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:string)=>void; preFilledData?:{budget:string;styles:string[]}|null }) {
   const t = useTranslations('start');
@@ -308,8 +317,9 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
 
   const inp: React.CSSProperties = {width:'100%',boxSizing:'border-box' as const,border:'1.5px solid rgba(0,68,123,0.15)',borderRadius:'var(--r-md)',padding:'11px 14px',fontFamily:'var(--font-body)',fontSize:14,color:'#000',background:'#fff',outline:'none',transition:'border-color 0.18s'};
   const lbl: React.CSSProperties = {fontFamily:'var(--font-head)',fontWeight:600,fontSize:11,color:'var(--navy)',marginBottom:6,display:'block',textTransform:'uppercase',letterSpacing:0.8};
+  const subLbl: React.CSSProperties = {fontFamily:'var(--font-head)',fontWeight:500,fontSize:10,color:'var(--gray-dark)',marginBottom:6,display:'block',textTransform:'uppercase',letterSpacing:0.6};
   const cBox: React.CSSProperties = {display:'flex',alignItems:'center',background:'#F4F7FB',border:'1.5px solid rgba(0,68,123,0.12)',borderRadius:'var(--r-md)',overflow:'hidden'};
-  const cBtn: React.CSSProperties = {width:40,height:40,background:'none',border:'none',color:'var(--navy)',fontSize:20,cursor:'pointer',flexShrink:0};
+  const cBtn: React.CSSProperties = {width:44,height:44,background:'none',border:'none',color:'var(--navy)',fontSize:20,cursor:'pointer',flexShrink:0};
   const navBtn = (primary=true): React.CSSProperties => ({
     fontFamily:'var(--font-head)',fontWeight:700,fontSize:14,padding:'12px 28px',borderRadius:'var(--r-pill)',border:primary?'none':'1.5px solid rgba(0,68,123,0.15)',
     background:primary?'var(--navy)':'none',color:primary?'#fff':'var(--navy)',cursor:'pointer',transition:'all 0.18s',
@@ -319,7 +329,12 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
   return (
     <>
     <style>{`
+      .hf-date-wrap:focus-within {
+        border-color: var(--navy) !important;
+        box-shadow: 0 0 0 3px rgba(0,68,123,0.08);
+      }
       @media (max-width: 640px) {
+        .hf-form-card { border-radius: 18px !important; box-shadow: 0 8px 24px rgba(0,68,123,0.08), 0 0 0 1px rgba(0,68,123,0.06) !important; }
         .step-header { padding: 12px 16px !important; }
         .step-label { display: none !important; }
         .hf-content { padding: 18px 16px !important; }
@@ -328,7 +343,7 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
         .hf-budget-grid { grid-template-columns: repeat(2, 1fr) !important; }
       }
     `}</style>
-    <div style={{ background:'#fff', borderRadius:'var(--r-lg)', boxShadow:'0 32px 80px rgba(0,0,0,0.28)', overflow:'hidden', textAlign:'left' }}>
+    <div className="hf-form-card" style={{ background:'#fff', borderRadius:'var(--r-lg)', boxShadow:'0 32px 80px rgba(0,0,0,0.28)', overflow:'hidden', textAlign:'left' }}>
       {/* Step header */}
       <div className="step-header" style={{ background:'var(--navy)', padding:'14px 28px', display:'flex', alignItems:'center' }}>
         {STEPS.map((label,i) => (
@@ -355,61 +370,66 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
             </div>
 
             <div>
-              <label style={lbl}>{t('from')} <span style={{ color:'var(--orange)' }}>*</span></label>
-              <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-                <div style={{ position:'relative', flex:1, minWidth:0 }}>
-                  <input type="date" value={dep} min={today}
-                    onChange={e=>{const v=e.target.value;if(v&&v<today){setDep('');return;}setDep(v);if(ret&&v>ret)setRet('');if(v)setErrors(p=>({...p,dep:''}));}}
-                    style={{...inp,borderColor:errors.dep?'#E53E3E':'rgba(0,68,123,0.15)'}}
-                    onFocus={e=>(e.target.style.borderColor=errors.dep?'#E53E3E':'var(--navy)')}
-                    onBlur={e=>(e.target.style.borderColor=errors.dep?'#E53E3E':'rgba(0,68,123,0.15)')} />
+              <label style={lbl}>{t('travelDates')} <span style={{ color:'var(--orange)' }}>*</span></label>
+              <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+                <div>
+                  <span style={subLbl}>{t('from')}</span>
+                  <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+                    <div className="hf-date-wrap" style={{ flex:1, minWidth:0, display:'flex', alignItems:'center', border:`1.5px solid ${errors.dep?'#E53E3E':'rgba(0,68,123,0.15)'}`, borderRadius:'var(--r-md)', background:'#fff', height:50, padding:'0 14px', gap:10, boxSizing:'border-box' as const, transition:'border-color 0.18s' }}>
+                      <CalIcon />
+                      <input type="date" value={dep} min={today}
+                        onChange={e=>{const v=e.target.value;if(v&&v<today){setDep('');return;}setDep(v);if(ret&&v>ret)setRet('');if(v)setErrors(p=>({...p,dep:''}));}}
+                        style={{ flex:1, border:'none', outline:'none', background:'transparent', fontFamily:'var(--font-body)', fontSize:14, color:'#000', padding:0, minWidth:0 }} />
+                    </div>
+                    <span className="hf-time-cell" style={{ fontFamily:'var(--font-body)',fontSize:11,color:'var(--gray-dark)',whiteSpace:'nowrap',flexShrink:0 }}>{t('estArrival')}</span>
+                    <div className="hf-time-cell" style={{ position:'relative', width:110, flexShrink:0 }}>
+                      <input type="time" value={depTime} onChange={e=>setDepTime(e.target.value)}
+                        style={{...inp,padding:'11px 8px'}}
+                        onFocus={e=>(e.target.style.borderColor='var(--navy)')}
+                        onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} />
+                    </div>
+                  </div>
+                  {errors.dep && <p style={{ fontFamily:'var(--font-body)',fontSize:12,color:'#E53E3E',marginTop:5,display:'flex',alignItems:'center',gap:4 }}>⚠ {errors.dep}</p>}
                 </div>
-                <span className="hf-time-cell" style={{ fontFamily:'var(--font-body)',fontSize:11,color:'var(--gray-dark)',whiteSpace:'nowrap',flexShrink:0 }}>{t('estArrival')}</span>
-                <div className="hf-time-cell" style={{ position:'relative', width:110, flexShrink:0 }}>
-                  <input type="time" value={depTime} onChange={e=>setDepTime(e.target.value)}
-                    style={{...inp,padding:'11px 8px'}}
-                    onFocus={e=>(e.target.style.borderColor='var(--navy)')}
-                    onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} />
+                <div>
+                  <span style={subLbl}>{t('to')}</span>
+                  <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+                    <div className="hf-date-wrap" style={{ flex:1, minWidth:0, display:'flex', alignItems:'center', border:`1.5px solid ${errors.ret?'#E53E3E':'rgba(0,68,123,0.15)'}`, borderRadius:'var(--r-md)', background:'#fff', height:50, padding:'0 14px', gap:10, boxSizing:'border-box' as const, transition:'border-color 0.18s' }}>
+                      <CalIcon />
+                      <input type="date" value={ret} min={dep || today}
+                        onChange={e=>{const v=e.target.value;if(v&&v<(dep||today)){setRet('');return;}setRet(v);if(v)setErrors(p=>({...p,ret:''}));}}
+                        style={{ flex:1, border:'none', outline:'none', background:'transparent', fontFamily:'var(--font-body)', fontSize:14, color:'#000', padding:0, minWidth:0 }} />
+                    </div>
+                    <span className="hf-time-cell" style={{ fontFamily:'var(--font-body)',fontSize:11,color:'var(--gray-dark)',whiteSpace:'nowrap',flexShrink:0 }}>{t('estReturn')}</span>
+                    <div className="hf-time-cell" style={{ position:'relative', width:110, flexShrink:0 }}>
+                      <input type="time" value={retTime} onChange={e=>setRetTime(e.target.value)}
+                        style={{...inp,padding:'11px 8px'}}
+                        onFocus={e=>(e.target.style.borderColor='var(--navy)')}
+                        onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} />
+                    </div>
+                  </div>
+                  {errors.ret && <p style={{ fontFamily:'var(--font-body)',fontSize:12,color:'#E53E3E',marginTop:5,display:'flex',alignItems:'center',gap:4 }}>⚠ {errors.ret}</p>}
                 </div>
               </div>
-              {errors.dep && <p style={{ fontFamily:'var(--font-body)',fontSize:12,color:'#E53E3E',marginTop:5,display:'flex',alignItems:'center',gap:4 }}>⚠ {errors.dep}</p>}
             </div>
 
             <div>
-              <label style={lbl}>{t('to')} <span style={{ color:'var(--orange)' }}>*</span></label>
-              <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-                <div style={{ position:'relative', flex:1, minWidth:0 }}>
-                  <input type="date" value={ret} min={dep || today}
-                    onChange={e=>{const v=e.target.value;if(v&&v<(dep||today)){setRet('');return;}setRet(v);if(v)setErrors(p=>({...p,ret:''}));}}
-                    style={{...inp,borderColor:errors.ret?'#E53E3E':'rgba(0,68,123,0.15)'}}
-                    onFocus={e=>(e.target.style.borderColor=errors.ret?'#E53E3E':'var(--navy)')}
-                    onBlur={e=>(e.target.style.borderColor=errors.ret?'#E53E3E':'rgba(0,68,123,0.15)')} />
-                </div>
-                <span className="hf-time-cell" style={{ fontFamily:'var(--font-body)',fontSize:11,color:'var(--gray-dark)',whiteSpace:'nowrap',flexShrink:0 }}>{t('estReturn')}</span>
-                <div className="hf-time-cell" style={{ position:'relative', width:110, flexShrink:0 }}>
-                  <input type="time" value={retTime} onChange={e=>setRetTime(e.target.value)}
-                    style={{...inp,padding:'11px 8px'}}
-                    onFocus={e=>(e.target.style.borderColor='var(--navy)')}
-                    onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} />
-                </div>
-              </div>
-              {errors.ret && <p style={{ fontFamily:'var(--font-body)',fontSize:12,color:'#E53E3E',marginTop:5,display:'flex',alignItems:'center',gap:4 }}>⚠ {errors.ret}</p>}
-            </div>
-
-            <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:12 }}>
-              {([
-                [t('adults'), adults, setAdultsChecked, 1],
-                [t('children'), kids, setKidsChecked, 0],
-              ] as const).map(([l,val,set,min])=>(
-                <div key={l as string}>
-                  <label style={lbl}>{l as string}</label>
-                  <div style={cBox}>
-                    <button onClick={()=>(set as (n:number)=>void)(Math.max(min as number,(val as number)-1))} style={cBtn}>−</button>
-                    <span style={{ flex:1,textAlign:'center',fontFamily:'var(--font-head)',fontWeight:700,fontSize:18,color:'var(--navy)' }}>{val as number}</span>
-                    <button onClick={()=>(set as (n:number)=>void)((val as number)+1)} style={cBtn}>+</button>
+              <label style={lbl}>{t('travellers')}</label>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+                {([
+                  [t('adults'), adults, setAdultsChecked, 1],
+                  [t('children'), kids, setKidsChecked, 0],
+                ] as const).map(([l,val,set,min])=>(
+                  <div key={l as string}>
+                    <span style={subLbl}>{l as string}</span>
+                    <div style={cBox}>
+                      <button onClick={()=>(set as (n:number)=>void)(Math.max(min as number,(val as number)-1))} style={cBtn}>−</button>
+                      <span style={{ flex:1,textAlign:'center',fontFamily:'var(--font-head)',fontWeight:700,fontSize:18,color:'var(--navy)' }}>{val as number}</span>
+                      <button onClick={()=>(set as (n:number)=>void)((val as number)+1)} style={cBtn}>+</button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
 
             {(adults>0||kids>0) && (
