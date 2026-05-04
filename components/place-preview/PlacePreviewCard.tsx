@@ -13,6 +13,15 @@ import { GoogleAttribution } from './GoogleAttribution';
 
 // ─── Photo gallery (universal: hotels up to 5, all others up to 3) ────────────
 
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
 interface PhotoGalleryProps {
   placeId: string;
   photoCount: number;
@@ -25,9 +34,11 @@ function PhotoGallery({ placeId, photoCount, displayName, maxPhotos = 3 }: Photo
   const [activeIndex, setActiveIndex] = useState(0);
   const [loadedIndices, setLoadedIndices] = useState<Set<number>>(new Set([0]));
   const [errorIndices, setErrorIndices] = useState<Set<number>>(new Set());
+  const [blurUrls, setBlurUrls] = useState<Map<number, string>>(new Map());
+  const [fullyLoaded, setFullyLoaded] = useState<Set<number>>(new Set());
 
-  const buildPhotoUrl = (index: number) =>
-    `/api/places/photo/${encodeURIComponent(placeId)}/${index}?w=800`;
+  const buildPhotoUrl = (index: number, width: number = 800) =>
+    `/api/places/photo/${encodeURIComponent(placeId)}/${index}?w=${width}`;
 
   const goTo = useCallback((index: number) => {
     const next = ((index % totalPhotos) + totalPhotos) % totalPhotos;
@@ -47,6 +58,31 @@ function PhotoGallery({ placeId, photoCount, displayName, maxPhotos = 3 }: Photo
       return next;
     });
   }, [activeIndex, totalPhotos]);
+
+  // Pre-fetch tiny blur versions for all photos on mount
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      for (let i = 0; i < totalPhotos; i++) {
+        try {
+          const res = await fetch(
+            `/api/places/photo/${encodeURIComponent(placeId)}/${i}?w=20`
+          );
+          if (cancelled) return;
+          if (res.ok) {
+            const blob = await res.blob();
+            const dataUrl = await blobToDataUrl(blob);
+            if (!cancelled) {
+              setBlurUrls(prev => new Map([...prev, [i, dataUrl]]));
+            }
+          }
+        } catch {
+          // blur is a progressive enhancement; ignore failures
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [totalPhotos, placeId]);
 
   // Single photo: render without gallery chrome
   if (totalPhotos <= 1) {
@@ -84,26 +120,55 @@ function PhotoGallery({ placeId, photoCount, displayName, maxPhotos = 3 }: Photo
 
   return (
     <div style={{ width: '100%', height: 200, overflow: 'hidden', background: '#F0F0F0', position: 'relative' }}>
-      {/* Photo stack — only loaded images rendered; active shown at full opacity */}
-      {Array.from(loadedIndices).map(idx => (
-        <img
-          key={idx}
-          src={buildPhotoUrl(idx)}
-          alt={`${displayName} photo ${idx + 1}`}
-          loading="lazy"
-          decoding="async"
-          onError={() => setErrorIndices(prev => new Set([...prev, idx]))}
-          style={{
-            position: 'absolute',
-            top: 0, left: 0,
-            width: '100%', height: '100%',
-            objectFit: 'cover',
-            opacity: idx === activeIndex ? 1 : 0,
-            transition: 'opacity 200ms ease-in-out',
-            display: errorIndices.has(idx) ? 'none' : 'block',
-          }}
-        />
-      ))}
+      {/* Photo stack — each slot: blur placeholder behind, full image fades in on load */}
+      {Array.from(loadedIndices).map(idx => {
+        const blurUrl = blurUrls.get(idx);
+        return (
+          <div
+            key={idx}
+            style={{
+              position: 'absolute',
+              top: 0, left: 0,
+              width: '100%', height: '100%',
+              opacity: idx === activeIndex ? 1 : 0,
+              transition: 'opacity 200ms ease-in-out',
+            }}
+          >
+            {blurUrl && (
+              <img
+                src={blurUrl}
+                alt=""
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  top: 0, left: 0,
+                  width: '100%', height: '100%',
+                  objectFit: 'cover',
+                  filter: 'blur(20px)',
+                  transform: 'scale(1.1)',
+                }}
+              />
+            )}
+            <img
+              src={buildPhotoUrl(idx)}
+              alt={`${displayName} photo ${idx + 1}`}
+              loading="lazy"
+              decoding="async"
+              onLoad={() => setFullyLoaded(prev => new Set([...prev, idx]))}
+              onError={() => setErrorIndices(prev => new Set([...prev, idx]))}
+              style={{
+                position: 'absolute',
+                top: 0, left: 0,
+                width: '100%', height: '100%',
+                objectFit: 'cover',
+                opacity: fullyLoaded.has(idx) ? 1 : 0,
+                transition: 'opacity 300ms ease-in-out',
+                display: errorIndices.has(idx) ? 'none' : 'block',
+              }}
+            />
+          </div>
+        );
+      })}
 
       {/* Left arrow */}
       <button

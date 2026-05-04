@@ -6,7 +6,7 @@ import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { getPhotoMeta, upsertPhotoMeta, getCachedPlace, isExpired } from './cache';
 
 // Valid width buckets. Requests for other widths are snapped to the nearest bucket.
-const WIDTH_BUCKETS = [400, 800, 1200, 1600] as const;
+const WIDTH_BUCKETS = [20, 400, 800, 1200, 1600] as const;
 
 function getAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
