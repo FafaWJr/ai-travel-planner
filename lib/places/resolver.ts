@@ -215,8 +215,11 @@ async function searchGooglePlaces(
     );
 
     if (!res.ok) {
-      const errBody = await res.text();
-      console.error(`[PlaceResolver] HTTP${res.status} ${errBody.slice(0, 200)}`);
+      console.error(
+        '[PlaceResolver] Google Text Search failed:',
+        res.status,
+        await res.text()
+      );
       return null;
     }
 
