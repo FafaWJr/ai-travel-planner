@@ -157,6 +157,8 @@ interface PlacePreviewCardProps {
   /** Photo author from cached_place_photos (passed by the trigger) */
   photoAuthorName?: string | null;
   photoAuthorUri?: string | null;
+  /** Called when the user submits a corrected search query */
+  onCorrect?: (correctedQuery: string) => Promise<void>;
 }
 
 export function PlacePreviewCard({
@@ -164,8 +166,26 @@ export function PlacePreviewCard({
   primaryPhotoUrl,
   photoAuthorName,
   photoAuthorUri,
+  onCorrect,
 }: PlacePreviewCardProps) {
   const [imageError, setImageError] = useState(false);
+  const [showCorrection, setShowCorrection] = useState(false);
+  const [correctionQuery, setCorrectionQuery] = useState('');
+  const [isCorrecting, setIsCorrecting] = useState(false);
+
+  const handleCorrectionSubmit = async () => {
+    const trimmed = correctionQuery.trim();
+    if (!trimmed || !onCorrect) return;
+    setIsCorrecting(true);
+    try {
+      await onCorrect(trimmed);
+      setShowCorrection(false);
+    } catch {
+      // trigger logs the error
+    } finally {
+      setIsCorrecting(false);
+    }
+  };
   const isHotel = place.entityType === 'hotel';
 
   const typeLabel = formatTypeLabel(place.entityType, place.primaryType);
@@ -369,6 +389,76 @@ export function PlacePreviewCard({
         authorName={photoAuthorName}
         authorUri={photoAuthorUri}
       />
+
+      {/* Wrong place? correction flow */}
+      {onCorrect && (
+        <div style={{ padding: '0 16px 12px' }}>
+          {!showCorrection ? (
+            <button
+              onClick={() => {
+                setShowCorrection(true);
+                setCorrectionQuery(place.displayName);
+              }}
+              style={{
+                background: 'none', border: 'none', padding: 0,
+                fontSize: 11, color: '#C0C0C0', cursor: 'pointer',
+                textDecoration: 'underline',
+                fontFamily: 'Inter, sans-serif',
+              }}
+            >
+              Wrong place?
+            </button>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <input
+                  type="text"
+                  value={correctionQuery}
+                  onChange={(e) => setCorrectionQuery(e.target.value)}
+                  placeholder="Search for the correct place..."
+                  // eslint-disable-next-line jsx-a11y/no-autofocus
+                  autoFocus
+                  style={{
+                    flex: 1, padding: '6px 8px', fontSize: 12,
+                    border: '1px solid #E8E8E8', borderRadius: 6,
+                    fontFamily: 'Inter, sans-serif',
+                    outline: 'none',
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleCorrectionSubmit();
+                    if (e.key === 'Escape') setShowCorrection(false);
+                  }}
+                />
+                <button
+                  onClick={handleCorrectionSubmit}
+                  disabled={isCorrecting || !correctionQuery.trim()}
+                  style={{
+                    padding: '6px 12px', fontSize: 12, fontWeight: 500,
+                    background: '#00447B', color: '#FFFFFF',
+                    border: 'none', borderRadius: 6, cursor: isCorrecting ? 'default' : 'pointer',
+                    fontFamily: 'Inter, sans-serif',
+                    opacity: isCorrecting || !correctionQuery.trim() ? 0.6 : 1,
+                    transition: 'opacity 150ms',
+                  }}
+                >
+                  {isCorrecting ? '...' : 'Go'}
+                </button>
+              </div>
+              <button
+                onClick={() => setShowCorrection(false)}
+                style={{
+                  background: 'none', border: 'none', padding: 0,
+                  fontSize: 11, color: '#6C6D6F', cursor: 'pointer',
+                  fontFamily: 'Inter, sans-serif',
+                  alignSelf: 'flex-start',
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

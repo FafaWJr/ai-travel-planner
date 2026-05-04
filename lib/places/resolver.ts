@@ -56,24 +56,26 @@ export async function resolvePlace(
     return { place: null, primaryPhotoUrl: null, source: 'not_found' };
   }
 
-  // 1. Check resolution cache (permanent mapping)
-  const resolution = await getResolution(queryText, cityContext);
-  if (resolution?.googlePlaceId) {
-    const cached = await getCachedPlace(resolution.googlePlaceId);
-    if (cached) {
-      // Return even if expired (stale-while-revalidate).
-      // Background refresh can be added later if needed.
-      return {
-        place: cached,
-        primaryPhotoUrl: cached.photoCount > 0
-          ? buildPhotoProxyUrl(cached.googlePlaceId, 0)
-          : null,
-        source: 'cache',
-      };
+  // 1. Check resolution cache (skipped when force=true)
+  if (!req.force) {
+    const resolution = await getResolution(queryText, cityContext);
+    if (resolution?.googlePlaceId) {
+      const cached = await getCachedPlace(resolution.googlePlaceId);
+      if (cached) {
+        // Return even if expired (stale-while-revalidate).
+        // Background refresh can be added later if needed.
+        return {
+          place: cached,
+          primaryPhotoUrl: cached.photoCount > 0
+            ? buildPhotoProxyUrl(cached.googlePlaceId, 0)
+            : null,
+          source: 'cache',
+        };
+      }
     }
   }
 
-  // 2. Cache miss: call Google Places Text Search (New)
+  // 2. Cache miss (or force bypass): call Google Places Text Search (New)
   const googleResult = await searchGooglePlaces(req.query, {
     lat: req.lat,
     lng: req.lng,
@@ -129,6 +131,14 @@ export async function resolvePlace(
   // 7. Persist resolution mapping (permanent)
   if (place) {
     await upsertResolution(queryText, cityContext, place.googlePlaceId);
+    // On a force-correction, also remap the ORIGINAL activity text so future
+    // hovers on the same text resolve to the corrected place automatically.
+    if (req.force && req.originalQuery) {
+      const originalText = normaliseQuery(req.originalQuery);
+      if (originalText && originalText !== queryText) {
+        await upsertResolution(originalText, cityContext, place.googlePlaceId);
+      }
+    }
   }
 
   return {

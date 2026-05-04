@@ -90,6 +90,11 @@ export interface ResolveRequest {
   lng?: number;
   /** ISO 3166-1 alpha-2 region code, e.g. "ID" for Indonesia */
   regionCode?: string;
+  /** When true, bypass the resolution cache and re-resolve from Google */
+  force?: boolean;
+  /** The original activity title. When force-resolving a correction, the
+      resolution mapping is updated for this text so future hovers are fixed. */
+  originalQuery?: string;
 }
 
 /**

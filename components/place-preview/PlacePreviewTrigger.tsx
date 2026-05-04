@@ -50,7 +50,7 @@ export function PlacePreviewTrigger({
   regionCode,
   children,
 }: PlacePreviewTriggerProps) {
-  const { resolve } = usePlaceCache();
+  const { resolve, update } = usePlaceCache();
 
   const [isOpen, setIsOpen] = useState(false);
   const [resolveResult, setResolveResult] = useState<ResolveResponse | null>(null);
@@ -79,6 +79,35 @@ export function PlacePreviewTrigger({
     setResolveResult(result);
     setIsLoading(false);
   }, [query, cityContext, lat, lng, regionCode, resolve]);
+
+  const handleCorrect = useCallback(async (correctedQuery: string) => {
+    try {
+      const res = await fetch('/api/places/resolve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: correctedQuery,
+          cityContext,
+          lat,
+          lng,
+          regionCode,
+          force: true,
+          originalQuery: query,
+        }),
+      });
+
+      if (!res.ok) return;
+
+      const data: ResolveResponse = await res.json();
+      setResolveResult(data);
+
+      // Update client cache for the original query key so future hovers
+      // on this activity use the corrected result without another API call
+      update({ query, cityContext, lat, lng, regionCode }, data);
+    } catch (err) {
+      console.error('[PlacePreviewTrigger] Correction failed:', err);
+    }
+  }, [query, cityContext, lat, lng, regionCode, update]);
 
   const updatePosition = useCallback(() => {
     if (!triggerRef.current) return;
@@ -212,6 +241,7 @@ export function PlacePreviewTrigger({
       <PlacePreviewCard
         place={resolveResult.place}
         primaryPhotoUrl={resolveResult.primaryPhotoUrl}
+        onCorrect={handleCorrect}
       />
     );
   })();

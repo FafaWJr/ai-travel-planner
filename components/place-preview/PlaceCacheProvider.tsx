@@ -17,6 +17,7 @@ import type { ResolveRequest, ResolveResponse } from '@/lib/places/types';
 interface PlaceCacheContextValue {
   resolve: (req: ResolveRequest) => Promise<ResolveResponse>;
   getFromCache: (key: string) => ResolveResponse | undefined;
+  update: (req: ResolveRequest, result: ResolveResponse) => void;
 }
 
 const NOT_FOUND_RESPONSE: ResolveResponse = {
@@ -28,6 +29,7 @@ const NOT_FOUND_RESPONSE: ResolveResponse = {
 const PlaceCacheContext = createContext<PlaceCacheContextValue>({
   resolve: async () => NOT_FOUND_RESPONSE,
   getFromCache: () => undefined,
+  update: () => {},
 });
 
 export function usePlaceCache() {
@@ -89,8 +91,13 @@ export function PlaceCacheProvider({ children }: PlaceCacheProviderProps) {
     return cache.current.get(key);
   }, []);
 
+  const update = useCallback((req: ResolveRequest, result: ResolveResponse) => {
+    const key = buildCacheKey(req);
+    cache.current.set(key, result);
+  }, []);
+
   return (
-    <PlaceCacheContext.Provider value={{ resolve, getFromCache }}>
+    <PlaceCacheContext.Provider value={{ resolve, getFromCache, update }}>
       {children}
     </PlaceCacheContext.Provider>
   );

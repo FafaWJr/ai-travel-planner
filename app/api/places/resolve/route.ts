@@ -47,12 +47,18 @@ export async function POST(request: Request) {
         ? body.regionCode.toUpperCase()
         : undefined;
 
+    const force = body.force === true;
+    const originalQuery =
+      typeof body.originalQuery === 'string' ? body.originalQuery.trim() : undefined;
+
     const req: ResolveRequest = {
       query,
       cityContext,
       lat,
       lng,
       regionCode,
+      force,
+      originalQuery,
     };
 
     const result = await resolvePlace(req);
@@ -60,7 +66,10 @@ export async function POST(request: Request) {
     return NextResponse.json(result, {
       status: 200,
       headers: {
-        'Cache-Control': 'public, max-age=300, s-maxage=3600',
+        // Force corrections must not be cached — the result is a user-driven override
+        'Cache-Control': force
+          ? 'no-store'
+          : 'public, max-age=300, s-maxage=3600',
       },
     });
   } catch (err) {
