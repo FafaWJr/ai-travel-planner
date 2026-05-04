@@ -1,7 +1,7 @@
 # Luna Let's Go - Claude Code Context
-**Last Updated:** 2026-05-04 19:21:57
+**Last Updated:** 2026-05-04 23:01:09
 **Current Branch:** main
-**Last Commit:** d6eb9b7c feat: place preview resolver, cache layer, and resolve API route
+**Last Commit:** 13c5ff32 fix(place-preview): CSP img-src + direct trigger on all activity titles
 **Deployment:** https://www.lunaletsgo.com
 
 ---
@@ -107,16 +107,16 @@ app/auth/signup/page.tsx
 ## Recent Changes (Last 10 Commits)
 
 ```
-d6eb9b7c (HEAD -> main, origin/main, origin/HEAD) feat: place preview resolver, cache layer, and resolve API route
-31700e8e feat: place preview database foundation and types
-dae10c97 fix(mobile): align date/time grid, fix hidden title, add time i18n key
-35ca27e5 fix: mobile form heading sizing and time input visibility
-798f73bb fix(mobile): polish /start form to match approved prototype
-a14d40c6 fix(mobile): responsive fixes for homepage and /start form
-9eda8c7a fix: form page tweaks - mandatory return date, stable pills, SVG icons
-bf656a69 feat: redesign /start form page + remove all 30-second references
-edc6b123 chore: remove 30-second claims, update form and loading copy
-d2e26263 (origin/collab-stage-5-launch, collab-stage-5-launch) feat: homepage v2 redesign, Part 1
+13c5ff32 (HEAD -> main, origin/main, origin/HEAD) fix(place-preview): CSP img-src + direct trigger on all activity titles
+f1f0a357 feat: wire place preview into planner page
+267205f6 feat: place preview frontend components
+093753c7 chore(places): revert debug error logging to clean production format
+58122e07 debug: extract GCP error status string for log visibility
+8ea0e7a4 debug: verbose Google Places error logging (temp)
+743b6ebd chore: revert debug log to original format
+a6d462b6 debug: surface Google Places HTTP status code in logs
+a99d0ac3 chore: redeploy to pick up NEXT_PUBLIC_PLACE_PREVIEW_ENABLED=true
+ff729f33 feat: place preview photo proxy with Supabase Storage caching
 ```
 
 ---
