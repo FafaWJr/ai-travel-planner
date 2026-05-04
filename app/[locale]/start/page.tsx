@@ -230,7 +230,7 @@ export default function StartPage() {
         @media (max-width: 640px) {
           .start-mobile-head {
             display: block;
-            padding: 28px 20px 16px;
+            padding: 82px 20px 16px;
             background: #F8F9FB;
           }
           .start-left {

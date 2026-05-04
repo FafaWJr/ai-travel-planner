@@ -1,7 +1,7 @@
 # Luna Let's Go - Claude Code Context
-**Last Updated:** 2026-05-03 21:28:06
-**Current Branch:** collab-stage-5-launch
-**Last Commit:** 908dfef8 chore: update context for itinerary UX clarity pass
+**Last Updated:** 2026-05-04 15:06:16
+**Current Branch:** main
+**Last Commit:** 35ca27e5 fix: mobile form heading sizing and time input visibility
 **Deployment:** https://www.lunaletsgo.com
 
 ---
@@ -83,6 +83,7 @@ app/[locale]/blog/japan-may-2025-part-2/page.tsx
 app/[locale]/blog/page.tsx
 app/[locale]/blog/rio-de-janeiro-5-days/page.tsx
 app/[locale]/deals/page.tsx
+app/[locale]/how-to-use-luna/page.tsx
 app/[locale]/my-trips/page.tsx
 app/[locale]/page.tsx
 app/[locale]/plan/page.tsx
@@ -104,16 +105,16 @@ app/auth/signup/page.tsx
 ## Recent Changes (Last 10 Commits)
 
 ```
-908dfef8 (HEAD -> collab-stage-5-launch, origin/main, origin/HEAD) chore: update context for itinerary UX clarity pass
-f549d1a1 (origin/collab-stage-5-launch) feat(itinerary): UX clarity pass -- one-sentence descriptions, food prefixes, duration hints
-2c0fbe0f fix: recover itinerary UX quality with rich descriptions and formatted output
-177d1024 feat: upgrade itinerary generation system prompt and schema enforcement
-97e21507 feat(collab): Plan Together homepage section + OG image + launch prep (Stage 5)
-e5e1d18e (main) fix: enforce date picker min constraints on mobile (iOS Safari)
-a95fd9e1 fix(collab): share icon always visible + comment icons on join
-47eba6a3 style(collab): fix share icon placement + split comment icon/panel
-baa199c8 style(collab): share icon + comment icon placement + shared card dates
-418c7131 feat(collab): My Trips owned/shared split + UX polish (Stage 4c)
+35ca27e5 (HEAD -> main, origin/main, origin/HEAD) fix: mobile form heading sizing and time input visibility
+798f73bb fix(mobile): polish /start form to match approved prototype
+a14d40c6 fix(mobile): responsive fixes for homepage and /start form
+9eda8c7a fix: form page tweaks - mandatory return date, stable pills, SVG icons
+bf656a69 feat: redesign /start form page + remove all 30-second references
+edc6b123 chore: remove 30-second claims, update form and loading copy
+d2e26263 (origin/collab-stage-5-launch, collab-stage-5-launch) feat: homepage v2 redesign, Part 1
+44afbef6 fix(how-to-use-luna): rebuild page and i18n to match HTML reference
+99d3cc84 feat: add How to Use Luna guide page with footer link
+8065deac chore: update context after push to main
 ```
 
 ---

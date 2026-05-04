@@ -223,6 +223,7 @@
     "from": "Chegada",
     "to": "Retorno",
     "optional": "opcional",
+    "time": "Hora",
     "estArrival": "Chegada prevista",
     "estReturn": "Retorno previsto",
     "travellers": "Viajantes",

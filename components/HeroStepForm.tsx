@@ -338,7 +338,6 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
         .step-header { padding: 12px 16px !important; }
         .step-label { display: none !important; }
         .hf-content { padding: 18px 16px !important; }
-        div.hf-time-cell { width: 100px !important; }
         .hf-companion-grid { grid-template-columns: repeat(2, 1fr) !important; }
         .hf-budget-grid { grid-template-columns: repeat(2, 1fr) !important; }
       }
@@ -373,39 +372,43 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
               <label style={lbl}>{t('travelDates')} <span style={{ color:'var(--orange)' }}>*</span></label>
               <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
                 <div>
-                  <span style={subLbl}>{t('from')}</span>
-                  <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-                    <div className="hf-date-wrap" style={{ flex:1, minWidth:0, display:'flex', alignItems:'center', border:`1.5px solid ${errors.dep?'#E53E3E':'rgba(0,68,123,0.15)'}`, borderRadius:'var(--r-md)', background:'#fff', height:50, padding:'0 14px', gap:10, boxSizing:'border-box' as const, transition:'border-color 0.18s' }}>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 100px', gap:8, marginBottom:6, alignItems:'end' }}>
+                    <span style={subLbl}>{t('from')}</span>
+                    <span style={{ fontFamily:'var(--font-head)',fontWeight:500,fontSize:10,color:'var(--gray-dark)',textTransform:'uppercase' as const,letterSpacing:'0.06em' }}>{t('time')} <span style={{ fontWeight:400,textTransform:'none' as const,letterSpacing:0 }}>({t('optional')})</span></span>
+                  </div>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 100px', gap:8 }}>
+                    <div className="hf-date-wrap" style={{ display:'flex', alignItems:'center', border:`1.5px solid ${errors.dep?'#E53E3E':'rgba(0,68,123,0.15)'}`, borderRadius:'var(--r-md)', background:'#fff', height:50, padding:'0 14px', gap:10, boxSizing:'border-box' as const, transition:'border-color 0.18s' }}>
                       <CalIcon />
                       <input type="date" value={dep} min={today}
                         onChange={e=>{const v=e.target.value;if(v&&v<today){setDep('');return;}setDep(v);if(ret&&v>ret)setRet('');if(v)setErrors(p=>({...p,dep:''}));}}
                         style={{ flex:1, border:'none', outline:'none', background:'transparent', fontFamily:'var(--font-body)', fontSize:14, color:'#000', padding:0, minWidth:0 }} />
                     </div>
-                    <span className="hf-time-cell" style={{ fontFamily:'var(--font-body)',fontSize:11,color:'var(--gray-dark)',whiteSpace:'nowrap',flexShrink:0 }}>{t('estArrival')}</span>
-                    <div className="hf-time-cell" style={{ position:'relative', width:110, flexShrink:0 }}>
+                    <div style={{ background:'#fff', border:'1.5px solid rgba(0,68,123,0.15)', borderRadius:'var(--r-md)', height:50, display:'flex', alignItems:'center', justifyContent:'center', padding:'0 8px', boxSizing:'border-box' as const, transition:'border-color 0.18s' }}
+                      onFocus={e=>(e.currentTarget.style.borderColor='var(--navy)')}
+                      onBlur={e=>(e.currentTarget.style.borderColor='rgba(0,68,123,0.15)')}>
                       <input type="time" value={depTime} onChange={e=>setDepTime(e.target.value)}
-                        style={{...inp,padding:'11px 8px'}}
-                        onFocus={e=>(e.target.style.borderColor='var(--navy)')}
-                        onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} />
+                        style={{ border:'none', outline:'none', background:'transparent', fontFamily:'var(--font-body)', fontSize:13, color:'#000', width:'100%', textAlign:'center' as const }} />
                     </div>
                   </div>
                   {errors.dep && <p style={{ fontFamily:'var(--font-body)',fontSize:12,color:'#E53E3E',marginTop:5,display:'flex',alignItems:'center',gap:4 }}>⚠ {errors.dep}</p>}
                 </div>
                 <div>
-                  <span style={subLbl}>{t('to')}</span>
-                  <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-                    <div className="hf-date-wrap" style={{ flex:1, minWidth:0, display:'flex', alignItems:'center', border:`1.5px solid ${errors.ret?'#E53E3E':'rgba(0,68,123,0.15)'}`, borderRadius:'var(--r-md)', background:'#fff', height:50, padding:'0 14px', gap:10, boxSizing:'border-box' as const, transition:'border-color 0.18s' }}>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 100px', gap:8, marginBottom:6, alignItems:'end' }}>
+                    <span style={subLbl}>{t('to')}</span>
+                    <span style={{ fontFamily:'var(--font-head)',fontWeight:500,fontSize:10,color:'var(--gray-dark)',textTransform:'uppercase' as const,letterSpacing:'0.06em' }}>{t('time')} <span style={{ fontWeight:400,textTransform:'none' as const,letterSpacing:0 }}>({t('optional')})</span></span>
+                  </div>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 100px', gap:8 }}>
+                    <div className="hf-date-wrap" style={{ display:'flex', alignItems:'center', border:`1.5px solid ${errors.ret?'#E53E3E':'rgba(0,68,123,0.15)'}`, borderRadius:'var(--r-md)', background:'#fff', height:50, padding:'0 14px', gap:10, boxSizing:'border-box' as const, transition:'border-color 0.18s' }}>
                       <CalIcon />
                       <input type="date" value={ret} min={dep || today}
                         onChange={e=>{const v=e.target.value;if(v&&v<(dep||today)){setRet('');return;}setRet(v);if(v)setErrors(p=>({...p,ret:''}));}}
                         style={{ flex:1, border:'none', outline:'none', background:'transparent', fontFamily:'var(--font-body)', fontSize:14, color:'#000', padding:0, minWidth:0 }} />
                     </div>
-                    <span className="hf-time-cell" style={{ fontFamily:'var(--font-body)',fontSize:11,color:'var(--gray-dark)',whiteSpace:'nowrap',flexShrink:0 }}>{t('estReturn')}</span>
-                    <div className="hf-time-cell" style={{ position:'relative', width:110, flexShrink:0 }}>
+                    <div style={{ background:'#fff', border:'1.5px solid rgba(0,68,123,0.15)', borderRadius:'var(--r-md)', height:50, display:'flex', alignItems:'center', justifyContent:'center', padding:'0 8px', boxSizing:'border-box' as const, transition:'border-color 0.18s' }}
+                      onFocus={e=>(e.currentTarget.style.borderColor='var(--navy)')}
+                      onBlur={e=>(e.currentTarget.style.borderColor='rgba(0,68,123,0.15)')}>
                       <input type="time" value={retTime} onChange={e=>setRetTime(e.target.value)}
-                        style={{...inp,padding:'11px 8px'}}
-                        onFocus={e=>(e.target.style.borderColor='var(--navy)')}
-                        onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} />
+                        style={{ border:'none', outline:'none', background:'transparent', fontFamily:'var(--font-body)', fontSize:13, color:'#000', width:'100%', textAlign:'center' as const }} />
                     </div>
                   </div>
                   {errors.ret && <p style={{ fontFamily:'var(--font-body)',fontSize:12,color:'#E53E3E',marginTop:5,display:'flex',alignItems:'center',gap:4 }}>⚠ {errors.ret}</p>}
