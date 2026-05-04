@@ -38,6 +38,8 @@ import {
   migrateToKeyed,
   type ChatHistory,
 } from '@/lib/chat-history';
+import { PlaceCacheProvider, usePlaceCache, PlacePreviewCard, PlacePreviewSkeleton } from '@/components/place-preview';
+import type { ResolveResponse } from '@/lib/places/types';
 
 /* Map next-intl locale codes to JS Intl locale codes for date formatting */
 function toDateLocale(locale: string): string {
@@ -242,6 +244,8 @@ function PlanContent() {
   const locale       = useLocale();
   const searchParams = useSearchParams();
   const router       = useRouter();
+  const placePreviewEnabled = process.env.NEXT_PUBLIC_PLACE_PREVIEW_ENABLED === 'true';
+  const { resolve: resolvePlace } = usePlaceCache();
   const sectionLabel = (id: string): string => {
     const map: Record<string, string> = {
       overview:      t('tabs.overview'),
@@ -907,10 +911,17 @@ function PlanContent() {
     }).join('\n\n');
   }, []);
 
-  // Place photo popup
+  // Place photo popup (legacy, used when NEXT_PUBLIC_PLACE_PREVIEW_ENABLED is false)
   const [popup, setPopup] = useState<{ name:string; x:number; y:number } | null>(null);
   const [photoCache, setPhotoCache] = useState<Record<string, string | null | '__loading__'>>({});
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Rich place preview card (used when NEXT_PUBLIC_PLACE_PREVIEW_ENABLED is true)
+  const [placePreview, setPlacePreview] = useState<{
+    resolveResponse: ResolveResponse | null;
+    loading: boolean;
+    position: { x: number; y: number };
+    name: string;
+  } | null>(null);
 
   // Normal generation — skip if we have a tripId or a pending guest draft
   useEffect(() => {
@@ -1270,29 +1281,51 @@ function PlanContent() {
     }
   };
 
+  // cityContext for the place resolver — same derivation as EditableItinerary's destination prop
+  const tripCityContext = (prompt
+    ? prompt.replace(/^plan a (trip to |)?/i, '').replace(/\b(from \d{4}-\d{2}-\d{2}.*)/i, '').trim().split(/\s+/).slice(0, 5).join(' ')
+    : '') || savedTripDestination;
+
   const handlePlaceMouseOver = async (e: React.MouseEvent) => {
     const el = (e.target as HTMLElement).closest('[data-place]') as HTMLElement | null;
     if (!el) return;
     if (hideTimer.current) { clearTimeout(hideTimer.current); hideTimer.current = null; }
     const name = el.getAttribute('data-place')!;
     const rect = el.getBoundingClientRect();
-    const x = Math.min(rect.left, window.innerWidth - 300);
-    const y = rect.bottom + 8;
-    setPopup({ name, x, y });
-    if (!(name in photoCache)) {
-      setPhotoCache(c => ({ ...c, [name]: '__loading__' }));
+
+    if (placePreviewEnabled) {
+      const x = Math.min(rect.left, window.innerWidth - 320 - 16);
+      const y = rect.bottom + 8;
+      setPlacePreview({ name, loading: true, resolveResponse: null, position: { x, y } });
       try {
-        const res  = await fetch(`/api/place-photo?q=${encodeURIComponent(name)}`);
-        const data = await res.json();
-        setPhotoCache(c => ({ ...c, [name]: data.url || null }));
+        const result = await resolvePlace({ query: name, cityContext: tripCityContext });
+        setPlacePreview(prev => prev?.name === name ? { ...prev, loading: false, resolveResponse: result } : prev);
       } catch {
-        setPhotoCache(c => ({ ...c, [name]: null }));
+        setPlacePreview(prev => prev?.name === name ? { ...prev, loading: false } : prev);
+      }
+    } else {
+      const x = Math.min(rect.left, window.innerWidth - 300);
+      const y = rect.bottom + 8;
+      setPopup({ name, x, y });
+      if (!(name in photoCache)) {
+        setPhotoCache(c => ({ ...c, [name]: '__loading__' }));
+        try {
+          const res  = await fetch(`/api/place-photo?q=${encodeURIComponent(name)}`);
+          const data = await res.json();
+          setPhotoCache(c => ({ ...c, [name]: data.url || null }));
+        } catch {
+          setPhotoCache(c => ({ ...c, [name]: null }));
+        }
       }
     }
   };
 
   const handlePlaneMouseLeave = () => {
-    hideTimer.current = setTimeout(() => setPopup(null), 120);
+    if (placePreviewEnabled) {
+      hideTimer.current = setTimeout(() => setPlacePreview(null), 200);
+    } else {
+      hideTimer.current = setTimeout(() => setPopup(null), 120);
+    }
   };
 
   const fetchExtraIdeas = async () => {
@@ -2258,8 +2291,42 @@ function PlanContent() {
         )}
       </div>
 
-      {/* ── Place photo popup ── */}
-      {popup && (
+      {/* ── Rich place preview card (NEXT_PUBLIC_PLACE_PREVIEW_ENABLED=true) ── */}
+      {placePreviewEnabled && placePreview && (
+        <div
+          onMouseEnter={() => { if (hideTimer.current) { clearTimeout(hideTimer.current); hideTimer.current = null; } }}
+          onMouseLeave={() => { hideTimer.current = setTimeout(() => setPlacePreview(null), 200); }}
+          style={{
+            position: 'fixed', zIndex: 9999,
+            top: placePreview.position.y, left: placePreview.position.x,
+            animation: 'popupFadeIn 0.15s ease both',
+            pointerEvents: 'auto',
+          }}
+        >
+          {placePreview.loading || !placePreview.resolveResponse ? (
+            <PlacePreviewSkeleton />
+          ) : placePreview.resolveResponse.source === 'not_found' || !placePreview.resolveResponse.place ? (
+            <div style={{
+              width: 320, borderRadius: 12, background: '#FFFFFF',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.12)', border: '1px solid #E8E8E8',
+              padding: '20px 16px', fontFamily: "'Inter', sans-serif",
+            }}>
+              <div style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 15, color: '#00447B', marginBottom: 8 }}>
+                {placePreview.name}
+              </div>
+              <div style={{ fontSize: 13, color: '#6C6D6F' }}>Details not available for this place.</div>
+            </div>
+          ) : (
+            <PlacePreviewCard
+              place={placePreview.resolveResponse.place}
+              primaryPhotoUrl={placePreview.resolveResponse.primaryPhotoUrl}
+            />
+          )}
+        </div>
+      )}
+
+      {/* ── Legacy place photo popup (NEXT_PUBLIC_PLACE_PREVIEW_ENABLED=false) ── */}
+      {!placePreviewEnabled && popup && (
         <div
           onMouseEnter={() => { if (hideTimer.current) { clearTimeout(hideTimer.current); hideTimer.current = null; } }}
           onMouseLeave={() => setPopup(null)}
@@ -2275,7 +2342,6 @@ function PlanContent() {
             pointerEvents:'auto',
           }}
         >
-          {/* Photo area */}
           {photoCache[popup.name] === '__loading__' || !(popup.name in photoCache) ? (
             <div style={{ height:160, background:'#F4F7FB', display:'flex', alignItems:'center', justifyContent:'center' }}>
               <div style={{ width:24, height:24, borderRadius:'50%', border:'3px solid rgba(0,68,123,0.10)', borderTop:'3px solid #FF8210', animation:'spin 0.8s linear infinite' }} />
@@ -2285,7 +2351,6 @@ function PlanContent() {
           ) : (
             <div style={{ height:100, background:'#F4F7FB', display:'flex', alignItems:'center', justifyContent:'center', fontSize:36 }}>📍</div>
           )}
-          {/* Name */}
           <div style={{ padding:'12px 14px 14px' }}>
             <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:14, color:'#00447B', marginBottom:2 }}>{popup.name}</p>
             <p style={{ fontFamily:"'Inter',sans-serif", fontSize:11, color:'#9CA3AF' }}>{t('activity.tapToSearch')}</p>
@@ -2349,15 +2414,23 @@ function PlanContent() {
 
 export default function PlanPage() {
   const t = useTranslations('plan');
+  const placePreviewEnabled = process.env.NEXT_PUBLIC_PLACE_PREVIEW_ENABLED === 'true';
+  const fallback = (
+    <div style={{ background:'#F4F7FB', minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:16 }}>
+      <div style={{ width:48, height:48, borderRadius:'50%', border:'3px solid rgba(0,68,123,0.12)', borderTop:'3px solid #FF8210', animation:'spin 1s linear infinite' }} />
+      <p style={{ fontFamily:"'Poppins',sans-serif", color:'#00447B', fontSize:15 }}>{t('loading')}</p>
+      <style>{`@keyframes spin { to { transform:rotate(360deg); } }`}</style>
+    </div>
+  );
   return (
-    <Suspense fallback={
-      <div style={{ background:'#F4F7FB', minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:16 }}>
-        <div style={{ width:48, height:48, borderRadius:'50%', border:'3px solid rgba(0,68,123,0.12)', borderTop:'3px solid #FF8210', animation:'spin 1s linear infinite' }} />
-        <p style={{ fontFamily:"'Poppins',sans-serif", color:'#00447B', fontSize:15 }}>{t('loading')}</p>
-        <style>{`@keyframes spin { to { transform:rotate(360deg); } }`}</style>
-      </div>
-    }>
-      <PlanContent />
+    <Suspense fallback={fallback}>
+      {placePreviewEnabled ? (
+        <PlaceCacheProvider>
+          <PlanContent />
+        </PlaceCacheProvider>
+      ) : (
+        <PlanContent />
+      )}
     </Suspense>
   );
 }
