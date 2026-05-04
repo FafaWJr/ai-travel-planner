@@ -439,6 +439,12 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
               <p style={{ fontFamily:'var(--font-body)',fontSize:11,color:'var(--gray-dark)',marginBottom:8,lineHeight:1.5 }}>{t('idealTripHint')}</p>
               <textarea value={notes} onChange={e=>setNotes(e.target.value)} placeholder={t('idealTripPlaceholder')} maxLength={600} rows={3} style={{ ...inp,resize:'vertical' }} onFocus={e=>(e.target.style.borderColor='var(--navy)')} onBlur={e=>(e.target.style.borderColor='rgba(0,68,123,0.15)')} />
             </div>
+            {/* Info banner */}
+            <div style={{ background:'#FFF3E5',border:'1px solid rgba(255,130,16,0.25)',borderRadius:12,padding:'11px 14px',display:'flex',alignItems:'flex-start',gap:10,marginTop:4 }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#FF8210" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width:18,height:18,flexShrink:0,marginTop:1 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              <p style={{ fontFamily:'var(--font-body)',fontSize:13,color:'var(--navy)',lineHeight:1.45,fontWeight:500,margin:0 }}>{t('infoBanner')}</p>
+            </div>
+
             <div style={{ display:'flex',justifyContent:'space-between',paddingTop:4 }}>
               <button onClick={()=>setStep(1)} style={navBtn(false)}>← {t('back')}</button>
               <button onClick={submit} style={{ ...navBtn(),background:'var(--orange)',boxShadow:'0 6px 20px rgba(255,130,16,0.30)',letterSpacing:0.3 }}>{t('generate')}</button>

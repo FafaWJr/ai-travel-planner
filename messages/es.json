@@ -214,9 +214,9 @@
   "start": {
     "title": "Cuéntale a Luna sobre tu viaje",
     "subtitle": "Comparte algunos detalles y Luna creará un itinerario personalizado solo para ti.",
-    "step1": "Dónde y Cuándo",
-    "step2": "Estilo de Viaje",
-    "step3": "Presupuesto y Viaje",
+    "step1": "Dónde & cuándo",
+    "step2": "Quién & estilo",
+    "step3": "Presupuesto & ambiente",
     "destination": "Destino",
     "destinationPlaceholder": "París, Francia · Tokio, Japón · Bali, Indonesia…",
     "from": "Desde",
@@ -275,7 +275,22 @@
       "safari": "Safari",
       "roadTrip": "Viaje en Auto",
       "cityBreak": "Escapada Urbana"
-    }
+    },
+    "infoBanner": "Luna creará tu itinerario completo en menos de 90 segundos. Puedes refinar cualquier cosa después."
+  },
+  "startHero": {
+    "badge": "Planea tu viaje perfecto",
+    "heading1": "Dile a Luna a dónde ir.",
+    "heading2": "Ella se encarga del resto.",
+    "subtitle": "Completa los detalles y Luna construirá tu itinerario personalizado en menos de 90 segundos. Ajusta cualquier cosa después.",
+    "feat1Title": "Menos de 90 segundos",
+    "feat1Body": "Del destino a un plan completo día a día.",
+    "feat2Title": "Hecho a tu medida",
+    "feat2Body": "Tu ritmo, tu presupuesto, tu estilo de viaje. Cada detalle considerado.",
+    "feat3Title": "Habla para refinar cualquier cosa",
+    "feat3Body": "Cambia una actividad, añade un restaurante, cambia el ritmo. Luna edita en tiempo real.",
+    "feat4Title": "Planea con amigos",
+    "feat4Body": "Comparte tu viaje. Todos editan juntos, en tiempo real."
   },
   "language": {
     "en": "EN",

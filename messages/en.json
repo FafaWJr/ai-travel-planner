@@ -214,9 +214,9 @@
   "start": {
     "title": "Tell Luna about your trip",
     "subtitle": "Share a few details and Luna will craft a personalised itinerary just for you.",
-    "step1": "Where & When",
-    "step2": "Travel Style",
-    "step3": "Budget & Trip",
+    "step1": "Where & when",
+    "step2": "Who & style",
+    "step3": "Budget & vibe",
     "destination": "Destination",
     "destinationPlaceholder": "Paris, France · Tokyo, Japan · Bali, Indonesia…",
     "from": "From",
@@ -275,7 +275,22 @@
       "safari": "Safari",
       "roadTrip": "Road Trip",
       "cityBreak": "City Break"
-    }
+    },
+    "infoBanner": "Luna will craft your full itinerary in under 90 seconds. You can refine anything after."
+  },
+  "startHero": {
+    "badge": "Plan your perfect trip",
+    "heading1": "Tell Luna where.",
+    "heading2": "She'll do the rest.",
+    "subtitle": "Fill in the details and Luna will build your personalised itinerary in under 90 seconds. Tweak anything after.",
+    "feat1Title": "Under 90 seconds",
+    "feat1Body": "From destination to a full day-by-day plan.",
+    "feat2Title": "Built around you",
+    "feat2Body": "Your pace, your budget, your travel style. Every detail considered.",
+    "feat3Title": "Chat to refine anything",
+    "feat3Body": "Swap an activity, add a restaurant, shift the pace. Luna edits live.",
+    "feat4Title": "Plan with friends",
+    "feat4Body": "Share your trip. Everyone edits together, in real time."
   },
   "language": {
     "en": "EN",
