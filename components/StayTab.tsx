@@ -5,6 +5,10 @@ import { bookingComLink } from '@/lib/affiliate';
 import { useTranslations } from 'next-intl';
 import type { CommentConfig } from '@/lib/comment-types';
 import CommentThread from './comments/CommentThread';
+import { usePlaceCache } from '@/components/place-preview';
+import { cleanActivityQuery, isResolvableQuery } from '@/lib/places/query-cleaner';
+
+const placePreviewEnabled = process.env.NEXT_PUBLIC_PLACE_PREVIEW_ENABLED === 'true';
 
 type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'night';
 
@@ -366,6 +370,7 @@ async function fetchHotelPhotosFromAPI(hotelName: string, city: string): Promise
 /* ─── Main component ─────────────────────────────────────────── */
 export default function StayTab({ prompt, destination, checkIn, checkOut, budget, itineraryRef, onAddToItinerary, onRemoveActivitiesMatching, onHotelsConfirmed, externalAccepted, commentConfig }: Props) {
   const t = useTranslations('plan');
+  const { resolve } = usePlaceCache();
   const [segments,      setSegments]      = useState<LocationSegment[]>([]);
   const [seenIds,       setSeenIds]       = useState<Set<string>>(new Set());
   const [confirmed,     setConfirmed]     = useState<Record<string, AcceptedHotel>>({});
@@ -397,20 +402,33 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
     fetchPhotos(externalAccepted.map(ah => ah.hotel));
   }, [externalAccepted]); // eslint-disable-line
 
-  /* ── Fetch hotel photos via Google Places API ── */
+  /* ── Fetch hotel photos ── */
   const fetchPhotos = useCallback(async (hotels: Hotel[]) => {
     const unfetched = hotels.filter(h => !fetchedRef.current.has(h.id));
     if (unfetched.length === 0) return;
     unfetched.forEach(h => fetchedRef.current.add(h.id));
 
     await Promise.all(unfetched.map(async (hotel) => {
+      // When Place Preview is enabled, resolve via Google Places first.
+      // Falls back to the original /api/hotel-photos pipeline if no match.
+      if (placePreviewEnabled) {
+        const query = cleanActivityQuery(hotel.name);
+        if (query && isResolvableQuery(query)) {
+          const result = await resolve({ query, cityContext: destination });
+          if (result.primaryPhotoUrl) {
+            setPhotoCache(prev => ({ ...prev, [hotel.id]: [result.primaryPhotoUrl!] }));
+            return;
+          }
+        }
+      }
+      // Original pipeline: Unsplash → Pexels → picsum fallback
       const photos = await fetchHotelPhotosFromAPI(hotel.name, destination);
       setPhotoCache(prev => ({
         ...prev,
         [hotel.id]: photos.length > 0 ? photos : [picsumFallback(hotel.id)],
       }));
     }));
-  }, [destination]);
+  }, [destination, resolve]);
 
   /* ── Load suggestions ── */
   const loadSuggestions = useCallback(async (opts: { excludeNames?: string[]; isMore?: boolean } = {}) => {
