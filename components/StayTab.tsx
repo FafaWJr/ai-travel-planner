@@ -415,8 +415,13 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
         const query = cleanActivityQuery(hotel.name);
         if (query && isResolvableQuery(query)) {
           const result = await resolve({ query, cityContext: destination });
-          if (result.primaryPhotoUrl) {
-            setPhotoCache(prev => ({ ...prev, [hotel.id]: [result.primaryPhotoUrl!] }));
+          if (result.place && result.place.photoCount > 0) {
+            const pid = result.place.googlePlaceId;
+            const count = Math.min(result.place.photoCount, 5);
+            const urls = Array.from({ length: count }, (_, i) =>
+              `/api/places/photo/${encodeURIComponent(pid)}/${i}?w=800`
+            );
+            setPhotoCache(prev => ({ ...prev, [hotel.id]: urls }));
             return;
           }
         }

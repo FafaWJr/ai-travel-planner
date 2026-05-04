@@ -2,31 +2,32 @@
 
 // components/place-preview/PlacePreviewCard.tsx
 // Rich preview card showing Google Places data: photo, name, rating,
-// address, summary, and attribution. Variant layout by entity type.
-// Hotels: navigable photo gallery (up to 5 photos, opacity crossfade).
-// All other entity types: single photo (unchanged from Phase 1).
+// address, summary, and attribution.
+// All entity types: navigable photo gallery. Hotels: up to 5 photos.
+// Attractions and restaurants: up to 3 photos. 1-photo places: no chrome.
 
 import { useState, useCallback, useEffect } from 'react';
 import { MapPin, Star, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { CachedPlace } from '@/lib/places/types';
 import { GoogleAttribution } from './GoogleAttribution';
 
-// ─── Hotel photo gallery ──────────────────────────────────────────────────────
+// ─── Photo gallery (universal: hotels up to 5, all others up to 3) ────────────
 
-interface HotelPhotoGalleryProps {
-  googlePlaceId: string;
+interface PhotoGalleryProps {
+  placeId: string;
   photoCount: number;
   displayName: string;
+  maxPhotos?: number;
 }
 
-function HotelPhotoGallery({ googlePlaceId, photoCount, displayName }: HotelPhotoGalleryProps) {
-  const totalPhotos = Math.min(photoCount, 5);
+function PhotoGallery({ placeId, photoCount, displayName, maxPhotos = 3 }: PhotoGalleryProps) {
+  const totalPhotos = Math.min(photoCount, maxPhotos);
   const [activeIndex, setActiveIndex] = useState(0);
   const [loadedIndices, setLoadedIndices] = useState<Set<number>>(new Set([0]));
   const [errorIndices, setErrorIndices] = useState<Set<number>>(new Set());
 
   const buildPhotoUrl = (index: number) =>
-    `/api/places/photo/${encodeURIComponent(googlePlaceId)}/${index}?w=800`;
+    `/api/places/photo/${encodeURIComponent(placeId)}/${index}?w=800`;
 
   const goTo = useCallback((index: number) => {
     const next = ((index % totalPhotos) + totalPhotos) % totalPhotos;
@@ -47,7 +48,7 @@ function HotelPhotoGallery({ googlePlaceId, photoCount, displayName }: HotelPhot
     });
   }, [activeIndex, totalPhotos]);
 
-  // Single photo: no gallery chrome
+  // Single photo: render without gallery chrome
   if (totalPhotos <= 1) {
     return (
       <div style={{ width: '100%', height: 200, overflow: 'hidden', background: '#F0F0F0', position: 'relative' }}>
@@ -168,7 +169,6 @@ export function PlacePreviewCard({
   photoAuthorUri,
   onCorrect,
 }: PlacePreviewCardProps) {
-  const [imageError, setImageError] = useState(false);
   const [showCorrection, setShowCorrection] = useState(false);
   const [correctionQuery, setCorrectionQuery] = useState('');
   const [isCorrecting, setIsCorrecting] = useState(false);
@@ -219,37 +219,14 @@ export function PlacePreviewCard({
         fontFamily: 'Inter, sans-serif',
       }}
     >
-      {/* Photo — gallery for hotels with photos, single img for everything else */}
-      {isHotel && place.photoCount > 0 ? (
-        <HotelPhotoGallery
-          googlePlaceId={place.googlePlaceId}
+      {/* Photo — universal gallery: hotels 5 photos, attractions/restaurants 3 */}
+      {place.photoCount > 0 ? (
+        <PhotoGallery
+          placeId={place.googlePlaceId}
           photoCount={place.photoCount}
           displayName={place.displayName}
+          maxPhotos={isHotel ? 5 : 3}
         />
-      ) : primaryPhotoUrl && !imageError ? (
-        <div
-          style={{
-            width: '100%',
-            height: 200,
-            overflow: 'hidden',
-            background: '#F0F0F0',
-            position: 'relative',
-          }}
-        >
-          <img
-            src={primaryPhotoUrl}
-            alt={place.displayName}
-            loading="lazy"
-            decoding="async"
-            onError={() => setImageError(true)}
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              display: 'block',
-            }}
-          />
-        </div>
       ) : null}
 
       {/* Content */}
