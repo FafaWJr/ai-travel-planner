@@ -3,11 +3,153 @@
 // components/place-preview/PlacePreviewCard.tsx
 // Rich preview card showing Google Places data: photo, name, rating,
 // address, summary, and attribution. Variant layout by entity type.
+// Hotels: navigable photo gallery (up to 5 photos, opacity crossfade).
+// All other entity types: single photo (unchanged from Phase 1).
 
-import { useState } from 'react';
-import { MapPin, Star, ExternalLink } from 'lucide-react';
+import { useState, useCallback, useEffect } from 'react';
+import { MapPin, Star, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { CachedPlace } from '@/lib/places/types';
 import { GoogleAttribution } from './GoogleAttribution';
+
+// ─── Hotel photo gallery ──────────────────────────────────────────────────────
+
+interface HotelPhotoGalleryProps {
+  googlePlaceId: string;
+  photoCount: number;
+  displayName: string;
+}
+
+function HotelPhotoGallery({ googlePlaceId, photoCount, displayName }: HotelPhotoGalleryProps) {
+  const totalPhotos = Math.min(photoCount, 5);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [loadedIndices, setLoadedIndices] = useState<Set<number>>(new Set([0]));
+  const [errorIndices, setErrorIndices] = useState<Set<number>>(new Set());
+
+  const buildPhotoUrl = (index: number) =>
+    `/api/places/photo/${encodeURIComponent(googlePlaceId)}/${index}?w=800`;
+
+  const goTo = useCallback((index: number) => {
+    const next = ((index % totalPhotos) + totalPhotos) % totalPhotos;
+    setActiveIndex(next);
+    setLoadedIndices(prev => new Set([...prev, next]));
+  }, [totalPhotos]);
+
+  const goPrev = useCallback(() => goTo(activeIndex - 1), [activeIndex, goTo]);
+  const goNext = useCallback(() => goTo(activeIndex + 1), [activeIndex, goTo]);
+
+  // Pre-load adjacent images when active index changes
+  useEffect(() => {
+    setLoadedIndices(prev => {
+      const next = new Set(prev);
+      if (activeIndex + 1 < totalPhotos) next.add(activeIndex + 1);
+      if (activeIndex - 1 >= 0) next.add(activeIndex - 1);
+      return next;
+    });
+  }, [activeIndex, totalPhotos]);
+
+  // Single photo: no gallery chrome
+  if (totalPhotos <= 1) {
+    return (
+      <div style={{ width: '100%', height: 200, overflow: 'hidden', background: '#F0F0F0', position: 'relative' }}>
+        <img
+          src={buildPhotoUrl(0)}
+          alt={displayName}
+          loading="lazy"
+          decoding="async"
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+        />
+      </div>
+    );
+  }
+
+  const arrowStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    width: 28,
+    height: 28,
+    borderRadius: '50%',
+    background: 'rgba(0,0,0,0.45)',
+    border: 'none',
+    color: '#FFFFFF',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2,
+    padding: 0,
+    backdropFilter: 'blur(4px)',
+  };
+
+  return (
+    <div style={{ width: '100%', height: 200, overflow: 'hidden', background: '#F0F0F0', position: 'relative' }}>
+      {/* Photo stack — only loaded images rendered; active shown at full opacity */}
+      {Array.from(loadedIndices).map(idx => (
+        <img
+          key={idx}
+          src={buildPhotoUrl(idx)}
+          alt={`${displayName} photo ${idx + 1}`}
+          loading="lazy"
+          decoding="async"
+          onError={() => setErrorIndices(prev => new Set([...prev, idx]))}
+          style={{
+            position: 'absolute',
+            top: 0, left: 0,
+            width: '100%', height: '100%',
+            objectFit: 'cover',
+            opacity: idx === activeIndex ? 1 : 0,
+            transition: 'opacity 200ms ease-in-out',
+            display: errorIndices.has(idx) ? 'none' : 'block',
+          }}
+        />
+      ))}
+
+      {/* Left arrow */}
+      <button
+        onClick={(e) => { e.stopPropagation(); goPrev(); }}
+        aria-label="Previous photo"
+        style={{ ...arrowStyle, left: 8 }}
+      >
+        <ChevronLeft size={14} />
+      </button>
+
+      {/* Right arrow */}
+      <button
+        onClick={(e) => { e.stopPropagation(); goNext(); }}
+        aria-label="Next photo"
+        style={{ ...arrowStyle, right: 8 }}
+      >
+        <ChevronRight size={14} />
+      </button>
+
+      {/* Dot indicators */}
+      <div style={{
+        position: 'absolute', bottom: 8, left: '50%',
+        transform: 'translateX(-50%)',
+        display: 'flex', gap: 5, zIndex: 2,
+      }}>
+        {Array.from({ length: totalPhotos }, (_, i) => (
+          <button
+            key={i}
+            onClick={(e) => { e.stopPropagation(); goTo(i); }}
+            aria-label={`View photo ${i + 1}`}
+            style={{
+              width: i === activeIndex ? 8 : 6,
+              height: i === activeIndex ? 8 : 6,
+              borderRadius: '50%',
+              background: i === activeIndex ? '#FFFFFF' : 'rgba(255,255,255,0.55)',
+              border: 'none', padding: 0, cursor: 'pointer',
+              transition: 'all 150ms ease',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Main card ────────────────────────────────────────────────────────────────
 
 interface PlacePreviewCardProps {
   place: CachedPlace;
@@ -57,8 +199,14 @@ export function PlacePreviewCard({
         fontFamily: 'Inter, sans-serif',
       }}
     >
-      {/* Photo — standard img because this renders inside a Portal */}
-      {primaryPhotoUrl && !imageError && (
+      {/* Photo — gallery for hotels with photos, single img for everything else */}
+      {isHotel && place.photoCount > 0 ? (
+        <HotelPhotoGallery
+          googlePlaceId={place.googlePlaceId}
+          photoCount={place.photoCount}
+          displayName={place.displayName}
+        />
+      ) : primaryPhotoUrl && !imageError ? (
         <div
           style={{
             width: '100%',
@@ -82,7 +230,7 @@ export function PlacePreviewCard({
             }}
           />
         </div>
-      )}
+      ) : null}
 
       {/* Content */}
       <div style={{ padding: '12px 16px 4px' }}>
