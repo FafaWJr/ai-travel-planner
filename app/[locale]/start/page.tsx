@@ -189,7 +189,7 @@ export default function StartPage() {
           margin: 0 auto;
           padding: 60px 60px 80px;
           display: grid;
-          grid-template-columns: 1fr 480px;
+          grid-template-columns: 1fr 500px;
           gap: 80px;
           align-items: start;
           background: #F8F9FB;
