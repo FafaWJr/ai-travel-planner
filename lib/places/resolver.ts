@@ -215,15 +215,11 @@ async function searchGooglePlaces(
     );
 
     if (!res.ok) {
-      const errBody = await res.text();
-      try {
-        const e = JSON.parse(errBody);
-        const gcpStatus = e?.error?.status ?? 'UNKNOWN';
-        const gcpMsg = (e?.error?.message ?? '').slice(0, 120);
-        console.error(`[PlaceResolver] GCP ${res.status} ${gcpStatus}: ${gcpMsg}`);
-      } catch {
-        console.error(`[PlaceResolver] GCP ${res.status} non-JSON: ${errBody.slice(0, 100)}`);
-      }
+      console.error(
+        '[PlaceResolver] Google Text Search failed:',
+        res.status,
+        await res.text()
+      );
       return null;
     }
 
