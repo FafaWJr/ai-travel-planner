@@ -14,6 +14,8 @@ import type { CommentConfig } from '@/lib/comment-types';
 import CommentIcon from './comments/CommentIcon';
 import CommentItem from './comments/CommentItem';
 import CommentCompose from './comments/CommentCompose';
+import { PlacePreviewTrigger } from './place-preview';
+import { cleanActivityQuery, isResolvableQuery } from '@/lib/places/query-cleaner';
 
 /**
  * Stage 2d hotfix #1: optional trailing parameter on every imperative
@@ -1701,6 +1703,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
                     readOnly={readOnly}
                     commentConfig={commentConfig}
                     dayId={day.id}
+                    cityContext={destination}
                   />
                 );
               })}
@@ -1881,7 +1884,12 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
 export default EditableItinerary;
 
 /* ─── renderActivityParts ───────────────────────────────────── */
-function renderActivityParts(text: string, declined: boolean) {
+interface ActivityTriggerConfig {
+  query: string;
+  cityContext: string;
+}
+
+function renderActivityParts(text: string, declined: boolean, triggerConfig?: ActivityTriggerConfig) {
   const parts = text.split('\n');
   const pStyle = {
     fontFamily: "'Inter',sans-serif",
@@ -1891,13 +1899,33 @@ function renderActivityParts(text: string, declined: boolean) {
     margin: 0,
     textDecoration: declined ? 'line-through' : 'none',
   } as const;
+
   if (parts.length < 2) {
+    if (triggerConfig) {
+      const cleanTitle = text.replace(/\*\*/g, '').replace(/\*/g, '').trim();
+      return (
+        <p style={pStyle}>
+          <PlacePreviewTrigger query={triggerConfig.query} cityContext={triggerConfig.cityContext}>
+            {cleanTitle}
+          </PlacePreviewTrigger>
+        </p>
+      );
+    }
     return <p style={pStyle} dangerouslySetInnerHTML={{ __html: inlineMd(text) }} />;
   }
+
   const [title, description, duration] = parts;
+  const titleEl = triggerConfig
+    ? (
+        <PlacePreviewTrigger query={triggerConfig.query} cityContext={triggerConfig.cityContext}>
+          {title.replace(/\*\*/g, '').replace(/\*/g, '').trim()}
+        </PlacePreviewTrigger>
+      )
+    : <span dangerouslySetInnerHTML={{ __html: inlineMd(title) }} />;
+
   return (
     <p style={pStyle}>
-      <span dangerouslySetInnerHTML={{ __html: inlineMd(title) }} />
+      {titleEl}
       {description && (
         <span style={{ display: 'block', color: '#555', fontSize: '0.85em', marginTop: 2 }}>
           {description}
@@ -1916,7 +1944,7 @@ function renderActivityParts(text: string, declined: boolean) {
 function TimeSlotSection({
   containerId, slotKey, label, icon, activities, activeId,
   onAccept, onDecline, otherDays, onMoveToDay, readOnly = false,
-  commentConfig, dayId,
+  commentConfig, dayId, cityContext,
 }: {
   containerId: string;
   slotKey: TimeSlot;
@@ -1931,6 +1959,7 @@ function TimeSlotSection({
   readOnly?: boolean;
   commentConfig?: CommentConfig;
   dayId?: string;
+  cityContext?: string;
 }) {
   const t = useTranslations('plan');
   const ids = activities.map(a => a.id);
@@ -1962,6 +1991,7 @@ function TimeSlotSection({
                   readOnly={readOnly}
                   commentConfig={commentConfig}
                   dayId={dayId}
+                  cityContext={cityContext}
                 />
               ))
           }
@@ -1996,7 +2026,7 @@ function EmptyDropZone({ containerId }: { containerId: string }) {
 /* ─── SortableActivityItem ───────────────────────────────────── */
 function SortableActivityItem({
   act, isDragging, onAccept, onDecline, otherDays, onMoveToDay, readOnly = false,
-  commentConfig, dayId,
+  commentConfig, dayId, cityContext,
 }: {
   act: Activity;
   isDragging: boolean;
@@ -2007,6 +2037,7 @@ function SortableActivityItem({
   readOnly?: boolean;
   commentConfig?: CommentConfig;
   dayId?: string;
+  cityContext?: string;
 }) {
   const t = useTranslations('plan');
   const [showMovePicker, setShowMovePicker] = useState(false);
@@ -2040,6 +2071,14 @@ function SortableActivityItem({
     opacity: isDragging ? 0.35 : 1,
   };
 
+  const placePreviewEnabled = process.env.NEXT_PUBLIC_PLACE_PREVIEW_ENABLED !== 'false';
+  const triggerConfig: ActivityTriggerConfig | undefined = (() => {
+    if (!placePreviewEnabled || !cityContext) return undefined;
+    const query = cleanActivityQuery(act.text);
+    if (!isResolvableQuery(query)) return undefined;
+    return { query, cityContext };
+  })();
+
   return (
     <div style={{ position: 'relative' }}>
       <div
@@ -2072,7 +2111,7 @@ function SortableActivityItem({
 
         {/* Text */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          {renderActivityParts(act.text, act.status === 'declined')}
+          {renderActivityParts(act.text, act.status === 'declined', triggerConfig)}
           {act.manuallyAdded && (
             <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 10, color: '#FF8210', fontWeight: 600, letterSpacing: 0.3 }}>✦ {t('activity.addedByYou')}</span>
           )}

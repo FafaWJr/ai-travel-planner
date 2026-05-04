@@ -37,7 +37,7 @@ const nextConfig: NextConfig = {
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
-              "img-src 'self' data: blob: https://images.unsplash.com https://www.pexels.com https://images.pexels.com https://lh3.googleusercontent.com https://www.google-analytics.com",
+              "img-src 'self' data: blob: https://images.unsplash.com https://www.pexels.com https://images.pexels.com https://lh3.googleusercontent.com https://www.google-analytics.com https://qhpxejzoxfruuositwzo.supabase.co",
               "connect-src 'self' https://api.anthropic.com https://www.google-analytics.com https://www.googletagmanager.com https://*.supabase.co wss://*.supabase.co https://geocoding-api.open-meteo.com https://api.open-meteo.com https://api.frankfurter.app",
               "frame-src 'none'",
               "object-src 'none'",
