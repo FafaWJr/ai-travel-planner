@@ -1,7 +1,7 @@
 # Luna Let's Go - Claude Code Context
-**Last Updated:** 2026-05-05 11:10:45
+**Last Updated:** 2026-05-05 12:38:10
 **Current Branch:** main
-**Last Commit:** 0f8bc74c feat: post-generation place resolution for instant hover previews
+**Last Commit:** ba670fdb feat: Google Places-backed hotel suggestions
 **Deployment:** https://www.lunaletsgo.com
 
 ---
@@ -108,16 +108,16 @@ app/auth/signup/page.tsx
 ## Recent Changes (Last 10 Commits)
 
 ```
-0f8bc74c (HEAD -> main, origin/main, origin/HEAD) feat: post-generation place resolution for instant hover previews
+ba670fdb (HEAD -> main, origin/main, origin/HEAD) feat: Google Places-backed hotel suggestions
+f67b1ec2 fix: country validation in resolver + remove link styling from non-itinerary tabs
+4d3ae0fd fix(place-preview): stop Overview tab triggering fake previews; add trip dates to Booking.com affiliate URLs
+3cc71d3e chore: update context after Place Preview Phase 2 completion
+0f8bc74c feat: post-generation place resolution for instant hover previews
 84dea1f8 feat: viewport batch resolution for place preview
 244f8954 feat: replace planner header photos with landmark-based pipeline
 c5653632 feat: destination header photo backend with landmark-first pipeline
 3988d97c feat: Unsplash hero photos for destination preview cards
 213bde5d feat: blur-up image placeholders for photo galleries
-b96afeb0 feat: multi-photo galleries for all entity types
-3f122766 feat: wrong place override for place preview cards
-259df58c feat: real Google Places photos for Stays tab hotel cards
-9bd14dd1 feat: hotel photo gallery in place preview card
 ```
 
 ---
