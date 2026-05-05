@@ -147,17 +147,19 @@ assert(
   sanitized.match(/<ol[\s\S]{0,500}/i)?.[0]
 );
 
-// Bold proper noun gets data-place + navy underline
+// Bold proper noun renders as plain <strong> — place-link styling is NOT added by
+// markdownToHtml (the plan renderer). PlacePreviewTrigger React components in
+// EditableItinerary handle place previews for the Itinerary tab instead.
 assert(
-  /<strong[^>]*data-place="Uluwatu"/i.test(sanitized),
-  'Bold proper noun "Uluwatu" gets data-place attribute',
+  /<strong>Uluwatu<\/strong>/i.test(sanitized),
+  'Bold proper noun "Uluwatu" renders as plain <strong> without data-place',
   sanitized.match(/<strong[^>]{0,200}/i)?.[0]
 );
 
 assert(
-  /<strong[^>]*data-place="Uluwatu"[^>]*style="[^"]*border-bottom:1\.5px dashed rgba\(0,68,123,0\.40\)/i.test(sanitized),
-  'Bold proper noun retains dashed navy underline in style',
-  sanitized.match(/<strong[^>]{0,300}/i)?.[0]
+  !/<strong[^>]*data-place="Uluwatu"/i.test(sanitized),
+  'Bold proper noun "Uluwatu" has no data-place attribute (plan renderer no longer adds link styling)',
+  sanitized.match(/<strong[^>]{0,200}/i)?.[0]
 );
 
 // UL has correct margin (margin:10px 0 10px 20px) and list-style:none

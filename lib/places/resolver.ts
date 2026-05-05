@@ -76,11 +76,39 @@ export async function resolvePlace(
   }
 
   // 2. Cache miss (or force bypass): call Google Places Text Search (New)
-  const googleResult = await searchGooglePlaces(req.query, {
-    lat: req.lat,
-    lng: req.lng,
-    regionCode: req.regionCode,
-  });
+  const bias: LocationBias = { lat: req.lat, lng: req.lng, regionCode: req.regionCode };
+  // Enriching the query with the city name dramatically improves disambiguation
+  // for shared place names that appear in multiple countries (e.g. "Igreja de Sao
+  // Francisco" in both Brazil and Mexico).
+  const enrichedQuery = enrichQueryWithCity(req.query, req.cityContext);
+
+  let googleResult = await searchGooglePlaces(enrichedQuery, bias);
+
+  if (googleResult) {
+    const countryOk = validateCountryMatch(
+      googleResult.formattedAddress,
+      req.regionCode,
+      req.cityContext
+    );
+    if (!countryOk) {
+      console.warn(
+        '[PlaceResolver] Wrong country match for',
+        req.query,
+        '— got',
+        googleResult.formattedAddress,
+        '— expected region:',
+        req.regionCode ?? req.cityContext
+      );
+      // Retry with a hard bounding rectangle to force results inside the destination area
+      const retryResult = await searchGooglePlacesStrict(enrichedQuery, bias);
+      if (retryResult && validateCountryMatch(retryResult.formattedAddress, req.regionCode, req.cityContext)) {
+        googleResult = retryResult;
+      } else {
+        // Both attempts returned wrong-country results. No card > wrong-country card.
+        return { place: null, primaryPhotoUrl: null, source: 'not_found' };
+      }
+    }
+  }
 
   if (!googleResult) {
     return { place: null, primaryPhotoUrl: null, source: 'not_found' };
@@ -265,6 +293,64 @@ async function searchGooglePlaces(
   }
 }
 
+/**
+ * Strict variant of searchGooglePlaces using locationRestriction (hard bounding
+ * rectangle) instead of locationBias (preference circle). Called as a fallback
+ * when the bias search returns a wrong-country result.
+ * Note: locationRestriction and locationBias are mutually exclusive per Google API.
+ */
+async function searchGooglePlacesStrict(
+  query: string,
+  bias: LocationBias
+): Promise<GooglePlaceResult | null> {
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+  if (!apiKey) return null;
+  if (bias.lat == null || bias.lng == null) return null; // restriction requires coordinates
+
+  const delta = 0.25; // ~25km at equator
+  const body: Record<string, unknown> = {
+    textQuery: query,
+    pageSize: 3,
+    languageCode: 'en',
+    locationRestriction: {
+      rectangle: {
+        low:  { latitude: bias.lat - delta, longitude: bias.lng - delta },
+        high: { latitude: bias.lat + delta, longitude: bias.lng + delta },
+      },
+    },
+  };
+
+  if (bias.regionCode) {
+    body.regionCode = bias.regionCode;
+  }
+
+  try {
+    const res = await fetch(
+      'https://places.googleapis.com/v1/places:searchText',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': apiKey,
+          'X-Goog-FieldMask': FIELD_MASK,
+        },
+        body: JSON.stringify(body),
+      }
+    );
+
+    if (!res.ok) {
+      console.error('[PlaceResolver] Strict search failed:', res.status, await res.text());
+      return null;
+    }
+
+    const data = await res.json() as { places?: GooglePlaceResult[] };
+    return data.places?.[0] ?? null;
+  } catch (err) {
+    console.error('[PlaceResolver] Strict search error:', err);
+    return null;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -279,6 +365,110 @@ function normaliseCityContext(city: string): string {
     .trim()
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9\-]/g, '');
+}
+
+/**
+ * Appends the city name from cityContext to the query for better disambiguation.
+ * "Igreja de Sao Francisco" + "Joao Pessoa, Brazil" → "Igreja de Sao Francisco Joao Pessoa"
+ * Skips enrichment if the query already contains the city name.
+ */
+function enrichQueryWithCity(query: string, cityContext: string): string {
+  if (!cityContext) return query;
+  // Extract city part: everything before the first comma
+  const cityPart = cityContext.split(/[,，]/)[0].trim();
+  if (!cityPart) return query;
+  // Skip if query already mentions the city (case-insensitive)
+  if (query.toLowerCase().includes(cityPart.toLowerCase())) return query;
+  return `${query} ${cityPart}`;
+}
+
+// ISO 3166-1 alpha-2 country code → expected name variants in formatted addresses
+const COUNTRY_NAMES: Record<string, string[]> = {
+  BR: ['Brazil', 'Brasil'],
+  ID: ['Indonesia'],
+  AU: ['Australia'],
+  JP: ['Japan'],
+  TH: ['Thailand'],
+  MX: ['Mexico'],
+  US: ['United States', 'USA'],
+  GB: ['United Kingdom', 'England', 'Scotland', 'Wales'],
+  FR: ['France'],
+  IT: ['Italy', 'Italia'],
+  ES: ['Spain'],
+  PT: ['Portugal'],
+  DE: ['Germany', 'Deutschland'],
+  NZ: ['New Zealand'],
+  VN: ['Vietnam', 'Viet Nam'],
+  PH: ['Philippines'],
+  GR: ['Greece'],
+  TR: ['Turkey', 'Türkiye'],
+  CO: ['Colombia'],
+  AR: ['Argentina'],
+  PE: ['Peru'],
+  CL: ['Chile'],
+  KR: ['South Korea'],
+  IN: ['India'],
+  NP: ['Nepal'],
+  LK: ['Sri Lanka'],
+  MY: ['Malaysia'],
+  SG: ['Singapore'],
+  HK: ['Hong Kong'],
+  TW: ['Taiwan'],
+  CN: ['China'],
+  AE: ['United Arab Emirates', 'UAE'],
+  MA: ['Morocco'],
+  ZA: ['South Africa'],
+  KE: ['Kenya'],
+  TZ: ['Tanzania'],
+  EG: ['Egypt'],
+  HR: ['Croatia'],
+  CZ: ['Czech Republic', 'Czechia'],
+  AT: ['Austria'],
+  CH: ['Switzerland'],
+  NL: ['Netherlands'],
+  BE: ['Belgium'],
+  SE: ['Sweden'],
+  NO: ['Norway'],
+  DK: ['Denmark'],
+  FI: ['Finland'],
+  PL: ['Poland'],
+  HU: ['Hungary'],
+  RO: ['Romania'],
+  IE: ['Ireland'],
+  IS: ['Iceland'],
+};
+
+/**
+ * Returns true when the formattedAddress appears to be in the expected country.
+ * Optimistically returns true when validation cannot be performed (no address, no country info).
+ * A false return signals a clear wrong-country mismatch that should trigger a retry.
+ */
+function validateCountryMatch(
+  formattedAddress: string | null | undefined,
+  regionCode: string | undefined,
+  cityContext: string
+): boolean {
+  if (!formattedAddress) return true; // cannot validate, accept optimistically
+
+  const addressLower = formattedAddress.toLowerCase();
+
+  if (regionCode) {
+    const expectedNames = COUNTRY_NAMES[regionCode.toUpperCase()];
+    if (expectedNames) {
+      return expectedNames.some(name => addressLower.includes(name.toLowerCase()));
+    }
+  }
+
+  // Fallback: extract country hint from cityContext (e.g. "Joao Pessoa, Brazil" → "Brazil")
+  const parts = cityContext.split(/[,，]/);
+  if (parts.length >= 2) {
+    const countryHint = parts[parts.length - 1].trim().toLowerCase();
+    if (countryHint.length > 2) {
+      return addressLower.includes(countryHint);
+    }
+  }
+
+  return true; // cannot validate, accept optimistically
 }
 
 function buildPhotoProxyUrl(placeId: string, index: number): string {

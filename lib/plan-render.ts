@@ -191,15 +191,25 @@ export function extractSection(plan: string, sectionId: string, isStreaming: boo
 }
 
 /* ── Minimal markdown → styled HTML ── */
-export function inlineMd(text: string): string {
+/**
+ * @param options.enablePlaceLinks - When true, bold proper nouns get data-place
+ *   attributes and link-like styling (the old event-delegation hover path).
+ *   Defaults to false. Plan markdown tabs (Overview, Weather, etc.) use the
+ *   default. The place-preview system now uses React PlacePreviewTrigger
+ *   components in EditableItinerary instead of event delegation.
+ */
+export function inlineMd(text: string, options?: { enablePlaceLinks?: boolean }): string {
+  const enablePlaceLinks = options?.enablePlaceLinks ?? false;
   return text
     .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
     .replace(/\*\*(.+?)\*\*/g, (_, t) => {
-      // Tag bold proper nouns as place hovers (starts with capital, not a label like "Morning:")
-      const isPlace = /^[A-Z]/.test(t) && !t.endsWith(':') && !/^(morning|afternoon|evening|night|day\s*\d|note|tip|option|important|total|budget|price|cost|recommended|optional|estimated|approximate|include)/i.test(t);
-      if (isPlace) {
-        const escaped = t.replace(/"/g, '&quot;');
-        return `<strong data-place="${escaped}" style="cursor:pointer;border-bottom:1.5px dashed rgba(0,68,123,0.40);color:#00447B;font-weight:700;transition:color 0.15s">${t}</strong>`;
+      if (enablePlaceLinks) {
+        const isPlace = /^[A-Z]/.test(t) && !t.endsWith(':') &&
+          !/^(morning|afternoon|evening|night|day\s*\d|note|tip|option|important|total|budget|price|cost|recommended|optional|estimated|approximate|include)/i.test(t);
+        if (isPlace) {
+          const escaped = t.replace(/"/g, '&quot;');
+          return `<strong data-place="${escaped}" style="cursor:pointer;border-bottom:1.5px dashed rgba(0,68,123,0.40);color:#00447B;font-weight:700;transition:color 0.15s">${t}</strong>`;
+        }
       }
       return `<strong>${t}</strong>`;
     })
