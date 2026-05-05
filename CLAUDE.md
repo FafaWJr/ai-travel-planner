@@ -1,7 +1,7 @@
 # Luna Let's Go - Claude Code Context
-**Last Updated:** 2026-05-04 23:01:09
+**Last Updated:** 2026-05-05 11:10:45
 **Current Branch:** main
-**Last Commit:** 13c5ff32 fix(place-preview): CSP img-src + direct trigger on all activity titles
+**Last Commit:** 0f8bc74c feat: post-generation place resolution for instant hover previews
 **Deployment:** https://www.lunaletsgo.com
 
 ---
@@ -46,6 +46,7 @@ app/api/brevo-sync/route.ts
 app/api/budget-estimate/route.ts
 app/api/chat/route.ts
 app/api/day-suggestions/route.ts
+app/api/destination-header/[slug]/route.ts
 app/api/destination-photos/route.ts
 app/api/exchange-rates/route.ts
 app/api/expand-phase/route.ts
@@ -107,16 +108,16 @@ app/auth/signup/page.tsx
 ## Recent Changes (Last 10 Commits)
 
 ```
-13c5ff32 (HEAD -> main, origin/main, origin/HEAD) fix(place-preview): CSP img-src + direct trigger on all activity titles
-f1f0a357 feat: wire place preview into planner page
-267205f6 feat: place preview frontend components
-093753c7 chore(places): revert debug error logging to clean production format
-58122e07 debug: extract GCP error status string for log visibility
-8ea0e7a4 debug: verbose Google Places error logging (temp)
-743b6ebd chore: revert debug log to original format
-a6d462b6 debug: surface Google Places HTTP status code in logs
-a99d0ac3 chore: redeploy to pick up NEXT_PUBLIC_PLACE_PREVIEW_ENABLED=true
-ff729f33 feat: place preview photo proxy with Supabase Storage caching
+0f8bc74c (HEAD -> main, origin/main, origin/HEAD) feat: post-generation place resolution for instant hover previews
+84dea1f8 feat: viewport batch resolution for place preview
+244f8954 feat: replace planner header photos with landmark-based pipeline
+c5653632 feat: destination header photo backend with landmark-first pipeline
+3988d97c feat: Unsplash hero photos for destination preview cards
+213bde5d feat: blur-up image placeholders for photo galleries
+b96afeb0 feat: multi-photo galleries for all entity types
+3f122766 feat: wrong place override for place preview cards
+259df58c feat: real Google Places photos for Stays tab hotel cards
+9bd14dd1 feat: hotel photo gallery in place preview card
 ```
 
 ---
