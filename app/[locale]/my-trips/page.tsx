@@ -11,6 +11,12 @@ import { useTranslations, useLocale } from 'next-intl';
 import { COLLAB_ENABLED, type CollabRole } from '@/lib/collaboration';
 import { RoleBadge } from '@/components/collab/RoleBadge';
 
+const placePreviewEnabled = process.env.NEXT_PUBLIC_PLACE_PREVIEW_ENABLED === 'true';
+
+function normaliseSlug(dest: string): string {
+  return dest.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
+}
+
 function isTripExpired(startDate?: string | null, endDate?: string | null): boolean {
   const referenceDate = endDate || startDate;
   if (!referenceDate) return false;
@@ -44,6 +50,12 @@ export default function MyTripsPage() {
   const [deletingId,   setDeletingId]   = useState<string | null>(null);
   const [collabCounts, setCollabCounts] = useState<Record<string, number>>({});
   const [sharedTrips, setSharedTrips] = useState<Array<{ id: string; title: string | null; destination: string | null; role: CollabRole; ownerName: string; start_date: string | null; end_date: string | null; created_at: string | null }>>([]);
+  const [photoCache,   setPhotoCache]   = useState<Record<string, string | null>>({});
+
+  const photoForDest = (dest: string | null | undefined): string | null => {
+    if (!dest || !placePreviewEnabled) return null;
+    return photoCache[dest.toLowerCase().trim()] ?? null;
+  };
 
   useEffect(() => {
     if (!COLLAB_ENABLED || !user) {
@@ -86,6 +98,45 @@ export default function MyTripsPage() {
       setLoading(false);
     })();
   }, [user]); // eslint-disable-line
+
+  /* Fetch destination photos for all trip cards (feature-flag gated) */
+  useEffect(() => {
+    if (!placePreviewEnabled) return;
+    const dests = [
+      ...trips.map(t => t.destination),
+      ...sharedTrips.map(t => t.destination).filter((d): d is string => Boolean(d)),
+    ];
+    const unique = [...new Set(dests.map(d => d.trim()).filter(Boolean))];
+    if (unique.length === 0) return;
+
+    let cancelled = false;
+    (async () => {
+      const results = await Promise.allSettled(
+        unique.map(async (dest) => {
+          try {
+            const res = await fetch(`/api/destination-header/${normaliseSlug(dest)}`);
+            if (!res.ok) return { dest, url: null as string | null };
+            const data: { photos?: Array<{ url: string }> } = await res.json();
+            const rawUrl = data.photos?.[0]?.url ?? null;
+            return { dest, url: rawUrl ? rawUrl.replace('w=1200', 'w=800') : null };
+          } catch {
+            return { dest, url: null as string | null };
+          }
+        })
+      );
+      if (cancelled) return;
+      setPhotoCache(prev => {
+        const next = { ...prev };
+        for (const r of results) {
+          if (r.status === 'fulfilled') {
+            next[r.value.dest.toLowerCase().trim()] = r.value.url;
+          }
+        }
+        return next;
+      });
+    })();
+    return () => { cancelled = true; };
+  }, [trips, sharedTrips]); // eslint-disable-line
 
   const toggleFavorite = async (id: string, current: boolean) => {
     await supabase.from('saved_trips').update({ is_favorite: !current }).eq('id', id);
@@ -192,7 +243,14 @@ export default function MyTripsPage() {
                 onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 2px 16px rgba(0,68,123,0.06)')}
               >
                 {/* Card header */}
-                <div style={{ background: 'linear-gradient(135deg,#00447B,#005FAD)', padding: '20px 20px 16px' }}>
+                <div style={{
+                  background: photoForDest(trip.destination)
+                    ? `linear-gradient(135deg, rgba(0,68,123,0.68), rgba(0,95,173,0.50)), url('${photoForDest(trip.destination)}')`
+                    : 'linear-gradient(135deg,#00447B,#005FAD)',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  padding: '20px 20px 16px',
+                }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
                     <h3 style={{
                       fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 16,
@@ -328,28 +386,40 @@ export default function MyTripsPage() {
                     border: '1.5px solid rgba(0,68,123,0.10)',
                     boxShadow: '0 2px 16px rgba(0,68,123,0.06)',
                     overflow: 'hidden',
-                    padding: 20,
                     transition: 'box-shadow 0.15s',
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
-                      <h3 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 16, color: '#00447B', margin: 0, flex: 1 }}>
-                        {trip.title || trip.destination || t('untitled')}
-                      </h3>
-                      <RoleBadge role={trip.role} />
+                    {/* Photo/gradient header */}
+                    <div style={{
+                      background: photoForDest(trip.destination)
+                        ? `linear-gradient(135deg, rgba(0,68,123,0.68), rgba(0,95,173,0.50)), url('${photoForDest(trip.destination)}')`
+                        : 'linear-gradient(135deg,#00447B,#005FAD)',
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      padding: '16px 20px',
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+                        <h3 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 16, color: '#fff', margin: 0, flex: 1 }}>
+                          {trip.title || trip.destination || t('untitled')}
+                        </h3>
+                        <RoleBadge role={trip.role} />
+                      </div>
                     </div>
-                    <p style={{ margin: '0 0 4px', fontSize: 13, color: '#6B7280' }}>
-                      {t('sharedBy', { name: trip.ownerName })}
-                    </p>
-                    {(trip.start_date || trip.end_date) && (
-                      <p style={{ margin: '0 0 2px', fontFamily: "'Inter',sans-serif", fontSize: 13, color: '#6C6D6F' }}>
-                        {fmtDate(trip.start_date)}{trip.start_date && trip.end_date ? ' → ' : ''}{fmtDate(trip.end_date)}
+                    {/* Card body */}
+                    <div style={{ padding: '14px 20px 16px' }}>
+                      <p style={{ margin: '0 0 4px', fontSize: 13, color: '#6B7280' }}>
+                        {t('sharedBy', { name: trip.ownerName })}
                       </p>
-                    )}
-                    {trip.created_at && (
-                      <p style={{ margin: 0, fontFamily: "'Inter',sans-serif", fontSize: 12, color: '#C0C0C0' }}>
-                        {t('tripCard.saved', { date: fmtDate(trip.created_at) })}
-                      </p>
-                    )}
+                      {(trip.start_date || trip.end_date) && (
+                        <p style={{ margin: '0 0 2px', fontFamily: "'Inter',sans-serif", fontSize: 13, color: '#6C6D6F' }}>
+                          {fmtDate(trip.start_date)}{trip.start_date && trip.end_date ? ' → ' : ''}{fmtDate(trip.end_date)}
+                        </p>
+                      )}
+                      {trip.created_at && (
+                        <p style={{ margin: 0, fontFamily: "'Inter',sans-serif", fontSize: 12, color: '#C0C0C0' }}>
+                          {t('tripCard.saved', { date: fmtDate(trip.created_at) })}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </Link>
               ))}
