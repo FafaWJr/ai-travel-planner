@@ -1,7 +1,7 @@
 # Luna Let's Go - Claude Code Context
-**Last Updated:** 2026-05-05 12:38:10
+**Last Updated:** 2026-05-05 17:10:58
 **Current Branch:** main
-**Last Commit:** ba670fdb feat: Google Places-backed hotel suggestions
+**Last Commit:** 1f66f44f feat: add multi-agent orchestration for Claude Code
 **Deployment:** https://www.lunaletsgo.com
 
 ---
@@ -108,16 +108,16 @@ app/auth/signup/page.tsx
 ## Recent Changes (Last 10 Commits)
 
 ```
-ba670fdb (HEAD -> main, origin/main, origin/HEAD) feat: Google Places-backed hotel suggestions
+1f66f44f (HEAD -> main, origin/main, origin/HEAD) feat: add multi-agent orchestration for Claude Code
+bd5ddec9 feat: real landmark photos on My Trips saved trip cards
+2f2af9fa chore: update context after Google Places hotel suggestions
+ba670fdb feat: Google Places-backed hotel suggestions
 f67b1ec2 fix: country validation in resolver + remove link styling from non-itinerary tabs
 4d3ae0fd fix(place-preview): stop Overview tab triggering fake previews; add trip dates to Booking.com affiliate URLs
 3cc71d3e chore: update context after Place Preview Phase 2 completion
 0f8bc74c feat: post-generation place resolution for instant hover previews
 84dea1f8 feat: viewport batch resolution for place preview
 244f8954 feat: replace planner header photos with landmark-based pipeline
-c5653632 feat: destination header photo backend with landmark-first pipeline
-3988d97c feat: Unsplash hero photos for destination preview cards
-213bde5d feat: blur-up image placeholders for photo galleries
 ```
 
 ---
@@ -183,8 +183,9 @@ These NEVER change:
 ### Photo Pipeline
 - Tier 1: Unsplash (randomize via `page` param 1-5 + shuffle 5 results, pick 3)
 - Tier 2: Pexels (use `p.src.landscape` NOT `p.src.large2x`)
-- Google Places: REMOVED from pipeline
+- Google Places: REMOVED from the activity/destination photo pipeline
 - Cache-Control: no-store on all photo API responses
+- **My Trips saved trip cards** show Google Places landmark photos via `/api/destination-header/[slug]` (7-day server-side TTL cache). Feature-flag gated: `NEXT_PUBLIC_PLACE_PREVIEW_ENABLED=false` preserves original navy gradient. Photos batch-fetched in parallel for all unique destinations on My Trips load. (commit `bd5ddec9`, 5 May 2026)
 
 ### Plan Rendering (lib/plan-render.ts)
 - `lib/plan-render.ts` is the canonical pure rendering pipeline: `inlineMd`, `markdownToHtml`, `extractSection`, `PLAN_SANITIZE_CONFIG`.
@@ -275,11 +276,27 @@ Full deployment IDs and commit hashes live in `docs/architecture/post-r6-changel
 
 Committed under `.claude/agents/` (force-added past `.gitignore`):
 
+**Governance agents:**
 - `luna-qa-agent.md`: runs smoke tests against a deployed URL
 - `luna-context-updater.md`: regenerates this file's heredoc from recent commits
 - `luna-multilang-qa.md`: 3-layer i18n check pipeline
 - `luna-multilang-translator.md`: drafts PT-BR/ES translations for new EN strings
 - `luna-release-writer.md`: drafts memory/changelog entries for shipped releases
+- `luna-code-reviewer.md`: pre-commit code review against CONVENTIONS.md and architecture rules
+
+**Specialist domain agents (added commit `1f66f44f`, 5 May 2026):**
+- `luna-agent-backend.md`: API routes, server-side logic, Supabase queries
+- `luna-agent-frontend.md`: React components, Next.js pages, client-side state
+- `luna-agent-ai.md`: Luna prompts, tool schemas, generate/chat paths
+- `luna-agent-media.md`: photo pipeline, Unsplash/Pexels/Google Places integration
+- `luna-agent-database.md`: Supabase schema, migrations, RLS policies
+- `luna-agent-auth.md`: Supabase SSR auth, OAuth flows, session handling
+- `luna-agent-devops.md`: Vercel deployments, env vars, build configuration
+- `luna-agent-seo.md`: metadata, OG images, structured data
+- `luna-agent-analytics.md`: Google Analytics events, tracking
+- `luna-agent-architect.md`: cross-cutting architecture decisions
+
+Orchestration protocol: `docs/architecture/multi-agent-orchestration.md`. Read before spawning subagents.
 
 Skills (if/when added) live under `.claude/skills/`: `luna-prompt-writer`, `luna-architecture`, `luna-diagnostic`.
 
@@ -560,6 +577,8 @@ After Claude Code finishes changes:
 - Luna intelligence recovery (1-2 May 2026): slot-structured itinerary context, structured itinerary as PRIMARY source of truth in FloatingChat, liveActivitiesText computed at send time via useCallback getter (was stale useMemo).
 - Stage 2 P2 backlog items shipped: tab-refocus catchup via visibilitychange (commit `2e8230d6`), server-side PATCH merge preserving all trip_data keys (commit `27674047`).
 - Collab Stage 4 fully shipped (2-3 May 2026): comments data layer and API (Stage 4a), comments UI components (Stage 4b), My Trips owned/shared split + CollabToast + Leave Trip + PDF collaborators line (Stage 4c), share icon + comment icon UI polish.
+- My Trips saved trip card headers now show Google Places landmark photos via `/api/destination-header/` (commit `bd5ddec9`, 5 May 2026). Feature-flag gated by `NEXT_PUBLIC_PLACE_PREVIEW_ENABLED`.
+- Multi-agent orchestration added: 11 specialist agents + `luna-code-reviewer.md` in `.claude/agents/`; orchestration protocol at `docs/architecture/multi-agent-orchestration.md` (commit `1f66f44f`, 5 May 2026).
 
 **Current Work:**
 - Collaborative Trips Stages 0+1+2+3+4 **shipped**. `NEXT_PUBLIC_COLLAB_ENABLED=false` still in production pending Stage 5 launch.
