@@ -1695,6 +1695,7 @@ function PlanContent() {
                   initialDays={initialItineraryDays}
                   initialPhases={initialItineraryPhases}
                   startDate={prompt.match(/from (\d{4}-\d{2}-\d{2})/)?.[1] || savedTripStartDate || undefined}
+                  endDate={prompt.match(/to (\d{4}-\d{2}-\d{2})/)?.[1] || savedTripEndDate || undefined}
                   locale={locale}
                   isStreaming={isStreaming}
                   onRegenerateDay={handleRegenerateDayClick}
@@ -1891,8 +1892,6 @@ function PlanContent() {
                     </div>
                   ) : (
                     <div
-                      onMouseOver={handlePlaceMouseOver}
-                      onMouseLeave={handlePlaneMouseLeave}
                       dangerouslySetInnerHTML={{ __html: sanitizeHtml(markdownToHtml(sectionContent), PLAN_SANITIZE_CONFIG) }}
                     />
                   )}

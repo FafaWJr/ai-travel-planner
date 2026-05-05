@@ -224,6 +224,9 @@ interface PlacePreviewCardProps {
   /** Photo author from cached_place_photos (passed by the trigger) */
   photoAuthorName?: string | null;
   photoAuthorUri?: string | null;
+  /** Trip dates in ISO format (YYYY-MM-DD). Appended to hotel booking URLs when present. */
+  tripCheckin?: string;
+  tripCheckout?: string;
   /** Called when the user submits a corrected search query */
   onCorrect?: (correctedQuery: string) => Promise<void>;
 }
@@ -233,6 +236,8 @@ export function PlacePreviewCard({
   primaryPhotoUrl,
   photoAuthorName,
   photoAuthorUri,
+  tripCheckin,
+  tripCheckout,
   onCorrect,
 }: PlacePreviewCardProps) {
   const [showCorrection, setShowCorrection] = useState(false);
@@ -269,9 +274,12 @@ export function PlacePreviewCard({
     ? truncate(place.editorialSummary, 120)
     : null;
 
-  const bookingUrl = isHotel
+  const bookingUrlBase = isHotel
     ? (place.metadata?.bookingAffiliateUrl as string) ?? null
     : null;
+  const bookingUrl = bookingUrlBase && tripCheckin && tripCheckout
+    ? `${bookingUrlBase}%26checkin%3D${tripCheckin}%26checkout%3D${tripCheckout}`
+    : bookingUrlBase;
 
   // ── Destination card: hero photo with name overlay, Unsplash attribution ──
   const isDestination = place.entityType === 'destination';

@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { ItineraryHandle } from '@/components/EditableItinerary';
-import { bookingComLink } from '@/lib/affiliate';
+import { buildBookingSearchUrl } from '@/lib/affiliate';
 import { useTranslations } from 'next-intl';
 import type { CommentConfig } from '@/lib/comment-types';
 import CommentThread from './comments/CommentThread';
@@ -145,13 +145,15 @@ function PhotoGallery({ photos, name }: { photos: string[] | null | '__loading__
 
 /* ─── Hotel card ─────────────────────────────────────────────── */
 function HotelCard({
-  hotel, isConfirmed, onChoose, photos, destination, commentConfig,
+  hotel, isConfirmed, onChoose, photos, destination, checkin, checkout, commentConfig,
 }: {
   hotel: Hotel;
   isConfirmed: boolean;
   onChoose: () => void;
   photos: string[] | null | '__loading__';
   destination: string;
+  checkin?: string;
+  checkout?: string;
   commentConfig?: CommentConfig;
 }) {
   const t = useTranslations('plan');
@@ -209,7 +211,7 @@ function HotelCard({
         </div>
         {/* Booking.com affiliate button */}
         <a
-          href={bookingComLink(hotel.neighborhood ? `${hotel.name}, ${destination}` : destination)}
+          href={buildBookingSearchUrl(hotel.neighborhood ? `${hotel.name}, ${destination}` : destination, checkin, checkout)}
           target="_blank"
           rel="noopener noreferrer"
           onClick={e => e.stopPropagation()}
@@ -248,13 +250,15 @@ function HotelCard({
 }
 
 /* ─── Hotel carousel ─────────────────────────────────────────── */
-function HotelCarousel({ hotels, segment, segConfirmed, chooseHotel, photoCache, destination, commentConfig }: {
+function HotelCarousel({ hotels, segment, segConfirmed, chooseHotel, photoCache, destination, checkin, checkout, commentConfig }: {
   hotels: Hotel[];
   segment: LocationSegment;
   segConfirmed: AcceptedHotel | undefined;
   chooseHotel: (hotel: Hotel, segment: LocationSegment) => void;
   photoCache: Record<string, string[] | null | '__loading__'>;
   destination: string;
+  checkin?: string;
+  checkout?: string;
   commentConfig?: CommentConfig;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
@@ -289,6 +293,8 @@ function HotelCarousel({ hotels, segment, segConfirmed, chooseHotel, photoCache,
               onChoose={() => chooseHotel(hotel, segment)}
               photos={photoCache[hotel.id] ?? '__loading__'}
               destination={destination}
+              checkin={checkin}
+              checkout={checkout}
               commentConfig={commentConfig}
             />
           </div>
@@ -310,7 +316,7 @@ function HotelCarousel({ hotels, segment, segConfirmed, chooseHotel, photoCache,
 }
 
 /* ─── Segment confirmed summary ──────────────────────────────── */
-function ConfirmedSummary({ hotel, segment }: AcceptedHotel) {
+function ConfirmedSummary({ hotel, segment, checkin, checkout }: AcceptedHotel & { checkin?: string; checkout?: string }) {
   const t = useTranslations('plan');
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hotel.googleMapsQuery)}`;
   return (
@@ -334,7 +340,7 @@ function ConfirmedSummary({ hotel, segment }: AcceptedHotel) {
         </a>
       </div>
       <a
-        href={bookingComLink(hotel.neighborhood ? `${hotel.name}, ${hotel.neighborhood}` : hotel.name)}
+        href={buildBookingSearchUrl(hotel.neighborhood ? `${hotel.name}, ${hotel.neighborhood}` : hotel.name, checkin, checkout)}
         target="_blank"
         rel="noopener noreferrer sponsored"
         style={{
@@ -579,7 +585,7 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
           </p>
         </div>
         <a
-          href={bookingComLink(destination)}
+          href={buildBookingSearchUrl(destination, checkIn, checkOut)}
           target="_blank"
           rel="noopener noreferrer"
           style={{
@@ -598,7 +604,7 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
         !segments.some(s => s.location === ah.segment.location)
       ).map(ah => (
         <div key={ah.hotel.id} style={{ marginBottom: 20 }}>
-          <ConfirmedSummary hotel={ah.hotel} segment={ah.segment} />
+          <ConfirmedSummary hotel={ah.hotel} segment={ah.segment} checkin={checkIn} checkout={checkOut} />
         </div>
       ))}
 
@@ -649,7 +655,7 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
             {/* Confirmed summary */}
             {segConfirmed && (
               <div style={{ marginBottom: 16 }}>
-                <ConfirmedSummary hotel={segConfirmed.hotel} segment={segConfirmed.segment} />
+                <ConfirmedSummary hotel={segConfirmed.hotel} segment={segConfirmed.segment} checkin={checkIn} checkout={checkOut} />
               </div>
             )}
 
@@ -661,6 +667,8 @@ export default function StayTab({ prompt, destination, checkIn, checkOut, budget
               chooseHotel={chooseHotel}
               photoCache={photoCache}
               destination={segment.location || destination}
+              checkin={checkIn}
+              checkout={checkOut}
               commentConfig={commentConfig}
             />
           </div>

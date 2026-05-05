@@ -33,6 +33,9 @@ interface PlacePreviewTriggerProps {
   lng?: number;
   /** ISO region code, e.g. "ID" */
   regionCode?: string;
+  /** Trip dates in ISO format (YYYY-MM-DD). Passed to the card for hotel booking URLs. */
+  tripCheckin?: string;
+  tripCheckout?: string;
   /** The text/element to wrap (typically the activity name) */
   children: ReactNode;
 }
@@ -48,6 +51,8 @@ export function PlacePreviewTrigger({
   lat,
   lng,
   regionCode,
+  tripCheckin,
+  tripCheckout,
   children,
 }: PlacePreviewTriggerProps) {
   const { resolve, update } = usePlaceCache();
@@ -241,6 +246,8 @@ export function PlacePreviewTrigger({
       <PlacePreviewCard
         place={resolveResult.place}
         primaryPhotoUrl={resolveResult.primaryPhotoUrl}
+        tripCheckin={tripCheckin}
+        tripCheckout={tripCheckout}
         onCorrect={handleCorrect}
       />
     );

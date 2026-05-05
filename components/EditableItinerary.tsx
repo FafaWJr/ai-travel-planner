@@ -319,6 +319,7 @@ interface Props {
   initialDays?: Day[];
   initialPhases?: Phase[];
   startDate?: string;
+  endDate?: string;
   locale?: string;
   /** True while the parent is actively streaming plan content. When this
       flips from true to false, EditableItinerary transitions out of
@@ -440,6 +441,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
   isGuest = false, onGateRequired,
   initialDays, initialPhases,
   startDate,
+  endDate,
   locale: localeProp,
   isStreaming = false,
   onPlanPhase,
@@ -1765,6 +1767,8 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
                     commentConfig={commentConfig}
                     dayId={day.id}
                     cityContext={destination}
+                    tripCheckin={startDate}
+                    tripCheckout={endDate}
                   />
                 );
               })}
@@ -1948,6 +1952,8 @@ export default EditableItinerary;
 interface ActivityTriggerConfig {
   query: string;
   cityContext: string;
+  tripCheckin?: string;
+  tripCheckout?: string;
 }
 
 function renderActivityParts(text: string, declined: boolean, triggerConfig?: ActivityTriggerConfig) {
@@ -1966,7 +1972,7 @@ function renderActivityParts(text: string, declined: boolean, triggerConfig?: Ac
       const cleanTitle = text.replace(/\*\*/g, '').replace(/\*/g, '').trim();
       return (
         <p style={pStyle}>
-          <PlacePreviewTrigger query={triggerConfig.query} cityContext={triggerConfig.cityContext}>
+          <PlacePreviewTrigger query={triggerConfig.query} cityContext={triggerConfig.cityContext} tripCheckin={triggerConfig.tripCheckin} tripCheckout={triggerConfig.tripCheckout}>
             {cleanTitle}
           </PlacePreviewTrigger>
         </p>
@@ -1978,7 +1984,7 @@ function renderActivityParts(text: string, declined: boolean, triggerConfig?: Ac
   const [title, description, duration] = parts;
   const titleEl = triggerConfig
     ? (
-        <PlacePreviewTrigger query={triggerConfig.query} cityContext={triggerConfig.cityContext}>
+        <PlacePreviewTrigger query={triggerConfig.query} cityContext={triggerConfig.cityContext} tripCheckin={triggerConfig.tripCheckin} tripCheckout={triggerConfig.tripCheckout}>
           {title.replace(/\*\*/g, '').replace(/\*/g, '').trim()}
         </PlacePreviewTrigger>
       )
@@ -2005,7 +2011,7 @@ function renderActivityParts(text: string, declined: boolean, triggerConfig?: Ac
 function TimeSlotSection({
   containerId, slotKey, label, icon, activities, activeId,
   onAccept, onDecline, otherDays, onMoveToDay, readOnly = false,
-  commentConfig, dayId, cityContext,
+  commentConfig, dayId, cityContext, tripCheckin, tripCheckout,
 }: {
   containerId: string;
   slotKey: TimeSlot;
@@ -2021,6 +2027,8 @@ function TimeSlotSection({
   commentConfig?: CommentConfig;
   dayId?: string;
   cityContext?: string;
+  tripCheckin?: string;
+  tripCheckout?: string;
 }) {
   const t = useTranslations('plan');
   const ids = activities.map(a => a.id);
@@ -2053,6 +2061,8 @@ function TimeSlotSection({
                   commentConfig={commentConfig}
                   dayId={dayId}
                   cityContext={cityContext}
+                  tripCheckin={tripCheckin}
+                  tripCheckout={tripCheckout}
                 />
               ))
           }
@@ -2087,7 +2097,7 @@ function EmptyDropZone({ containerId }: { containerId: string }) {
 /* ─── SortableActivityItem ───────────────────────────────────── */
 function SortableActivityItem({
   act, isDragging, onAccept, onDecline, otherDays, onMoveToDay, readOnly = false,
-  commentConfig, dayId, cityContext,
+  commentConfig, dayId, cityContext, tripCheckin, tripCheckout,
 }: {
   act: Activity;
   isDragging: boolean;
@@ -2099,6 +2109,8 @@ function SortableActivityItem({
   commentConfig?: CommentConfig;
   dayId?: string;
   cityContext?: string;
+  tripCheckin?: string;
+  tripCheckout?: string;
 }) {
   const t = useTranslations('plan');
   const [showMovePicker, setShowMovePicker] = useState(false);
@@ -2137,7 +2149,7 @@ function SortableActivityItem({
     if (!placePreviewEnabled || !cityContext) return undefined;
     const query = cleanActivityQuery(act.text);
     if (!isResolvableQuery(query)) return undefined;
-    return { query, cityContext };
+    return { query, cityContext, tripCheckin, tripCheckout };
   })();
 
   return (

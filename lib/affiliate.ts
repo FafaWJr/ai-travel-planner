@@ -17,3 +17,17 @@ export const ACTIVITY_AFFILIATE = {
 export function bookingComLink(_destination?: string): string {
   return BOOKING_AFFILIATE.hotels;
 }
+
+/**
+ * Builds a Booking.com search affiliate URL with optional destination, check-in, and check-out.
+ * Dates must be ISO format (YYYY-MM-DD). Falls back to the generic hotels link if omitted.
+ */
+export function buildBookingSearchUrl(destination?: string, checkin?: string, checkout?: string): string {
+  const params: string[] = [];
+  if (destination) params.push(`ss=${encodeURIComponent(destination)}`);
+  if (checkin) params.push(`checkin=${checkin}`);
+  if (checkout) params.push(`checkout=${checkout}`);
+  if (params.length === 0) return BOOKING_AFFILIATE.hotels;
+  const ued = `https://www.booking.com/searchresults.html?${params.join('&')}`;
+  return `${BOOKING_AFFILIATE.hotels}&ued=${encodeURIComponent(ued)}`;
+}
