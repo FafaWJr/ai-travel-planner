@@ -1139,6 +1139,23 @@ function PlanContent() {
     const dest = prompt.replace(/^plan a (trip to |)?/i,'').replace(/\b(from \d{4}-\d{2}-\d{2}.*)/i,'').trim().split(' ').slice(0,5).join(' ');
     setIsLoadingPhotos(true);
     try {
+      if (process.env.NEXT_PUBLIC_PLACE_PREVIEW_ENABLED === 'true' && dest) {
+        try {
+          const slug = encodeURIComponent(
+            dest.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-')
+          );
+          const res = await fetch(`/api/destination-header/${slug}`);
+          if (res.ok) {
+            const data = await res.json() as { photos?: { url: string }[] };
+            if (data.photos && data.photos.length > 0) {
+              setPhotos(data.photos.map(p => p.url));
+              return;
+            }
+          }
+        } catch (err) {
+          console.warn('[DestHeader] New pipeline failed, falling back:', err);
+        }
+      }
       const pr = await fetch(`/api/destination-photos?city=${encodeURIComponent(dest)}`);
       if (pr.ok) { const pd = await pr.json(); setPhotos(pd.photos||[]); }
     } catch {}
