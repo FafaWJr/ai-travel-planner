@@ -1,5 +1,5 @@
 'use client';
-import { useState, useId, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { useState, useId, useRef, useEffect, forwardRef, useImperativeHandle, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import FinalItineraryModal from './FinalItineraryModal';
 import DayNotes from './itinerary/DayNotes';
@@ -14,7 +14,7 @@ import type { CommentConfig } from '@/lib/comment-types';
 import CommentIcon from './comments/CommentIcon';
 import CommentItem from './comments/CommentItem';
 import CommentCompose from './comments/CommentCompose';
-import { PlacePreviewTrigger } from './place-preview';
+import { PlacePreviewTrigger, useBatchResolve, useDayViewportObserver } from './place-preview';
 import { cleanActivityQuery, isResolvableQuery } from '@/lib/places/query-cleaner';
 
 /**
@@ -490,6 +490,27 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
   const phasesRef = useRef(phases);
   useEffect(() => { daysRef.current = days; }, [days]);
   useEffect(() => { phasesRef.current = phases; }, [phases]);
+
+  // P2-7: Viewport batch pre-warming — resolves activities in visible day cards
+  // before the user hovers, so the first hover is an instant cache hit.
+  const batchPreviewEnabled = process.env.NEXT_PUBLIC_PLACE_PREVIEW_ENABLED !== 'false';
+  const { batchResolve } = useBatchResolve();
+  const onDayVisible = useCallback((dayElement: HTMLElement) => {
+    const dayId = dayElement.dataset.dayId;
+    if (!dayId) return;
+    const day = daysRef.current.find(d => (d.id ?? String(d.number)) === dayId);
+    if (!day) return;
+    const items = day.activities
+      .map(act => {
+        const query = cleanActivityQuery(act.text);
+        if (!isResolvableQuery(query)) return null;
+        return { query, cityContext: destination };
+      })
+      .filter((item): item is { query: string; cityContext: string } => item !== null);
+    if (items.length > 0) void batchResolve(items);
+  }, [batchResolve, destination]);
+  const { attachRef } = useDayViewportObserver({ onDayVisible, enabled: batchPreviewEnabled });
+
   // R6: medium mode only — user can dismiss phase overview cards.
   const [phasesDismissed, setPhasesDismissed] = useState(false);
   // R5.1: which phases are manually collapsed (Set of phase IDs).
@@ -1617,7 +1638,7 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
     const dayDate = formatDayDate(startDate, idx, locale);
 
     return (
-      <div key={day.number} style={{ marginBottom: 8 }}>
+      <div key={day.number} data-day-id={day.id ?? String(day.number)} ref={attachRef} style={{ marginBottom: 8 }}>
         <div style={{
           background: day.confirmed ? 'rgba(22,163,74,0.02)' : '#fff',
           borderRadius: 14,

@@ -5,3 +5,5 @@ export { PlacePreviewCard } from './PlacePreviewCard';
 export { PlacePreviewSkeleton } from './PlacePreviewSkeleton';
 export { GoogleAttribution } from './GoogleAttribution';
 export { UnsplashAttribution } from './UnsplashAttribution';
+export { useBatchResolve } from './useBatchResolve';
+export { useDayViewportObserver } from './useDayViewportObserver';
