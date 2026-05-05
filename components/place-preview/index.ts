@@ -7,3 +7,4 @@ export { GoogleAttribution } from './GoogleAttribution';
 export { UnsplashAttribution } from './UnsplashAttribution';
 export { useBatchResolve } from './useBatchResolve';
 export { useDayViewportObserver } from './useDayViewportObserver';
+export { usePostGenerationResolve } from './usePostGenerationResolve';

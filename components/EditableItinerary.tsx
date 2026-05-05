@@ -14,7 +14,7 @@ import type { CommentConfig } from '@/lib/comment-types';
 import CommentIcon from './comments/CommentIcon';
 import CommentItem from './comments/CommentItem';
 import CommentCompose from './comments/CommentCompose';
-import { PlacePreviewTrigger, useBatchResolve, useDayViewportObserver } from './place-preview';
+import { PlacePreviewTrigger, useBatchResolve, useDayViewportObserver, usePostGenerationResolve } from './place-preview';
 import { cleanActivityQuery, isResolvableQuery } from '@/lib/places/query-cleaner';
 
 /**
@@ -510,6 +510,46 @@ const EditableItinerary = forwardRef<ItineraryHandle, Props>(function EditableIt
     if (items.length > 0) void batchResolve(items);
   }, [batchResolve, destination]);
   const { attachRef } = useDayViewportObserver({ onDayVisible, enabled: batchPreviewEnabled });
+
+  // P2-8: Post-generation resolution key — bumped when a new generation
+  // completes (isStreaming: true→false) or a saved trip is loaded (initialDays
+  // reference changes). The key guards the hook against re-resolving the same
+  // trip on every re-render.
+  const postResolveKeyRef = useRef(0);
+  const [postResolveKey, setPostResolveKey] = useState('none');
+
+  // Signal 1: main generation just completed.
+  // didStreamRef tracks whether streaming was ever true, so we only fire on
+  // the true→false transition, not on every render where isStreaming is false.
+  const didStreamRef = useRef(false);
+  useEffect(() => {
+    if (isStreaming) {
+      didStreamRef.current = true;
+      return;
+    }
+    if (didStreamRef.current) {
+      didStreamRef.current = false;
+      // days.length read at effect-fire time, not tracked as dep
+      if (days.length > 0) {
+        postResolveKeyRef.current += 1;
+        setPostResolveKey(`gen-${postResolveKeyRef.current}`);
+      }
+    }
+  }, [isStreaming]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Signal 2: saved/draft trip loaded (initialDays reference changes to non-empty).
+  useEffect(() => {
+    if (!initialDays || initialDays.length === 0) return;
+    postResolveKeyRef.current += 1;
+    setPostResolveKey(`load-${postResolveKeyRef.current}`);
+  }, [initialDays]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  usePostGenerationResolve({
+    days,
+    cityContext: destination,
+    enabled: batchPreviewEnabled,
+    generationKey: postResolveKey,
+  });
 
   // R6: medium mode only — user can dismiss phase overview cards.
   const [phasesDismissed, setPhasesDismissed] = useState(false);
