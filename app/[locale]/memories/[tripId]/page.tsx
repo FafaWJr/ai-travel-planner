@@ -5,11 +5,11 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import NavBar from '@/components/NavBar';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import {
   BookHeart, ChevronDown, ChevronUp,
   Frown, Smile, Zap, Leaf, Heart,
-  Sparkles, Check,
+  Sparkles, Check, PenLine, RefreshCw, Loader2,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -62,6 +62,7 @@ export default function MemoryCapturePage({
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const t = useTranslations('memories');
+  const locale = useLocale();
 
   const [tripId, setTripId] = useState<string | null>(null);
   const [memory, setMemory] = useState<MemoryData | null>(null);
@@ -71,6 +72,9 @@ export default function MemoryCapturePage({
   const [expandedDay, setExpandedDay] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [narrativeText, setNarrativeText] = useState<string>('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isEditingNarrative, setIsEditingNarrative] = useState(false);
 
   useEffect(() => {
     params.then(p => setTripId(p.tripId));
@@ -90,6 +94,9 @@ export default function MemoryCapturePage({
         const data = await res.json();
         setMemory(data.memory);
         setTrip(data.trip);
+        if (data.memory?.narrative) {
+          setNarrativeText(data.memory.narrative);
+        }
         const firstEmpty = data.memory?.memory_data?.days?.findIndex(
           (d: MemoryDay) => !d.notes
         );
@@ -139,6 +146,89 @@ export default function MemoryCapturePage({
     setMemory(prev => prev ? { ...prev, memory_data: { ...prev.memory_data, days } } : prev);
     saveMemoryData(days);
   }, [memory, saveMemoryData]);
+
+  const generateNarrative = useCallback(async () => {
+    if (!tripId || isGenerating) return;
+    setIsGenerating(true);
+    setNarrativeText('');
+    setIsEditingNarrative(false);
+
+    try {
+      const res = await fetch('/api/memories/narrative', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tripId, locale }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as { error?: string }).error || `HTTP ${res.status}`);
+      }
+
+      const reader = res.body!.getReader();
+      const decoder = new TextDecoder();
+      let accumulated = '';
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        const lines = buffer.split('\n');
+        buffer = lines.pop() ?? '';
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const payload = line.slice(6).trim();
+          if (payload === '[DONE]') continue;
+
+          try {
+            const parsed = JSON.parse(payload);
+            const content = parsed?.choices?.[0]?.delta?.content;
+            if (content) {
+              accumulated += content;
+              setNarrativeText(accumulated);
+            }
+          } catch { /* skip malformed */ }
+        }
+      }
+
+      if (accumulated.trim()) {
+        await fetch(`/api/memories/${tripId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            memory_data: memory?.memory_data,
+            status: 'complete',
+          }),
+        });
+        await fetch(`/api/memories/${tripId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ narrative: accumulated }),
+        });
+      }
+    } catch (err) {
+      console.error('[memories] narrative generation error:', err);
+      setNarrativeText('Something went wrong generating your story. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [tripId, isGenerating, memory?.memory_data, locale]);
+
+  const saveNarrative = useCallback(async () => {
+    if (!tripId || !narrativeText.trim()) return;
+    try {
+      await fetch(`/api/memories/${tripId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ narrative: narrativeText }),
+      });
+    } catch (err) {
+      console.error('[memories] save narrative error:', err);
+    }
+  }, [tripId, narrativeText]);
 
   const days = memory?.memory_data?.days ?? [];
   const capturedCount = days.filter(d => d.notes.trim().length > 0).length;
@@ -362,11 +452,172 @@ export default function MemoryCapturePage({
             );
           })}
         </div>
+
+        {/* ─── Generate story / Narrative section ──────────────────────────── */}
+        <div style={{ marginTop: 32 }}>
+          {/* Generate button — appears once 3+ days have notes */}
+          {capturedCount >= 3 && !narrativeText && !isGenerating && (
+            <button
+              onClick={generateNarrative}
+              style={{
+                width: '100%', padding: '16px 24px',
+                background: '#FF8210', color: '#fff', border: 'none',
+                borderRadius: 12, cursor: 'pointer',
+                fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 15,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                transition: 'background 0.15s',
+                boxShadow: '0 4px 12px rgba(255,130,16,0.25)',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#e67400'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = '#FF8210'; }}
+            >
+              <PenLine size={18} />
+              {t('generateStory')}
+            </button>
+          )}
+
+          {/* Nudge when fewer than 3 days have notes */}
+          {capturedCount < 3 && capturedCount > 0 && !narrativeText && (
+            <p style={{
+              textAlign: 'center', fontFamily: "'Inter',sans-serif",
+              fontSize: 13, color: '#C0C0C0', marginTop: 8,
+            }}>
+              {t('minDaysNotice', { needed: 3 - capturedCount })}
+            </p>
+          )}
+
+          {/* Generating spinner */}
+          {isGenerating && !narrativeText && (
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              gap: 10, padding: 24,
+            }}>
+              <Loader2 size={20} color="#FF8210" style={{ animation: 'spin 1s linear infinite' }} />
+              <span style={{
+                fontFamily: "'Poppins',sans-serif", fontWeight: 500, fontSize: 14,
+                color: '#FF8210',
+              }}>
+                {t('narrativeGenerating')}
+              </span>
+            </div>
+          )}
+
+          {/* Streaming display — text appearing word by word */}
+          {isGenerating && narrativeText && (
+            <div style={{
+              background: '#FDFBF7', borderRadius: 12,
+              border: '1.5px solid rgba(255,130,16,0.2)',
+              padding: 28, marginTop: 12,
+            }}>
+              <div style={{
+                fontFamily: "'Inter',sans-serif", fontSize: 15, color: '#2a2a3e',
+                lineHeight: 1.85, whiteSpace: 'pre-wrap',
+              }}>
+                {narrativeText}
+                <span style={{
+                  display: 'inline-block', width: 8, height: 18,
+                  background: '#FF8210', marginLeft: 2,
+                  animation: 'blink 1s step-end infinite',
+                }} />
+              </div>
+            </div>
+          )}
+
+          {/* Completed narrative display */}
+          {narrativeText && !isGenerating && (
+            <div style={{
+              background: '#FDFBF7', borderRadius: 12,
+              border: '1.5px solid rgba(0,68,123,0.08)',
+              padding: 28,
+            }}>
+              {/* Header with edit / re-roll controls */}
+              <div style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                marginBottom: 16,
+              }}>
+                <h2 style={{
+                  fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 20,
+                  color: '#00447B', margin: 0,
+                }}>
+                  {t('yourStory')}
+                </h2>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    onClick={() => setIsEditingNarrative(!isEditingNarrative)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 5,
+                      padding: '6px 12px', borderRadius: 100,
+                      border: '1.5px solid rgba(0,68,123,0.12)',
+                      background: isEditingNarrative ? '#00447B' : '#fff',
+                      color: isEditingNarrative ? '#fff' : '#00447B',
+                      cursor: 'pointer',
+                      fontFamily: "'Inter',sans-serif", fontSize: 12, fontWeight: 500,
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    <PenLine size={13} />
+                    {isEditingNarrative ? t('doneEditing') : t('editStory')}
+                  </button>
+                  <button
+                    onClick={generateNarrative}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 5,
+                      padding: '6px 12px', borderRadius: 100,
+                      border: '1.5px solid rgba(0,68,123,0.12)',
+                      background: '#fff', color: '#6C6D6F',
+                      cursor: 'pointer',
+                      fontFamily: "'Inter',sans-serif", fontSize: 12, fontWeight: 500,
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    <RefreshCw size={13} />
+                    {t('narrativeReroll')}
+                  </button>
+                </div>
+              </div>
+
+              {/* Narrative content */}
+              {isEditingNarrative ? (
+                <div>
+                  <textarea
+                    value={narrativeText}
+                    onChange={e => setNarrativeText(e.target.value)}
+                    onBlur={saveNarrative}
+                    rows={20}
+                    style={{
+                      width: '100%', padding: 16, borderRadius: 8,
+                      border: '1.5px solid #FF8210',
+                      fontFamily: "'Inter',sans-serif", fontSize: 14, color: '#2a2a3e',
+                      lineHeight: 1.85, resize: 'vertical',
+                      outline: 'none', background: '#fff',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                  <p style={{
+                    fontFamily: "'Inter',sans-serif", fontSize: 12, color: '#C0C0C0',
+                    marginTop: 6,
+                  }}>
+                    {t('narrativeEditHint')}
+                  </p>
+                </div>
+              ) : (
+                <div style={{
+                  fontFamily: "'Inter',sans-serif", fontSize: 15, color: '#2a2a3e',
+                  lineHeight: 1.85, whiteSpace: 'pre-wrap',
+                }}>
+                  {narrativeText}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
       </div>
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500&display=swap');
         @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes blink { 50% { opacity: 0; } }
         textarea::placeholder { color: #C0C0C0; }
       `}</style>
     </div>

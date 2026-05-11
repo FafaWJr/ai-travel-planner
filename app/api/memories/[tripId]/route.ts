@@ -105,14 +105,16 @@ export async function PUT(
   }
 
   const body = await request.json();
-  const { memory_data, status: memoryStatus } = body as {
+  const { memory_data, status: memoryStatus, narrative } = body as {
     memory_data?: { days: MemoryDay[] };
     status?: 'draft' | 'complete';
+    narrative?: string;
   };
 
   const updatePayload: Record<string, unknown> = {};
   if (memory_data) updatePayload.memory_data = memory_data;
   if (memoryStatus) updatePayload.status = memoryStatus;
+  if (narrative !== undefined) updatePayload.narrative = narrative;
 
   if (Object.keys(updatePayload).length === 0) {
     return Response.json({ error: 'No fields to update' }, { status: 400 });

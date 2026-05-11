@@ -786,7 +786,11 @@
     "narrativeGenerating": "Luna está escrevendo sua história...",
     "narrativeReroll": "Tentar outra versão",
     "narrativeEditHint": "Você pode editar este texto. Ele é seu.",
-    "shareStory": "Compartilhar sua história"
+    "shareStory": "Compartilhar sua história",
+    "yourStory": "Sua história",
+    "editStory": "Editar",
+    "doneEditing": "Pronto",
+    "minDaysNotice": "Adicione notas a mais {needed} dias para gerar sua história."
   },
   "collab": {
     "toast": {

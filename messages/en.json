@@ -786,7 +786,11 @@
     "narrativeGenerating": "Luna is writing your story...",
     "narrativeReroll": "Try a different version",
     "narrativeEditHint": "You can edit this text. It is yours.",
-    "shareStory": "Share your story"
+    "shareStory": "Share your story",
+    "yourStory": "Your story",
+    "editStory": "Edit",
+    "doneEditing": "Done",
+    "minDaysNotice": "Add notes to {needed} more days to generate your story."
   },
   "collab": {
     "toast": {
