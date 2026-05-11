@@ -31,6 +31,7 @@ export const AI_CONFIG = {
     expandPhase: 8000,
     // Single day regeneration. Same budget as a day within /api/generate.
     regenerateDay: 4000,
+    narrative: 4000,
   },
   /** Temperature shared across all routes. Tune here if Luna ever drifts. */
   temperature: 0.7,
