@@ -754,6 +754,7 @@
       "expired": "Expirado",
       "saved": "Salvo em {date}",
       "viewTrip": "Ver viagem",
+      "captureMemories": "Capturar memórias",
       "addFavorite": "Adicionar aos favoritos",
       "removeFavorite": "Remover dos favoritos",
       "deleteTrip": "Excluir viagem"
@@ -765,6 +766,27 @@
     "leaveTrip": "Sair desta viagem",
     "leaveConfirm": "Tem certeza de que deseja sair desta viagem? Você perderá o acesso.",
     "untitled": "Viagem sem título"
+  },
+  "memories": {
+    "pageSubtitle": "Registre o que tornou essa viagem especial. Algumas palavras por dia já são suficientes para Luna escrever sua história.",
+    "progress": "{count} de {total} dias registrados",
+    "saving": "Salvando...",
+    "notesPlaceholder": "Como foi esse dia? Até uma frase já é suficiente.",
+    "moodLabel": "Como esse dia te fez sentir?",
+    "mood": {
+      "exhausted": "Exausto(a)",
+      "content": "Contente",
+      "excited": "Empolgado(a)",
+      "peaceful": "Tranquilo(a)",
+      "emotional": "Emocionado(a)"
+    },
+    "highlight": "Melhor momento da viagem",
+    "untitledTrip": "Minha viagem",
+    "generateStory": "Gerar minha história",
+    "narrativeGenerating": "Luna está escrevendo sua história...",
+    "narrativeReroll": "Tentar outra versão",
+    "narrativeEditHint": "Você pode editar este texto. Ele é seu.",
+    "shareStory": "Compartilhar sua história"
   },
   "collab": {
     "toast": {

@@ -6,7 +6,7 @@ import { Link } from '@/i18n/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import NavBar from '@/components/NavBar';
-import { Clock } from 'lucide-react';
+import { Clock, BookHeart } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import { COLLAB_ENABLED, type CollabRole } from '@/lib/collaboration';
 import { RoleBadge } from '@/components/collab/RoleBadge';
@@ -322,21 +322,57 @@ export default function MyTripsPage() {
                   </p>
 
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    {/* View trip */}
-                    <button
-                      onClick={() => viewTrip(trip)}
-                      style={{
-                        flex: 1, padding: '9px 0',
-                        border: '1.5px solid #00447B', color: '#00447B',
-                        background: 'none', borderRadius: 100, cursor: 'pointer',
-                        fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 13,
-                        transition: 'all 0.15s',
-                      }}
-                      onMouseEnter={e => { const b = e.currentTarget; b.style.background = '#00447B'; b.style.color = '#fff'; }}
-                      onMouseLeave={e => { const b = e.currentTarget; b.style.background = 'none'; b.style.color = '#00447B'; }}
-                    >
-                      {t('tripCard.viewTrip')}
-                    </button>
+                    {isTripExpired(trip.start_date, trip.end_date) ? (
+                      <>
+                        {/* Capture memories — primary CTA for expired trips */}
+                        <button
+                          onClick={() => router.push(`/memories/${trip.id}`)}
+                          style={{
+                            flex: 1, padding: '9px 0',
+                            border: 'none', color: '#fff',
+                            background: '#FF8210', borderRadius: 100, cursor: 'pointer',
+                            fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 13,
+                            transition: 'all 0.15s',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                          }}
+                          onMouseEnter={e => { e.currentTarget.style.background = '#e67400'; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = '#FF8210'; }}
+                        >
+                          <BookHeart size={15} />
+                          {t('tripCard.captureMemories')}
+                        </button>
+                        {/* View trip — secondary for expired trips */}
+                        <button
+                          onClick={() => viewTrip(trip)}
+                          style={{
+                            padding: '9px 14px',
+                            border: '1.5px solid #00447B', color: '#00447B',
+                            background: 'none', borderRadius: 100, cursor: 'pointer',
+                            fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 12,
+                            transition: 'all 0.15s', flexShrink: 0,
+                          }}
+                          onMouseEnter={e => { const b = e.currentTarget; b.style.background = '#00447B'; b.style.color = '#fff'; }}
+                          onMouseLeave={e => { const b = e.currentTarget; b.style.background = 'none'; b.style.color = '#00447B'; }}
+                        >
+                          {t('tripCard.viewTrip')}
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => viewTrip(trip)}
+                        style={{
+                          flex: 1, padding: '9px 0',
+                          border: '1.5px solid #00447B', color: '#00447B',
+                          background: 'none', borderRadius: 100, cursor: 'pointer',
+                          fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 13,
+                          transition: 'all 0.15s',
+                        }}
+                        onMouseEnter={e => { const b = e.currentTarget; b.style.background = '#00447B'; b.style.color = '#fff'; }}
+                        onMouseLeave={e => { const b = e.currentTarget; b.style.background = 'none'; b.style.color = '#00447B'; }}
+                      >
+                        {t('tripCard.viewTrip')}
+                      </button>
+                    )}
 
                     {/* Delete */}
                     <button

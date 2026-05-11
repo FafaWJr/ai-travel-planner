@@ -754,6 +754,7 @@
       "expired": "Expired",
       "saved": "Saved {date}",
       "viewTrip": "View trip",
+      "captureMemories": "Capture memories",
       "addFavorite": "Add to favorites",
       "removeFavorite": "Remove from favorites",
       "deleteTrip": "Delete trip"
@@ -765,6 +766,27 @@
     "leaveTrip": "Leave this trip",
     "leaveConfirm": "Are you sure you want to leave this trip? You will lose access.",
     "untitled": "Untitled trip"
+  },
+  "memories": {
+    "pageSubtitle": "Capture what made this trip special. Even a few words per day is enough for Luna to write your story.",
+    "progress": "{count} of {total} days captured",
+    "saving": "Saving...",
+    "notesPlaceholder": "What was this day like? Even a sentence is enough.",
+    "moodLabel": "How did this day feel?",
+    "mood": {
+      "exhausted": "Exhausted",
+      "content": "Content",
+      "excited": "Excited",
+      "peaceful": "Peaceful",
+      "emotional": "Emotional"
+    },
+    "highlight": "Best moment of the trip",
+    "untitledTrip": "My trip",
+    "generateStory": "Generate my story",
+    "narrativeGenerating": "Luna is writing your story...",
+    "narrativeReroll": "Try a different version",
+    "narrativeEditHint": "You can edit this text. It is yours.",
+    "shareStory": "Share your story"
   },
   "collab": {
     "toast": {
