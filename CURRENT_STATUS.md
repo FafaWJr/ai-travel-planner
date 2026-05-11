@@ -139,3 +139,15 @@ Update this file whenever:
 - The master plan version changes.
 
 Always include the date in the **Last updated** field at the top.
+
+---
+
+## Luna Memories project
+
+**Active phase:** Phase 1: Memory mode on existing trips
+**Phase status:** Not started
+**Last completed phase:** None
+**Hotfixes in current phase:** 0
+**Known issues:** None
+**Master plan:** docs/specs/memories/session_anchor.md (immutable during sessions)
+**Full spec:** Memories master plan in project files (luna-memories-master-plan.md)

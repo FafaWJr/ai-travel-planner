@@ -665,6 +665,22 @@ clickable destination suggestions at the results screen. Each card links to
 Shows: persona name, one-line description, travel profile tags, trip style
 summary, 3 DestinationCard suggestions, "Ask Luna" prompt pills, and a
 Deals CTA block linking to \`/deals\`.
+
+## Luna Memories project rules
+
+- At the start of every session, read \`docs/specs/memories/session_anchor.md\` and
+  \`CURRENT_STATUS.md\` before responding. Use what you find to inform your work.
+  Do not announce what you found. Just be informed by it.
+- \`CURRENT_STATUS.md\` is the single source of truth for Luna's project state.
+  When told "remember this," write the information to CURRENT_STATUS.md immediately
+  and confirm you have done it.
+- Before any hotfix during the Memories project, record in
+  \`docs/specs/memories/hotfix_log.md\`: which phase is active, the problem,
+  the proposed fix. After the hotfix, confirm the active phase did not change.
+- Read \`docs/specs/memories/session_anchor.md\` for phase scope.
+  Never implement features from a future phase. Never modify out-of-scope systems.
+- If a change would affect Luna's existing trip planner, chat, generation,
+  or collaborative features, STOP and verify with Wilson before proceeding.
 EOF
 
 echo "CLAUDE.md regenerated successfully!"
