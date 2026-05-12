@@ -36,6 +36,9 @@ export async function generateMetadata(
   return {
     title: `${destination} — Trip Memory | Luna Let's Go`,
     description: `Read the story of a trip to ${destination}, written with Luna Let's Go.`,
+    alternates: {
+      canonical: pageUrl,
+    },
     openGraph: {
       type: 'website',
       url: pageUrl,

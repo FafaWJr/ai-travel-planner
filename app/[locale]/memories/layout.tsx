@@ -14,15 +14,18 @@ export async function generateMetadata({
 
   const title = t('ogTitle');
   const description = t('ogDescription');
-  const url = `${BASE_URL}/${locale}/memories`;
+  // With localePrefix: 'as-needed', the default locale (en) has no prefix.
+  // Canonical must match the actual URL the page is served at, not /en/memories.
+  const canonical =
+    locale === 'en' ? `${BASE_URL}/memories` : `${BASE_URL}/${locale}/memories`;
 
   return {
     title,
     description,
     alternates: {
-      canonical: url,
+      canonical,
       languages: {
-        en: `${BASE_URL}/en/memories`,
+        en: `${BASE_URL}/memories`,
         'pt-BR': `${BASE_URL}/pt-BR/memories`,
         es: `${BASE_URL}/es/memories`,
       },
@@ -30,15 +33,15 @@ export async function generateMetadata({
     openGraph: {
       title,
       description,
-      url,
+      url: canonical,
       siteName: "Luna Let's Go",
       type: 'website',
       locale: locale === 'pt-BR' ? 'pt_BR' : locale === 'es' ? 'es_ES' : 'en_GB',
       images: [
         {
           url: `${BASE_URL}/images/memories-hero.jpg`,
-          width: 1200,
-          height: 630,
+          width: 1600,
+          height: 1064,
           alt: t('ogImageAlt'),
         },
       ],

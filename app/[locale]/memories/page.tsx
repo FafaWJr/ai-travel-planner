@@ -1,7 +1,10 @@
 'use client';
 export const dynamic = 'force-dynamic';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  useState, useEffect, useRef, useCallback,
+  type ReactNode, type CSSProperties, type FocusEvent, type ChangeEvent,
+} from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslations, useLocale } from 'next-intl';
@@ -31,9 +34,9 @@ function useInView(threshold = 0.15) {
 }
 
 function FadeUp({ children, delay = 0, style = {} }: {
-  children: React.ReactNode;
+  children: ReactNode;
   delay?: number;
-  style?: React.CSSProperties;
+  style?: CSSProperties;
 }) {
   const [ref, inView] = useInView(0.1);
   return (
@@ -54,7 +57,7 @@ function FadeUp({ children, delay = 0, style = {} }: {
 // ─── Feature card with hover ───────────────────────────────────────────────────
 
 function FeatureCard({ icon, title, desc, delay = 0 }: {
-  icon: React.ReactNode; title: string; desc: string; delay?: number;
+  icon: ReactNode; title: string; desc: string; delay?: number;
 }) {
   const [hovered, setHovered] = useState(false);
   return (
@@ -106,7 +109,7 @@ function FeatureCard({ icon, title, desc, delay = 0 }: {
 // ─── Step item ─────────────────────────────────────────────────────────────────
 
 function StepItem({ num, icon, title, desc, delay = 0 }: {
-  num: number; icon: React.ReactNode; title: string; desc: string; delay?: number;
+  num: number; icon: ReactNode; title: string; desc: string; delay?: number;
 }) {
   const [hovered, setHovered] = useState(false);
   return (
@@ -163,6 +166,31 @@ function StepItem({ num, icon, title, desc, delay = 0 }: {
   );
 }
 
+// ─── Module-level style constants (no state dependencies, stable across renders) ─
+
+const inputBase: CSSProperties = {
+  width: '100%', padding: '13px 16px', borderRadius: 10,
+  border: '1.5px solid rgba(0,68,123,0.10)',
+  fontFamily: "'Inter',sans-serif", fontSize: 14, color: '#2a2a3e',
+  outline: 'none', boxSizing: 'border-box',
+  transition: 'border-color 0.2s, box-shadow 0.2s', background: '#FFFFFF',
+};
+
+const labelBase: CSSProperties = {
+  fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 12,
+  color: '#6C6D6F', display: 'flex', alignItems: 'center', gap: 5, marginBottom: 7,
+};
+
+function handleFocus(e: FocusEvent<HTMLInputElement>) {
+  e.currentTarget.style.borderColor = '#FF8210';
+  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(255,130,16,0.08)';
+}
+
+function handleBlur(e: FocusEvent<HTMLInputElement>) {
+  e.currentTarget.style.borderColor = 'rgba(0,68,123,0.10)';
+  e.currentTarget.style.boxShadow = 'none';
+}
+
 // ─── Main page ─────────────────────────────────────────────────────────────────
 
 export default function MemoriesLandingPage() {
@@ -186,7 +214,7 @@ export default function MemoriesLandingPage() {
   }, []);
 
   // Sync end date with start date on first pick
-  const handleStartChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleStartChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setStartDate(val);
     setFormError('');
@@ -256,38 +284,16 @@ export default function MemoriesLandingPage() {
           }
         }
       } catch {
-        // Skeleton failed — continue with generic day titles
+        // Skeleton failed. Continue with generic day titles.
       }
 
-      router.push(`/memories/${memory.id}`);
+      router.push(`/${locale}/memories/${memory.id}`);
     } catch (err) {
       console.error('[memories] standalone create error:', err);
       setFormError(t('genericError'));
     } finally {
       setCreating(false);
     }
-  };
-
-  const inputBase: React.CSSProperties = {
-    width: '100%', padding: '13px 16px', borderRadius: 10,
-    border: '1.5px solid rgba(0,68,123,0.10)',
-    fontFamily: "'Inter',sans-serif", fontSize: 14, color: '#2a2a3e',
-    outline: 'none', boxSizing: 'border-box',
-    transition: 'border-color 0.2s, box-shadow 0.2s', background: '#FFFFFF',
-  };
-
-  const labelBase: React.CSSProperties = {
-    fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 12,
-    color: '#6C6D6F', display: 'flex', alignItems: 'center', gap: 5, marginBottom: 7,
-  };
-
-  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    e.currentTarget.style.borderColor = '#FF8210';
-    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(255,130,16,0.08)';
-  };
-  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    e.currentTarget.style.borderColor = 'rgba(0,68,123,0.10)';
-    e.currentTarget.style.boxShadow = 'none';
   };
 
   return (
@@ -338,7 +344,7 @@ export default function MemoriesLandingPage() {
               borderRadius: 100, padding: '7px 20px', marginBottom: 28,
               backdropFilter: 'blur(8px)',
             }}>
-              <BookHeart size={14} color="#FFBD59" aria-hidden="true" />
+              <BookHeart size={14} color="#FF8210" aria-hidden="true" />
               <span style={{
                 fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 11,
                 color: '#FFBD59', textTransform: 'uppercase', letterSpacing: '0.12em',
