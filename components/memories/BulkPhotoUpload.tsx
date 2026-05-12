@@ -291,7 +291,7 @@ export default function BulkPhotoUpload({
                   color: '#6C6D6F', margin: '0 0 6px',
                   textTransform: 'uppercase', letterSpacing: '0.04em',
                 }}>
-                  {t('dayAssignment', { day: dn })}{dayInfo ? ` — ${dayInfo.dayTitle}` : ''}
+                  {t('dayAssignment', { day: dn })}{dayInfo ? ` - ${dayInfo.dayTitle}` : ''}
                 </p>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {dayPhotos.map(item => (
@@ -349,19 +349,73 @@ export default function BulkPhotoUpload({
             );
           })}
 
-          {unsortedCount > 0 && (
-            <div style={{
-              marginBottom: 12, padding: '8px 12px', borderRadius: 8,
-              background: 'rgba(255,130,16,0.06)', border: '1px solid rgba(255,130,16,0.15)',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <AlertCircle size={14} color="#FF8210" />
+          {/* Unsorted photos — show per-item with day picker */}
+          {items.filter(i => i.dayNumber === null).length > 0 && (
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                <AlertCircle size={13} color="#FF8210" />
                 <span style={{
-                  fontFamily: "'Inter',sans-serif", fontSize: 12, color: '#6C6D6F',
+                  fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 12,
+                  color: '#6C6D6F', textTransform: 'uppercase', letterSpacing: '0.04em',
                 }}>
-                  {t('photosUnsorted', { count: unsortedCount })}
+                  {t('photosUnsorted', { count: items.filter(i => i.dayNumber === null).length })}
                 </span>
               </div>
+              {items.filter(i => i.dayNumber === null).map(item => (
+                <div key={item.localId} style={{
+                  display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6,
+                  padding: '6px 8px', borderRadius: 8,
+                  background: 'rgba(255,130,16,0.04)', border: '1px solid rgba(255,130,16,0.12)',
+                }}>
+                  <img
+                    src={item.previewUrl}
+                    alt={item.file.name}
+                    style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 5, flexShrink: 0 }}
+                  />
+                  <span style={{
+                    fontFamily: "'Inter',sans-serif", fontSize: 11, color: '#6C6D6F',
+                    flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0,
+                  }}>
+                    {item.file.name}
+                  </span>
+                  {phase === 'preview' && (
+                    <>
+                      <select
+                        defaultValue=""
+                        onChange={e => {
+                          const dn = parseInt(e.target.value, 10);
+                          if (!isNaN(dn)) {
+                            setItems(prev => prev.map(i =>
+                              i.localId === item.localId ? { ...i, dayNumber: dn } : i,
+                            ));
+                          }
+                        }}
+                        style={{
+                          fontSize: 11, padding: '4px 6px', borderRadius: 6,
+                          border: '1px solid #E5E7EB', background: '#fff',
+                          color: '#00447B', cursor: 'pointer', flexShrink: 0,
+                        }}
+                      >
+                        <option value="" disabled>{t('assignToDay')}</option>
+                        {days.map(d => (
+                          <option key={d.dayNumber} value={d.dayNumber}>
+                            {t('dayAssignment', { day: d.dayNumber })} - {d.dayTitle}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => removeItem(item.localId)}
+                        style={{
+                          background: 'none', border: 'none', cursor: 'pointer',
+                          padding: 2, lineHeight: 0, flexShrink: 0,
+                        }}
+                      >
+                        <X size={13} color="#C0C0C0" />
+                      </button>
+                    </>
+                  )}
+                </div>
+              ))}
             </div>
           )}
 

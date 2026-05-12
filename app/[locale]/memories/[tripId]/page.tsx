@@ -454,7 +454,7 @@ export default function MemoryCapturePage({
                       fontFamily: "'Inter',sans-serif", fontSize: 11, color: '#679AC1',
                     }}>
                       <ImagePlus size={12} color="#679AC1" />
-                      {(day.photos ?? []).length}
+                      {t('photoCount', { count: (day.photos ?? []).length })}
                     </span>
                   )}
 
