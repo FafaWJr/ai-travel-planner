@@ -1,7 +1,7 @@
 # Luna Let's Go - Claude Code Context
-**Last Updated:** 2026-05-11 20:01:28
+**Last Updated:** 2026-05-12 12:01:47
 **Current Branch:** main
-**Last Commit:** 2489d5fb docs: restructure CLAUDE.md from 718 to 186 lines with modular sub-docs
+**Last Commit:** 34b5ddfb feat(memories): Phase 3.2 — photo upload UI + EXIF auto-sort + day grid
 **Deployment:** https://www.lunaletsgo.com
 
 ---
@@ -55,6 +55,10 @@ app/api/extra-ideas/route.ts
 app/api/generate/route.ts
 app/api/hotel-photos/route.ts
 app/api/hotel-suggestions/route.ts
+app/api/memories/[tripId]/route.ts
+app/api/memories/narrative/route.ts
+app/api/memories/photos/route.ts
+app/api/memories/share/[token]/route.ts
 app/api/place-photo/route.ts
 app/api/places/photo/[placeId]/[index]/route.ts
 app/api/places/resolve/route.ts
@@ -88,6 +92,8 @@ app/[locale]/blog/page.tsx
 app/[locale]/blog/rio-de-janeiro-5-days/page.tsx
 app/[locale]/deals/page.tsx
 app/[locale]/how-to-use-luna/page.tsx
+app/[locale]/memories/[tripId]/page.tsx
+app/[locale]/memories/share/[token]/page.tsx
 app/[locale]/my-trips/page.tsx
 app/[locale]/page.tsx
 app/[locale]/plan/page.tsx
@@ -109,16 +115,16 @@ app/auth/signup/page.tsx
 ## Recent Changes (Last 10 Commits)
 
 ```
-2489d5fb (HEAD -> main, origin/main, origin/HEAD) docs: restructure CLAUDE.md from 718 to 186 lines with modular sub-docs
-69f057cd chore: update CURRENT_STATUS.md + resolve TD-004/TD-008 in TECH_DEBT.md
-e79bd132 feat: add luna-status-updater subagent
-db929e68 chore: add TECH_DEBT.md to update-context.sh heredoc + regen CLAUDE.md
-70de3ef1 docs: create TECH_DEBT.md register at project root
-dd8c668e chore: update context after My Trips photos and orchestration agents
-1f66f44f feat: add multi-agent orchestration for Claude Code
-bd5ddec9 feat: real landmark photos on My Trips saved trip cards
-2f2af9fa chore: update context after Google Places hotel suggestions
-ba670fdb feat: Google Places-backed hotel suggestions
+34b5ddfb (HEAD -> main, origin/main, origin/HEAD) feat(memories): Phase 3.2 — photo upload UI + EXIF auto-sort + day grid
+6498c97e chore: update CURRENT_STATUS.md after Phase 3.1 ship
+e3c9a97b feat: photo storage foundation for Luna Memories
+6b013dd9 fix(memories): guard against false Saved confirmation in MemoryBanner
+09f022c0 chore: update CURRENT_STATUS.md after Phase 2 ship
+1da8df1b feat: mid-trip memory capture banner on Plan page
+0025ba08 chore: Phase 1.4 post-ship — fix ES punctuation + update CURRENT_STATUS
+58cb636f feat: Phase 1.4 — shareable memory link with OG image
+808a6a8a feat: AI narrative generation for trip memories
+638408cc feat: memory capture page with My Trips CTA and auto-save
 ```
 
 ---
@@ -580,10 +586,12 @@ After Claude Code finishes changes:
 - Collab Stage 4 fully shipped (2-3 May 2026): comments data layer and API (Stage 4a), comments UI components (Stage 4b), My Trips owned/shared split + CollabToast + Leave Trip + PDF collaborators line (Stage 4c), share icon + comment icon UI polish.
 - My Trips saved trip card headers now show Google Places landmark photos via `/api/destination-header/` (commit `bd5ddec9`, 5 May 2026). Feature-flag gated by `NEXT_PUBLIC_PLACE_PREVIEW_ENABLED`.
 - Multi-agent orchestration added: 11 specialist agents + `luna-code-reviewer.md` in `.claude/agents/`; orchestration protocol at `docs/architecture/multi-agent-orchestration.md` (commit `1f66f44f`, 5 May 2026).
+- Luna Memories Phase 3.2 shipped (commit `34b5ddfb`, 12 May 2026): `BulkPhotoUpload` component (EXIF sort preview, sequential upload, progress), `DayPhotoGrid` component (3-col grid, lightbox, delete confirmation), canonical `lib/memories/types.ts` (`PhotoMeta` + `PhotoUploadItem`), integrated into memory capture page, 18 new locale keys per locale.
 
 **Current Work:**
 - Collaborative Trips Stages 0+1+2+3+4 **shipped**. `NEXT_PUBLIC_COLLAB_ENABLED=false` still in production pending Stage 5 launch.
 - Stage 5 (landing page, OG image, flag flip): NOT STARTED. `NEXT_PUBLIC_COLLAB_ENABLED` still false.
+- Luna Memories Phase 3.2 (photo upload UI): **SHIPPED** (commit `34b5ddfb`, 12 May 2026). Phase 3.3+ not started.
 - Brevo email integration (list ID 17, /api/brevo-sync/route.ts)
 - PDF export (jsPDF + html2canvas, branded itinerary)
 
@@ -732,3 +740,4 @@ Deals CTA block linking to `/deals`.
   Never implement features from a future phase. Never modify out-of-scope systems.
 - If a change would affect Luna's existing trip planner, chat, generation,
   or collaborative features, STOP and verify with Wilson before proceeding.
+- Canonical photo types: `lib/memories/types.ts` exports `PhotoMeta` and `PhotoUploadItem`. Import from there; never redefine locally.

@@ -529,10 +529,12 @@ After Claude Code finishes changes:
 - Collab Stage 4 fully shipped (2-3 May 2026): comments data layer and API (Stage 4a), comments UI components (Stage 4b), My Trips owned/shared split + CollabToast + Leave Trip + PDF collaborators line (Stage 4c), share icon + comment icon UI polish.
 - My Trips saved trip card headers now show Google Places landmark photos via \`/api/destination-header/\` (commit \`bd5ddec9\`, 5 May 2026). Feature-flag gated by \`NEXT_PUBLIC_PLACE_PREVIEW_ENABLED\`.
 - Multi-agent orchestration added: 11 specialist agents + \`luna-code-reviewer.md\` in \`.claude/agents/\`; orchestration protocol at \`docs/architecture/multi-agent-orchestration.md\` (commit \`1f66f44f\`, 5 May 2026).
+- Luna Memories Phase 3.2 shipped (commit \`34b5ddfb\`, 12 May 2026): \`BulkPhotoUpload\` component (EXIF sort preview, sequential upload, progress), \`DayPhotoGrid\` component (3-col grid, lightbox, delete confirmation), canonical \`lib/memories/types.ts\` (\`PhotoMeta\` + \`PhotoUploadItem\`), integrated into memory capture page, 18 new locale keys per locale.
 
 **Current Work:**
 - Collaborative Trips Stages 0+1+2+3+4 **shipped**. \`NEXT_PUBLIC_COLLAB_ENABLED=false\` still in production pending Stage 5 launch.
 - Stage 5 (landing page, OG image, flag flip): NOT STARTED. \`NEXT_PUBLIC_COLLAB_ENABLED\` still false.
+- Luna Memories Phase 3.2 (photo upload UI): **SHIPPED** (commit \`34b5ddfb\`, 12 May 2026). Phase 3.3+ not started.
 - Brevo email integration (list ID 17, /api/brevo-sync/route.ts)
 - PDF export (jsPDF + html2canvas, branded itinerary)
 
@@ -681,6 +683,7 @@ Deals CTA block linking to \`/deals\`.
   Never implement features from a future phase. Never modify out-of-scope systems.
 - If a change would affect Luna's existing trip planner, chat, generation,
   or collaborative features, STOP and verify with Wilson before proceeding.
+- Canonical photo types: \`lib/memories/types.ts\` exports \`PhotoMeta\` and \`PhotoUploadItem\`. Import from there; never redefine locally.
 EOF
 
 echo "CLAUDE.md regenerated successfully!"

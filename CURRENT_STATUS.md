@@ -25,7 +25,7 @@ Six stages. Real-time multi-user trip planning with viewer/editor/owner permissi
 - **How to Use Luna guide page**: shipped `99d3cc84` (3 May). `/[locale]/how-to-use-luna`, full i18n, footer Quick Links entry.
 - **Multi-agent orchestration**: 11 specialist subagents, `1f66f44f` (5 May). `luna-status-updater` added `e79bd132` (6 May).
 - **TECH_DEBT.md register**: created `70de3ef1` (5 May), 10 active items.
-- **Luna Memories Phases 1+2 shipped + Phase 3.1 shipped** (12 May 2026): `trip_memories` table + RLS, memory capture page, streaming AI narrative, shareable public link + OG image, mid-trip capture banner, photo storage foundation (`memory-photos` bucket, exif.ts, compress.ts, photos API). Phase 3.2 (photo upload UI) is next. Spec at `docs/specs/memories/session_anchor.md`.
+- **Luna Memories Phases 1+2+3.1+3.2 shipped** (12 May 2026): `trip_memories` table + RLS, memory capture page, streaming AI narrative, shareable public link + OG image, mid-trip capture banner, photo storage foundation (`memory-photos` bucket, exif.ts, compress.ts, photos API), photo upload UI with EXIF auto-sort + day grid + lightbox (`BulkPhotoUpload`, `DayPhotoGrid`, `lib/memories/types.ts`, 18 new locale keys). Spec at `docs/specs/memories/session_anchor.md`.
 
 ---
 
@@ -62,6 +62,7 @@ For full patch library, hotfix history, and implementation notes see `CLAUDE.md`
 
 | Detour | Status | Commit | Date | One-line cause |
 |---|---|---|---|---|
+| Luna Memories Phase 3.2: photo upload UI + day grid | Closed | `34b5ddfb` | 12 May | BulkPhotoUpload, DayPhotoGrid, lightbox, lib/memories/types.ts, 18 locale keys EN/PT-BR/ES |
 | Luna Memories Phase 3.1: photo storage foundation | Closed | `e3c9a97b` | 12 May | memory-photos bucket + RLS, exif.ts, compress.ts, /api/memories/photos POST+DELETE, exifr dep |
 | Phase 2 HF-1: MemoryBanner false Saved guard | Closed | `6b013dd9` | 12 May | dayIndex < 0 path called setSaved(true) on unchanged PUT; moved inside dayIndex >= 0 block |
 | Luna Memories Phase 2: mid-trip capture banner | Closed | `1da8df1b` | 12 May | Date-aware MemoryBanner on Plan page; expandable note, 24h dismiss, journal link |
@@ -154,8 +155,8 @@ Always include the date in the **Last updated** field at the top.
 ## Luna Memories project
 
 **Active phase:** Phase 3: Photo upload + EXIF auto-sort
-**Phase status:** In progress — Phase 3.1 complete; Phase 3.2 (photo upload UI) next
-**Last completed phase:** Phase 3.1 — Photo storage foundation (shipped 12 May 2026, commit `e3c9a97b`)
+**Phase status:** Phase 3.1 + 3.2 complete; next phase TBD
+**Last completed phase:** Phase 3.2 — Photo upload UI + EXIF auto-sort + day grid (shipped 12 May 2026, commit `34b5ddfb`)
 **Hotfixes in current phase:** 1 (HF-1: `6b013dd9`, false Saved confirmation guard in MemoryBanner)
 **Known issues:** None
 **Master plan:** docs/specs/memories/session_anchor.md (immutable during sessions)
@@ -171,3 +172,6 @@ Always include the date in the **Last updated** field at the top.
 
 **Phase 3.1 deliverables (all shipped):**
 - 3.1 (`e3c9a97b`, 12 May): `memory-photos` Supabase Storage bucket (public read, 5MB limit, JPEG/PNG/WebP/HEIC); 3 RLS policies (INSERT/DELETE owner-scoped to `auth.uid()` path prefix, SELECT public); `lib/memories/exif.ts` — browser-side EXIF extraction via `exifr` + `sortPhotosByDay` helper; `lib/memories/compress.ts` — Canvas API compression (max 2000px, JPEG 85%) + blur placeholder generator; `app/api/memories/photos/route.ts` — POST (upload + metadata) and DELETE (remove + cleanup + re-index sortOrder); `exifr ^7.1.3` npm dependency.
+
+**Phase 3.2 deliverables (all shipped):**
+- 3.2 (`34b5ddfb`, 12 May): `lib/memories/types.ts` — canonical `PhotoMeta` and `PhotoUploadItem` interfaces (imported by API route and components); `components/memories/BulkPhotoUpload` — file picker, EXIF-based auto-sort preview, sequential upload with progress bar, unsorted-photo warning; `components/memories/DayPhotoGrid` — 3-column thumbnail grid, lightbox with prev/next navigation, delete confirmation modal; memories capture page wired with `handleDayPhotosAdded`, `handlePhotoDelete`, `refetchMemory` callbacks, `BulkPhotoUpload` inserted after progress bar, `DayPhotoGrid` inside expanded day cards, photo count badge in collapsed day header; 18 new locale keys (`photosSection`, `addPhotos`, `uploading`, `uploadDone`, `uploadError`, `uploadPhotosBtn`, `deletePhoto`, `deletePhotoConfirm`, `deleteCancel`, `deleteConfirm`, `photosAutoSorted`, `photosUnsorted`, `photoCount`, `closeLightbox`, `addMorePhotos`, `photoOf`, `dayAssignment`) in EN/PT-BR/ES.
