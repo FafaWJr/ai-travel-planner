@@ -66,7 +66,13 @@ export async function GET(
     .insert({
       trip_id: tripId,
       user_id: user.id,
-      memory_data: { days },
+      memory_data: {
+        days,
+        tripDestination: trip.destination,
+        tripTitle: trip.title,
+        tripStartDate: trip.start_date,
+        tripEndDate: trip.end_date,
+      },
     })
     .select()
     .single();

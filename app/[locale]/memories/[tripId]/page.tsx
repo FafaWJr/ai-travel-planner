@@ -10,6 +10,7 @@ import {
   BookHeart, ChevronDown, ChevronUp,
   Frown, Smile, Zap, Leaf, Heart,
   Sparkles, Check, PenLine, RefreshCw, Loader2,
+  Share2, Link2, CheckCircle,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -75,6 +76,7 @@ export default function MemoryCapturePage({
   const [narrativeText, setNarrativeText] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isEditingNarrative, setIsEditingNarrative] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     params.then(p => setTripId(p.tripId));
@@ -195,19 +197,19 @@ export default function MemoryCapturePage({
       }
 
       if (accumulated.trim()) {
-        await fetch(`/api/memories/${tripId}`, {
+        const res2 = await fetch(`/api/memories/${tripId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             memory_data: memory?.memory_data,
             status: 'complete',
+            narrative: accumulated,
           }),
         });
-        await fetch(`/api/memories/${tripId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ narrative: accumulated }),
-        });
+        if (res2.ok) {
+          const saved = await res2.json();
+          setMemory(saved.memory);
+        }
       }
     } catch (err) {
       console.error('[memories] narrative generation error:', err);
@@ -229,6 +231,18 @@ export default function MemoryCapturePage({
       console.error('[memories] save narrative error:', err);
     }
   }, [tripId, narrativeText]);
+
+  const copyShareLink = useCallback(async () => {
+    if (!memory?.share_token) return;
+    const url = `${window.location.origin}/memories/share/${memory.share_token}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
+    } catch {
+      /* fallback: do nothing */
+    }
+  }, [memory?.share_token]);
 
   const days = memory?.memory_data?.days ?? [];
   const capturedCount = days.filter(d => d.notes.trim().length > 0).length;
@@ -520,6 +534,29 @@ export default function MemoryCapturePage({
                   animation: 'blink 1s step-end infinite',
                 }} />
               </div>
+            </div>
+          )}
+
+          {/* Share button — only visible once story is complete */}
+          {narrativeText && !isGenerating && memory?.share_token && (
+            <div style={{ marginTop: 16 }}>
+              <button
+                onClick={copyShareLink}
+                style={{
+                  width: '100%', padding: '14px 24px',
+                  background: copied ? '#4A9D5B' : '#00447B',
+                  color: '#fff', border: 'none',
+                  borderRadius: 12, cursor: 'pointer',
+                  fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 14,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  transition: 'background 0.2s',
+                }}
+              >
+                {copied
+                  ? <><CheckCircle size={16} />{t('linkCopied')}</>
+                  : <><Share2 size={16} /><Link2 size={14} />{t('shareStory')}</>
+                }
+              </button>
             </div>
           )}
 
