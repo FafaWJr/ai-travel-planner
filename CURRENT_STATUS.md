@@ -2,7 +2,7 @@
 
 > **Purpose.** This file is the single source of truth for which Luna project is active, which stage we are on, what shipped last, what is pending, and which detours are active. Upload this at the start of any working session. If a session-memory claim disagrees with this file, this file wins.
 
-**Last updated:** 6 May 2026
+**Last updated:** 12 May 2026
 **Maintainer:** Wilson
 **Repo location:** root of `ai-travel-planner` (commit alongside `CLAUDE.md` and `CONVENTIONS.md`)
 
@@ -25,6 +25,7 @@ Six stages. Real-time multi-user trip planning with viewer/editor/owner permissi
 - **How to Use Luna guide page**: shipped `99d3cc84` (3 May). `/[locale]/how-to-use-luna`, full i18n, footer Quick Links entry.
 - **Multi-agent orchestration**: 11 specialist subagents, `1f66f44f` (5 May). `luna-status-updater` added `e79bd132` (6 May).
 - **TECH_DEBT.md register**: created `70de3ef1` (5 May), 10 active items.
+- **Luna Memories Phase 1** (all 4 sub-phases shipped 11-12 May 2026): `trip_memories` table + RLS, memory capture page, streaming AI narrative, shareable public link + OG image. Phase 2 (mid-trip capture banner) not started.
 
 ---
 
@@ -61,6 +62,11 @@ For full patch library, hotfix history, and implementation notes see `CLAUDE.md`
 
 | Detour | Status | Commit | Date | One-line cause |
 |---|---|---|---|---|
+| Luna Memories Phase 1.4: shareable link + OG image | Closed | `58cb636f` | 12 May | Public share page, OG image route, share button + clipboard, per-token generateMetadata |
+| Luna Memories Phase 1.3: streaming AI narrative | Closed | `808a6a8a` | 12 May | Streaming Claude Sonnet 4.5 narrative via /api/memories/narrative; editable + re-roll + auto-save |
+| Luna Memories Phase 1.2: capture page + My Trips CTA | Closed | `638408cc` | 12 May | Memory capture page with day cards + auto-save; My Trips CTA replaced for expired trips |
+| Luna Memories Phase 1.1: trip_memories table + AI_CONFIG | Closed | `74dbc159` | 11 May | trip_memories Supabase table, RLS, indexes, narrative token limit in AI_CONFIG |
+| Luna Memories infrastructure setup | Closed | `2b9966fb` | 11 May | session_anchor, hotfix_log, ideas_backlog, two new subagents, CURRENT_STATUS section |
 | luna-status-updater subagent | Closed | `e79bd132` | 6 May | New subagent for keeping CURRENT_STATUS.md current |
 | TECH_DEBT.md register | Closed | `70de3ef1` | 5 May | 10 active tech debt items catalogued; added to update-context.sh heredoc |
 | Multi-agent orchestration | Closed | `1f66f44f` | 5 May | 11 specialist subagents + orchestration protocol in .claude/agents/ |
@@ -144,10 +150,15 @@ Always include the date in the **Last updated** field at the top.
 
 ## Luna Memories project
 
-**Active phase:** Phase 1: Memory mode on existing trips
+**Active phase:** Phase 2: Mid-trip capture banner
 **Phase status:** Not started
-**Last completed phase:** None
+**Last completed phase:** Phase 1 — Memory mode on existing trips (all of 1.1-1.4 shipped, 12 May 2026)
 **Hotfixes in current phase:** 0
 **Known issues:** None
 **Master plan:** docs/specs/memories/session_anchor.md (immutable during sessions)
-**Full spec:** Memories master plan in project files (luna-memories-master-plan.md)
+
+**Phase 1 deliverables (all shipped):**
+- 1.1 (`74dbc159`, 11 May): `trip_memories` Supabase table, RLS policies, indexes, `AI_CONFIG` narrative route at 4000 tokens.
+- 1.2 (`638408cc`, 12 May): Memory capture page, My Trips CTA change (`Capture memories` for expired trips), `GET`/`PUT /api/memories/[tripId]` routes, per-day notes/mood/highlight, debounced auto-save, i18n EN/PT-BR/ES.
+- 1.3 (`808a6a8a`, 12 May): Streaming AI narrative (`POST /api/memories/narrative`), generate/re-roll/edit/auto-save, narrative persisted to `trip_memories.narrative`, i18n.
+- 1.4 (`58cb636f`, 12 May): Public share API (`/api/memories/share/[token]`), share page (`/memories/share/[token]`), OG image route (`/api/og/memory/[token]`), share button + clipboard copy, per-token `generateMetadata`, i18n.
