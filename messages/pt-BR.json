@@ -833,7 +833,12 @@
     "formError": "Por favor, preencha destino e datas.",
     "startCapturing": "Começar a capturar memórias",
     "creatingMemory": "Preparando sua viagem...",
-    "loginToSave": "Entre para salvar suas memórias entre dispositivos."
+    "loginToSave": "Entre para salvar suas memórias entre dispositivos.",
+    "copyLink": "Copiar link",
+    "downloadStoryCard": "Card para Stories",
+    "downloadCarousel": "Cards por dia",
+    "shareInstagram": "Compartilhar no Instagram",
+    "instagramShareHint": "A imagem foi salva. Abra o Instagram, crie um novo Story e selecione da sua galeria."
   },
   "collab": {
     "toast": {

@@ -833,7 +833,12 @@
     "formError": "Please fill in destination and dates.",
     "startCapturing": "Start capturing memories",
     "creatingMemory": "Setting up your trip...",
-    "loginToSave": "Sign in to save your memories across devices."
+    "loginToSave": "Sign in to save your memories across devices.",
+    "copyLink": "Copy link",
+    "downloadStoryCard": "Stories card",
+    "downloadCarousel": "Day cards",
+    "shareInstagram": "Share to Instagram",
+    "instagramShareHint": "The image has been saved. Open Instagram, create a new Story, and select it from your camera roll."
   },
   "collab": {
     "toast": {

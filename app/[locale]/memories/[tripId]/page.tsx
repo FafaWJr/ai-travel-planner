@@ -10,7 +10,7 @@ import {
   BookHeart, ChevronDown, ChevronUp,
   Frown, Smile, Zap, Leaf, Heart,
   Sparkles, Check, PenLine, RefreshCw, Loader2,
-  Share2, Link2, CheckCircle, ImagePlus,
+  Share2, Link2, CheckCircle, ImagePlus, Download,
 } from 'lucide-react';
 import nextDynamic from 'next/dynamic';
 import DayPhotoGrid from '@/components/memories/DayPhotoGrid';
@@ -644,26 +644,110 @@ export default function MemoryCapturePage({
             </div>
           )}
 
-          {/* Share button — only visible once story is complete */}
-          {narrativeText && !isGenerating && memory?.share_token && (
-            <div style={{ marginTop: 16 }}>
-              <button
-                onClick={copyShareLink}
-                style={{
-                  width: '100%', padding: '14px 24px',
-                  background: copied ? '#4A9D5B' : '#00447B',
-                  color: '#fff', border: 'none',
-                  borderRadius: 12, cursor: 'pointer',
-                  fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 14,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  transition: 'background 0.2s',
-                }}
-              >
-                {copied
-                  ? <><CheckCircle size={16} />{t('linkCopied')}</>
-                  : <><Share2 size={16} /><Link2 size={14} />{t('shareStory')}</>
-                }
-              </button>
+          {/* Share panel — visible once story is complete */}
+          {narrativeText && !isGenerating && memory?.status === 'complete' && (
+            <div style={{
+              marginTop: 24, background: '#fff', borderRadius: 12,
+              border: '1.5px solid rgba(0,68,123,0.08)',
+              padding: '24px 28px',
+            }}>
+              <h3 style={{
+                fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 15,
+                color: '#00447B', margin: '0 0 16px',
+              }}>
+                {t('shareStory')}
+              </h3>
+
+              <div style={{
+                display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10,
+              }}>
+                {/* Copy link */}
+                <button
+                  onClick={copyShareLink}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    padding: '12px 16px', borderRadius: 10,
+                    border: copied ? '1.5px solid #16A34A' : '1.5px solid rgba(0,68,123,0.12)',
+                    background: copied ? 'rgba(22,163,74,0.04)' : '#fff',
+                    color: copied ? '#16A34A' : '#00447B',
+                    cursor: 'pointer',
+                    fontFamily: "'Inter',sans-serif", fontSize: 13, fontWeight: 500,
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  {copied ? <CheckCircle size={15} /> : <Link2 size={15} />}
+                  {copied ? t('linkCopied') : t('copyLink')}
+                </button>
+
+                {/* Download Stories card */}
+                <a
+                  href={`/api/memories/card/${memory.share_token}`}
+                  download={`${(trip?.destination ?? 'trip').replace(/[^a-zA-Z0-9]/g, '-')}-story.png`}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    padding: '12px 16px', borderRadius: 10,
+                    border: '1.5px solid rgba(0,68,123,0.12)',
+                    background: '#fff', color: '#00447B',
+                    textDecoration: 'none',
+                    fontFamily: "'Inter',sans-serif", fontSize: 13, fontWeight: 500,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Download size={15} />
+                  {t('downloadStoryCard')}
+                </a>
+
+                {/* Download carousel images */}
+                <button
+                  onClick={async () => {
+                    const dayCount = memory?.memory_data?.days?.length ?? 0;
+                    for (let i = 1; i <= dayCount; i++) {
+                      const link = document.createElement('a');
+                      link.href = `/api/memories/card/day/${memory.share_token}/${i}`;
+                      link.download = `day-${i}.png`;
+                      link.click();
+                      await new Promise<void>(r => setTimeout(r, 300));
+                    }
+                  }}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    padding: '12px 16px', borderRadius: 10,
+                    border: '1.5px solid rgba(0,68,123,0.12)',
+                    background: '#fff', color: '#00447B',
+                    cursor: 'pointer',
+                    fontFamily: "'Inter',sans-serif", fontSize: 13, fontWeight: 500,
+                  }}
+                >
+                  <Download size={15} />
+                  {t('downloadCarousel')}
+                </button>
+
+                {/* Share to Instagram */}
+                <button
+                  onClick={() => {
+                    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                    const link = document.createElement('a');
+                    link.href = `/api/memories/card/${memory.share_token}`;
+                    link.download = 'luna-story.png';
+                    link.click();
+                    if (isMobile) {
+                      setTimeout(() => alert(t('instagramShareHint')), 500);
+                    }
+                  }}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    padding: '12px 16px', borderRadius: 10,
+                    border: 'none',
+                    background: 'linear-gradient(135deg, #833AB4 0%, #E1306C 50%, #F77737 100%)',
+                    color: '#fff',
+                    cursor: 'pointer',
+                    fontFamily: "'Inter',sans-serif", fontSize: 13, fontWeight: 600,
+                  }}
+                >
+                  <Share2 size={15} />
+                  {t('shareInstagram')}
+                </button>
+              </div>
             </div>
           )}
 
