@@ -86,14 +86,28 @@ export async function POST(request: NextRequest) {
       blurPlaceholder: (formData.get('blurPlaceholder') as string) || '',
     };
 
-    const { data: memory, error: fetchError } = await supabase
+    // Dual-lookup: try trip_id first (linked), then id (standalone)
+    let memory = null as { id: string; memory_data: Record<string, unknown> } | null;
+    const { data: byTripId } = await supabase
       .from('trip_memories')
-      .select('memory_data')
+      .select('id, memory_data')
       .eq('trip_id', tripId)
       .eq('user_id', user.id)
       .single();
 
-    if (fetchError || !memory) {
+    if (byTripId) {
+      memory = byTripId as typeof memory;
+    } else {
+      const { data: byId } = await supabase
+        .from('trip_memories')
+        .select('id, memory_data')
+        .eq('id', tripId)
+        .eq('user_id', user.id)
+        .single();
+      memory = byId as typeof memory;
+    }
+
+    if (!memory) {
       await supabase.storage.from('memory-photos').remove([storagePath]);
       return Response.json({ error: 'Memory not found' }, { status: 404 });
     }
@@ -120,7 +134,7 @@ export async function POST(request: NextRequest) {
     const { error: updateError } = await supabase
       .from('trip_memories')
       .update({ memory_data: memoryData })
-      .eq('trip_id', tripId)
+      .eq('id', memory.id)
       .eq('user_id', user.id);
 
     if (updateError) {
@@ -170,14 +184,28 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const { data: memory, error: fetchError } = await supabase
+    // Dual-lookup: try trip_id first (linked), then id (standalone)
+    let memory = null as { id: string; memory_data: Record<string, unknown> } | null;
+    const { data: byTripId2 } = await supabase
       .from('trip_memories')
-      .select('memory_data')
+      .select('id, memory_data')
       .eq('trip_id', tripId)
       .eq('user_id', user.id)
       .single();
 
-    if (fetchError || !memory) {
+    if (byTripId2) {
+      memory = byTripId2 as typeof memory;
+    } else {
+      const { data: byId2 } = await supabase
+        .from('trip_memories')
+        .select('id, memory_data')
+        .eq('id', tripId)
+        .eq('user_id', user.id)
+        .single();
+      memory = byId2 as typeof memory;
+    }
+
+    if (!memory) {
       return Response.json({ error: 'Memory not found' }, { status: 404 });
     }
 
@@ -218,7 +246,7 @@ export async function DELETE(request: NextRequest) {
     const { error: updateError } = await supabase
       .from('trip_memories')
       .update({ memory_data: memoryData })
-      .eq('trip_id', tripId)
+      .eq('id', memory.id)
       .eq('user_id', user.id);
 
     if (updateError) {

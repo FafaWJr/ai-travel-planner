@@ -66,28 +66,72 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: 'tripId is required' }, { status: 400 });
     }
 
-    const { data: trip, error: tripError } = await supabase
-      .from('saved_trips')
-      .select('id, destination, start_date, end_date, title, trip_data')
-      .eq('id', tripId)
-      .single();
+    // Dual-lookup on trip_memories first: linked (trip_id=tripId) or standalone (id=tripId)
+    let memory = null as {
+      trip_id: string | null;
+      memory_data: Record<string, unknown>;
+      standalone_destination: string | null;
+      standalone_start_date: string | null;
+      standalone_end_date: string | null;
+    } | null;
 
-    if (tripError || !trip) {
-      return Response.json({ error: 'Trip not found' }, { status: 404 });
-    }
-
-    const { data: memory, error: memError } = await supabase
+    const { data: byTripId } = await supabase
       .from('trip_memories')
-      .select('memory_data')
+      .select('trip_id, memory_data, standalone_destination, standalone_start_date, standalone_end_date')
       .eq('trip_id', tripId)
       .eq('user_id', user.id)
       .single();
 
-    if (memError || !memory) {
+    if (byTripId) {
+      memory = byTripId as typeof memory;
+    } else {
+      const { data: byId } = await supabase
+        .from('trip_memories')
+        .select('trip_id, memory_data, standalone_destination, standalone_start_date, standalone_end_date')
+        .eq('id', tripId)
+        .eq('user_id', user.id)
+        .single();
+      memory = byId as typeof memory;
+    }
+
+    if (!memory) {
       return Response.json({ error: 'Memory not found. Capture some notes first.' }, { status: 404 });
     }
 
-    const dynamicContext = buildNarrativeDynamicContext(trip, memory.memory_data, locale ?? 'en');
+    // Build trip context: for linked memories fetch saved_trips; for standalone use memory columns
+    let tripContext: {
+      destination: string | null;
+      start_date: string | null;
+      end_date: string | null;
+      trip_data: Record<string, unknown> | null;
+    };
+
+    if (memory.trip_id) {
+      const { data: savedTrip, error: tripError } = await supabase
+        .from('saved_trips')
+        .select('destination, start_date, end_date, trip_data')
+        .eq('id', memory.trip_id)
+        .single();
+
+      if (tripError || !savedTrip) {
+        return Response.json({ error: 'Trip not found' }, { status: 404 });
+      }
+      tripContext = savedTrip as typeof tripContext;
+    } else {
+      const memData = memory.memory_data as {
+        tripDestination?: string;
+        tripStartDate?: string;
+        tripEndDate?: string;
+      } | null;
+      tripContext = {
+        destination: memData?.tripDestination ?? memory.standalone_destination,
+        start_date: memData?.tripStartDate ?? memory.standalone_start_date,
+        end_date: memData?.tripEndDate ?? memory.standalone_end_date,
+        trip_data: null,
+      };
+    }
+
+    const dynamicContext = buildNarrativeDynamicContext(tripContext, memory.memory_data as { days: MemoryDayData[] }, locale ?? 'en');
 
     const systemBlocks: SystemContentBlock[] = [
       {

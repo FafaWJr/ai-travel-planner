@@ -58,3 +58,16 @@ Format per entry:
 **Phase changed?** No.
 **Fix confirmed:** 2026-05-12
 **Notes:** F1 is a crash-path fix (hooks violation). F2 is a locale consistency fix.
+
+---
+
+## HF-4 2026-05-12
+
+**Active phase at time of hotfix:** Phase 6: PDF export (first monetisation)
+**Problem:** POST /api/memories/photos returns 404 for standalone memories. The route queries trip_memories using `.eq('trip_id', tripId)`, but standalone memories have trip_id=null. Same gap exists in /api/memories/narrative: it first fetches saved_trips by `.eq('id', tripId)` (which does not exist for standalone), then fetches trip_memories by `.eq('trip_id', tripId)` (also fails for standalone).
+**Root cause:** Both routes were created before Phase 4 introduced standalone memories and the dual-lookup pattern. The photos route (Phase 3.1) and narrative route (Phase 1) predate dual-lookup entirely.
+**Proposed fix:** Photos route: dual-lookup (trip_id then id) in both POST and DELETE fetch steps; update by memory.id (canonical, avoids silent no-op when trip_id=null). Narrative route: dual-lookup on trip_memories first; for linked memories fetch saved_trips via memory.trip_id; for standalone build synthetic trip object from standalone_* columns.
+**Files affected:** app/api/memories/photos/route.ts, app/api/memories/narrative/route.ts, docs/specs/memories/hotfix_log.md
+**Phase changed?** No.
+**Fix confirmed:** 2026-05-12
+**Notes:** Photos route update steps now use `.eq('id', memory.id)` (canonical, never null) rather than `trip_id`, avoiding silent no-op when trip_id=null. Narrative route restructured to dual-lookup memory first, then branch: linked fetches saved_trips via memory.trip_id; standalone builds synthetic trip from standalone_* columns. The narrative generator already handles null trip_data (empty itineraryDays), so standalone stories generate from notes alone. Systematic audit: all other /api/memories/* routes (share, card, card/day, export/pdf, standalone, skeleton) were checked — none use .eq('trip_id', tripId) with user_id; the dual-lookup gap was limited to photos and narrative.
