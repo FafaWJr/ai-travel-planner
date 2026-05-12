@@ -11,6 +11,8 @@ import Footer from '@/components/Footer';
 import FooterWrapper from '@/components/FooterWrapper';
 import AnalyticsScripts from '@/components/AnalyticsScripts';
 import RouteTracker from '@/components/RouteTracker';
+import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration';
+import PwaInstallBanner from '@/components/PwaInstallBanner';
 
 const BASE_URL = 'https://www.lunaletsgo.com';
 
@@ -99,9 +101,11 @@ export const metadata: Metadata = {
     site: '@lunaletsgo',
   },
 
+  manifest: '/manifest.json',
+
   icons: {
     icon: '/luna-favicon.ico',
-    apple: '/luna-favicon.ico',
+    apple: '/icons/luna-192.png',
   },
 
   other: {
@@ -282,6 +286,11 @@ export default async function LocaleLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaOrg) }}
         />
+        {/* PWA: Apple meta tags for iOS home screen */}
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Luna" />
+        <link rel="apple-touch-icon" href="/icons/luna-192.png" />
         {/* Google Analytics */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-YZV7GHDQ0T"
@@ -309,6 +318,8 @@ export default async function LocaleLayout({
             </FooterWrapper>
           </AuthProvider>
         </NextIntlClientProvider>
+        <ServiceWorkerRegistration />
+        <PwaInstallBanner />
       </body>
     </html>
   );
