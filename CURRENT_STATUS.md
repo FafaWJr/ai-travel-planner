@@ -25,7 +25,7 @@ Six stages. Real-time multi-user trip planning with viewer/editor/owner permissi
 - **How to Use Luna guide page**: shipped `99d3cc84` (3 May). `/[locale]/how-to-use-luna`, full i18n, footer Quick Links entry.
 - **Multi-agent orchestration**: 11 specialist subagents, `1f66f44f` (5 May). `luna-status-updater` added `e79bd132` (6 May).
 - **TECH_DEBT.md register**: created `70de3ef1` (5 May), 10 active items.
-- **Luna Memories Phases 1+2+3.1+3.2 shipped** (12 May 2026): `trip_memories` table + RLS, memory capture page, streaming AI narrative, shareable public link + OG image, mid-trip capture banner, photo storage foundation (`memory-photos` bucket, exif.ts, compress.ts, photos API), photo upload UI with EXIF auto-sort + day grid + lightbox (`BulkPhotoUpload`, `DayPhotoGrid`, `lib/memories/types.ts`, 18 new locale keys). Spec at `docs/specs/memories/session_anchor.md`.
+- **Luna Memories Phases 1+2+3 shipped** (12 May 2026): `trip_memories` table + RLS, memory capture page, streaming AI narrative, shareable public link + OG image, mid-trip capture banner, photo storage foundation (`memory-photos` bucket, exif.ts, compress.ts, photos API), photo upload UI with EXIF auto-sort + day grid + lightbox (`BulkPhotoUpload`, `DayPhotoGrid`, `lib/memories/types.ts`, 18 locale keys), GPS route map (`RouteMap.tsx`, Leaflet + OpenStreetMap, day-coloured markers + polylines), photo gallery on public share page (grouped by day, responsive hero grid), `leaflet@1.9.4` + `react-leaflet@4.2.1`. Phase 3 complete. Spec at `docs/specs/memories/session_anchor.md`.
 
 ---
 
@@ -62,6 +62,7 @@ For full patch library, hotfix history, and implementation notes see `CLAUDE.md`
 
 | Detour | Status | Commit | Date | One-line cause |
 |---|---|---|---|---|
+| Luna Memories Phase 3.3: GPS route map + share page gallery | Closed | `66722db5` | 12 May | RouteMap.tsx (Leaflet + OSM, day-coloured markers, polylines), photo gallery on share page by day, leaflet@1.9.4 + react-leaflet@4.2.1, mapLabel + photosLabel in EN/PT-BR/ES |
 | Luna Memories Phase 3.2: photo upload UI + day grid | Closed | `34b5ddfb` | 12 May | BulkPhotoUpload, DayPhotoGrid, lightbox, lib/memories/types.ts, 18 locale keys EN/PT-BR/ES |
 | Luna Memories Phase 3.1: photo storage foundation | Closed | `e3c9a97b` | 12 May | memory-photos bucket + RLS, exif.ts, compress.ts, /api/memories/photos POST+DELETE, exifr dep |
 | Phase 2 HF-1: MemoryBanner false Saved guard | Closed | `6b013dd9` | 12 May | dayIndex < 0 path called setSaved(true) on unchanged PUT; moved inside dayIndex >= 0 block |
@@ -154,10 +155,10 @@ Always include the date in the **Last updated** field at the top.
 
 ## Luna Memories project
 
-**Active phase:** Phase 3: Photo upload + EXIF auto-sort
-**Phase status:** Phase 3.1 + 3.2 complete; next phase TBD
-**Last completed phase:** Phase 3.2 — Photo upload UI + EXIF auto-sort + day grid (shipped 12 May 2026, commit `34b5ddfb`)
-**Hotfixes in current phase:** 1 (HF-1: `6b013dd9`, false Saved confirmation guard in MemoryBanner)
+**Active phase:** Phase 4 (not started)
+**Phase status:** Phase 3 fully complete (3.1 + 3.2 + 3.3 shipped). Phase 4 not started.
+**Last completed phase:** Phase 3.3 — GPS route map + share page photo gallery (shipped 12 May 2026, commit `66722db5`)
+**Hotfixes in current phase:** 0
 **Known issues:** None
 **Master plan:** docs/specs/memories/session_anchor.md (immutable during sessions)
 
@@ -175,3 +176,6 @@ Always include the date in the **Last updated** field at the top.
 
 **Phase 3.2 deliverables (all shipped):**
 - 3.2 (`34b5ddfb`, 12 May): `lib/memories/types.ts` — canonical `PhotoMeta` and `PhotoUploadItem` interfaces (imported by API route and components); `components/memories/BulkPhotoUpload` — file picker, EXIF-based auto-sort preview, sequential upload with progress bar, unsorted-photo warning; `components/memories/DayPhotoGrid` — 3-column thumbnail grid, lightbox with prev/next navigation, delete confirmation modal; memories capture page wired with `handleDayPhotosAdded`, `handlePhotoDelete`, `refetchMemory` callbacks, `BulkPhotoUpload` inserted after progress bar, `DayPhotoGrid` inside expanded day cards, photo count badge in collapsed day header; 18 new locale keys (`photosSection`, `addPhotos`, `uploading`, `uploadDone`, `uploadError`, `uploadPhotosBtn`, `deletePhoto`, `deletePhotoConfirm`, `deleteCancel`, `deleteConfirm`, `photosAutoSorted`, `photosUnsorted`, `photoCount`, `closeLightbox`, `addMorePhotos`, `photoOf`, `dayAssignment`) in EN/PT-BR/ES.
+
+**Phase 3.3 deliverables (all shipped):**
+- 3.3 (`66722db5`, 12 May): `components/memories/RouteMap.tsx` — Leaflet + OpenStreetMap GPS route map; day-coloured markers; dashed polylines connecting GPS points in chronological order; dynamic import (`ssr: false`) for Next.js App Router compatibility; self-contained Leaflet CSS injection; returns null when fewer than 2 GPS points are available. Route map placed above day cards on the capture page (auto-hides without GPS data). `SharedMemory` interface extended with `MemoryDay` + `PhotoMeta`; share page (`/memories/share/[token]`) gains photo grids grouped by day with responsive hero layout (1-col / 2-col / 3-col with landscape hero for first photo when 3+ photos exist); route map rendered between narrative and photo gallery on share page; both sections hidden when no photos exist. `leaflet@1.9.4`, `react-leaflet@4.2.1`, `@types/leaflet` installed. 2 new locale keys (`mapLabel`, `photosLabel`) in EN/PT-BR/ES. Phase 3 complete.

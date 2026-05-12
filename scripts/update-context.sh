@@ -530,11 +530,12 @@ After Claude Code finishes changes:
 - My Trips saved trip card headers now show Google Places landmark photos via \`/api/destination-header/\` (commit \`bd5ddec9\`, 5 May 2026). Feature-flag gated by \`NEXT_PUBLIC_PLACE_PREVIEW_ENABLED\`.
 - Multi-agent orchestration added: 11 specialist agents + \`luna-code-reviewer.md\` in \`.claude/agents/\`; orchestration protocol at \`docs/architecture/multi-agent-orchestration.md\` (commit \`1f66f44f\`, 5 May 2026).
 - Luna Memories Phase 3.2 shipped (commit \`34b5ddfb\`, 12 May 2026): \`BulkPhotoUpload\` component (EXIF sort preview, sequential upload, progress), \`DayPhotoGrid\` component (3-col grid, lightbox, delete confirmation), canonical \`lib/memories/types.ts\` (\`PhotoMeta\` + \`PhotoUploadItem\`), integrated into memory capture page, 18 new locale keys per locale.
+- Luna Memories Phase 3.3 shipped (commit \`66722db5\`, 12 May 2026): \`RouteMap\` component (Leaflet + OpenStreetMap, day-coloured markers, dashed polylines, dynamic import ssr:false), route map on capture page, photo gallery on public share page (day-grouped, responsive hero grid), \`leaflet@1.9.4\` + \`react-leaflet@4.2.1\` installed. **Phase 3 complete.**
 
 **Current Work:**
 - Collaborative Trips Stages 0+1+2+3+4 **shipped**. \`NEXT_PUBLIC_COLLAB_ENABLED=false\` still in production pending Stage 5 launch.
 - Stage 5 (landing page, OG image, flag flip): NOT STARTED. \`NEXT_PUBLIC_COLLAB_ENABLED\` still false.
-- Luna Memories Phase 3.2 (photo upload UI): **SHIPPED** (commit \`34b5ddfb\`, 12 May 2026). Phase 3.3+ not started.
+- Luna Memories Phase 3 (all sub-phases 3.1+3.2+3.3): **SHIPPED** (12 May 2026). Phase 4 not started.
 - Brevo email integration (list ID 17, /api/brevo-sync/route.ts)
 - PDF export (jsPDF + html2canvas, branded itinerary)
 
