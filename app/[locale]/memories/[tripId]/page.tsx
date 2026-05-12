@@ -35,13 +35,14 @@ interface MemoryDay {
 
 interface MemoryData {
   id: string;
-  trip_id: string;
+  trip_id: string | null;
   user_id: string;
   memory_data: { days: MemoryDay[] };
   narrative: string | null;
   narrative_tone: string;
   status: string;
   share_token: string;
+  pdf_purchased: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -89,6 +90,8 @@ export default function MemoryCapturePage({
   const [isEditingNarrative, setIsEditingNarrative] = useState(false);
   const [copied, setCopied] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState(false);
+  const [showPdfPreview, setShowPdfPreview] = useState(false);
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
 
   useEffect(() => {
     params.then(p => setTripId(p.tripId));
@@ -97,6 +100,18 @@ export default function MemoryCapturePage({
   useEffect(() => {
     if (!authLoading && !user) router.replace('/auth/login?next=/my-trips');
   }, [user, authLoading]); // eslint-disable-line
+
+  // Detect ?payment=success redirect from Stripe Checkout
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('payment') === 'success' && tripId) {
+      fetch(`/api/memories/${tripId}`)
+        .then(res => res.json())
+        .then(data => { if (data.memory) setMemory(data.memory); })
+        .catch(() => { /* noop */ });
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [tripId]);
 
   useEffect(() => {
     if (!user || !tripId) return;
@@ -283,6 +298,36 @@ export default function MemoryCapturePage({
       setGeneratingPdf(false);
     }
   }, [tripId, generatingPdf, trip?.destination]);
+
+  const handlePurchase = useCallback(async () => {
+    if (!memory || paymentProcessing) return;
+    setPaymentProcessing(true);
+    try {
+      const memoryId = memory.trip_id ?? memory.id;
+      const res = await fetch('/api/payments/create-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memoryId }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      if (data.alreadyPurchased) {
+        setMemory(prev => prev ? { ...prev, pdf_purchased: true } : prev);
+        setShowPdfPreview(false);
+        return;
+      }
+
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      }
+    } catch (err) {
+      console.error('[payment] error:', err);
+      alert('Payment failed. Please try again.');
+    } finally {
+      setPaymentProcessing(false);
+    }
+  }, [memory, paymentProcessing]);
 
   const refetchMemory = useCallback(async () => {
     if (!tripId) return;
@@ -777,27 +822,172 @@ export default function MemoryCapturePage({
                   {t('shareInstagram')}
                 </button>
 
-                {/* Download PDF story */}
-                <button
-                  onClick={downloadPdf}
-                  disabled={generatingPdf}
-                  style={{
-                    gridColumn: 'span 2',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                    padding: '13px 16px', borderRadius: 10,
-                    border: '1.5px solid rgba(0,68,123,0.15)',
-                    background: generatingPdf ? 'rgba(0,68,123,0.04)' : '#fff',
-                    color: generatingPdf ? '#C0C0C0' : '#00447B',
-                    cursor: generatingPdf ? 'not-allowed' : 'pointer',
-                    fontFamily: "'Inter',sans-serif", fontSize: 13, fontWeight: 600,
-                    transition: 'all 0.15s',
-                  }}
-                >
-                  {generatingPdf
-                    ? <Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} />
-                    : <Download size={15} />}
-                  {generatingPdf ? t('generatingPdf') : t('downloadPdf')}
-                </button>
+                {/* PDF: direct download (purchased) or paywall CTA */}
+                {memory.pdf_purchased ? (
+                  <button
+                    onClick={downloadPdf}
+                    disabled={generatingPdf}
+                    style={{
+                      gridColumn: 'span 2',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                      padding: '14px 16px', borderRadius: 10,
+                      border: 'none',
+                      background: generatingPdf ? 'rgba(0,68,123,0.6)' : '#00447B',
+                      color: '#fff',
+                      cursor: generatingPdf ? 'default' : 'pointer',
+                      fontFamily: "'Poppins',sans-serif", fontSize: 14, fontWeight: 600,
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    {generatingPdf
+                      ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
+                      : <Download size={16} />}
+                    {generatingPdf ? t('generatingPdf') : t('downloadPdf')}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setShowPdfPreview(true)}
+                    style={{
+                      gridColumn: 'span 2',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                      padding: '14px 16px', borderRadius: 10,
+                      border: 'none',
+                      background: 'linear-gradient(135deg, #FF8210 0%, #e67400 100%)',
+                      color: '#fff',
+                      cursor: 'pointer',
+                      fontFamily: "'Poppins',sans-serif", fontSize: 14, fontWeight: 600,
+                      transition: 'all 0.15s',
+                      boxShadow: '0 4px 12px rgba(255,130,16,0.3)',
+                    }}
+                  >
+                    <Download size={16} />
+                    {t('getPdfStory')}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* PDF preview / paywall modal */}
+          {showPdfPreview && !memory.pdf_purchased && (
+            <div
+              style={{
+                position: 'fixed', inset: 0, zIndex: 9999,
+                background: 'rgba(0,20,60,0.6)',
+                backdropFilter: 'blur(4px)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                padding: 24,
+              }}
+              onClick={() => setShowPdfPreview(false)}
+            >
+              <div
+                onClick={e => e.stopPropagation()}
+                style={{
+                  background: '#fff', borderRadius: 16,
+                  maxWidth: 520, width: '100%',
+                  maxHeight: '90vh', overflowY: 'auto',
+                  boxShadow: '0 24px 80px rgba(0,20,60,0.25)',
+                }}
+              >
+                {/* Preview header */}
+                <div style={{
+                  background: 'linear-gradient(180deg, #001F3F 0%, #00447B 100%)',
+                  borderRadius: '16px 16px 0 0',
+                  padding: '40px 32px 32px', textAlign: 'center', color: '#fff',
+                }}>
+                  <BookHeart size={28} color="#FF8210" style={{ marginBottom: 12 }} />
+                  <h3 style={{
+                    fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 22,
+                    margin: '0 0 6px',
+                  }}>
+                    {trip?.destination ?? t('untitledTrip')}
+                  </h3>
+                  <p style={{
+                    fontFamily: "'Inter',sans-serif", fontSize: 13,
+                    color: 'rgba(255,255,255,0.5)', margin: 0,
+                  }}>
+                    {t('pdfPreviewSubtitle')}
+                  </p>
+                </div>
+
+                {/* What is included */}
+                <div style={{ padding: '28px 32px' }}>
+                  <p style={{
+                    fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 14,
+                    color: '#00447B', margin: '0 0 14px',
+                  }}>
+                    {t('pdfIncludes')}
+                  </p>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 28 }}>
+                    {([
+                      { label: t('pdfIncludesCover'), detail: t('pdfIncludesCoverDetail') },
+                      { label: t('pdfIncludesOverview'), detail: t('pdfIncludesOverviewDetail') },
+                      { label: t('pdfIncludesDays'), detail: t('pdfIncludesDaysDetail') },
+                      { label: t('pdfIncludesPhotos'), detail: t('pdfIncludesPhotosDetail') },
+                      { label: t('pdfIncludesReflections'), detail: t('pdfIncludesReflectionsDetail') },
+                    ] as const).map((item, i) => (
+                      <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                        <span style={{
+                          width: 22, height: 22, borderRadius: '50%',
+                          background: 'rgba(255,130,16,0.1)', color: '#FF8210',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 11,
+                          flexShrink: 0, marginTop: 1,
+                        }}>
+                          {i + 1}
+                        </span>
+                        <div>
+                          <p style={{
+                            fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 13,
+                            color: '#2a2a3e', margin: 0,
+                          }}>
+                            {item.label}
+                          </p>
+                          <p style={{
+                            fontFamily: "'Inter',sans-serif", fontSize: 12,
+                            color: '#6C6D6F', margin: '2px 0 0', lineHeight: 1.5,
+                          }}>
+                            {item.detail}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Purchase button */}
+                  <button
+                    onClick={handlePurchase}
+                    disabled={paymentProcessing}
+                    style={{
+                      width: '100%', padding: '16px 24px',
+                      background: paymentProcessing ? 'rgba(255,130,16,0.6)' : '#FF8210',
+                      color: '#fff', border: 'none', borderRadius: 12,
+                      fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 16,
+                      cursor: paymentProcessing ? 'default' : 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                      boxShadow: '0 4px 16px rgba(255,130,16,0.35)',
+                      transition: 'background 0.15s',
+                    }}
+                  >
+                    {paymentProcessing ? (
+                      <>
+                        <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
+                        {t('processingPayment')}
+                      </>
+                    ) : (
+                      t('purchasePdf')
+                    )}
+                  </button>
+
+                  <p style={{
+                    fontFamily: "'Inter',sans-serif", fontSize: 11,
+                    color: '#C0C0C0', textAlign: 'center',
+                    marginTop: 12, lineHeight: 1.5,
+                  }}>
+                    {t('paymentSecure')}
+                  </p>
+                </div>
               </div>
             </div>
           )}

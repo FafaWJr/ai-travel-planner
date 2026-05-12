@@ -840,7 +840,23 @@
     "shareInstagram": "Compartir en Instagram",
     "instagramShareHint": "La imagen se ha guardado. Abre Instagram, crea un nuevo Story y selecciónala de tu galería.",
     "downloadPdf": "Descargar historia en PDF",
-    "generatingPdf": "Creando tu libro..."
+    "generatingPdf": "Creando tu libro...",
+    "getPdfStory": "Obtener historia en PDF ($10)",
+    "pdfPreviewSubtitle": "Tu viaje, diseñado como un libro de memorias premium",
+    "pdfIncludes": "Tu PDF incluye:",
+    "pdfIncludesCover": "Portada personalizada",
+    "pdfIncludesCoverDetail": "Tu destino destacado, con fechas del viaje e identidad Luna.",
+    "pdfIncludesOverview": "Resumen del viaje",
+    "pdfIncludesOverviewDetail": "Estadísticas: días viajados, fotos capturadas, mejor momento.",
+    "pdfIncludesDays": "Narrativa día a día",
+    "pdfIncludesDaysDetail": "Tu historia escrita por IA, sección por sección, con citas de tus notas.",
+    "pdfIncludesPhotos": "Tus fotos",
+    "pdfIncludesPhotosDetail": "Fotos principales y galerías, diagramadas en estilo editorial.",
+    "pdfIncludesReflections": "Reflexiones finales",
+    "pdfIncludesReflectionsDetail": "Una despedida personal de Luna, mirando todo el viaje.",
+    "purchasePdf": "Descargar por $10",
+    "processingPayment": "Abriendo pago...",
+    "paymentSecure": "Pago seguro vía Stripe. Compra única, sin suscripción. Descarga disponible por 30 días."
   },
   "collab": {
     "toast": {

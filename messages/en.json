@@ -840,7 +840,23 @@
     "shareInstagram": "Share to Instagram",
     "instagramShareHint": "The image has been saved. Open Instagram, create a new Story, and select it from your camera roll.",
     "downloadPdf": "Download PDF story",
-    "generatingPdf": "Creating your book..."
+    "generatingPdf": "Creating your book...",
+    "getPdfStory": "Get your PDF story ($10)",
+    "pdfPreviewSubtitle": "Your trip, designed as a premium travel memoir",
+    "pdfIncludes": "Your PDF story includes:",
+    "pdfIncludesCover": "Designed cover page",
+    "pdfIncludesCoverDetail": "Your destination in bold, with trip dates and Luna branding.",
+    "pdfIncludesOverview": "Trip overview",
+    "pdfIncludesOverviewDetail": "Key stats: days travelled, photos captured, best moment.",
+    "pdfIncludesDays": "Day-by-day narrative",
+    "pdfIncludesDaysDetail": "Your AI-written story, section by section, with pull quotes from your notes.",
+    "pdfIncludesPhotos": "Your photos",
+    "pdfIncludesPhotosDetail": "Hero images and grids, laid out in an editorial style.",
+    "pdfIncludesReflections": "Closing reflections",
+    "pdfIncludesReflectionsDetail": "A personal sign-off from Luna, looking back on the whole trip.",
+    "purchasePdf": "Download for $10",
+    "processingPayment": "Opening payment...",
+    "paymentSecure": "Secure payment via Stripe. One-off purchase, no subscription. Download available for 30 days."
   },
   "collab": {
     "toast": {
