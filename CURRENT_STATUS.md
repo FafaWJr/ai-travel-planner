@@ -25,7 +25,7 @@ Six stages. Real-time multi-user trip planning with viewer/editor/owner permissi
 - **How to Use Luna guide page**: shipped `99d3cc84` (3 May). `/[locale]/how-to-use-luna`, full i18n, footer Quick Links entry.
 - **Multi-agent orchestration**: 11 specialist subagents, `1f66f44f` (5 May). `luna-status-updater` added `e79bd132` (6 May).
 - **TECH_DEBT.md register**: created `70de3ef1` (5 May), 10 active items.
-- **Luna Memories Phases 1+2 shipped** (11-12 May 2026): `trip_memories` table + RLS, memory capture page, streaming AI narrative, shareable public link + OG image, mid-trip capture banner (`MemoryBanner`, Plan page). Phase 3 (photo upload + EXIF auto-sort) not started.
+- **Luna Memories Phases 1+2 shipped + Phase 3.1 shipped** (12 May 2026): `trip_memories` table + RLS, memory capture page, streaming AI narrative, shareable public link + OG image, mid-trip capture banner, photo storage foundation (`memory-photos` bucket, exif.ts, compress.ts, photos API). Phase 3.2 (photo upload UI) is next. Spec at `docs/specs/memories/session_anchor.md`.
 
 ---
 
@@ -62,6 +62,8 @@ For full patch library, hotfix history, and implementation notes see `CLAUDE.md`
 
 | Detour | Status | Commit | Date | One-line cause |
 |---|---|---|---|---|
+| Luna Memories Phase 3.1: photo storage foundation | Closed | `e3c9a97b` | 12 May | memory-photos bucket + RLS, exif.ts, compress.ts, /api/memories/photos POST+DELETE, exifr dep |
+| Phase 2 HF-1: MemoryBanner false Saved guard | Closed | `6b013dd9` | 12 May | dayIndex < 0 path called setSaved(true) on unchanged PUT; moved inside dayIndex >= 0 block |
 | Luna Memories Phase 2: mid-trip capture banner | Closed | `1da8df1b` | 12 May | Date-aware MemoryBanner on Plan page; expandable note, 24h dismiss, journal link |
 | Luna Memories Phase 1.4: shareable link + OG image | Closed | `58cb636f` | 12 May | Public share page, OG image route, share button + clipboard, per-token generateMetadata |
 | Luna Memories Phase 1.3: streaming AI narrative | Closed | `808a6a8a` | 12 May | Streaming Claude Sonnet 4.5 narrative via /api/memories/narrative; editable + re-roll + auto-save |
@@ -152,9 +154,9 @@ Always include the date in the **Last updated** field at the top.
 ## Luna Memories project
 
 **Active phase:** Phase 3: Photo upload + EXIF auto-sort
-**Phase status:** Not started
-**Last completed phase:** Phase 2 — Mid-trip capture banner (shipped 12 May 2026, commit `1da8df1b`)
-**Hotfixes in current phase:** 0
+**Phase status:** In progress — Phase 3.1 complete; Phase 3.2 (photo upload UI) next
+**Last completed phase:** Phase 3.1 — Photo storage foundation (shipped 12 May 2026, commit `e3c9a97b`)
+**Hotfixes in current phase:** 1 (HF-1: `6b013dd9`, false Saved confirmation guard in MemoryBanner)
 **Known issues:** None
 **Master plan:** docs/specs/memories/session_anchor.md (immutable during sessions)
 
@@ -166,3 +168,6 @@ Always include the date in the **Last updated** field at the top.
 
 **Phase 2 deliverables (all shipped):**
 - 2.0 (`1da8df1b`, 12 May): `MemoryBanner` component on Plan page — date-aware detection shows banner when today is within the trip's date range; expandable textarea saves quick day note to `trip_memories` row; dismissable for 24h via localStorage key per `tripId`; "Full journal" link to `/memories/[tripId]`; EN/PT-BR/ES locale strings.
+
+**Phase 3.1 deliverables (all shipped):**
+- 3.1 (`e3c9a97b`, 12 May): `memory-photos` Supabase Storage bucket (public read, 5MB limit, JPEG/PNG/WebP/HEIC); 3 RLS policies (INSERT/DELETE owner-scoped to `auth.uid()` path prefix, SELECT public); `lib/memories/exif.ts` — browser-side EXIF extraction via `exifr` + `sortPhotosByDay` helper; `lib/memories/compress.ts` — Canvas API compression (max 2000px, JPEG 85%) + blur placeholder generator; `app/api/memories/photos/route.ts` — POST (upload + metadata) and DELETE (remove + cleanup + re-index sortOrder); `exifr ^7.1.3` npm dependency.
