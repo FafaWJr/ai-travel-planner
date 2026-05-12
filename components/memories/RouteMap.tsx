@@ -42,10 +42,9 @@ export default function RouteMap({ days, height = 280 }: RouteMapProps) {
     }
   }
 
-  if (points.length < 2) return null;
-
   useEffect(() => {
-    if (!mapRef.current || leafletMapRef.current) return;
+    // Guard inside effect: not enough GPS points, or DOM not ready, or already initialized
+    if (points.length < 2 || !mapRef.current || leafletMapRef.current) return;
 
     if (!document.querySelector('link[href*="leaflet.css"]')) {
       const link = document.createElement('link');
@@ -129,6 +128,9 @@ export default function RouteMap({ days, height = 280 }: RouteMapProps) {
       }
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Return null AFTER all hooks — hooks must be called unconditionally every render
+  if (points.length < 2) return null;
 
   return (
     <div style={{

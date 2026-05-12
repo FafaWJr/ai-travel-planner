@@ -200,6 +200,13 @@ export default function MemorySharePage({
         {/* Route map */}
         {hasPhotos && (
           <div style={{ marginTop: 32 }}>
+            <p style={{
+              fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 13,
+              color: '#00447B', margin: '0 0 8px', textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+            }}>
+              Your route
+            </p>
             <RouteMap days={memoryDays} height={240} />
           </div>
         )}
@@ -207,6 +214,13 @@ export default function MemorySharePage({
         {/* Photo gallery by day */}
         {hasPhotos && (
           <div style={{ marginTop: 32 }}>
+            <p style={{
+              fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 13,
+              color: '#00447B', margin: '0 0 16px', textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+            }}>
+              Photos
+            </p>
             {memoryDays
               .filter(day => (day.photos?.length ?? 0) > 0)
               .map(day => (

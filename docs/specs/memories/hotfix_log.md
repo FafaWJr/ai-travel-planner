@@ -45,3 +45,16 @@ Format per entry:
 **Phase changed?** No.
 **Fix confirmed:** 2026-05-12
 **Notes:** Commit `92243395`. F1 is the substantive UX fix; F2+F3 are convention/consistency fixes flagged by QA.
+
+---
+
+## HF-3 2026-05-12
+
+**Active phase at time of hotfix:** Phase 3.3: Route map + share page photos
+**Problem:** Two issues found by memories-qa after Phase 3.3 ship: (F1) `RouteMap.tsx` placed `if (points.length < 2) return null` before the `useEffect` call — a React rules-of-hooks violation causing a runtime crash when the `days` prop transitions from no GPS points to 2+ GPS points (normal happy path for sequential photo uploads); (F2) `mapLabel` and `photosLabel` locale keys defined in all three locales but not used as section headings anywhere.
+**Root cause:** F1: Early-return guard placed before hooks instead of inside the effect body and after all hooks. F2: Keys added speculatively during Phase 3.3 but corresponding headings never wired up in JSX.
+**Proposed fix:** F1: Move the guard inside `useEffect` body; move `if (points.length < 2) return null` to after all hooks (after `useEffect`). F2: Add "Your route" heading (`t('mapLabel')`) above `<RouteMap>` on the capture page (conditional on any photo having GPS data); add "Photos" heading (`t('photosLabel')`) above `<DayPhotoGrid>` inside expanded day cards. Share page uses hardcoded English strings (no `useTranslations` context available on the public share page).
+**Files affected:** `components/memories/RouteMap.tsx`, `app/[locale]/memories/[tripId]/page.tsx`, `app/[locale]/memories/share/[token]/page.tsx`
+**Phase changed?** No.
+**Fix confirmed:** 2026-05-12
+**Notes:** F1 is a crash-path fix (hooks violation). F2 is a locale consistency fix.

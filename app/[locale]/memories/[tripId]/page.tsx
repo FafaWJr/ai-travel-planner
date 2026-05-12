@@ -395,6 +395,15 @@ export default function MemoryCapturePage({
         )}
 
         {/* Route map from photo GPS data */}
+        {days.some(d => (d.photos ?? []).some(p => p.exifLat !== null && p.exifLng !== null)) && (
+          <p style={{
+            fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 13,
+            color: '#00447B', margin: '16px 0 4px', textTransform: 'uppercase',
+            letterSpacing: '0.06em',
+          }}>
+            {t('mapLabel')}
+          </p>
+        )}
         <RouteMap days={days} />
 
         {/* Day cards */}
@@ -542,6 +551,15 @@ export default function MemoryCapturePage({
                     </button>
 
                     {/* Photo grid for this day */}
+                    {(day.photos ?? []).length > 0 && (
+                      <p style={{
+                        fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 12,
+                        color: '#00447B', margin: '12px 0 6px', textTransform: 'uppercase',
+                        letterSpacing: '0.06em',
+                      }}>
+                        {t('photosLabel')}
+                      </p>
+                    )}
                     {(day.photos ?? []).length > 0 && (
                       <DayPhotoGrid
                         photos={day.photos ?? []}
