@@ -838,7 +838,9 @@
     "downloadStoryCard": "Stories card",
     "downloadCarousel": "Day cards",
     "shareInstagram": "Share to Instagram",
-    "instagramShareHint": "The image has been saved. Open Instagram, create a new Story, and select it from your camera roll."
+    "instagramShareHint": "The image has been saved. Open Instagram, create a new Story, and select it from your camera roll.",
+    "downloadPdf": "Download PDF story",
+    "generatingPdf": "Creating your book..."
   },
   "collab": {
     "toast": {

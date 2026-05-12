@@ -88,6 +88,7 @@ export default function MemoryCapturePage({
   const [isGenerating, setIsGenerating] = useState(false);
   const [isEditingNarrative, setIsEditingNarrative] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [generatingPdf, setGeneratingPdf] = useState(false);
 
   useEffect(() => {
     params.then(p => setTripId(p.tripId));
@@ -254,6 +255,34 @@ export default function MemoryCapturePage({
       /* fallback: do nothing */
     }
   }, [memory?.share_token]);
+
+  const downloadPdf = useCallback(async () => {
+    if (!tripId || generatingPdf) return;
+    setGeneratingPdf(true);
+    try {
+      const res = await fetch('/api/memories/export/pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memoryId: tripId }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as { error?: string }).error || `HTTP ${res.status}`);
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const safeDestination = (trip?.destination ?? 'trip').replace(/[^a-zA-Z0-9]/g, '-');
+      link.download = `${safeDestination}-memory.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('[memories] PDF download error:', err);
+    } finally {
+      setGeneratingPdf(false);
+    }
+  }, [tripId, generatingPdf, trip?.destination]);
 
   const refetchMemory = useCallback(async () => {
     if (!tripId) return;
@@ -746,6 +775,28 @@ export default function MemoryCapturePage({
                 >
                   <Share2 size={15} />
                   {t('shareInstagram')}
+                </button>
+
+                {/* Download PDF story */}
+                <button
+                  onClick={downloadPdf}
+                  disabled={generatingPdf}
+                  style={{
+                    gridColumn: 'span 2',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    padding: '13px 16px', borderRadius: 10,
+                    border: '1.5px solid rgba(0,68,123,0.15)',
+                    background: generatingPdf ? 'rgba(0,68,123,0.04)' : '#fff',
+                    color: generatingPdf ? '#C0C0C0' : '#00447B',
+                    cursor: generatingPdf ? 'not-allowed' : 'pointer',
+                    fontFamily: "'Inter',sans-serif", fontSize: 13, fontWeight: 600,
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {generatingPdf
+                    ? <Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} />
+                    : <Download size={15} />}
+                  {generatingPdf ? t('generatingPdf') : t('downloadPdf')}
                 </button>
               </div>
             </div>

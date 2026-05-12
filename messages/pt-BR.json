@@ -838,7 +838,9 @@
     "downloadStoryCard": "Card para Stories",
     "downloadCarousel": "Cards por dia",
     "shareInstagram": "Compartilhar no Instagram",
-    "instagramShareHint": "A imagem foi salva. Abra o Instagram, crie um novo Story e selecione da sua galeria."
+    "instagramShareHint": "A imagem foi salva. Abra o Instagram, crie um novo Story e selecione da sua galeria.",
+    "downloadPdf": "Baixar história em PDF",
+    "generatingPdf": "Criando seu livro..."
   },
   "collab": {
     "toast": {
