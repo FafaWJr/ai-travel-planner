@@ -2,10 +2,11 @@ import { NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import Stripe from 'stripe';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2026-04-22.dahlia' as any });
-
 export async function POST(request: NextRequest) {
+  // Instantiate inside handler so STRIPE_SECRET_KEY is available at runtime, not build time
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2026-04-22.dahlia' as any });
+
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
