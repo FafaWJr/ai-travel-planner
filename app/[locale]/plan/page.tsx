@@ -29,6 +29,7 @@ import { Share } from 'lucide-react';
 import { InviteModal } from '@/components/collab/InviteModal';
 import { CollaboratorAvatars } from '@/components/collab/CollaboratorAvatars';
 import CollabToast from '@/components/CollabToast';
+import MemoryBanner from '@/components/MemoryBanner';
 import { useCollaborativeTrip } from '@/hooks/useCollaborativeTrip';
 import type { Patch } from '@/lib/trip-patches';
 import {
@@ -1602,6 +1603,15 @@ function PlanContent() {
             </div>
           );
         })()}
+
+              {/* Mid-trip memory capture banner */}
+              {savedTripId && savedTripStartDate && savedTripEndDate && (
+                <MemoryBanner
+                  tripId={savedTripId}
+                  startDate={savedTripStartDate}
+                  endDate={savedTripEndDate}
+                />
+              )}
 
               {/* Section tabs — folder-tab style */}
               <div className="plan-tabs" style={{ display:'flex', overflowX:'auto', marginBottom:0, borderBottom:'2px solid rgba(0,68,123,0.10)' }}>

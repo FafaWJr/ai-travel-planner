@@ -791,7 +791,13 @@
     "yourStory": "Tu historia",
     "editStory": "Editar",
     "doneEditing": "Listo",
-    "minDaysNotice": "Agrega notas a {needed} días más para generar tu historia."
+    "minDaysNotice": "Agrega notas a {needed} días más para generar tu historia.",
+    "bannerTitle": "Día {day} de tu viaje. ¿Quieres capturar un momento?",
+    "bannerQuickNote": "Escribir una nota rápida",
+    "bannerFullPage": "Diario completo",
+    "bannerCancel": "Cancelar",
+    "bannerSave": "Guardar",
+    "bannerSaved": "Guardado en los recuerdos del viaje"
   },
   "collab": {
     "toast": {

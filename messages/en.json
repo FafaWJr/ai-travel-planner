@@ -791,7 +791,13 @@
     "yourStory": "Your story",
     "editStory": "Edit",
     "doneEditing": "Done",
-    "minDaysNotice": "Add notes to {needed} more days to generate your story."
+    "minDaysNotice": "Add notes to {needed} more days to generate your story.",
+    "bannerTitle": "Day {day} of your trip. Capture a quick memory?",
+    "bannerQuickNote": "Write a quick note",
+    "bannerFullPage": "Full journal",
+    "bannerCancel": "Cancel",
+    "bannerSave": "Save",
+    "bannerSaved": "Saved to your trip memories"
   },
   "collab": {
     "toast": {
