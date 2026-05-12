@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslations, useLocale } from 'next-intl';
 import NavBar from '@/components/NavBar';
+import DestinationInput from '@/components/DestinationInput';
 import {
   BookHeart, Camera, Share2, FileText, ChevronDown,
   MapPin, Calendar, Users, ArrowRight, Sparkles,
@@ -205,13 +206,95 @@ export default function MemoriesLandingPage() {
   const [travellers, setTravellers] = useState('');
   const [creating, setCreating] = useState(false);
   const [formError, setFormError] = useState('');
-  const [isLoginError, setIsLoginError] = useState(false);
   const [heroLoaded, setHeroLoaded] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setHeroLoaded(true), 100);
     return () => clearTimeout(timer);
   }, []);
+
+  // After login redirect: auto-create memory from stored form data
+  useEffect(() => {
+    if (!user) return;
+    if (typeof window === 'undefined') return;
+
+    const stored = sessionStorage.getItem('luna_memories_form');
+    if (!stored) return;
+
+    sessionStorage.removeItem('luna_memories_form');
+
+    let formData: { destination: string; startDate: string; endDate: string; travellers: string };
+    try {
+      formData = JSON.parse(stored);
+    } catch {
+      return;
+    }
+
+    if (!formData.destination || !formData.startDate || !formData.endDate) return;
+
+    setDestination(formData.destination);
+    setStartDate(formData.startDate);
+    setEndDate(formData.endDate);
+    setTravellers(formData.travellers);
+
+    const timer = setTimeout(() => {
+      setCreating(true);
+      (async () => {
+        try {
+          const res = await fetch('/api/memories/standalone', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              destination: formData.destination,
+              startDate: formData.startDate,
+              endDate: formData.endDate,
+              travellers: formData.travellers || undefined,
+            }),
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const { memory } = await res.json();
+
+          const numDays = Math.round(
+            (new Date(formData.endDate).getTime() - new Date(formData.startDate).getTime()) / 86400000,
+          ) + 1;
+
+          try {
+            const skelRes = await fetch('/api/memories/skeleton', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ destination: formData.destination, numDays, locale }),
+            });
+            if (skelRes.ok) {
+              const { titles } = await skelRes.json();
+              if (titles?.length > 0) {
+                const days = memory.memory_data.days.map(
+                  (d: { dayNumber: number; dayTitle?: string }, i: number) => ({
+                    ...d,
+                    dayTitle: titles[i] ?? d.dayTitle ?? `Day ${i + 1}`,
+                  }),
+                );
+                await fetch(`/api/memories/${memory.id}`, {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ memory_data: { ...memory.memory_data, days } }),
+                });
+              }
+            }
+          } catch {
+            // Skeleton failed. Continue with generic day titles.
+          }
+
+          router.push(`/${locale}/memories/${memory.id}`);
+        } catch (err) {
+          console.error('[memories] auto-create error:', err);
+          setFormError(t('genericError'));
+          setCreating(false);
+        }
+      })();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sync end date with start date on first pick
   const handleStartChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
@@ -228,21 +311,24 @@ export default function MemoriesLandingPage() {
   const handleCreate = async () => {
     if (!destination.trim() || !startDate || !endDate) {
       setFormError(t('formError'));
-      setIsLoginError(false);
       return;
     }
     if (!user) {
-      setFormError(t('loginRequired'));
-      setIsLoginError(true);
       if (typeof window !== 'undefined') {
-        localStorage.setItem('luna_redirect_after_login', window.location.pathname);
+        sessionStorage.setItem('luna_memories_form', JSON.stringify({
+          destination: destination.trim(),
+          startDate,
+          endDate,
+          travellers: travellers.trim() || '',
+        }));
+        localStorage.setItem('luna_redirect_after_login', `/${locale}/memories`);
       }
+      router.push('/auth/login');
       return;
     }
 
     setCreating(true);
     setFormError('');
-    setIsLoginError(false);
     try {
       const res = await fetch('/api/memories/standalone', {
         method: 'POST',
@@ -514,19 +600,15 @@ export default function MemoriesLandingPage() {
             }}>
               {/* Destination */}
               <div style={{ marginBottom: 18 }}>
-                <label htmlFor="mem-destination" style={labelBase}>
+                <label style={labelBase}>
                   <MapPin size={13} aria-hidden="true" /> {t('destination')}
                 </label>
-                <input
-                  id="mem-destination"
-                  type="text"
+                <DestinationInput
                   value={destination}
-                  onChange={e => { setDestination(e.target.value); setFormError(''); }}
+                  onChange={(v) => { setDestination(v); setFormError(''); }}
                   placeholder={t('destinationPlaceholder')}
-                  style={inputBase}
-                  onFocus={handleFocus}
-                  onBlur={handleBlur}
-                  autoComplete="off"
+                  inputStyle={{ ...inputBase, paddingLeft: 42 }}
+                  iconColor="#FF8210"
                 />
               </div>
 
@@ -586,19 +668,11 @@ export default function MemoriesLandingPage() {
                   role="alert"
                   style={{
                     fontFamily: "'Inter',sans-serif", fontSize: 13,
-                    color: isLoginError ? '#FF8210' : '#DC2626',
+                    color: '#DC2626',
                     margin: '0 0 14px', lineHeight: 1.5,
                   }}
                 >
                   {formError}
-                  {isLoginError && (
-                    <a href="/auth/login" style={{
-                      color: '#FF8210', fontWeight: 600, marginLeft: 6,
-                      textDecoration: 'underline',
-                    }}>
-                      {t('signInLink')}
-                    </a>
-                  )}
                 </p>
               )}
 

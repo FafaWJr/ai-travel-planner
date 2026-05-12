@@ -896,8 +896,6 @@
     "travellers": "Who came along? (optional)",
     "travellersPlaceholder": "e.g. Solo, with partner, family of 4...",
     "formError": "Please add a destination and travel dates.",
-    "loginRequired": "Please sign in to save your memories.",
-    "signInLink": "Sign in",
     "genericError": "Something went wrong. Please try again.",
     "startCapturing": "Start capturing memories",
     "creatingMemory": "Creating your memory...",

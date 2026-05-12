@@ -896,8 +896,6 @@
     "travellers": "¿Quién vino? (opcional)",
     "travellersPlaceholder": "ej: Solo/a, con pareja, familia de 4...",
     "formError": "Por favor, añade un destino y las fechas del viaje.",
-    "loginRequired": "Por favor, inicia sesión para guardar tus recuerdos.",
-    "signInLink": "Iniciar sesión",
     "genericError": "Algo salió mal. Inténtalo de nuevo.",
     "startCapturing": "Comenzar a capturar recuerdos",
     "creatingMemory": "Creando tu recuerdo...",
