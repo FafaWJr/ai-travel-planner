@@ -12,9 +12,15 @@ import {
   Sparkles, Check, PenLine, RefreshCw, Loader2,
   Share2, Link2, CheckCircle, ImagePlus,
 } from 'lucide-react';
+import nextDynamic from 'next/dynamic';
 import DayPhotoGrid from '@/components/memories/DayPhotoGrid';
 import BulkPhotoUpload from '@/components/memories/BulkPhotoUpload';
 import type { PhotoMeta } from '@/lib/memories/types';
+
+const RouteMap = nextDynamic(() => import('@/components/memories/RouteMap'), {
+  ssr: false,
+  loading: () => null,
+});
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -387,6 +393,9 @@ export default function MemoryCapturePage({
             onPhotosAdded={handleDayPhotosAdded}
           />
         )}
+
+        {/* Route map from photo GPS data */}
+        <RouteMap days={days} />
 
         {/* Day cards */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>

@@ -815,7 +815,9 @@
     "closeLightbox": "Close",
     "addMorePhotos": "Add more photos",
     "photoOf": "{index} of {total}",
-    "dayAssignment": "Day {day}"
+    "dayAssignment": "Day {day}",
+    "mapLabel": "Your route",
+    "photosLabel": "Photos"
   },
   "collab": {
     "toast": {

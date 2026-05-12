@@ -3,8 +3,24 @@ export const dynamic = 'force-dynamic';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import nextDynamic from 'next/dynamic';
 import NavBar from '@/components/NavBar';
 import { BookHeart, MapPin } from 'lucide-react';
+import type { PhotoMeta } from '@/lib/memories/types';
+
+const RouteMap = nextDynamic(() => import('@/components/memories/RouteMap'), {
+  ssr: false,
+  loading: () => null,
+});
+
+interface MemoryDay {
+  dayNumber: number;
+  dayTitle: string;
+  notes: string;
+  mood: string | null;
+  highlight: boolean;
+  photos: PhotoMeta[];
+}
 
 interface SharedMemory {
   id: string;
@@ -13,6 +29,7 @@ interface SharedMemory {
   status: string;
   share_token: string;
   memory_data: {
+    days?: MemoryDay[];
     tripDestination?: string | null;
     tripTitle?: string | null;
     tripStartDate?: string | null;
@@ -67,6 +84,12 @@ export default function MemorySharePage({
         day: 'numeric', month: 'long', year: 'numeric',
       })
     : null;
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const memoryDays = memory?.memory_data?.days ?? [];
+  const hasPhotos = memoryDays.some(d => (d.photos?.length ?? 0) > 0);
+  const getPhotoUrl = (photo: PhotoMeta) =>
+    `${supabaseUrl}/storage/v1/object/public/memory-photos/${photo.storagePath}`;
 
   if (loading) {
     return (
@@ -172,6 +195,92 @@ export default function MemorySharePage({
           <p style={{ textAlign: 'center', color: '#C0C0C0', fontFamily: "'Inter',sans-serif" }}>
             No story written yet.
           </p>
+        )}
+
+        {/* Route map */}
+        {hasPhotos && (
+          <div style={{ marginTop: 32 }}>
+            <RouteMap days={memoryDays} height={240} />
+          </div>
+        )}
+
+        {/* Photo gallery by day */}
+        {hasPhotos && (
+          <div style={{ marginTop: 32 }}>
+            {memoryDays
+              .filter(day => (day.photos?.length ?? 0) > 0)
+              .map(day => (
+                <div key={day.dayNumber} style={{ marginBottom: 32 }}>
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    marginBottom: 12,
+                  }}>
+                    <span style={{
+                      width: 28, height: 28, borderRadius: '50%',
+                      background: '#FF8210', color: '#fff',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 12,
+                      flexShrink: 0,
+                    }}>
+                      {day.dayNumber}
+                    </span>
+                    <span style={{
+                      fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 15,
+                      color: '#00447B',
+                    }}>
+                      {day.dayTitle}
+                    </span>
+                  </div>
+
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: day.photos.length === 1
+                      ? '1fr'
+                      : day.photos.length === 2
+                        ? '1fr 1fr'
+                        : 'repeat(3, 1fr)',
+                    gap: 6,
+                    borderRadius: 10,
+                    overflow: 'hidden',
+                  }}>
+                    {day.photos
+                      .sort((a, b) => a.sortOrder - b.sortOrder)
+                      .slice(0, 6)
+                      .map((photo, idx) => (
+                        <div
+                          key={photo.id}
+                          style={{
+                            aspectRatio: idx === 0 && day.photos.length > 2 ? '16/9' : '1',
+                            gridColumn: idx === 0 && day.photos.length > 2 ? 'span 2' : undefined,
+                            borderRadius: 8,
+                            overflow: 'hidden',
+                            background: '#E5E7EB',
+                          }}
+                        >
+                          <img
+                            src={getPhotoUrl(photo)}
+                            alt={`Day ${day.dayNumber}`}
+                            loading="lazy"
+                            style={{
+                              width: '100%', height: '100%',
+                              objectFit: 'cover', display: 'block',
+                            }}
+                          />
+                        </div>
+                      ))}
+                  </div>
+
+                  {day.photos.length > 6 && (
+                    <p style={{
+                      fontFamily: "'Inter',sans-serif", fontSize: 12,
+                      color: '#C0C0C0', marginTop: 6, textAlign: 'center',
+                    }}>
+                      +{day.photos.length - 6} more photos
+                    </p>
+                  )}
+                </div>
+              ))}
+          </div>
         )}
 
         {/* CTA */}

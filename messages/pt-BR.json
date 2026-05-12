@@ -815,7 +815,9 @@
     "closeLightbox": "Fechar",
     "addMorePhotos": "Adicionar mais fotos",
     "photoOf": "{index} de {total}",
-    "dayAssignment": "Dia {day}"
+    "dayAssignment": "Dia {day}",
+    "mapLabel": "Sua rota",
+    "photosLabel": "Fotos"
   },
   "collab": {
     "toast": {
