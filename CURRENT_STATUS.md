@@ -25,7 +25,7 @@ Six stages. Real-time multi-user trip planning with viewer/editor/owner permissi
 - **How to Use Luna guide page**: shipped `99d3cc84` (3 May). `/[locale]/how-to-use-luna`, full i18n, footer Quick Links entry.
 - **Multi-agent orchestration**: 11 specialist subagents, `1f66f44f` (5 May). `luna-status-updater` added `e79bd132` (6 May).
 - **TECH_DEBT.md register**: created `70de3ef1` (5 May), 10 active items.
-- **Luna Memories Phase 1** (all 4 sub-phases shipped 11-12 May 2026): `trip_memories` table + RLS, memory capture page, streaming AI narrative, shareable public link + OG image. Phase 2 (mid-trip capture banner) not started.
+- **Luna Memories Phases 1+2 shipped** (11-12 May 2026): `trip_memories` table + RLS, memory capture page, streaming AI narrative, shareable public link + OG image, mid-trip capture banner (`MemoryBanner`, Plan page). Phase 3 (photo upload + EXIF auto-sort) not started.
 
 ---
 
@@ -62,6 +62,7 @@ For full patch library, hotfix history, and implementation notes see `CLAUDE.md`
 
 | Detour | Status | Commit | Date | One-line cause |
 |---|---|---|---|---|
+| Luna Memories Phase 2: mid-trip capture banner | Closed | `1da8df1b` | 12 May | Date-aware MemoryBanner on Plan page; expandable note, 24h dismiss, journal link |
 | Luna Memories Phase 1.4: shareable link + OG image | Closed | `58cb636f` | 12 May | Public share page, OG image route, share button + clipboard, per-token generateMetadata |
 | Luna Memories Phase 1.3: streaming AI narrative | Closed | `808a6a8a` | 12 May | Streaming Claude Sonnet 4.5 narrative via /api/memories/narrative; editable + re-roll + auto-save |
 | Luna Memories Phase 1.2: capture page + My Trips CTA | Closed | `638408cc` | 12 May | Memory capture page with day cards + auto-save; My Trips CTA replaced for expired trips |
@@ -150,9 +151,9 @@ Always include the date in the **Last updated** field at the top.
 
 ## Luna Memories project
 
-**Active phase:** Phase 2: Mid-trip capture banner
+**Active phase:** Phase 3: Photo upload + EXIF auto-sort
 **Phase status:** Not started
-**Last completed phase:** Phase 1 — Memory mode on existing trips (all of 1.1-1.4 shipped, 12 May 2026)
+**Last completed phase:** Phase 2 — Mid-trip capture banner (shipped 12 May 2026, commit `1da8df1b`)
 **Hotfixes in current phase:** 0
 **Known issues:** None
 **Master plan:** docs/specs/memories/session_anchor.md (immutable during sessions)
@@ -162,3 +163,6 @@ Always include the date in the **Last updated** field at the top.
 - 1.2 (`638408cc`, 12 May): Memory capture page, My Trips CTA change (`Capture memories` for expired trips), `GET`/`PUT /api/memories/[tripId]` routes, per-day notes/mood/highlight, debounced auto-save, i18n EN/PT-BR/ES.
 - 1.3 (`808a6a8a`, 12 May): Streaming AI narrative (`POST /api/memories/narrative`), generate/re-roll/edit/auto-save, narrative persisted to `trip_memories.narrative`, i18n.
 - 1.4 (`58cb636f`, 12 May): Public share API (`/api/memories/share/[token]`), share page (`/memories/share/[token]`), OG image route (`/api/og/memory/[token]`), share button + clipboard copy, per-token `generateMetadata`, i18n.
+
+**Phase 2 deliverables (all shipped):**
+- 2.0 (`1da8df1b`, 12 May): `MemoryBanner` component on Plan page — date-aware detection shows banner when today is within the trip's date range; expandable textarea saves quick day note to `trip_memories` row; dismissable for 24h via localStorage key per `tripId`; "Full journal" link to `/memories/[tripId]`; EN/PT-BR/ES locale strings.
