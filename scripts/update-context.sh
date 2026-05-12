@@ -530,14 +530,21 @@ After Claude Code finishes changes:
 - My Trips saved trip card headers now show Google Places landmark photos via \`/api/destination-header/\` (commit \`bd5ddec9\`, 5 May 2026). Feature-flag gated by \`NEXT_PUBLIC_PLACE_PREVIEW_ENABLED\`.
 - Multi-agent orchestration added: 11 specialist agents + \`luna-code-reviewer.md\` in \`.claude/agents/\`; orchestration protocol at \`docs/architecture/multi-agent-orchestration.md\` (commit \`1f66f44f\`, 5 May 2026).
 - Luna Memories Phase 3.2 shipped (commit \`34b5ddfb\`, 12 May 2026): \`BulkPhotoUpload\` component (EXIF sort preview, sequential upload, progress), \`DayPhotoGrid\` component (3-col grid, lightbox, delete confirmation), canonical \`lib/memories/types.ts\` (\`PhotoMeta\` + \`PhotoUploadItem\`), integrated into memory capture page, 18 new locale keys per locale.
-- Luna Memories Phase 3.3 shipped (commit \`66722db5\`, 12 May 2026): \`RouteMap\` component (Leaflet + OpenStreetMap, day-coloured markers, dashed polylines, dynamic import ssr:false), route map on capture page, photo gallery on public share page (day-grouped, responsive hero grid), \`leaflet@1.9.4\` + \`react-leaflet@4.2.1\` installed. **Phase 3 complete.**
+- Luna Memories Phase 3.3 shipped (commit \`66722db5\`, 12 May 2026): \`RouteMap\` component (Leaflet + OpenStreetMap, day-coloured markers, dashed polylines, dynamic import ssr:false), route map on capture page, photo gallery on public share page (day-grouped, responsive hero grid). \`react-leaflet\` removed (React 19 peer dep conflict broke Vercel build, commit \`b68652e3\`); map rendered via raw Leaflet + dynamic import only. **Phase 3 complete.**
+- Luna Memories Phase 4 shipped (commit \`e7910c2c\`, 12 May 2026): standalone memories landing page (\`/memories\`), nav item visible to all users, \`POST /api/memories/standalone\` (create memory without a Luna trip), \`POST /api/memories/skeleton\` (AI day-title generation), dual-lookup on \`GET/PUT /api/memories/[tripId]\` (resolves both \`saved_trips.id\` and \`trip_memories.id\`), 15 locale keys per locale.
+- Luna Memories Phase 5 shipped (commit \`8eec5bd7\`, 12 May 2026): social sharing cards. Two edge-runtime image routes (\`GET /api/memories/card/[token]\` 1080x1920 Stories, \`GET /api/memories/card/day/[token]/[dayNumber]\` 1080x1350 carousel). Share panel on capture page: copy link, download Stories card, download per-day carousel, Share to Instagram. 24h Cache-Control on card routes. 5 locale keys per locale.
+- Luna Memories Phase 6.1 shipped (commit \`12103fa6\`, 12 May 2026): premium PDF export pipeline. \`lib/memories/pdf-template.ts\` editorial HTML template (cover, stats, day sections, highlight accent, reflections). \`POST /api/memories/export/pdf\` uses \`@sparticuz/chromium\` + \`puppeteer-core\`, caches PDFs in private \`memory-pdfs\` Supabase Storage bucket (\`pdfs/{userId}/{memoryId}.pdf\`), returns binary stream. 2 locale keys per locale.
+- Luna Memories Phase 6.2 shipped (commit \`65a6f8f6\`, 12 May 2026): Stripe paywall for PDF export. \`POST /api/payments/create-session\` creates \$10 Stripe Checkout Session with memory metadata; returns \`checkoutUrl\` or \`alreadyPurchased\` for idempotency. \`POST /api/webhooks/stripe\` verifies \`stripe-signature\` from raw body (\`request.text()\`), marks \`pdf_purchased=true\` on \`checkout.session.completed\`. Stripe v22.1.1, apiVersion \`2026-04-22.dahlia\`.
+- Stripe instantiation rule (commit \`3649f4b9\`, 12 May 2026): Stripe MUST be instantiated INSIDE the request handler, not at module level. Module-level \`new Stripe()\` causes Vercel build crash. Pattern: \`const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: ... })\` at the top of each handler function.
+- HF-4 dual-lookup fix (commit \`998d57de\`, 12 May 2026): memories \`GET /api/memories/photos\` and \`POST /api/memories/narrative\` routes now select \`id\` during fetch and update by \`memory.id\` (not the incoming \`tripId\` param). Fixes silent 0-row no-ops when \`tripId\` is a \`saved_trips.id\` but \`trip_memories\` row was created via standalone flow with its own UUID.
+- Luna Memories Phase 7 PWA shipped (commit \`88bd5523\`, 12 May 2026): \`public/manifest.json\` (theme \`#00447B\`, background \`#F4F7FB\`), \`public/icons/luna-{192,512,maskable-512}.png\` (Sharp-rasterised, maskable has 20% safe-zone), \`public/sw.js\` (cache-first static assets, network-first pages, skips API/auth/Supabase), \`public/offline.html\` branded fallback, \`components/ServiceWorkerRegistration.tsx\` (registers on mount), \`components/PwaInstallBanner.tsx\` (shows after 2+ visits via \`luna_visit_count\` localStorage key, dismissable via \`luna_pwa_dismissed\`). Manifest + Apple PWA meta tags in \`app/layout.tsx\`.
+- Security hardening shipped (commit \`e1f7491c\`, 12 May 2026): dropped \`trip_memories_public_read_shared\` RLS policy (was allowing anonymous enumeration of all complete memories by share_token). PDF route streams binary from private \`memory-pdfs\` bucket (no public URL). Capture page auth redirect sets \`luna_redirect_after_login\` localStorage key before pushing to \`/auth/login\`. Added \`.eq('user_id', user.id)\` IDOR guard to \`saved_trips\` queries in memories GET and narrative POST routes. Share route strips \`notes\`, \`mood\`, \`highlight\` from \`memory_data.days\` before returning to public viewers (only \`dayNumber\`, \`dayTitle\`, \`photos\` exposed on share links).
 
 **Current Work:**
 - Collaborative Trips Stages 0+1+2+3+4 **shipped**. \`NEXT_PUBLIC_COLLAB_ENABLED=false\` still in production pending Stage 5 launch.
 - Stage 5 (landing page, OG image, flag flip): NOT STARTED. \`NEXT_PUBLIC_COLLAB_ENABLED\` still false.
-- Luna Memories Phase 3 (all sub-phases 3.1+3.2+3.3): **SHIPPED** (12 May 2026). Phase 4 not started.
+- Luna Memories Phases 3+4+5+6+7: **SHIPPED** (12 May 2026). Phase 8 not started.
 - Brevo email integration (list ID 17, /api/brevo-sync/route.ts)
-- PDF export (jsPDF + html2canvas, branded itinerary)
 
 ---
 
@@ -547,6 +554,9 @@ After Claude Code finishes changes:
 - **Language:** TypeScript
 - **Database:** Supabase (auth + PostgreSQL)
 - **AI:** Anthropic Claude API
+- **Payments:** Stripe v22.1.1 (apiVersion \`2026-04-22.dahlia\`); \$10 one-off PDF purchase
+- **PDF generation:** \`@sparticuz/chromium\` + \`puppeteer-core\` (server-side, Vercel-compatible)
+- **PWA:** \`public/manifest.json\` + \`public/sw.js\` service worker (cache-first static, network-first pages, offline fallback)
 - **Deployment:** Vercel (GitHub integration, auto-deploy on push to main)
 - **Analytics:** Google Analytics (G-YZV7GHDQ0T)
 
@@ -685,6 +695,12 @@ Deals CTA block linking to \`/deals\`.
 - If a change would affect Luna's existing trip planner, chat, generation,
   or collaborative features, STOP and verify with Wilson before proceeding.
 - Canonical photo types: \`lib/memories/types.ts\` exports \`PhotoMeta\` and \`PhotoUploadItem\`. Import from there; never redefine locally.
+- **Stripe MUST be instantiated inside handler functions, not at module level.** Module-level \`new Stripe()\` crashes the Vercel build. Pattern: declare inside each handler: \`const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2026-04-22.dahlia' })\`.
+- **Stripe webhook body MUST be read as raw text.** Use \`request.text()\` (not \`request.json()\`) before passing to \`stripe.webhooks.constructEvent\`. Next.js body parsing corrupts the signature.
+- **PDF storage uses the private \`memory-pdfs\` bucket, not \`memory-photos\`.** PDF routes must download the binary and stream it back to the client; never return a public URL from a private bucket.
+- **Memories dual-lookup pattern.** Routes that accept a \`tripId\` param MUST handle two cases: \`saved_trips.id\` (Luna-planned trips) and \`trip_memories.id\` (standalone memories). Fetch with \`select('id')\` then update by \`memory.id\`, not by the incoming param. Omitting this causes silent 0-row no-ops (HF-4 root cause).
+- **Share route privacy.** \`GET /api/memories/share/[token]\` MUST strip \`notes\`, \`mood\`, and \`highlight\` from \`memory_data.days\` before returning to anonymous callers. Only \`dayNumber\`, \`dayTitle\`, and \`photos\` are public-safe.
+- **IDOR guard on saved_trips queries.** Any memories API route that queries \`saved_trips\` MUST include \`.eq('user_id', user.id)\` to prevent cross-user enumeration via a foreign trip UUID.
 EOF
 
 echo "CLAUDE.md regenerated successfully!"

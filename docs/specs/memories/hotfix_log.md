@@ -22,6 +22,19 @@ Format per entry:
 
 ## Log entries
 
+## HF-5 2026-05-12
+
+**Active phase at time of hotfix:** Phase 7: PWA layer (shipped, post-QA)
+**Problem:** `manifest.json`, `sw.js`, and `offline.html` return HTTP 404 in production. The PWA cannot install — no manifest, no service worker registration, install banner never fires.
+**Root cause:** The next-intl middleware matcher in `proxy.ts` did not exclude `.json` or `.js` file extensions. The middleware intercepts `GET /manifest.json` and `GET /sw.js` before Next.js can serve them from `/public`, causing a routing failure.
+**Proposed fix:** Add `manifest\\.json|sw\\.js|offline\\.html|` to the negative lookahead in the `config.matcher` pattern in `proxy.ts`.
+**Files affected:** `proxy.ts`
+**Phase changed?** No.
+**Fix confirmed:** 2026-05-12
+**Notes:** Identified by `luna-memories-qa` post-deploy QA run. Security hardening (C2/C3/C4/H2/H3) was unaffected — this was PWA-only. The source-level implementation (manifest content, SW strategy, icons, install banner) was correct; only the middleware exclusion was missing.
+
+---
+
 ## HF-1 2026-05-12
 
 **Active phase at time of hotfix:** Phase 3: Photo upload + EXIF auto-sort
