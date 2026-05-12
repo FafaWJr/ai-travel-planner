@@ -797,7 +797,24 @@
     "bannerFullPage": "Diario completo",
     "bannerCancel": "Cancelar",
     "bannerSave": "Guardar",
-    "bannerSaved": "Guardado en los recuerdos del viaje"
+    "bannerSaved": "Guardado en los recuerdos del viaje",
+    "photosSection": "Fotos",
+    "addPhotos": "Añadir fotos",
+    "uploading": "Subiendo {done} de {total}...",
+    "uploadDone": "{count} fotos añadidas",
+    "uploadError": "Algunas fotos no pudieron subirse",
+    "uploadPhotosBtn": "Subir {count} fotos",
+    "deletePhoto": "Eliminar foto",
+    "deletePhotoConfirm": "¿Eliminar esta foto?",
+    "deleteCancel": "Cancelar",
+    "deleteConfirm": "Eliminar",
+    "photosAutoSorted": "Organizadas en días específicos por la fecha de la foto",
+    "photosUnsorted": "{count} foto(s) no pudieron organizarse — fecha no encontrada",
+    "photoCount": "{count} fotos",
+    "closeLightbox": "Cerrar",
+    "addMorePhotos": "Añadir más fotos",
+    "photoOf": "{index} de {total}",
+    "dayAssignment": "Día {day}"
   },
   "collab": {
     "toast": {

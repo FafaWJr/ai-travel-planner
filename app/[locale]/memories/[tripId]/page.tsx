@@ -10,8 +10,11 @@ import {
   BookHeart, ChevronDown, ChevronUp,
   Frown, Smile, Zap, Leaf, Heart,
   Sparkles, Check, PenLine, RefreshCw, Loader2,
-  Share2, Link2, CheckCircle,
+  Share2, Link2, CheckCircle, ImagePlus,
 } from 'lucide-react';
+import DayPhotoGrid from '@/components/memories/DayPhotoGrid';
+import BulkPhotoUpload from '@/components/memories/BulkPhotoUpload';
+import type { PhotoMeta } from '@/lib/memories/types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -21,7 +24,7 @@ interface MemoryDay {
   notes: string;
   mood: string | null;
   highlight: boolean;
-  photos: unknown[];
+  photos: PhotoMeta[];
 }
 
 interface MemoryData {
@@ -52,6 +55,8 @@ const MOODS = [
   { key: 'peaceful', icon: Leaf, color: '#4A9D5B' },
   { key: 'emotional', icon: Heart, color: '#C0547A' },
 ] as const;
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -244,6 +249,51 @@ export default function MemoryCapturePage({
     }
   }, [memory?.share_token]);
 
+  const refetchMemory = useCallback(async () => {
+    if (!tripId) return;
+    try {
+      const res = await fetch(`/api/memories/${tripId}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      setMemory(data.memory);
+    } catch { /* noop */ }
+  }, [tripId]);
+
+  const handleDayPhotosAdded = useCallback((dayNumber: number, newPhotos: PhotoMeta[]) => {
+    setMemory(prev => {
+      if (!prev) return prev;
+      const days = prev.memory_data.days.map(d =>
+        d.dayNumber === dayNumber
+          ? { ...d, photos: [...(d.photos ?? []), ...newPhotos] }
+          : d,
+      );
+      return { ...prev, memory_data: { ...prev.memory_data, days } };
+    });
+  }, []);
+
+  const handlePhotoDelete = useCallback(async (dayNumber: number, photoId: string) => {
+    if (!tripId) return;
+    try {
+      await fetch('/api/memories/photos', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tripId, dayNumber, photoId }),
+      });
+      setMemory(prev => {
+        if (!prev) return prev;
+        const days = prev.memory_data.days.map(d =>
+          d.dayNumber === dayNumber
+            ? { ...d, photos: d.photos.filter(p => p.id !== photoId) }
+            : d,
+        );
+        return { ...prev, memory_data: { ...prev.memory_data, days } };
+      });
+    } catch (err) {
+      console.error('[memories] photo delete error:', err);
+      refetchMemory();
+    }
+  }, [tripId, refetchMemory]);
+
   const days = memory?.memory_data?.days ?? [];
   const capturedCount = days.filter(d => d.notes.trim().length > 0).length;
   const totalDays = days.length;
@@ -327,8 +377,19 @@ export default function MemoryCapturePage({
           </div>
         </div>
 
+        {/* Bulk photo upload */}
+        {trip?.start_date && trip?.end_date && (
+          <BulkPhotoUpload
+            tripId={tripId!}
+            tripStartDate={trip.start_date}
+            tripEndDate={trip.end_date}
+            days={days.map(d => ({ dayNumber: d.dayNumber, dayTitle: d.dayTitle }))}
+            onPhotosAdded={handleDayPhotosAdded}
+          />
+        )}
+
         {/* Day cards */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
           {days.map((day, i) => {
             const isExpanded = expandedDay === i;
             const hasMood = day.mood !== null;
@@ -386,6 +447,16 @@ export default function MemoryCapturePage({
                   })()}
 
                   {day.highlight && <Sparkles size={16} color="#FF8210" />}
+
+                  {!isExpanded && (day.photos ?? []).length > 0 && (
+                    <span style={{
+                      display: 'flex', alignItems: 'center', gap: 3,
+                      fontFamily: "'Inter',sans-serif", fontSize: 11, color: '#679AC1',
+                    }}>
+                      <ImagePlus size={12} color="#679AC1" />
+                      {(day.photos ?? []).length}
+                    </span>
+                  )}
 
                   {isExpanded ? <ChevronUp size={18} color="#C0C0C0" /> : <ChevronDown size={18} color="#C0C0C0" />}
                 </button>
@@ -460,6 +531,15 @@ export default function MemoryCapturePage({
                       {day.highlight ? <Check size={14} color="#FF8210" /> : <Sparkles size={14} color="#C0C0C0" />}
                       {t('highlight')}
                     </button>
+
+                    {/* Photo grid for this day */}
+                    {(day.photos ?? []).length > 0 && (
+                      <DayPhotoGrid
+                        photos={day.photos ?? []}
+                        supabaseUrl={supabaseUrl}
+                        onDelete={photoId => handlePhotoDelete(day.dayNumber, photoId)}
+                      />
+                    )}
                   </div>
                 )}
               </div>

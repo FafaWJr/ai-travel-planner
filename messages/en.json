@@ -797,7 +797,24 @@
     "bannerFullPage": "Full journal",
     "bannerCancel": "Cancel",
     "bannerSave": "Save",
-    "bannerSaved": "Saved to your trip memories"
+    "bannerSaved": "Saved to your trip memories",
+    "photosSection": "Photos",
+    "addPhotos": "Add photos",
+    "uploading": "Uploading {done} of {total}...",
+    "uploadDone": "{count} photos added",
+    "uploadError": "Some photos could not be uploaded",
+    "uploadPhotosBtn": "Upload {count} photos",
+    "deletePhoto": "Delete photo",
+    "deletePhotoConfirm": "Delete this photo?",
+    "deleteCancel": "Cancel",
+    "deleteConfirm": "Delete",
+    "photosAutoSorted": "Sorted to specific days based on photo date",
+    "photosUnsorted": "{count} photo(s) could not be sorted — no date found",
+    "photoCount": "{count} photos",
+    "closeLightbox": "Close",
+    "addMorePhotos": "Add more photos",
+    "photoOf": "{index} of {total}",
+    "dayAssignment": "Day {day}"
   },
   "collab": {
     "toast": {

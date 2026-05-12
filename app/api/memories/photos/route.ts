@@ -1,20 +1,10 @@
 import { NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import type { PhotoMeta } from '@/lib/memories/types';
 
 export const maxDuration = 30;
 
-export interface PhotoMeta {
-  id: string;
-  storagePath: string;
-  originalFilename: string;
-  width: number | null;
-  height: number | null;
-  exifDate: string | null;
-  exifLat: number | null;
-  exifLng: number | null;
-  sortOrder: number;
-  blurPlaceholder: string;
-}
+export type { PhotoMeta };
 
 /**
  * POST /api/memories/photos
