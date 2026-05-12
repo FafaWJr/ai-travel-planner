@@ -98,7 +98,12 @@ export default function MemoryCapturePage({
   }, [params]);
 
   useEffect(() => {
-    if (!authLoading && !user) router.replace('/auth/login?next=/my-trips');
+    if (!authLoading && !user) {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('luna_redirect_after_login', window.location.pathname);
+      }
+      router.replace('/auth/login');
+    }
   }, [user, authLoading]); // eslint-disable-line
 
   // Detect ?payment=success redirect from Stripe Checkout

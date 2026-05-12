@@ -60,14 +60,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Return cached PDF if available
+    // Return cached PDF as binary (private bucket — never expose public URL)
     if (memory.pdf_storage_path) {
-      const { data: cached } = supabase.storage
-        .from('memory-photos')
-        .getPublicUrl(memory.pdf_storage_path);
+      const { data: cachedBlob, error: downloadError } = await supabase.storage
+        .from('memory-pdfs')
+        .download(memory.pdf_storage_path);
 
-      if (cached?.publicUrl) {
-        return Response.json({ pdfUrl: cached.publicUrl, cached: true });
+      if (!downloadError && cachedBlob) {
+        const cachedBuffer = Buffer.from(await cachedBlob.arrayBuffer());
+        const memDataForName = memory.memory_data as { tripDestination?: string } | null;
+        const safeNameCached = (memDataForName?.tripDestination ?? 'trip').replace(/[^a-zA-Z0-9]/g, '-');
+        return new Response(cachedBuffer, {
+          headers: {
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': `attachment; filename="${safeNameCached}-memory.pdf"`,
+            'Cache-Control': 'private, max-age=3600',
+          },
+        });
       }
     }
 
@@ -111,11 +120,11 @@ export async function POST(request: NextRequest) {
 
     await browser.close();
 
-    // Cache the PDF in Supabase Storage
+    // Cache the PDF in private storage (memory-pdfs bucket)
     const pdfBuffer2 = Buffer.from(pdfBuffer);
     const pdfPath = `pdfs/${user.id}/${memory.id}.pdf`;
     await supabase.storage
-      .from('memory-photos')
+      .from('memory-pdfs')
       .upload(pdfPath, pdfBuffer2, {
         contentType: 'application/pdf',
         cacheControl: '2592000',

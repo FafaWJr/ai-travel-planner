@@ -107,10 +107,12 @@ export async function POST(request: NextRequest) {
     };
 
     if (memory.trip_id) {
+      // H2: .eq('user_id') guards against IDOR — a user supplying someone else's trip UUID.
       const { data: savedTrip, error: tripError } = await supabase
         .from('saved_trips')
         .select('destination, start_date, end_date, trip_data')
         .eq('id', memory.trip_id)
+        .eq('user_id', user.id)
         .single();
 
       if (tripError || !savedTrip) {

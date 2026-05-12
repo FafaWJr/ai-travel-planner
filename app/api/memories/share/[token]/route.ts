@@ -26,5 +26,33 @@ export async function GET(
     return Response.json({ error: 'Memory not found or not yet published' }, { status: 404 });
   }
 
-  return Response.json({ memory });
+  // H3: Strip private per-day fields before exposing to public share viewers.
+  // notes, mood, highlight are personal data. Only expose dayNumber, dayTitle, photos.
+  const memData = memory.memory_data as {
+    days?: Array<{
+      dayNumber: number;
+      dayTitle: string;
+      notes?: string;
+      mood?: string | null;
+      highlight?: boolean;
+      photos?: unknown[];
+    }>;
+    [key: string]: unknown;
+  } | null;
+
+  const sanitizedMemory = {
+    ...memory,
+    memory_data: memData
+      ? {
+          ...memData,
+          days: (memData.days ?? []).map(d => ({
+            dayNumber: d.dayNumber,
+            dayTitle: d.dayTitle,
+            photos: d.photos ?? [],
+          })),
+        }
+      : memData,
+  };
+
+  return Response.json({ memory: sanitizedMemory });
 }

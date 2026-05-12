@@ -30,10 +30,12 @@ export async function GET(
   }
 
   // Fetch the saved trip (for linked memories). Will be null for standalone.
+  // H2: .eq('user_id') guards against IDOR — a user supplying someone else's trip UUID.
   const { data: trip } = await supabase
     .from('saved_trips')
     .select('id, destination, start_date, end_date, title, trip_data')
     .eq('id', tripId)
+    .eq('user_id', user.id)
     .single();
 
   // Dual-lookup: try trip_id first (linked memories), then id (standalone memories)
