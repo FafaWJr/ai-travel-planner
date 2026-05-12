@@ -13,7 +13,8 @@
     "menu": "Menu",
     "discoverStyle": "Discover your travel style",
     "retakeQuiz": "Retake quiz",
-    "viewPersona": "View your persona"
+    "viewPersona": "View your persona",
+    "memories": "Memories"
   },
   "hero": {
     "badge": "Trusted by travellers worldwide",
@@ -817,7 +818,22 @@
     "photoOf": "{index} of {total}",
     "dayAssignment": "Day {day}",
     "mapLabel": "Your route",
-    "photosLabel": "Photos"
+    "photosLabel": "Photos",
+    "landingTitle": "Your trip, narrated by Luna",
+    "landingSubtitle": "Turn your travel photos and notes into a personal story. Whether you planned with Luna or not.",
+    "fromLunaTrip": "Continue from a Luna trip",
+    "captureAnyTrip": "Capture any trip",
+    "noPastTrips": "No past trips yet. Plan one first, or capture any trip below.",
+    "destination": "Where did you go?",
+    "destinationPlaceholder": "e.g. Lisbon, Portugal",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "travellers": "Who travelled? (optional)",
+    "travellersPlaceholder": "e.g. Solo, with partner, family of 4",
+    "formError": "Please fill in destination and dates.",
+    "startCapturing": "Start capturing memories",
+    "creatingMemory": "Setting up your trip...",
+    "loginToSave": "Sign in to save your memories across devices."
   },
   "collab": {
     "toast": {

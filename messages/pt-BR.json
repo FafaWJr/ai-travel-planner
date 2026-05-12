@@ -13,7 +13,8 @@
     "menu": "Menu",
     "discoverStyle": "Descubra seu estilo de viagem",
     "retakeQuiz": "Refazer o quiz",
-    "viewPersona": "Ver sua persona"
+    "viewPersona": "Ver sua persona",
+    "memories": "Memorias"
   },
   "hero": {
     "badge": "Confiado por viajantes do mundo inteiro",
@@ -817,7 +818,22 @@
     "photoOf": "{index} de {total}",
     "dayAssignment": "Dia {day}",
     "mapLabel": "Sua rota",
-    "photosLabel": "Fotos"
+    "photosLabel": "Fotos",
+    "landingTitle": "Sua viagem, narrada pela Luna",
+    "landingSubtitle": "Transforme suas fotos e notas de viagem em uma historia pessoal. Tendo planejado com a Luna ou nao.",
+    "fromLunaTrip": "Continuar de uma viagem Luna",
+    "captureAnyTrip": "Capturar qualquer viagem",
+    "noPastTrips": "Nenhuma viagem passada ainda. Planeje uma primeiro, ou capture qualquer viagem abaixo.",
+    "destination": "Para onde voce foi?",
+    "destinationPlaceholder": "ex: Lisboa, Portugal",
+    "startDate": "Data de inicio",
+    "endDate": "Data de fim",
+    "travellers": "Quem viajou? (opcional)",
+    "travellersPlaceholder": "ex: Sozinho(a), com parceiro(a), familia de 4",
+    "formError": "Por favor, preencha destino e datas.",
+    "startCapturing": "Comecar a capturar memorias",
+    "creatingMemory": "Preparando sua viagem...",
+    "loginToSave": "Entre para salvar suas memorias entre dispositivos."
   },
   "collab": {
     "toast": {

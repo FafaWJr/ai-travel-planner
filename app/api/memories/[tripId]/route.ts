@@ -29,34 +29,63 @@ export async function GET(
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { data: trip, error: tripError } = await supabase
+  // Fetch the saved trip (for linked memories). Will be null for standalone.
+  const { data: trip } = await supabase
     .from('saved_trips')
     .select('id, destination, start_date, end_date, title, trip_data')
     .eq('id', tripId)
     .single();
 
-  if (tripError || !trip) {
-    return Response.json({ error: 'Trip not found' }, { status: 404 });
-  }
-
-  const { data: existing } = await supabase
+  // Dual-lookup: try trip_id first (linked memories), then id (standalone memories)
+  let existing = null;
+  const { data: byTripId } = await supabase
     .from('trip_memories')
     .select('*')
     .eq('trip_id', tripId)
     .eq('user_id', user.id)
     .single();
 
+  if (byTripId) {
+    existing = byTripId;
+  } else {
+    const { data: byId } = await supabase
+      .from('trip_memories')
+      .select('*')
+      .eq('id', tripId)
+      .eq('user_id', user.id)
+      .single();
+    existing = byId;
+  }
+
+  if (!existing && !trip) {
+    return Response.json({ error: 'Trip or memory not found' }, { status: 404 });
+  }
+
   if (existing) {
+    const memData = existing.memory_data as Record<string, unknown>;
+    const tripMeta = existing.trip_id ? {
+      id: trip?.id,
+      destination: trip?.destination,
+      title: trip?.title,
+      start_date: trip?.start_date,
+      end_date: trip?.end_date,
+    } : {
+      id: existing.id,
+      destination: (memData?.tripDestination as string) ?? existing.standalone_destination,
+      title: (memData?.tripTitle as string) ?? existing.standalone_destination,
+      start_date: (memData?.tripStartDate as string) ?? existing.standalone_start_date,
+      end_date: (memData?.tripEndDate as string) ?? existing.standalone_end_date,
+    };
+
     return Response.json({
       memory: existing,
-      trip: {
-        id: trip.id,
-        destination: trip.destination,
-        title: trip.title,
-        start_date: trip.start_date,
-        end_date: trip.end_date,
-      },
+      trip: tripMeta,
     });
+  }
+
+  // At this point existing is null; trip is non-null (both-null case returned 404 above)
+  if (!trip) {
+    return Response.json({ error: 'Trip not found' }, { status: 404 });
   }
 
   const days = buildDaysFromTrip(trip);
@@ -126,7 +155,11 @@ export async function PUT(
     return Response.json({ error: 'No fields to update' }, { status: 400 });
   }
 
-  const { data: updated, error } = await supabase
+  // Dual-lookup: try trip_id first, then id (standalone memories)
+  let updated = null;
+  let updateError = null;
+
+  const { data: byTripId, error: err1 } = await supabase
     .from('trip_memories')
     .update(updatePayload)
     .eq('trip_id', tripId)
@@ -134,8 +167,22 @@ export async function PUT(
     .select()
     .single();
 
-  if (error) {
-    console.error('[memories/PUT] update error:', error);
+  if (byTripId) {
+    updated = byTripId;
+  } else {
+    const { data: byId, error: err2 } = await supabase
+      .from('trip_memories')
+      .update(updatePayload)
+      .eq('id', tripId)
+      .eq('user_id', user.id)
+      .select()
+      .single();
+    updated = byId;
+    updateError = err2 ?? err1;
+  }
+
+  if (!updated) {
+    console.error('[memories/PUT] update error:', updateError);
     return Response.json({ error: 'Failed to update memory' }, { status: 500 });
   }
 
