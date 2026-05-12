@@ -76,20 +76,20 @@ export default function MemoryBanner({ tripId, startDate, endDate }: MemoryBanne
             ? `${days[dayIndex].notes}\n${note.trim()}`
             : note.trim(),
         };
+
+        await fetch(`/api/memories/${tripId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ memory_data: { ...memory.memory_data, days } }),
+        });
+
+        setSaved(true);
+        setNote('');
+        setTimeout(() => {
+          setSaved(false);
+          setExpanded(false);
+        }, 2000);
       }
-
-      await fetch(`/api/memories/${tripId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ memory_data: { ...memory.memory_data, days } }),
-      });
-
-      setSaved(true);
-      setNote('');
-      setTimeout(() => {
-        setSaved(false);
-        setExpanded(false);
-      }, 2000);
     } catch (err) {
       console.error('[MemoryBanner] save error:', err);
     } finally {
