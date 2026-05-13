@@ -613,7 +613,7 @@ export default function MemoriesLandingPage() {
               </div>
 
               {/* Dates */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 18 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 18, minWidth: 0 }}>
                 <div>
                   <label htmlFor="mem-start-date" style={labelBase}>
                     <Calendar size={13} aria-hidden="true" /> {t('startDate')}
@@ -623,7 +623,7 @@ export default function MemoriesLandingPage() {
                     type="date"
                     value={startDate}
                     onChange={handleStartChange}
-                    style={inputBase}
+                    style={{ ...inputBase, minWidth: 0, maxWidth: '100%' }}
                     onFocus={handleFocus}
                     onBlur={handleBlur}
                   />
@@ -638,8 +638,15 @@ export default function MemoriesLandingPage() {
                     value={endDate}
                     min={startDate || undefined}
                     onChange={e => { setEndDate(e.target.value); setFormError(''); }}
-                    style={inputBase}
-                    onFocus={handleFocus}
+                    style={{ ...inputBase, minWidth: 0, maxWidth: '100%' }}
+                    onFocus={(e) => {
+                      handleFocus(e);
+                      if (!endDate && startDate) {
+                        const d = new Date(startDate);
+                        d.setDate(d.getDate() + 1);
+                        setEndDate(d.toISOString().split('T')[0]);
+                      }
+                    }}
                     onBlur={handleBlur}
                   />
                 </div>
@@ -753,6 +760,7 @@ export default function MemoriesLandingPage() {
         @keyframes spin { to { transform: rotate(360deg); } }
         @media (max-width: 768px) {
           .step-connector { display: none !important; }
+          input[type="date"] { font-size: 14px !important; min-width: 0 !important; }
         }
         @media (prefers-reduced-motion: reduce) {
           *, *::before, *::after {

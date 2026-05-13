@@ -99,11 +99,12 @@ export default function DestinationInput({
           onChange={handleChange} onKeyDown={handleKey}
           placeholder={placeholder}
           style={{
-            width: '100%', paddingLeft: 42, paddingRight: 40, paddingTop: 15, paddingBottom: 15,
+            width: '100%', paddingRight: 40, paddingTop: 15, paddingBottom: 15,
             border: '1.5px solid rgba(0,68,123,0.15)', borderRadius: 'var(--r-md)',
             fontFamily: 'var(--font-body)', fontSize: 16, color: '#000', background: '#fff', outline: 'none',
             transition: 'border-color 0.18s', boxSizing: 'border-box',
             ...inputStyle,
+            paddingLeft: 42,
           }}
           onFocus={e => (e.target.style.borderColor = 'var(--navy)')}
           onBlur={e => (e.target.style.borderColor = 'rgba(0,68,123,0.15)')}

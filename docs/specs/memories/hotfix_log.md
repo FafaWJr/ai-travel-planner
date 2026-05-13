@@ -22,6 +22,18 @@ Format per entry:
 
 ## Log entries
 
+## HF-6 2026-05-13
+**Active phase at time of hotfix:** LP-3 complete
+**Problem:** Three form issues on /memories landing page:
+  1. Mobile (375px): date inputs overflow their grid cells, overlapping and breaking alignment
+  2. Desktop: destination text overlaps the MapPin icon — `padding: '13px 16px'` shorthand from `inputBase` is applied after `paddingLeft: 42` in React's style iteration, resetting left padding to 16px (insufficient for the 18px-wide icon at left:14)
+  3. End date picker opens to the current month instead of the start date's month
+**Proposed fix:** (1) `minWidth: 0` on grid container + date inputs, CSS `min-width: 0 !important` on `input[type="date"]` in mobile media query. (2) Move `paddingLeft: 42` to AFTER `...inputStyle` spread in DestinationInput.tsx so it is always the last declaration. (3) Add `onFocus` pre-fill on end date input: when empty and startDate is set, set to startDate+1 so calendar opens to the correct month.
+**Files affected:** `app/[locale]/memories/page.tsx`, `components/DestinationInput.tsx`
+**Phase changed?** No.
+
+---
+
 ## HF-5 2026-05-12
 
 **Active phase at time of hotfix:** Phase 7: PWA layer (shipped, post-QA)
