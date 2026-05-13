@@ -856,7 +856,14 @@
     "pdfIncludesReflectionsDetail": "A personal sign-off from Luna, looking back on the whole trip.",
     "purchasePdf": "Download for $10",
     "processingPayment": "Opening payment...",
-    "paymentSecure": "Secure payment via Stripe. One-off purchase, no subscription. Download available for 30 days."
+    "paymentSecure": "Secure payment via Stripe. One-off purchase, no subscription. Download available for 30 days.",
+    "reconstructTitles": "Let Luna name your days from your photos",
+    "reconstructTitlesHint": "Luna can read your photo locations and create better day titles",
+    "reconstructing": "Finding your locations...",
+    "reconstructDone": "Day titles updated from your photo locations",
+    "reconstructAgain": "Regenerate day titles",
+    "noGpsHint": "Your photos did not include location data. You can edit day titles manually.",
+    "locationBadge": "{count} locations"
   },
   "memoriesLanding": {
     "ogTitle": "Trip Memories by Luna Let's Go | AI Travel Journal",

@@ -1,7 +1,7 @@
 'use client';
 export const dynamic = 'force-dynamic';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import NavBar from '@/components/NavBar';
@@ -27,6 +27,9 @@ const RouteMap = nextDynamic(() => import('@/components/memories/RouteMap'), {
 interface MemoryDay {
   dayNumber: number;
   dayTitle: string;
+  dayTitleSource?: 'skeleton' | 'gps' | 'user';
+  locations?: Array<{ name: string; type: string; lat: number; lng: number; photoCount: number; timeRange: string | null }>;
+  confidence?: 'high' | 'medium' | 'low' | 'none';
   notes: string;
   mood: string | null;
   highlight: boolean;
@@ -92,6 +95,8 @@ export default function MemoryCapturePage({
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const [showPdfPreview, setShowPdfPreview] = useState(false);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
+  const [reconstructing, setReconstructing] = useState(false);
+  const [reconstructDone, setReconstructDone] = useState(false);
 
   useEffect(() => {
     params.then(p => setTripId(p.tripId));
@@ -334,6 +339,13 @@ export default function MemoryCapturePage({
     }
   }, [memory, paymentProcessing]);
 
+  const hasGpsPhotos = useMemo(() => {
+    if (!memory?.memory_data?.days) return false;
+    return memory.memory_data.days.some(day =>
+      day.photos?.some(p => typeof p.exifLat === 'number'),
+    );
+  }, [memory]);
+
   const refetchMemory = useCallback(async () => {
     if (!tripId) return;
     try {
@@ -343,6 +355,46 @@ export default function MemoryCapturePage({
       setMemory(data.memory);
     } catch { /* noop */ }
   }, [tripId]);
+
+  const handleReconstructTitles = useCallback(async () => {
+    if (!memory || reconstructing) return;
+    setReconstructing(true);
+    setReconstructDone(false);
+    try {
+      const res = await fetch('/api/memories/reconstruct-titles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memoryId: memory.id }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        console.error('[reconstruct] Error:', err);
+        return;
+      }
+      const { days: updatedDays } = await res.json();
+      setMemory(prev => {
+        if (!prev) return prev;
+        const newDays = prev.memory_data.days.map(day => {
+          const updated = updatedDays.find((d: { dayNumber: number }) => d.dayNumber === day.dayNumber);
+          if (!updated) return day;
+          return {
+            ...day,
+            dayTitle: updated.title,
+            dayTitleSource: updated.source,
+            locations: updated.locations,
+            confidence: updated.confidence,
+          };
+        });
+        return { ...prev, memory_data: { ...prev.memory_data, days: newDays } };
+      });
+      setReconstructDone(true);
+      setTimeout(() => setReconstructDone(false), 4000);
+    } catch (err) {
+      console.error('[reconstruct] Error:', err);
+    } finally {
+      setReconstructing(false);
+    }
+  }, [memory, reconstructing]);
 
   const handleDayPhotosAdded = useCallback((dayNumber: number, newPhotos: PhotoMeta[]) => {
     setMemory(prev => {
@@ -485,6 +537,63 @@ export default function MemoryCapturePage({
         )}
         <RouteMap days={days} />
 
+        {/* Reconstruct titles from GPS data */}
+        {hasGpsPhotos && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 12,
+            padding: '14px 18px', marginTop: 16, marginBottom: 4,
+            background: reconstructDone ? 'rgba(16,185,129,0.06)' : 'rgba(255,130,16,0.06)',
+            border: `1px solid ${reconstructDone ? 'rgba(16,185,129,0.2)' : 'rgba(255,130,16,0.2)'}`,
+            borderRadius: 12,
+            transition: 'background 0.3s, border-color 0.3s',
+          }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+              stroke={reconstructDone ? '#10b981' : '#FF8210'}
+              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              style={{ flexShrink: 0 }}>
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            <div style={{ flex: 1 }}>
+              <p style={{
+                fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 13,
+                color: reconstructDone ? '#10b981' : '#00447B', margin: 0,
+              }}>
+                {reconstructDone ? t('reconstructDone') : reconstructing ? t('reconstructing') : t('reconstructTitles')}
+              </p>
+              {!reconstructing && !reconstructDone && (
+                <p style={{
+                  fontFamily: 'var(--font-body)', fontSize: 12,
+                  color: '#6C6D6F', margin: '2px 0 0',
+                }}>
+                  {t('reconstructTitlesHint')}
+                </p>
+              )}
+            </div>
+            {!reconstructDone && (
+              <button
+                onClick={handleReconstructTitles}
+                disabled={reconstructing}
+                style={{
+                  background: reconstructing ? '#ccc' : '#FF8210',
+                  color: '#fff', border: 'none', borderRadius: 8,
+                  padding: '8px 16px', fontFamily: "'Poppins',sans-serif",
+                  fontWeight: 600, fontSize: 12, cursor: reconstructing ? 'not-allowed' : 'pointer',
+                  whiteSpace: 'nowrap', flexShrink: 0,
+                  opacity: reconstructing ? 0.6 : 1,
+                  transition: 'opacity 0.15s',
+                }}
+              >
+                {reconstructing ? '...' : (
+                  days.some(d => d.dayTitleSource === 'gps')
+                    ? t('reconstructAgain')
+                    : t('reconstructTitles')
+                )}
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Day cards */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
           {days.map((day, i) => {
@@ -528,6 +637,24 @@ export default function MemoryCapturePage({
                     }}>
                       {day.dayTitle}
                     </p>
+                    {Array.isArray(day.locations) && day.locations.length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 3 }}>
+                        {day.locations.map((loc: { name: string }, locIdx: number) => (
+                          <span key={locIdx} style={{
+                            display: 'inline-block',
+                            padding: '1px 7px',
+                            background: 'rgba(0,68,123,0.06)',
+                            borderRadius: 6,
+                            fontFamily: "'Inter',sans-serif",
+                            fontSize: 11,
+                            color: '#679AC1',
+                            fontWeight: 500,
+                          }}>
+                            {loc.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                     {!isExpanded && hasNotes && (
                       <p style={{
                         fontFamily: "'Inter',sans-serif", fontSize: 12, color: '#6C6D6F',

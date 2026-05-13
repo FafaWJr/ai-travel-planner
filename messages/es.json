@@ -856,7 +856,14 @@
     "pdfIncludesReflectionsDetail": "Una despedida personal de Luna, mirando todo el viaje.",
     "purchasePdf": "Descargar por $10",
     "processingPayment": "Abriendo pago...",
-    "paymentSecure": "Pago seguro vía Stripe. Compra única, sin suscripción. Descarga disponible por 30 días."
+    "paymentSecure": "Pago seguro vía Stripe. Compra única, sin suscripción. Descarga disponible por 30 días.",
+    "reconstructTitles": "Deja que Luna nombre tus días con tus fotos",
+    "reconstructTitlesHint": "Luna puede leer las ubicaciones de tus fotos y crear mejores títulos",
+    "reconstructing": "Encontrando tus ubicaciones...",
+    "reconstructDone": "Títulos de los días actualizados con las ubicaciones de tus fotos",
+    "reconstructAgain": "Regenerar títulos de los días",
+    "noGpsHint": "Tus fotos no incluyeron datos de ubicación. Puedes editar los títulos manualmente.",
+    "locationBadge": "{count} ubicaciones"
   },
   "memoriesLanding": {
     "ogTitle": "Recuerdos de Viaje por Luna Let's Go | Diario de Viaje con IA",
