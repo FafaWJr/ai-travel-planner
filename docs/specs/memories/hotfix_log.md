@@ -22,6 +22,15 @@ Format per entry:
 
 ## Log entries
 
+## HF-9 2026-05-13
+**Active phase at time of hotfix:** G6 complete
+**Problem:** Photos auto-sorted to days in BulkPhotoUpload cannot be moved to a different day. The X button only removes them. If EXIF date sorting assigns a photo to the wrong day, the user has no recourse — they must delete and re-upload, but the sort is deterministic so the photo lands in the same wrong day.
+**Proposed fix:** Add a day reassignment dropdown on each sorted photo thumbnail (preview phase only), matching the existing "Select day" pattern already used for unsorted photos. When a day is selected, the photo moves from its current day group to the target day. The move updates the in-memory `items` array by changing the photo's `dayNumber` field.
+**Files affected:** `components/memories/BulkPhotoUpload.tsx`, `docs/specs/memories/hotfix_log.md`
+**Phase changed?** No.
+
+---
+
 ## HF-8 2026-05-13
 **Active phase at time of hotfix:** G3 complete
 **Problem:** HEIC/HEIF photos (default iPhone format) rejected by upload pipeline. Chrome/Firefox cannot decode HEIC via the Canvas API used by compressPhoto/generateBlurPlaceholder. Blocks G3 testing since AirDropped iPhone photos with GPS are typically HEIF.

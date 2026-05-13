@@ -183,6 +183,12 @@ export default function BulkPhotoUpload({
     onUploadComplete?.();
   }, [items, tripId, onPhotosAdded, onUploadStart, onProgress, onUploadComplete]);
 
+  const movePhotoToDay = useCallback((localId: string, toDay: number) => {
+    setItems(prev => prev.map(i =>
+      i.localId === localId ? { ...i, dayNumber: toDay } : i,
+    ));
+  }, []);
+
   const reset = useCallback(() => {
     exifCacheRef.current.clear();
     items.forEach(i => { try { URL.revokeObjectURL(i.previewUrl); } catch { /* noop */ } });
@@ -329,54 +335,85 @@ export default function BulkPhotoUpload({
                 }}>
                   {t('dayAssignment', { day: dn })}{dayInfo ? ` - ${dayInfo.dayTitle}` : ''}
                 </p>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'flex-start' }}>
                   {dayPhotos.map(item => (
-                    <div key={item.localId} style={{ position: 'relative', width: 56, height: 56, borderRadius: 6, overflow: 'hidden' }}>
-                      <img
-                        src={item.previewUrl}
-                        alt={item.file.name}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      />
-                      {item.status === 'uploading' && (
-                        <div style={{
-                          position: 'absolute', inset: 0,
-                          background: 'rgba(0,0,0,0.45)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        }}>
-                          <Loader2 size={16} color="#fff" style={{ animation: 'spin 1s linear infinite' }} />
-                        </div>
-                      )}
-                      {item.status === 'done' && (
-                        <div style={{
-                          position: 'absolute', inset: 0,
-                          background: 'rgba(74,157,91,0.35)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        }}>
-                          <Check size={18} color="#fff" />
-                        </div>
-                      )}
-                      {item.status === 'error' && (
-                        <div style={{
-                          position: 'absolute', inset: 0,
-                          background: 'rgba(220,38,38,0.35)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        }}>
-                          <AlertCircle size={16} color="#fff" />
-                        </div>
-                      )}
-                      {item.status === 'pending' && phase === 'preview' && (
-                        <button
-                          onClick={() => removeItem(item.localId)}
-                          style={{
-                            position: 'absolute', top: 2, right: 2,
-                            width: 18, height: 18, borderRadius: '50%',
-                            background: 'rgba(0,0,0,0.55)', border: 'none',
+                    <div key={item.localId} style={{ display: 'flex', flexDirection: 'column', width: 56 }}>
+                      {/* Image + status overlays + X button */}
+                      <div style={{ position: 'relative', width: 56, height: 56, borderRadius: 6, overflow: 'hidden', flexShrink: 0 }}>
+                        <img
+                          src={item.previewUrl}
+                          alt={item.file.name}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                        {item.status === 'uploading' && (
+                          <div style={{
+                            position: 'absolute', inset: 0,
+                            background: 'rgba(0,0,0,0.45)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            cursor: 'pointer', lineHeight: 0,
+                          }}>
+                            <Loader2 size={16} color="#fff" style={{ animation: 'spin 1s linear infinite' }} />
+                          </div>
+                        )}
+                        {item.status === 'done' && (
+                          <div style={{
+                            position: 'absolute', inset: 0,
+                            background: 'rgba(74,157,91,0.35)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          }}>
+                            <Check size={18} color="#fff" />
+                          </div>
+                        )}
+                        {item.status === 'error' && (
+                          <div style={{
+                            position: 'absolute', inset: 0,
+                            background: 'rgba(220,38,38,0.35)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          }}>
+                            <AlertCircle size={16} color="#fff" />
+                          </div>
+                        )}
+                        {item.status === 'pending' && phase === 'preview' && (
+                          <button
+                            onClick={() => removeItem(item.localId)}
+                            style={{
+                              position: 'absolute', top: 2, right: 2,
+                              width: 18, height: 18, borderRadius: '50%',
+                              background: 'rgba(0,0,0,0.55)', border: 'none',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              cursor: 'pointer', lineHeight: 0,
+                            }}
+                          >
+                            <X size={10} color="#fff" />
+                          </button>
+                        )}
+                      </div>
+                      {/* Move-to-day select — only in preview, only pending, only when other days exist */}
+                      {item.status === 'pending' && phase === 'preview' && days.length > 1 && (
+                        <select
+                          value=""
+                          onChange={e => {
+                            const toDay = parseInt(e.target.value, 10);
+                            if (!isNaN(toDay)) movePhotoToDay(item.localId, toDay);
                           }}
+                          style={{
+                            width: '100%', marginTop: 3,
+                            padding: '2px 1px', borderRadius: 3,
+                            border: '1px solid rgba(0,68,123,0.12)',
+                            fontFamily: "'Inter',sans-serif", fontSize: 9,
+                            color: '#00447B', background: '#fff',
+                            cursor: 'pointer',
+                          }}
+                          title="Move to different day"
                         >
-                          <X size={10} color="#fff" />
-                        </button>
+                          <option value="" disabled>Day {dn}</option>
+                          {days
+                            .filter(d => d.dayNumber !== dn)
+                            .map(d => (
+                              <option key={d.dayNumber} value={d.dayNumber}>
+                                Day {d.dayNumber}
+                              </option>
+                            ))}
+                        </select>
                       )}
                     </div>
                   ))}
