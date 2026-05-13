@@ -4,7 +4,9 @@ import { useState, useRef, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { ImagePlus, Upload, X, Check, Loader2, AlertCircle } from 'lucide-react';
 import { extractExif, sortPhotosByDay } from '@/lib/memories/exif';
+import type { PhotoExifData } from '@/lib/memories/exif';
 import { compressPhoto, generateBlurPlaceholder } from '@/lib/memories/compress';
+import { isHeicFile, convertHeicToJpeg } from '@/lib/memories/heic-convert';
 import type { PhotoMeta, PhotoUploadItem } from '@/lib/memories/types';
 
 interface BulkPhotoUploadProps {
@@ -24,6 +26,8 @@ export default function BulkPhotoUpload({
 }: BulkPhotoUploadProps) {
   const t = useTranslations('memories');
   const inputRef = useRef<HTMLInputElement>(null);
+  // Preserves EXIF from original HEIC files before heic2any strips it during conversion
+  const exifCacheRef = useRef<Map<string, PhotoExifData>>(new Map());
 
   const [items, setItems] = useState<PhotoUploadItem[]>([]);
   const [phase, setPhase] = useState<'idle' | 'preview' | 'uploading' | 'done'>('idle');
@@ -40,13 +44,20 @@ export default function BulkPhotoUpload({
     const start = new Date(tripStartDate + 'T00:00:00');
     const end = new Date(tripEndDate + 'T23:59:59');
 
-    // Extract EXIF from all files in parallel
+    // Extract EXIF from all files in parallel.
+    // For HEIC: extract EXIF from original first (exifr supports HEIC natively),
+    // then convert to JPEG — heic2any strips EXIF during conversion.
     const withExif = await Promise.all(
-      files.map(async file => ({
-        file,
-        exif: await extractExif(file),
-        id: crypto.randomUUID(),
-      })),
+      files.map(async file => {
+        const id = crypto.randomUUID();
+        const exif = await extractExif(file); // always from original
+        let processedFile = file;
+        if (isHeicFile(file)) {
+          processedFile = await convertHeicToJpeg(file);
+        }
+        exifCacheRef.current.set(id, exif); // cache before EXIF is lost
+        return { file: processedFile, exif, id };
+      }),
     );
 
     const { sorted, unsorted } = sortPhotosByDay(withExif, start, end);
@@ -80,6 +91,7 @@ export default function BulkPhotoUpload({
   }, [tripStartDate, tripEndDate]);
 
   const removeItem = useCallback((localId: string) => {
+    exifCacheRef.current.delete(localId);
     setItems(prev => {
       const item = prev.find(i => i.localId === localId);
       if (item) URL.revokeObjectURL(item.previewUrl);
@@ -107,7 +119,9 @@ export default function BulkPhotoUpload({
           generateBlurPlaceholder(item.file),
         ]);
 
-        const exif = await extractExif(item.file);
+        // Use cached EXIF to preserve GPS from original HEIC (stripped by heic2any)
+        const exif = exifCacheRef.current.get(item.localId) ?? await extractExif(item.file);
+        exifCacheRef.current.delete(item.localId);
 
         const fd = new FormData();
         fd.append('file', compressed, item.file.name);
@@ -149,6 +163,7 @@ export default function BulkPhotoUpload({
   }, [items, tripId, onPhotosAdded]);
 
   const reset = useCallback(() => {
+    exifCacheRef.current.clear();
     items.forEach(i => { try { URL.revokeObjectURL(i.previewUrl); } catch { /* noop */ } });
     setItems([]);
     setPhase('idle');
@@ -174,7 +189,7 @@ export default function BulkPhotoUpload({
         <input
           ref={inputRef}
           type="file"
-          accept="image/*"
+          accept="image/*,.heic,.heif"
           multiple
           style={{ display: 'none' }}
           onChange={handleFilesSelected}
@@ -215,7 +230,7 @@ export default function BulkPhotoUpload({
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept="image/*,.heic,.heif"
         multiple
         style={{ display: 'none' }}
         onChange={handleFilesSelected}

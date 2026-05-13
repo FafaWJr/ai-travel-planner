@@ -22,6 +22,16 @@ Format per entry:
 
 ## Log entries
 
+## HF-8 2026-05-13
+**Active phase at time of hotfix:** G3 complete
+**Problem:** HEIC/HEIF photos (default iPhone format) rejected by upload pipeline. Chrome/Firefox cannot decode HEIC via the Canvas API used by compressPhoto/generateBlurPlaceholder. Blocks G3 testing since AirDropped iPhone photos with GPS are typically HEIF.
+**Root cause:** compress.ts uses `new Image()` + Canvas to resize photos. Browsers other than Safari cannot decode HEIC natively. The file picker accepts `image/*` (which includes HEIC), but compression silently fails for HEIC files.
+**Proposed fix:** Add heic2any npm package. Create lib/memories/heic-convert.ts with isHeicFile() + convertHeicToJpeg(). In BulkPhotoUpload: extract EXIF from original HEIC first (exifr supports HEIC natively), then convert to JPEG before compression. Cache EXIF per localId in a ref so GPS data is preserved across the conversion that strips metadata.
+**Files affected:** components/memories/BulkPhotoUpload.tsx, lib/memories/heic-convert.ts, package.json, types/heic2any.d.ts (if types not bundled)
+**Phase changed?** No.
+
+---
+
 ## HF-7 2026-05-13
 **Active phase at time of hotfix:** LP-3 complete
 **Problem:** User profile photo in NavBar shows broken image icon instead of Google avatar. Google avatar URLs from lh3.googleusercontent.com return 403 when the Referer header is sent. No onError fallback exists, so the browser renders the broken image icon with truncated alt text.
