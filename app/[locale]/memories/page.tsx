@@ -294,7 +294,7 @@ export default function MemoriesLandingPage() {
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user, locale, router, t]);
 
   // Sync end date with start date on first pick
   const handleStartChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {

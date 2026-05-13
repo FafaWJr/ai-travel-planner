@@ -31,7 +31,9 @@ export async function generateMetadata(
     memData?.tripDestination || memData?.tripTitle || 'A trip';
 
   const ogImageUrl = `${BASE_URL}/api/og/memory/${token}`;
-  const pageUrl = `${BASE_URL}/${locale}/memories/share/${token}`;
+  const pageUrl = locale === 'en'
+    ? `${BASE_URL}/memories/share/${token}`
+    : `${BASE_URL}/${locale}/memories/share/${token}`;
 
   return {
     title: `${destination} — Trip Memory | Luna Let's Go`,

@@ -10,10 +10,6 @@ export interface GeoResult {
   admin1?: string;
 }
 
-export function flagEmoji(code: string) {
-  if (!code || code.length !== 2) return '🌍';
-  return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
-}
 
 interface DestinationInputProps {
   value: string;
@@ -144,16 +140,19 @@ export default function DestinationInput({
                 }}>
                 <div style={{
                   width: 40, height: 40, borderRadius: 10, overflow: 'hidden', flexShrink: 0,
-                  background: '#F4F7FB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20,
+                  background: '#F4F7FB', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
                   {thumbs[r.id]
                     ? <img src={thumbs[r.id]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    : <span>{flagEmoji(r.country_code)}</span>
+                    : (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#679AC1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                      </svg>
+                    )
                   }
                 </div>
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 13 }}>{flagEmoji(r.country_code)}</span>
                     <span style={{ fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 14, color: '#000', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</span>
                   </div>
                   <div style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--gray-dark)', marginTop: 1 }}>

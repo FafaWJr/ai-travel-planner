@@ -1,7 +1,7 @@
 # Luna Let's Go - Claude Code Context
-**Last Updated:** 2026-05-12 23:46:30
+**Last Updated:** 2026-05-13 10:18:10
 **Current Branch:** main
-**Last Commit:** 091c48e0 feat: redesign /memories landing page with photo hero and OG metadata (LP-2)
+**Last Commit:** 54c3a40f feat: destination autocomplete and sessionStorage auth flow on /memories (LP-3)
 **Deployment:** https://www.lunaletsgo.com
 
 ---
@@ -121,7 +121,9 @@ app/auth/signup/page.tsx
 ## Recent Changes (Last 10 Commits)
 
 ```
-091c48e0 (HEAD -> main, origin/main, origin/HEAD) feat: redesign /memories landing page with photo hero and OG metadata (LP-2)
+54c3a40f (HEAD -> main, origin/main, origin/HEAD) feat: destination autocomplete and sessionStorage auth flow on /memories (LP-3)
+d7bc4ff0 chore: LP-2 post-ship agent fixes — SEO, frontend, i18n QA
+091c48e0 feat: redesign /memories landing page with photo hero and OG metadata (LP-2)
 a2346137 fix(pwa): exclude manifest.json/sw.js/offline.html from intl middleware (HF-5)
 e1f7491c fix(memories): security hardening C2/C3/C4/H2/H3
 88bd5523 feat: PWA layer for home screen install and offline support (Phase 7)
@@ -129,8 +131,6 @@ e1f7491c fix(memories): security hardening C2/C3/C4/H2/H3
 3649f4b9 fix: move Stripe instantiation inside handlers to fix build error
 65a6f8f6 feat: Stripe payment for PDF story export (Phase 6.2)
 12103fa6 feat(memories): Phase 6.1 — premium PDF export pipeline
-8eec5bd7 feat: social sharing cards for trip memories
-0d056d45 fix(i18n): correct diacritics in Phase 4 PT-BR and ES locale keys
 ```
 
 ---
@@ -604,11 +604,12 @@ After Claude Code finishes changes:
 - Security hardening shipped (commit `e1f7491c`, 12 May 2026): dropped `trip_memories_public_read_shared` RLS policy (was allowing anonymous enumeration of all complete memories by share_token). PDF route streams binary from private `memory-pdfs` bucket (no public URL). Capture page auth redirect sets `luna_redirect_after_login` localStorage key before pushing to `/auth/login`. Added `.eq('user_id', user.id)` IDOR guard to `saved_trips` queries in memories GET and narrative POST routes. Share route strips `notes`, `mood`, `highlight` from `memory_data.days` before returning to public viewers (only `dayNumber`, `dayTitle`, `photos` exposed on share links).
 - Luna Memories LP-2 landing page redesign shipped (commit `091c48e0`, 12 May 2026): `app/[locale]/memories/page.tsx` replaced with V2 photo-hero design (full-bleed `public/images/memories-hero.jpg`, `FadeUp`/`FeatureCard`/`StepItem` sub-components, IntersectionObserver scroll animations, `heroLoaded` entrance gate). `app/[locale]/memories/layout.tsx` added with `generateMetadata` (OG/Twitter/canonical/hreflang for /memories route). `memoriesLanding` i18n namespace (46 keys EN/PT-BR/ES) is separate from the existing `memories` namespace. Auth redirect from landing page sets `luna_redirect_after_login` before pushing to `/auth/login`.
 - HF-5 PWA middleware fix shipped (commit `a2346137`, 12 May 2026): `proxy.ts` matcher now excludes `manifest.json`, `sw.js`, `offline.html` from next-intl interception. Without this exclusion, next-intl intercepted those requests before Next.js could serve them from `/public`, causing HTTP 404 and making PWA install non-functional in production.
+- Luna Memories LP-3 shipped (commit `54c3a40f`, 13 May 2026): `components/DestinationInput.tsx` — new shared geocoding autocomplete component extracted from `HeroStepForm`. Optional props: `inputStyle?: CSSProperties`, `iconColor?: string` (default `'var(--orange)'`). Exports `GeoResult` interface and `flagEmoji` function as named exports. Used on both /start (via `HeroStepForm`) and /memories page. `HeroStepForm` now imports from this shared component (no behaviour change). /memories anonymous user flow: saves `{ destination, startDate, endDate, travellers }` to sessionStorage key `luna_memories_form`, sets `luna_redirect_after_login` to `/${locale}/memories`, pushes to `/auth/login`; after login `useEffect([user])` reads sessionStorage, removes it, auto-creates memory via `/api/memories/standalone`, redirects to capture page. Removed `loginRequired` and `signInLink` from `memoriesLanding` locale namespace (en/pt-BR/es); namespace now 44 keys.
 
 **Current Work:**
 - Collaborative Trips Stages 0+1+2+3+4 **shipped**. `NEXT_PUBLIC_COLLAB_ENABLED=false` still in production pending Stage 5 launch.
 - Stage 5 (landing page, OG image, flag flip): NOT STARTED. `NEXT_PUBLIC_COLLAB_ENABLED` still false.
-- Luna Memories Phases 3+4+5+6+7: **SHIPPED** (12 May 2026). Phase 8 not started.
+- Luna Memories Phases 3+4+5+6+7+LP-2+LP-3: **SHIPPED** (12-13 May 2026). Phase 8 not started.
 - Brevo email integration (list ID 17, /api/brevo-sync/route.ts)
 
 ---
@@ -766,5 +767,7 @@ Deals CTA block linking to `/deals`.
 - **Memories dual-lookup pattern.** Routes that accept a `tripId` param MUST handle two cases: `saved_trips.id` (Luna-planned trips) and `trip_memories.id` (standalone memories). Fetch with `select('id')` then update by `memory.id`, not by the incoming param. Omitting this causes silent 0-row no-ops (HF-4 root cause).
 - **Share route privacy.** `GET /api/memories/share/[token]` MUST strip `notes`, `mood`, and `highlight` from `memory_data.days` before returning to anonymous callers. Only `dayNumber`, `dayTitle`, and `photos` are public-safe.
 - **IDOR guard on saved_trips queries.** Any memories API route that queries `saved_trips` MUST include `.eq('user_id', user.id)` to prevent cross-user enumeration via a foreign trip UUID.
-- **`memoriesLanding` i18n namespace is separate from `memories`.** The /memories landing page uses `memoriesLanding` (46 keys, LP-2, commit `091c48e0`). Never merge these two namespaces or add landing-page strings to the `memories` namespace.
+- **`memoriesLanding` i18n namespace is separate from `memories`.** The /memories landing page uses `memoriesLanding` (44 keys after LP-3 removed `loginRequired` + `signInLink`, commit `54c3a40f`; was 46 keys at LP-2). Never merge these two namespaces or add landing-page strings to the `memories` namespace.
 - **PWA static files MUST be excluded from the next-intl matcher.** `proxy.ts` matcher negative lookahead MUST include `manifest\.json|sw\.js|offline\.html`. Removing these exclusions causes HTTP 404 for PWA install assets (HF-5 root cause, commit `a2346137`).
+- **`DestinationInput` is the shared geocoding autocomplete component.** Import from `components/DestinationInput.tsx`; never redefine geocoding autocomplete inline. Exports `GeoResult` interface and `flagEmoji` helper as named exports alongside the default component. Both /start (via `HeroStepForm`) and /memories use this component.
+- **Anonymous /memories flow uses sessionStorage, not URL params.** Form data `{ destination, startDate, endDate, travellers }` is written to sessionStorage key `luna_memories_form` before redirect to `/auth/login`. After login, `useEffect([user])` reads and removes the key, auto-creates the memory via `/api/memories/standalone`, then redirects to the capture page. Do not persist this data in localStorage or URL params (LP-3, commit `54c3a40f`).
