@@ -296,15 +296,24 @@ export default function MemoriesLandingPage() {
     return () => clearTimeout(timer);
   }, [user, locale, router, t]);
 
-  // Sync end date with start date on first pick
+  // Sync end date with start date on pick — pre-fills so calendar opens to the right month
   const handleStartChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setStartDate(val);
     setFormError('');
-    if (!endDate && val) {
-      const d = new Date(val);
-      d.setDate(d.getDate() + 1);
-      setEndDate(d.toISOString().split('T')[0]);
+    if (val && (!endDate || endDate <= val)) {
+      // Parse without timezone issues
+      const [y, m, d] = val.split('-').map(Number);
+      const daysInMonth = new Date(y, m, 0).getDate();
+      const daysLeftInMonth = daysInMonth - d;
+      // If < 3 days left in month, jump 7 days so calendar opens to next month
+      const offset = daysLeftInMonth < 3 ? 7 : 1;
+      const prefill = new Date(y, m - 1, d + offset);
+      setEndDate([
+        prefill.getFullYear(),
+        String(prefill.getMonth() + 1).padStart(2, '0'),
+        String(prefill.getDate()).padStart(2, '0'),
+      ].join('-'));
     }
   }, [endDate]);
 
@@ -593,7 +602,7 @@ export default function MemoriesLandingPage() {
           </FadeUp>
 
           <FadeUp delay={0.1}>
-            <div style={{
+            <div className="mem-form-card" style={{
               background: '#FFFFFF', borderRadius: 20, padding: '32px 30px 28px',
               boxShadow: '0 4px 24px rgba(0,68,123,0.06), 0 1px 3px rgba(0,68,123,0.04)',
               border: '1.5px solid rgba(0,68,123,0.06)',
@@ -613,8 +622,8 @@ export default function MemoriesLandingPage() {
               </div>
 
               {/* Dates */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 18, minWidth: 0 }}>
-                <div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 12, marginBottom: 18, overflow: 'hidden' }}>
+                <div style={{ minWidth: 0, overflow: 'hidden' }}>
                   <label htmlFor="mem-start-date" style={labelBase}>
                     <Calendar size={13} aria-hidden="true" /> {t('startDate')}
                   </label>
@@ -623,12 +632,12 @@ export default function MemoriesLandingPage() {
                     type="date"
                     value={startDate}
                     onChange={handleStartChange}
-                    style={{ ...inputBase, minWidth: 0, maxWidth: '100%' }}
+                    style={{ ...inputBase, width: '100%', minWidth: 0 }}
                     onFocus={handleFocus}
                     onBlur={handleBlur}
                   />
                 </div>
-                <div>
+                <div style={{ minWidth: 0, overflow: 'hidden' }}>
                   <label htmlFor="mem-end-date" style={labelBase}>
                     <Calendar size={13} aria-hidden="true" /> {t('endDate')}
                   </label>
@@ -638,15 +647,8 @@ export default function MemoriesLandingPage() {
                     value={endDate}
                     min={startDate || undefined}
                     onChange={e => { setEndDate(e.target.value); setFormError(''); }}
-                    style={{ ...inputBase, minWidth: 0, maxWidth: '100%' }}
-                    onFocus={(e) => {
-                      handleFocus(e);
-                      if (!endDate && startDate) {
-                        const d = new Date(startDate);
-                        d.setDate(d.getDate() + 1);
-                        setEndDate(d.toISOString().split('T')[0]);
-                      }
-                    }}
+                    style={{ ...inputBase, width: '100%', minWidth: 0 }}
+                    onFocus={handleFocus}
                     onBlur={handleBlur}
                   />
                 </div>
@@ -758,9 +760,13 @@ export default function MemoriesLandingPage() {
         input::placeholder { color: #C0C0C0; }
         .step-connector { display: flex; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        @media (max-width: 768px) {
+        @media (max-width: 480px) {
           .step-connector { display: none !important; }
-          input[type="date"] { font-size: 14px !important; min-width: 0 !important; }
+          input[type="date"] { font-size: 16px !important; min-width: 0 !important; max-width: 100% !important; box-sizing: border-box !important; }
+          .mem-form-card { padding: 24px 16px 20px !important; }
+        }
+        @media (min-width: 481px) and (max-width: 768px) {
+          .step-connector { display: none !important; }
         }
         @media (prefers-reduced-motion: reduce) {
           *, *::before, *::after {
