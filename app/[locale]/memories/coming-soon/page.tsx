@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { Camera, MapPin, Sparkles, FileText } from 'lucide-react';
+import NavBar from '@/components/NavBar';
 
 const features = [
   { icon: Camera, titleKey: 'feature1Title', descKey: 'feature1Desc' },
@@ -17,6 +18,7 @@ export default function MemoriesComingSoon() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#FAFAF8', fontFamily: "'Inter', sans-serif" }}>
+      <NavBar />
       {/* Hero */}
       <div style={{
         position: 'relative',
