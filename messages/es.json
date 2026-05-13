@@ -863,7 +863,13 @@
     "reconstructDone": "Títulos de los días actualizados con las ubicaciones de tus fotos",
     "reconstructAgain": "Regenerar títulos de los días",
     "noGpsHint": "Tus fotos no incluyeron datos de ubicación. Puedes editar los títulos manualmente.",
-    "locationBadge": "{count} ubicaciones"
+    "locationBadge": "{count} ubicaciones",
+    "titleSourceGps": "Nombrado de tus fotos",
+    "titleSourceSkeleton": "Título generado automáticamente",
+    "titleSourceUser": "Editado por ti",
+    "confidenceNone": "Sin datos de ubicación — agrega una nota para recordar este día",
+    "editTitle": "Editar título del día",
+    "tapToEdit": "Toca para editar"
   },
   "memoriesLanding": {
     "ogTitle": "Recuerdos de Viaje por Luna Let's Go | Diario de Viaje con IA",

@@ -863,7 +863,13 @@
     "reconstructDone": "Day titles updated from your photo locations",
     "reconstructAgain": "Regenerate day titles",
     "noGpsHint": "Your photos did not include location data. You can edit day titles manually.",
-    "locationBadge": "{count} locations"
+    "locationBadge": "{count} locations",
+    "titleSourceGps": "Named from your photos",
+    "titleSourceSkeleton": "Auto-generated title",
+    "titleSourceUser": "Edited by you",
+    "confidenceNone": "No location data — add a note to help remember this day",
+    "editTitle": "Edit day title",
+    "tapToEdit": "Tap to edit"
   },
   "memoriesLanding": {
     "ogTitle": "Trip Memories by Luna Let's Go | AI Travel Journal",

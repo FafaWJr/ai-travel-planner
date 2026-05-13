@@ -10,7 +10,7 @@ import {
   BookHeart, ChevronDown, ChevronUp,
   Frown, Smile, Zap, Leaf, Heart,
   Sparkles, Check, PenLine, RefreshCw, Loader2,
-  Share2, Link2, CheckCircle, ImagePlus, Download,
+  Share2, Link2, CheckCircle, ImagePlus, Download, MapPin,
 } from 'lucide-react';
 import nextDynamic from 'next/dynamic';
 import DayPhotoGrid from '@/components/memories/DayPhotoGrid';
@@ -97,6 +97,8 @@ export default function MemoryCapturePage({
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [reconstructing, setReconstructing] = useState(false);
   const [reconstructDone, setReconstructDone] = useState(false);
+  const [editingTitleDay, setEditingTitleDay] = useState<number | null>(null);
+  const [editingTitleValue, setEditingTitleValue] = useState('');
 
   useEffect(() => {
     params.then(p => setTripId(p.tripId));
@@ -396,6 +398,17 @@ export default function MemoryCapturePage({
     }
   }, [memory, reconstructing]);
 
+  const saveTitleEdit = useCallback((dayIndex: number) => {
+    const trimmed = editingTitleValue.trim();
+    if (!trimmed || !memory) return;
+    const days = [...memory.memory_data.days];
+    days[dayIndex] = { ...days[dayIndex], dayTitle: trimmed, dayTitleSource: 'user' };
+    setMemory(prev => prev ? { ...prev, memory_data: { ...prev.memory_data, days } } : prev);
+    saveMemoryData(days);
+    setEditingTitleDay(null);
+    setEditingTitleValue('');
+  }, [editingTitleValue, memory, saveMemoryData]);
+
   const handleDayPhotosAdded = useCallback((dayNumber: number, newPhotos: PhotoMeta[]) => {
     setMemory(prev => {
       if (!prev) return prev;
@@ -610,12 +623,16 @@ export default function MemoryCapturePage({
                 transition: 'border-color 0.2s',
               }}>
                 {/* Collapsed header */}
-                <button
-                  onClick={() => setExpandedDay(isExpanded ? null : i)}
+                <div
+                  onClick={() => { if (editingTitleDay !== i) setExpandedDay(isExpanded ? null : i); }}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && editingTitleDay !== i) setExpandedDay(isExpanded ? null : i); }}
                   style={{
                     width: '100%', padding: '14px 18px',
                     display: 'flex', alignItems: 'center', gap: 12,
-                    background: 'none', border: 'none', cursor: 'pointer',
+                    background: 'none', border: 'none',
+                    cursor: editingTitleDay === i ? 'default' : 'pointer',
                     textAlign: 'left',
                   }}
                 >
@@ -630,13 +647,58 @@ export default function MemoryCapturePage({
                   </span>
 
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{
-                      fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 14,
-                      color: '#00447B', margin: 0,
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                    }}>
-                      {day.dayTitle}
-                    </p>
+                    {editingTitleDay === i ? (
+                      <input
+                        autoFocus
+                        value={editingTitleValue}
+                        onChange={e => setEditingTitleValue(e.target.value)}
+                        onKeyDown={e => {
+                          e.stopPropagation();
+                          if (e.key === 'Enter') saveTitleEdit(i);
+                          if (e.key === 'Escape') { setEditingTitleDay(null); setEditingTitleValue(''); }
+                        }}
+                        onBlur={() => saveTitleEdit(i)}
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                          fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 14,
+                          color: '#00447B', background: 'rgba(0,68,123,0.05)',
+                          border: '1.5px solid #679AC1', borderRadius: 6,
+                          padding: '2px 8px', outline: 'none', width: '100%',
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                    ) : (
+                      <div
+                        onClick={e => {
+                          e.stopPropagation();
+                          setEditingTitleDay(i);
+                          setEditingTitleValue(day.dayTitle);
+                        }}
+                        title={t('tapToEdit')}
+                        style={{ display: 'flex', alignItems: 'center', gap: 4, overflow: 'hidden', cursor: 'text' }}
+                      >
+                        <span style={{
+                          fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 14,
+                          color: '#00447B', overflow: 'hidden', textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap', flex: '1 1 auto', minWidth: 0,
+                        }}>
+                          {day.dayTitle}
+                        </span>
+                        <PenLine size={11} color="#C0C0C0" style={{ flexShrink: 0 }} />
+                      </div>
+                    )}
+                    {day.dayTitleSource === 'gps' && editingTitleDay !== i && (
+                      <div style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 3,
+                        marginTop: 2, padding: '1px 6px',
+                        background: 'rgba(74,157,91,0.08)', borderRadius: 6,
+                        color: '#4A9D5B', fontSize: 10,
+                        fontFamily: "'Inter',sans-serif", fontWeight: 500,
+                      }}>
+                        <MapPin size={10} />
+                        {t('titleSourceGps')}
+                      </div>
+                    )}
                     {Array.isArray(day.locations) && day.locations.length > 0 && (
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 3 }}>
                         {day.locations.map((loc: { name: string }, locIdx: number) => (
@@ -683,7 +745,7 @@ export default function MemoryCapturePage({
                   )}
 
                   {isExpanded ? <ChevronUp size={18} color="#C0C0C0" /> : <ChevronDown size={18} color="#C0C0C0" />}
-                </button>
+                </div>
 
                 {/* Expanded content */}
                 {isExpanded && (
@@ -755,6 +817,15 @@ export default function MemoryCapturePage({
                       {day.highlight ? <Check size={14} color="#FF8210" /> : <Sparkles size={14} color="#C0C0C0" />}
                       {t('highlight')}
                     </button>
+
+                    {day.confidence === 'none' && !hasNotes && (day.photos ?? []).length === 0 && (
+                      <p style={{
+                        fontFamily: "'Inter',sans-serif", fontSize: 12, color: '#C0C0C0',
+                        marginTop: 14, fontStyle: 'italic', textAlign: 'center',
+                      }}>
+                        {t('confidenceNone')}
+                      </p>
+                    )}
 
                     {/* Photo grid for this day */}
                     {(day.photos ?? []).length > 0 && (
