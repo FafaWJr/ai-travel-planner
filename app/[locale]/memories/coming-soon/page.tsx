@@ -78,7 +78,7 @@ export default function MemoriesComingSoon() {
 
       <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 24px 80px' }}>
         {/* Feature cards — pulled up to overlap hero */}
-        <div className="cs-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: -40 }}>
+        <div className="cs-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 40 }}>
           {features.map(({ icon: Icon, titleKey, descKey }, i) => (
             <div key={i} style={{
               background: '#fff',
