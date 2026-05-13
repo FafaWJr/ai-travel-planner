@@ -177,6 +177,19 @@ const inputBase: CSSProperties = {
   transition: 'border-color 0.2s, box-shadow 0.2s', background: '#FFFFFF',
 };
 
+// Separate style for date inputs — uses explicit paddingLeft/Right (no shorthand that
+// could be overridden), fontSize 16 to prevent iOS Safari auto-zoom on focus, and
+// WebkitAppearance none to strip iOS-enforced minimum sizing from the native control.
+const dateInputStyle: CSSProperties = {
+  display: 'block', width: '100%', maxWidth: '100%', minWidth: 0,
+  paddingTop: 13, paddingBottom: 13, paddingLeft: 12, paddingRight: 12,
+  borderRadius: 10, border: '1.5px solid rgba(0,68,123,0.10)',
+  fontFamily: "'Inter',sans-serif", fontSize: 16, color: '#2a2a3e',
+  outline: 'none', boxSizing: 'border-box',
+  transition: 'border-color 0.2s, box-shadow 0.2s', background: '#FFFFFF',
+  WebkitAppearance: 'none', appearance: 'none',
+};
+
 const labelBase: CSSProperties = {
   fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 12,
   color: '#6C6D6F', display: 'flex', alignItems: 'center', gap: 5, marginBottom: 7,
@@ -621,9 +634,9 @@ export default function MemoriesLandingPage() {
                 />
               </div>
 
-              {/* Dates */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 12, marginBottom: 18, overflow: 'hidden' }}>
-                <div style={{ minWidth: 0, overflow: 'hidden' }}>
+              {/* Dates — flex with explicit calc widths; grid fr-units have iOS native-input quirks */}
+              <div style={{ display: 'flex', gap: 12, marginBottom: 18 }}>
+                <div style={{ flex: '0 0 calc(50% - 6px)', minWidth: 0, overflow: 'hidden' }}>
                   <label htmlFor="mem-start-date" style={labelBase}>
                     <Calendar size={13} aria-hidden="true" /> {t('startDate')}
                   </label>
@@ -632,12 +645,12 @@ export default function MemoriesLandingPage() {
                     type="date"
                     value={startDate}
                     onChange={handleStartChange}
-                    style={{ ...inputBase, width: '100%', minWidth: 0 }}
+                    style={dateInputStyle}
                     onFocus={handleFocus}
                     onBlur={handleBlur}
                   />
                 </div>
-                <div style={{ minWidth: 0, overflow: 'hidden' }}>
+                <div style={{ flex: '0 0 calc(50% - 6px)', minWidth: 0, overflow: 'hidden' }}>
                   <label htmlFor="mem-end-date" style={labelBase}>
                     <Calendar size={13} aria-hidden="true" /> {t('endDate')}
                   </label>
@@ -647,7 +660,7 @@ export default function MemoriesLandingPage() {
                     value={endDate}
                     min={startDate || undefined}
                     onChange={e => { setEndDate(e.target.value); setFormError(''); }}
-                    style={{ ...inputBase, width: '100%', minWidth: 0 }}
+                    style={dateInputStyle}
                     onFocus={handleFocus}
                     onBlur={handleBlur}
                   />
@@ -762,10 +775,10 @@ export default function MemoriesLandingPage() {
         @keyframes spin { to { transform: rotate(360deg); } }
         @media (max-width: 480px) {
           .step-connector { display: none !important; }
-          input[type="date"] { font-size: 16px !important; min-width: 0 !important; max-width: 100% !important; box-sizing: border-box !important; }
+          input[type="date"] { -webkit-appearance: none !important; appearance: none !important; min-width: 0 !important; max-width: 100% !important; }
           .mem-form-card { padding: 24px 16px 20px !important; }
         }
-        @media (min-width: 481px) and (max-width: 768px) {
+        @media (max-width: 768px) {
           .step-connector { display: none !important; }
         }
         @media (prefers-reduced-motion: reduce) {
