@@ -10,7 +10,7 @@ import {
   BookHeart, ChevronDown, ChevronUp,
   Sparkles, Check, PenLine, RefreshCw, Loader2,
   Share2, Link2, CheckCircle, ImagePlus, Download, MapPin,
-  Camera, Wand2,
+  Camera, Wand2, AlertCircle,
 } from 'lucide-react';
 import { MOOD_CATEGORIES, MAX_MOODS, normaliseMood } from '@/lib/memories/mood';
 import nextDynamic from 'next/dynamic';
@@ -79,8 +79,9 @@ export default function MemoryCapturePage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedDay, setExpandedDay] = useState<number | null>(null);
-  const [saving, setSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastSavedRef = useRef<string>('');
   const [narrativeText, setNarrativeText] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isEditingNarrative, setIsEditingNarrative] = useState(false);
@@ -139,6 +140,7 @@ export default function MemoryCapturePage({
         const data = await res.json();
         setMemory(data.memory);
         setTrip(data.trip);
+        lastSavedRef.current = JSON.stringify(data.memory?.memory_data ?? {});
         if (data.memory?.narrative) {
           setNarrativeText(data.memory.narrative);
         }
@@ -170,8 +172,9 @@ export default function MemoryCapturePage({
 
     if (!hasAnyPhotos && !hasAnyNotes) {
       setFlowState('empty');
-    } else if (hasAnyPhotos && hasGps && allPlaceholder) {
-      // Photos just uploaded, GPS present, titles not yet reconstructed — auto-reconstruct
+    } else if (hasAnyPhotos && allPlaceholder) {
+      // Photos uploaded but titles still placeholder — reconstruct regardless of GPS.
+      // The reconstruct-titles API handles no-GPS fallback via destination context.
       setFlowState('reconstructing');
       runAutoReconstruct(memory.id, allDays.length);
     } else {
@@ -240,18 +243,22 @@ export default function MemoryCapturePage({
   const saveMemoryData = useCallback((days: MemoryDay[]) => {
     if (!tripId) return;
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    setSaveStatus('saving');
     saveTimerRef.current = setTimeout(async () => {
-      setSaving(true);
+      const payload = JSON.stringify({ days });
       try {
-        await fetch(`/api/memories/${tripId}`, {
+        const res = await fetch(`/api/memories/${tripId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ memory_data: { days } }),
         });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        lastSavedRef.current = payload;
+        setSaveStatus('saved');
+        setTimeout(() => setSaveStatus(s => s === 'saved' ? 'idle' : s), 3000);
       } catch (err) {
         console.error('[memories] save error:', err);
-      } finally {
-        setSaving(false);
+        setSaveStatus('error');
       }
     }, 1000);
   }, [tripId]);
@@ -520,12 +527,12 @@ export default function MemoryCapturePage({
       setMemory(refreshedMemory);
 
       const allDays = refreshedMemory.memory_data?.days ?? [];
-      const hasGps = allDays.some(d => (d.photos ?? []).some((p: PhotoMeta) => typeof p.exifLat === 'number'));
       const allPlaceholder = allDays.every(
         (d: MemoryDay) => !d.dayTitleSource || d.dayTitleSource === 'placeholder',
       );
 
-      if (hasGps && allPlaceholder) {
+      if (allPlaceholder) {
+        // Always reconstruct when titles are still placeholders — API handles no-GPS fallback.
         setFlowState('reconstructing');
         runAutoReconstruct(refreshedMemory.id, allDays.length);
       } else {
@@ -535,6 +542,21 @@ export default function MemoryCapturePage({
       setFlowState('ready');
     }
   }, [memory, tripId, runAutoReconstruct]);
+
+  // Warn before unload if there are unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (flowState !== 'ready') return;
+      if (!memory?.memory_data) return;
+      const current = JSON.stringify(memory.memory_data);
+      if (current !== lastSavedRef.current) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [memory?.memory_data, flowState]);
 
   const handleDayPhotosAdded = useCallback((dayNumber: number, newPhotos: PhotoMeta[]) => {
     setMemory(prev => {
@@ -644,7 +666,7 @@ export default function MemoryCapturePage({
                 <span style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>
                   {t('progress', { count: capturedCount, total: totalDays })}
                 </span>
-                {saving && (
+                {saveStatus === 'saving' && (
                   <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>
                     {t('saving')}
                   </span>
@@ -1652,6 +1674,47 @@ export default function MemoryCapturePage({
         )}
 
       </div>
+
+      {/* ── Save status toast (bottom-right, fixed) ─────────────── */}
+      {saveStatus !== 'idle' && (
+        <div style={{
+          position: 'fixed', bottom: 24, right: 24, zIndex: 50,
+          padding: '10px 18px', borderRadius: 10,
+          background: saveStatus === 'saving' ? 'rgba(0,68,123,0.92)'
+            : saveStatus === 'saved' ? 'rgba(16,185,129,0.92)'
+            : 'rgba(220,38,38,0.92)',
+          color: '#fff',
+          fontFamily: "'Inter',sans-serif", fontSize: 13, fontWeight: 600,
+          backdropFilter: 'blur(8px)',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.18)',
+          display: 'flex', alignItems: 'center', gap: 8,
+          transition: 'background 0.3s',
+        }}>
+          {saveStatus === 'saving' && (
+            <>
+              <div style={{
+                width: 13, height: 13,
+                border: '2px solid rgba(255,255,255,0.3)',
+                borderTopColor: '#fff', borderRadius: '50%',
+                animation: 'spin 0.8s linear infinite', flexShrink: 0,
+              }} />
+              {t('saving')}
+            </>
+          )}
+          {saveStatus === 'saved' && (
+            <>
+              <Check size={14} style={{ flexShrink: 0 }} />
+              {t('saved')}
+            </>
+          )}
+          {saveStatus === 'error' && (
+            <>
+              <AlertCircle size={14} style={{ flexShrink: 0 }} />
+              {t('saveFailed')}
+            </>
+          )}
+        </div>
+      )}
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500&display=swap');

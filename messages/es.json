@@ -772,6 +772,8 @@
     "pageSubtitle": "Captura lo que hizo especial este viaje. Unas pocas palabras por día son suficientes para que Luna escriba tu historia.",
     "progress": "{count} de {total} días capturados",
     "saving": "Guardando...",
+    "saved": "Guardado",
+    "saveFailed": "Error al guardar. Reintentando...",
     "notesPlaceholder": "¿Cómo fue este día? Incluso una frase es suficiente.",
     "moodLabel": "¿Cómo se sintió este día?",
     "moodMaxHint": "{count} de {max} seleccionados",

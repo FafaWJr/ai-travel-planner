@@ -22,6 +22,15 @@ Format per entry:
 
 ## Log entries
 
+## HF-10 2026-05-13
+**Active phase at time of hotfix:** G6 complete
+**Problem:** (1) Day titles stay empty after uploading photos without GPS data — G6 auto-reconstruction only triggers when `hasGps` is true. Users who share photos via WhatsApp, email, or have location disabled see empty placeholder titles, which is worse than the old skeleton system. (2) The existing `saving: boolean` state only shows "Saving..." with no success confirmation, no error state, and no `beforeunload` warning for unsaved changes.
+**Proposed fix:** (1) Remove `hasGps &&` from the reconstruction trigger in both `handleUploadComplete` and the on-load flow-state effect — reconstruct whenever photos exist and titles are still placeholders, regardless of GPS. The reconstruct-titles API already handles no-GPS fallback using destination context, day number, and EXIF date ranges. (2) Upgrade `saving: boolean` → `saveStatus: 'idle' | 'saving' | 'saved' | 'error'` with a 3s "Saved" confirmation toast (bottom-right, fixed position), `lastSavedRef` to avoid redundant saves, and a `beforeunload` warning.
+**Files affected:** `app/[locale]/memories/[tripId]/page.tsx`, `messages/en.json`, `messages/pt-BR.json`, `messages/es.json`, `docs/specs/memories/hotfix_log.md`
+**Phase changed?** No.
+
+---
+
 ## HF-9 2026-05-13
 **Active phase at time of hotfix:** G6 complete
 **Problem:** Photos auto-sorted to days in BulkPhotoUpload cannot be moved to a different day. The X button only removes them. If EXIF date sorting assigns a photo to the wrong day, the user has no recourse — they must delete and re-upload, but the sort is deterministic so the photo lands in the same wrong day.

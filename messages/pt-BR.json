@@ -772,6 +772,8 @@
     "pageSubtitle": "Registre o que tornou essa viagem especial. Algumas palavras por dia já são suficientes para Luna escrever sua história.",
     "progress": "{count} de {total} dias registrados",
     "saving": "Salvando...",
+    "saved": "Salvo",
+    "saveFailed": "Falha ao salvar. Tentando novamente...",
     "notesPlaceholder": "Como foi esse dia? Até uma frase já é suficiente.",
     "moodLabel": "Como foi esse dia?",
     "moodMaxHint": "{count} de {max} selecionados",
