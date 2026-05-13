@@ -17,9 +17,18 @@ const NAV_LINK_KEYS = [
 ]
 
 function Avatar({ name, avatarUrl }: { name: string; avatarUrl?: string | null }) {
+  const [imgError, setImgError] = useState(false)
   const initial = (name || '?')[0].toUpperCase()
-  if (avatarUrl) {
-    return <img src={avatarUrl} alt={name} style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover', display: 'block', flexShrink: 0 }} />
+  if (avatarUrl && !imgError) {
+    return (
+      <img
+        src={avatarUrl}
+        alt={name}
+        referrerPolicy="no-referrer"
+        onError={() => setImgError(true)}
+        style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover', display: 'block', flexShrink: 0 }}
+      />
+    )
   }
   return (
     <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--navy)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-head)', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>

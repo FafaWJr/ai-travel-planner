@@ -22,6 +22,15 @@ Format per entry:
 
 ## Log entries
 
+## HF-7 2026-05-13
+**Active phase at time of hotfix:** LP-3 complete
+**Problem:** User profile photo in NavBar shows broken image icon instead of Google avatar. Google avatar URLs from lh3.googleusercontent.com return 403 when the Referer header is sent. No onError fallback exists, so the browser renders the broken image icon with truncated alt text.
+**Proposed fix:** Add referrerPolicy="no-referrer" and onError fallback to Avatar component img tag.
+**Files affected:** components/NavBar.tsx
+**Phase changed?** No.
+
+---
+
 ## HF-6 2026-05-13
 **Active phase at time of hotfix:** LP-3 complete
 **Problem:** Three form issues on /memories landing page:
