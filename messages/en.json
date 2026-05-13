@@ -897,7 +897,7 @@
     "reconPhase1": "Reading photos",
     "reconPhase2": "Finding places",
     "reconPhase3": "Naming days",
-    "reconPhase4": "Done"
+    "reconPhase4": "Done",
     "locationBadge": "{count} locations",
     "titleSourceGps": "Named from your photos",
     "titleSourceSkeleton": "Auto-generated title",
