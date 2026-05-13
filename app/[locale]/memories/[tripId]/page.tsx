@@ -8,10 +8,10 @@ import NavBar from '@/components/NavBar';
 import { useTranslations, useLocale } from 'next-intl';
 import {
   BookHeart, ChevronDown, ChevronUp,
-  Frown, Smile, Zap, Leaf, Heart,
   Sparkles, Check, PenLine, RefreshCw, Loader2,
   Share2, Link2, CheckCircle, ImagePlus, Download, MapPin,
 } from 'lucide-react';
+import { MOOD_CATEGORIES, MAX_MOODS, normaliseMood } from '@/lib/memories/mood';
 import nextDynamic from 'next/dynamic';
 import DayPhotoGrid from '@/components/memories/DayPhotoGrid';
 import BulkPhotoUpload from '@/components/memories/BulkPhotoUpload';
@@ -31,7 +31,7 @@ interface MemoryDay {
   locations?: Array<{ name: string; type: string; lat: number; lng: number; photoCount: number; timeRange: string | null }>;
   confidence?: 'high' | 'medium' | 'low' | 'none';
   notes: string;
-  mood: string | null;
+  mood: string | string[] | null;
   highlight: boolean;
   photos: PhotoMeta[];
 }
@@ -57,14 +57,6 @@ interface TripMeta {
   start_date: string | null;
   end_date: string | null;
 }
-
-const MOODS = [
-  { key: 'exhausted', icon: Frown, color: '#6C6D6F' },
-  { key: 'content', icon: Smile, color: '#679AC1' },
-  { key: 'excited', icon: Zap, color: '#FF8210' },
-  { key: 'peaceful', icon: Leaf, color: '#4A9D5B' },
-  { key: 'emotional', icon: Heart, color: '#C0547A' },
-] as const;
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 
@@ -611,7 +603,6 @@ export default function MemoryCapturePage({
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
           {days.map((day, i) => {
             const isExpanded = expandedDay === i;
-            const hasMood = day.mood !== null;
             const hasNotes = day.notes.trim().length > 0;
 
             return (
@@ -727,10 +718,17 @@ export default function MemoryCapturePage({
                     )}
                   </div>
 
-                  {!isExpanded && hasMood && (() => {
-                    const m = MOODS.find(mo => mo.key === day.mood);
-                    return m ? <m.icon size={16} color={m.color} /> : null;
-                  })()}
+                  {!isExpanded && normaliseMood(day.mood).length > 0 && (
+                    <span style={{
+                      display: 'inline-flex', alignItems: 'center',
+                      padding: '2px 8px', background: 'rgba(255,130,16,0.08)',
+                      borderRadius: 20, fontFamily: "'Inter',sans-serif",
+                      fontSize: 11, color: '#FF8210', fontWeight: 500, whiteSpace: 'nowrap',
+                    }}>
+                      {t(`mood.${normaliseMood(day.mood)[0]}` as Parameters<typeof t>[0])}
+                      {normaliseMood(day.mood).length > 1 && ` +${normaliseMood(day.mood).length - 1}`}
+                    </span>
+                  )}
 
                   {day.highlight && <Sparkles size={16} color="#FF8210" />}
 
@@ -770,35 +768,65 @@ export default function MemoryCapturePage({
                     <div style={{ marginTop: 14 }}>
                       <p style={{
                         fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 12,
-                        color: '#6C6D6F', margin: '0 0 8px', textTransform: 'uppercase',
+                        color: '#6C6D6F', margin: '0 0 10px', textTransform: 'uppercase',
                         letterSpacing: '0.04em',
                       }}>
                         {t('moodLabel')}
+                        {normaliseMood(day.mood).length > 0 && (
+                          <span style={{
+                            fontFamily: "'Inter',sans-serif", fontWeight: 400, fontSize: 10,
+                            color: '#FF8210', textTransform: 'none', letterSpacing: 0, marginLeft: 8,
+                          }}>
+                            {t('moodMaxHint', { count: normaliseMood(day.mood).length, max: MAX_MOODS })}
+                          </span>
+                        )}
                       </p>
-                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                        {MOODS.map(m => {
-                          const isActive = day.mood === m.key;
-                          return (
-                            <button
-                              key={m.key}
-                              onClick={() => updateDay(i, 'mood', isActive ? null : m.key)}
-                              style={{
-                                display: 'flex', alignItems: 'center', gap: 6,
-                                padding: '6px 12px', borderRadius: 100,
-                                border: isActive ? `2px solid ${m.color}` : '1.5px solid #E5E7EB',
-                                background: isActive ? `${m.color}10` : '#fff',
-                                cursor: 'pointer',
-                                fontFamily: "'Inter',sans-serif", fontSize: 12, fontWeight: 500,
-                                color: isActive ? m.color : '#6C6D6F',
-                                transition: 'all 0.15s',
-                              }}
-                            >
-                              <m.icon size={14} color={isActive ? m.color : '#C0C0C0'} />
-                              {t(`mood.${m.key}`)}
-                            </button>
-                          );
-                        })}
-                      </div>
+                      {MOOD_CATEGORIES.map(category => {
+                        const currentMoods = normaliseMood(day.mood);
+                        return (
+                          <div key={category.key} style={{ marginBottom: 8 }}>
+                            <p style={{
+                              fontFamily: "'Inter',sans-serif", fontSize: 10, fontWeight: 500,
+                              color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em',
+                              margin: '0 0 4px',
+                            }}>
+                              {t(`moodCategory.${category.key}` as Parameters<typeof t>[0])}
+                            </p>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                              {category.moods.map(moodKey => {
+                                const isSelected = currentMoods.includes(moodKey);
+                                const isDisabled = !isSelected && currentMoods.length >= MAX_MOODS;
+                                return (
+                                  <button
+                                    key={moodKey}
+                                    onClick={() => {
+                                      if (isDisabled) return;
+                                      const next = isSelected
+                                        ? currentMoods.filter(m => m !== moodKey)
+                                        : [...currentMoods, moodKey];
+                                      updateDay(i, 'mood', next);
+                                    }}
+                                    disabled={isDisabled}
+                                    style={{
+                                      display: 'inline-flex', alignItems: 'center',
+                                      padding: '4px 10px', borderRadius: 20,
+                                      border: `1.5px solid ${isSelected ? '#FF8210' : 'rgba(0,68,123,0.10)'}`,
+                                      background: isSelected ? '#FF8210' : '#F4F7FB',
+                                      color: isSelected ? '#fff' : isDisabled ? '#ccc' : '#333',
+                                      fontFamily: "'Inter',sans-serif", fontSize: 12, fontWeight: 500,
+                                      cursor: isDisabled ? 'not-allowed' : 'pointer',
+                                      transition: 'all 0.15s',
+                                      opacity: isDisabled ? 0.5 : 1,
+                                    }}
+                                  >
+                                    {t(`mood.${moodKey}` as Parameters<typeof t>[0])}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
 
                     <button
