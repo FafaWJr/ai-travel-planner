@@ -10,6 +10,7 @@ import {
   BookHeart, ChevronDown, ChevronUp,
   Sparkles, Check, PenLine, RefreshCw, Loader2,
   Share2, Link2, CheckCircle, ImagePlus, Download, MapPin,
+  Camera, Wand2,
 } from 'lucide-react';
 import { MOOD_CATEGORIES, MAX_MOODS, normaliseMood } from '@/lib/memories/mood';
 import nextDynamic from 'next/dynamic';
@@ -27,7 +28,7 @@ const RouteMap = nextDynamic(() => import('@/components/memories/RouteMap'), {
 interface MemoryDay {
   dayNumber: number;
   dayTitle: string;
-  dayTitleSource?: 'skeleton' | 'gps' | 'user';
+  dayTitleSource?: 'skeleton' | 'gps' | 'user' | 'placeholder';
   locations?: Array<{ name: string; type: string; lat: number; lng: number; photoCount: number; timeRange: string | null }>;
   confidence?: 'high' | 'medium' | 'low' | 'none';
   notes: string;
@@ -92,6 +93,17 @@ export default function MemoryCapturePage({
   const [editingTitleDay, setEditingTitleDay] = useState<number | null>(null);
   const [editingTitleValue, setEditingTitleValue] = useState('');
 
+  // G6: photo-first flow state
+  type FlowState = 'empty' | 'uploading' | 'reconstructing' | 'ready';
+  const [flowState, setFlowState] = useState<FlowState>('empty');
+  const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 });
+  const [reconPhase, setReconPhase] = useState(0); // 0-4 visual stepper
+  const [reconSuccess, setReconSuccess] = useState(false);
+  const [reconPhotoCount, setReconPhotoCount] = useState(0);
+  const uploadTriggerRef = useRef<(() => void) | null>(null);
+  const reconTimersRef = useRef<ReturnType<typeof setInterval>[]>([]);
+  const [bulkShowPreview, setBulkShowPreview] = useState(false);
+
   useEffect(() => {
     params.then(p => setTripId(p.tripId));
   }, [params]);
@@ -144,6 +156,86 @@ export default function MemoryCapturePage({
       }
     })();
   }, [user, tripId]); // eslint-disable-line
+
+  // Determine flow state on load
+  useEffect(() => {
+    if (!memory) return;
+    const allDays = memory.memory_data?.days ?? [];
+    const hasAnyPhotos = allDays.some(d => (d.photos ?? []).length > 0);
+    const hasGps = allDays.some(d => (d.photos ?? []).some(p => typeof p.exifLat === 'number'));
+    const hasAnyNotes = allDays.some(d => d.notes.trim().length > 0);
+    const allPlaceholder = allDays.every(
+      d => !d.dayTitleSource || d.dayTitleSource === 'placeholder',
+    );
+
+    if (!hasAnyPhotos && !hasAnyNotes) {
+      setFlowState('empty');
+    } else if (hasAnyPhotos && hasGps && allPlaceholder) {
+      // Photos just uploaded, GPS present, titles not yet reconstructed — auto-reconstruct
+      setFlowState('reconstructing');
+      runAutoReconstruct(memory.id, allDays.length);
+    } else {
+      setFlowState('ready');
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [memory?.id]);
+
+  const runAutoReconstruct = useCallback(async (memoryId: string, dayCount: number) => {
+    // Clear any existing timers
+    reconTimersRef.current.forEach(clearInterval);
+    reconTimersRef.current = [];
+    setReconPhase(1);
+    setReconSuccess(false);
+
+    // Visual stepper — advances every 1.5s up to phase 3 while API runs
+    let phase = 1;
+    const interval = setInterval(() => {
+      phase += 1;
+      if (phase <= 3) setReconPhase(phase);
+      else clearInterval(interval);
+    }, 1500);
+    reconTimersRef.current.push(interval);
+
+    try {
+      const res = await fetch('/api/memories/reconstruct-titles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memoryId }),
+      });
+
+      // Stop timers
+      reconTimersRef.current.forEach(clearInterval);
+      reconTimersRef.current = [];
+
+      if (res.ok) {
+        const { days: updatedDays } = await res.json();
+        setMemory(prev => {
+          if (!prev) return prev;
+          const newDays = prev.memory_data.days.map((day: MemoryDay) => {
+            const updated = updatedDays.find((d: { dayNumber: number }) => d.dayNumber === day.dayNumber);
+            if (!updated) return day;
+            return {
+              ...day,
+              dayTitle: updated.title,
+              dayTitleSource: updated.source,
+              locations: updated.locations,
+              confidence: updated.confidence,
+            };
+          });
+          return { ...prev, memory_data: { ...prev.memory_data, days: newDays } };
+        });
+        setReconPhase(4);
+        setReconSuccess(true);
+        setTimeout(() => setFlowState('ready'), 2000);
+      } else {
+        setFlowState('ready');
+      }
+    } catch {
+      reconTimersRef.current.forEach(clearInterval);
+      reconTimersRef.current = [];
+      setFlowState('ready');
+    }
+  }, []);
 
   const saveMemoryData = useCallback((days: MemoryDay[]) => {
     if (!tripId) return;
@@ -401,6 +493,49 @@ export default function MemoryCapturePage({
     setEditingTitleValue('');
   }, [editingTitleValue, memory, saveMemoryData]);
 
+  const handleFilesSelected = useCallback((count: number) => {
+    setReconPhotoCount(count);
+    setFlowState('uploading');
+    setBulkShowPreview(true);
+    setUploadProgress({ done: 0, total: count });
+  }, []);
+
+  const handleUploadStart = useCallback(() => {
+    setFlowState('uploading');
+  }, []);
+
+  const handleProgress = useCallback((done: number, total: number) => {
+    setUploadProgress({ done, total });
+  }, []);
+
+  const handleUploadComplete = useCallback(async () => {
+    if (!memory) return;
+    setBulkShowPreview(false);
+    // Refetch to get updated photo list with EXIF data
+    try {
+      const res = await fetch(`/api/memories/${tripId}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const refreshedMemory: MemoryData = data.memory;
+      setMemory(refreshedMemory);
+
+      const allDays = refreshedMemory.memory_data?.days ?? [];
+      const hasGps = allDays.some(d => (d.photos ?? []).some((p: PhotoMeta) => typeof p.exifLat === 'number'));
+      const allPlaceholder = allDays.every(
+        (d: MemoryDay) => !d.dayTitleSource || d.dayTitleSource === 'placeholder',
+      );
+
+      if (hasGps && allPlaceholder) {
+        setFlowState('reconstructing');
+        runAutoReconstruct(refreshedMemory.id, allDays.length);
+      } else {
+        setFlowState('ready');
+      }
+    } catch {
+      setFlowState('ready');
+    }
+  }, [memory, tripId, runAutoReconstruct]);
+
   const handleDayPhotosAdded = useCallback((dayNumber: number, newPhotos: PhotoMeta[]) => {
     setMemory(prev => {
       if (!prev) return prev;
@@ -466,140 +601,342 @@ export default function MemoryCapturePage({
     );
   }
 
+  const destination = trip.destination || trip.title || t('untitledTrip');
+
+  const RECON_PHASES = [
+    t('reconPhase1'),
+    t('reconPhase2'),
+    t('reconPhase3'),
+    t('reconPhase4'),
+  ];
+
   return (
     <div style={{ minHeight: '100vh', background: '#F4F7FB', fontFamily: "'Inter',sans-serif" }}>
       <NavBar />
 
-      <div style={{ maxWidth: 720, margin: '0 auto', padding: '96px 24px 60px' }}>
-
-        {/* Trip header */}
-        <div style={{ marginBottom: 32 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-            <BookHeart size={24} color="#FF8210" />
+      {/* ── Navy gradient header ─────────────────────────────────── */}
+      <div style={{
+        background: 'linear-gradient(160deg, #001F3F 0%, #00447B 100%)',
+        paddingTop: 72, paddingBottom: 32, paddingLeft: 24, paddingRight: 24,
+      }}>
+        <div style={{ maxWidth: 720, margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+            <BookHeart size={22} color="#FF8210" />
             <h1 style={{
-              fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 28,
-              color: '#00447B', margin: 0,
+              fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 26,
+              color: '#FFFFFF', margin: 0, lineHeight: 1.2,
             }}>
-              {trip.destination || trip.title || t('untitledTrip')}
+              {destination}
             </h1>
           </div>
           {(trip.start_date || trip.end_date) && (
-            <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 14, color: '#6C6D6F', margin: 0 }}>
+            <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, color: 'rgba(255,255,255,0.55)', margin: '0 0 20px' }}>
               {trip.start_date && new Date(trip.start_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-              {trip.start_date && trip.end_date ? ' → ' : ''}
+              {trip.start_date && trip.end_date ? ' – ' : ''}
               {trip.end_date && new Date(trip.end_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
           )}
-          <p style={{
-            fontFamily: "'Inter',sans-serif", fontSize: 14, color: '#6C6D6F',
-            marginTop: 12, lineHeight: 1.6,
-          }}>
-            {t('pageSubtitle')}
-          </p>
-        </div>
 
-        {/* Progress bar */}
-        <div style={{ marginBottom: 32 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <span style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 13, color: '#00447B' }}>
-              {t('progress', { count: capturedCount, total: totalDays })}
-            </span>
-            {saving && (
-              <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: '#C0C0C0' }}>
-                {t('saving')}
-              </span>
-            )}
-          </div>
-          <div style={{ height: 6, background: '#E5E7EB', borderRadius: 100, overflow: 'hidden' }}>
-            <div style={{
-              height: '100%', width: `${progressPct}%`,
-              background: '#FF8210', borderRadius: 100,
-              transition: 'width 0.3s ease',
-            }} />
-          </div>
-        </div>
-
-        {/* Bulk photo upload */}
-        {trip?.start_date && trip?.end_date && (
-          <BulkPhotoUpload
-            tripId={tripId!}
-            tripStartDate={trip.start_date}
-            tripEndDate={trip.end_date}
-            days={days.map(d => ({ dayNumber: d.dayNumber, dayTitle: d.dayTitle }))}
-            onPhotosAdded={handleDayPhotosAdded}
-          />
-        )}
-
-        {/* Route map from photo GPS data */}
-        {days.some(d => (d.photos ?? []).some(p => p.exifLat !== null && p.exifLng !== null)) && (
-          <p style={{
-            fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 13,
-            color: '#00447B', margin: '16px 0 4px', textTransform: 'uppercase',
-            letterSpacing: '0.06em',
-          }}>
-            {t('mapLabel')}
-          </p>
-        )}
-        <RouteMap days={days} />
-
-        {/* Reconstruct titles from GPS data */}
-        {hasGpsPhotos && (
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 12,
-            padding: '14px 18px', marginTop: 16, marginBottom: 4,
-            background: reconstructDone ? 'rgba(16,185,129,0.06)' : 'rgba(255,130,16,0.06)',
-            border: `1px solid ${reconstructDone ? 'rgba(16,185,129,0.2)' : 'rgba(255,130,16,0.2)'}`,
-            borderRadius: 12,
-            transition: 'background 0.3s, border-color 0.3s',
-          }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-              stroke={reconstructDone ? '#10b981' : '#FF8210'}
-              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-              style={{ flexShrink: 0 }}>
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-              <circle cx="12" cy="10" r="3" />
-            </svg>
-            <div style={{ flex: 1 }}>
-              <p style={{
-                fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 13,
-                color: reconstructDone ? '#10b981' : '#00447B', margin: 0,
-              }}>
-                {reconstructDone ? t('reconstructDone') : reconstructing ? t('reconstructing') : t('reconstructTitles')}
-              </p>
-              {!reconstructing && !reconstructDone && (
-                <p style={{
-                  fontFamily: 'var(--font-body)', fontSize: 12,
-                  color: '#6C6D6F', margin: '2px 0 0',
-                }}>
-                  {t('reconstructTitlesHint')}
-                </p>
-              )}
-            </div>
-            {!reconstructDone && (
-              <button
-                onClick={handleReconstructTitles}
-                disabled={reconstructing}
-                style={{
-                  background: reconstructing ? '#ccc' : '#FF8210',
-                  color: '#fff', border: 'none', borderRadius: 8,
-                  padding: '8px 16px', fontFamily: "'Poppins',sans-serif",
-                  fontWeight: 600, fontSize: 12, cursor: reconstructing ? 'not-allowed' : 'pointer',
-                  whiteSpace: 'nowrap', flexShrink: 0,
-                  opacity: reconstructing ? 0.6 : 1,
-                  transition: 'opacity 0.15s',
-                }}
-              >
-                {reconstructing ? '...' : (
-                  days.some(d => d.dayTitleSource === 'gps')
-                    ? t('reconstructAgain')
-                    : t('reconstructTitles')
+          {/* Progress bar — only in ready state */}
+          {flowState === 'ready' && (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                <span style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>
+                  {t('progress', { count: capturedCount, total: totalDays })}
+                </span>
+                {saving && (
+                  <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>
+                    {t('saving')}
+                  </span>
                 )}
-              </button>
+              </div>
+              <div style={{ height: 4, background: 'rgba(255,255,255,0.12)', borderRadius: 100, overflow: 'hidden' }}>
+                <div style={{
+                  height: '100%', width: `${progressPct}%`,
+                  background: 'linear-gradient(90deg, #FF8210, #FFBD59)',
+                  borderRadius: 100, transition: 'width 0.4s ease',
+                }} />
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div style={{ maxWidth: 720, margin: '0 auto', padding: '28px 24px 60px' }}>
+
+        {/* ── EMPTY state ─────────────────────────────────────────── */}
+        {flowState === 'empty' && (
+          <div style={{
+            background: '#FFFFFF', borderRadius: 20,
+            border: '1.5px dashed rgba(0,68,123,0.15)',
+            padding: '52px 32px', textAlign: 'center',
+            boxShadow: '0 2px 16px rgba(0,68,123,0.04)',
+          }}>
+            <div style={{
+              width: 72, height: 72, borderRadius: '50%',
+              background: 'linear-gradient(145deg, #00447B, #003868)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 20px',
+              boxShadow: '0 8px 24px rgba(0,68,123,0.2)',
+            }}>
+              <Camera size={32} color="#FFFFFF" />
+            </div>
+            <h2 style={{
+              fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 22,
+              color: '#00447B', margin: '0 0 10px',
+            }}>
+              {t('uploadCtaTitle')}
+            </h2>
+            <p style={{
+              fontFamily: "'Inter',sans-serif", fontSize: 14.5,
+              color: '#6C6D6F', lineHeight: 1.65, margin: '0 auto 28px', maxWidth: 380,
+            }}>
+              {t('uploadCtaDesc')}
+            </p>
+            <button
+              onClick={() => {
+                setBulkShowPreview(true);
+                setTimeout(() => uploadTriggerRef.current?.(), 50);
+              }}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 10,
+                padding: '15px 32px',
+                background: 'linear-gradient(135deg, #FF8210 0%, #e67400 100%)',
+                color: '#FFFFFF', border: 'none', borderRadius: 14,
+                fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 15,
+                cursor: 'pointer',
+                boxShadow: '0 6px 20px rgba(255,130,16,0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
+                transition: 'transform 0.15s, box-shadow 0.15s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 10px 28px rgba(255,130,16,0.38), inset 0 1px 0 rgba(255,255,255,0.1)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(255,130,16,0.3), inset 0 1px 0 rgba(255,255,255,0.1)'; }}
+            >
+              <Camera size={18} />
+              {t('uploadCtaBtn')}
+            </button>
+            <p style={{
+              fontFamily: "'Inter',sans-serif", fontSize: 12,
+              color: '#C0C0C0', marginTop: 20, lineHeight: 1.5,
+            }}>
+              {t('uploadCtaHint')}
+            </p>
+          </div>
+        )}
+
+        {/* ── UPLOADING state ──────────────────────────────────────── */}
+        {flowState === 'uploading' && !bulkShowPreview && (
+          <div style={{
+            background: '#FFFFFF', borderRadius: 20,
+            border: '1.5px solid rgba(0,68,123,0.08)',
+            padding: '40px 32px', textAlign: 'center',
+            boxShadow: '0 2px 16px rgba(0,68,123,0.04)',
+          }}>
+            <Loader2 size={36} color="#FF8210" style={{ animation: 'spin 1s linear infinite', marginBottom: 16 }} />
+            <h2 style={{
+              fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 18,
+              color: '#00447B', margin: '0 0 8px',
+            }}>
+              {t('uploadingTitle')}
+            </h2>
+            {uploadProgress.total > 0 && (
+              <>
+                <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, color: '#6C6D6F', margin: '0 0 16px' }}>
+                  {t('uploadingProgress', { done: uploadProgress.done, total: uploadProgress.total })}
+                </p>
+                <div style={{ height: 6, background: '#E5E7EB', borderRadius: 100, overflow: 'hidden', maxWidth: 320, margin: '0 auto' }}>
+                  <div style={{
+                    height: '100%',
+                    width: `${uploadProgress.total > 0 ? (uploadProgress.done / uploadProgress.total) * 100 : 0}%`,
+                    background: 'linear-gradient(90deg, #FF8210, #FFBD59)',
+                    borderRadius: 100, transition: 'width 0.3s',
+                  }} />
+                </div>
+              </>
             )}
           </div>
         )}
 
-        {/* Day cards */}
+        {/* ── RECONSTRUCTING state ─────────────────────────────────── */}
+        {flowState === 'reconstructing' && (
+          <div style={{
+            background: '#FFFFFF', borderRadius: 20,
+            border: '1.5px solid rgba(0,68,123,0.08)',
+            padding: '40px 32px', textAlign: 'center',
+            boxShadow: '0 2px 16px rgba(0,68,123,0.04)',
+          }}>
+            <div style={{
+              width: 64, height: 64, borderRadius: '50%',
+              background: reconSuccess ? 'rgba(16,185,129,0.1)' : 'rgba(255,130,16,0.08)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 20px',
+              transition: 'background 0.4s',
+            }}>
+              {reconSuccess
+                ? <Check size={28} color="#10b981" />
+                : <Wand2 size={28} color="#FF8210" style={{ animation: 'pulse 2s ease-in-out infinite' }} />
+              }
+            </div>
+            <h2 style={{
+              fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 18,
+              color: reconSuccess ? '#10b981' : '#00447B', margin: '0 0 8px',
+              transition: 'color 0.4s',
+            }}>
+              {reconSuccess ? t('reconSuccessTitle') : t('reconTitle')}
+            </h2>
+            <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13.5, color: '#6C6D6F', margin: '0 0 28px', lineHeight: 1.6 }}>
+              {reconSuccess ? t('reconSuccessDesc', { count: reconPhotoCount }) : t('reconDesc')}
+            </p>
+
+            {/* Phase stepper */}
+            {!reconSuccess && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0 }}>
+                {RECON_PHASES.map((label, idx) => {
+                  const stepNum = idx + 1;
+                  const done = reconPhase > stepNum;
+                  const active = reconPhase === stepNum;
+                  return (
+                    <div key={idx} style={{ display: 'flex', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                        <div style={{
+                          width: 32, height: 32, borderRadius: '50%',
+                          background: done ? '#10b981' : active ? '#FF8210' : 'rgba(0,68,123,0.08)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          transition: 'background 0.4s',
+                        }}>
+                          {done
+                            ? <Check size={14} color="#fff" />
+                            : active
+                            ? <Loader2 size={14} color="#fff" style={{ animation: 'spin 1s linear infinite' }} />
+                            : <span style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 12, color: '#9ca3af' }}>{stepNum}</span>
+                          }
+                        </div>
+                        <span style={{
+                          fontFamily: "'Inter',sans-serif", fontSize: 10,
+                          color: active ? '#FF8210' : done ? '#10b981' : '#C0C0C0',
+                          maxWidth: 64, textAlign: 'center', lineHeight: 1.3,
+                          transition: 'color 0.4s',
+                        }}>
+                          {label}
+                        </span>
+                      </div>
+                      {idx < RECON_PHASES.length - 1 && (
+                        <div style={{
+                          width: 32, height: 2, borderRadius: 1, margin: '0 4px',
+                          background: done ? '#10b981' : 'rgba(0,68,123,0.08)',
+                          marginBottom: 18, transition: 'background 0.4s',
+                        }} />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── BulkPhotoUpload — always mounted, hidden unless in empty+preview or uploading ── */}
+        {trip?.start_date && trip?.end_date && (
+          <div style={{ display: bulkShowPreview ? 'block' : 'none', marginBottom: 16 }}>
+            <BulkPhotoUpload
+              tripId={tripId!}
+              tripStartDate={trip.start_date}
+              tripEndDate={trip.end_date}
+              days={days.map(d => ({ dayNumber: d.dayNumber, dayTitle: d.dayTitle || `Day ${d.dayNumber}` }))}
+              onPhotosAdded={handleDayPhotosAdded}
+              triggerRef={uploadTriggerRef}
+              onFilesSelected={handleFilesSelected}
+              onUploadStart={handleUploadStart}
+              onProgress={handleProgress}
+              onUploadComplete={handleUploadComplete}
+            />
+          </div>
+        )}
+
+        {/* ── READY state: route map + reconstruct banner + day cards ── */}
+        {flowState === 'ready' && (
+          <>
+            {/* Add more photos button */}
+            {trip?.start_date && trip?.end_date && (
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+                <button
+                  onClick={() => {
+                    setBulkShowPreview(true);
+                    setTimeout(() => uploadTriggerRef.current?.(), 50);
+                  }}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    padding: '8px 16px', borderRadius: 100,
+                    border: '1.5px solid rgba(0,68,123,0.15)',
+                    background: '#FFFFFF', color: '#00447B',
+                    fontFamily: "'Inter',sans-serif", fontSize: 13, fontWeight: 500,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <ImagePlus size={14} />
+                  {t('addPhotos')}
+                </button>
+              </div>
+            )}
+
+            {/* Route map */}
+            {days.some(d => (d.photos ?? []).some(p => p.exifLat !== null && p.exifLng !== null)) && (
+              <p style={{
+                fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 13,
+                color: '#00447B', margin: '0 0 4px', textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+              }}>
+                {t('mapLabel')}
+              </p>
+            )}
+            <RouteMap days={days} />
+
+            {/* Reconstruct titles — manual trigger when GPS present */}
+            {hasGpsPhotos && (
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 12,
+                padding: '14px 18px', marginTop: 12, marginBottom: 4,
+                background: reconstructDone ? 'rgba(16,185,129,0.06)' : 'rgba(255,130,16,0.06)',
+                border: `1px solid ${reconstructDone ? 'rgba(16,185,129,0.2)' : 'rgba(255,130,16,0.2)'}`,
+                borderRadius: 12, transition: 'background 0.3s, border-color 0.3s',
+              }}>
+                <MapPin size={18} color={reconstructDone ? '#10b981' : '#FF8210'} style={{ flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <p style={{
+                    fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 13,
+                    color: reconstructDone ? '#10b981' : '#00447B', margin: 0,
+                  }}>
+                    {reconstructDone ? t('reconstructDone') : reconstructing ? t('reconPhase2') : t('reconstructTitles')}
+                  </p>
+                  {!reconstructing && !reconstructDone && (
+                    <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: '#6C6D6F', margin: '2px 0 0' }}>
+                      {t('reconstructTitlesHint')}
+                    </p>
+                  )}
+                </div>
+                {!reconstructDone && (
+                  <button
+                    onClick={handleReconstructTitles}
+                    disabled={reconstructing}
+                    style={{
+                      background: reconstructing ? '#ccc' : '#FF8210',
+                      color: '#fff', border: 'none', borderRadius: 8,
+                      padding: '8px 16px', fontFamily: "'Poppins',sans-serif",
+                      fontWeight: 600, fontSize: 12, cursor: reconstructing ? 'not-allowed' : 'pointer',
+                      whiteSpace: 'nowrap', flexShrink: 0,
+                      opacity: reconstructing ? 0.6 : 1, transition: 'opacity 0.15s',
+                    }}
+                  >
+                    {reconstructing ? '...' : days.some(d => d.dayTitleSource === 'gps') ? t('reconstructAgain') : t('reconstructTitles')}
+                  </button>
+                )}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Day cards + narrative — visible only in ready state */}
+        {flowState === 'ready' && (
+        <div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
           {days.map((day, i) => {
             const isExpanded = expandedDay === i;
@@ -882,7 +1219,7 @@ export default function MemoryCapturePage({
         {/* ─── Generate story / Narrative section ──────────────────────────── */}
         <div style={{ marginTop: 32 }}>
           {/* Generate button — appears once 3+ days have notes */}
-          {capturedCount >= 3 && !narrativeText && !isGenerating && (
+          {capturedCount >= 2 && !narrativeText && !isGenerating && (
             <button
               onClick={generateNarrative}
               style={{
@@ -903,12 +1240,12 @@ export default function MemoryCapturePage({
           )}
 
           {/* Nudge when fewer than 3 days have notes */}
-          {capturedCount < 3 && capturedCount > 0 && !narrativeText && (
+          {capturedCount < 2 && capturedCount > 0 && !narrativeText && (
             <p style={{
               textAlign: 'center', fontFamily: "'Inter',sans-serif",
               fontSize: 13, color: '#C0C0C0', marginTop: 8,
             }}>
-              {t('minDaysNotice', { needed: 3 - capturedCount })}
+              {t('minDaysNotice', { needed: 2 - capturedCount })}
             </p>
           )}
 
@@ -1311,6 +1648,8 @@ export default function MemoryCapturePage({
             </div>
           )}
         </div>
+        </div>
+        )}
 
       </div>
 
@@ -1318,6 +1657,7 @@ export default function MemoryCapturePage({
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500&display=swap');
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes blink { 50% { opacity: 0; } }
+        @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.7; transform:scale(1.08); } }
         textarea::placeholder { color: #C0C0C0; }
       `}</style>
     </div>

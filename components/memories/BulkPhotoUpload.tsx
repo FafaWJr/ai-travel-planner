@@ -15,6 +15,11 @@ interface BulkPhotoUploadProps {
   tripEndDate: string;
   days: Array<{ dayNumber: number; dayTitle: string }>;
   onPhotosAdded: (dayNumber: number, newPhotos: PhotoMeta[]) => void;
+  triggerRef?: React.MutableRefObject<(() => void) | null>;
+  onFilesSelected?: (count: number) => void;
+  onUploadStart?: () => void;
+  onProgress?: (done: number, total: number) => void;
+  onUploadComplete?: () => void;
 }
 
 export default function BulkPhotoUpload({
@@ -23,11 +28,21 @@ export default function BulkPhotoUpload({
   tripEndDate,
   days,
   onPhotosAdded,
+  triggerRef,
+  onFilesSelected,
+  onUploadStart,
+  onProgress,
+  onUploadComplete,
 }: BulkPhotoUploadProps) {
   const t = useTranslations('memories');
   const inputRef = useRef<HTMLInputElement>(null);
   // Preserves EXIF from original HEIC files before heic2any strips it during conversion
   const exifCacheRef = useRef<Map<string, PhotoExifData>>(new Map());
+
+  // Expose file picker trigger to parent via ref
+  if (triggerRef) {
+    triggerRef.current = () => inputRef.current?.click();
+  }
 
   const [items, setItems] = useState<PhotoUploadItem[]>([]);
   const [phase, setPhase] = useState<'idle' | 'preview' | 'uploading' | 'done'>('idle');
@@ -88,7 +103,8 @@ export default function BulkPhotoUpload({
 
     setItems(prev => [...prev, ...newItems]);
     setPhase('preview');
-  }, [tripStartDate, tripEndDate]);
+    onFilesSelected?.(newItems.length);
+  }, [tripStartDate, tripEndDate, onFilesSelected]);
 
   const removeItem = useCallback((localId: string) => {
     exifCacheRef.current.delete(localId);
@@ -106,9 +122,11 @@ export default function BulkPhotoUpload({
     setPhase('uploading');
     setDoneCount(0);
     setErrorCount(0);
+    onUploadStart?.();
 
     // Map dayNumber → newPhotos accumulated during this batch
     const accumulated: Record<number, PhotoMeta[]> = {};
+    let localDone = 0;
 
     for (const item of uploadable) {
       setItems(prev => prev.map(i => i.localId === item.localId ? { ...i, status: 'uploading' } : i));
@@ -145,7 +163,9 @@ export default function BulkPhotoUpload({
         accumulated[dn].push(photo);
 
         setItems(prev => prev.map(i => i.localId === item.localId ? { ...i, status: 'done', meta: photo } : i));
-        setDoneCount(c => c + 1);
+        localDone += 1;
+        setDoneCount(localDone);
+        onProgress?.(localDone, uploadable.length);
         URL.revokeObjectURL(item.previewUrl);
       } catch (err) {
         console.error('[BulkPhotoUpload] upload error:', err);
@@ -160,7 +180,8 @@ export default function BulkPhotoUpload({
     }
 
     setPhase('done');
-  }, [items, tripId, onPhotosAdded]);
+    onUploadComplete?.();
+  }, [items, tripId, onPhotosAdded, onUploadStart, onProgress, onUploadComplete]);
 
   const reset = useCallback(() => {
     exifCacheRef.current.clear();

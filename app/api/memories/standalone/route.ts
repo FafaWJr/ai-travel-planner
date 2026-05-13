@@ -29,11 +29,14 @@ export async function POST(request: NextRequest) {
 
     const days = Array.from({ length: Math.max(numDays, 1) }, (_, i) => ({
       dayNumber: i + 1,
-      dayTitle: `Day ${i + 1} in ${destination}`,
+      dayTitle: '',
+      dayTitleSource: 'placeholder',
       notes: '',
-      mood: null,
+      mood: [],
       highlight: false,
       photos: [],
+      locations: [],
+      confidence: 'none',
     }));
 
     const { data: memory, error } = await supabase

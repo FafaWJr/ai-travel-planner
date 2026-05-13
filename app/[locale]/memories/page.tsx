@@ -267,36 +267,6 @@ export default function MemoriesLandingPage() {
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const { memory } = await res.json();
 
-          const numDays = Math.round(
-            (new Date(formData.endDate).getTime() - new Date(formData.startDate).getTime()) / 86400000,
-          ) + 1;
-
-          try {
-            const skelRes = await fetch('/api/memories/skeleton', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ destination: formData.destination, numDays, locale }),
-            });
-            if (skelRes.ok) {
-              const { titles } = await skelRes.json();
-              if (titles?.length > 0) {
-                const days = memory.memory_data.days.map(
-                  (d: { dayNumber: number; dayTitle?: string }, i: number) => ({
-                    ...d,
-                    dayTitle: titles[i] ?? d.dayTitle ?? `Day ${i + 1}`,
-                  }),
-                );
-                await fetch(`/api/memories/${memory.id}`, {
-                  method: 'PUT',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ memory_data: { ...memory.memory_data, days } }),
-                });
-              }
-            }
-          } catch {
-            // Skeleton failed. Continue with generic day titles.
-          }
-
           router.push(`/${locale}/memories/${memory.id}`);
         } catch (err) {
           console.error('[memories] auto-create error:', err);
@@ -364,36 +334,6 @@ export default function MemoriesLandingPage() {
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const { memory } = await res.json();
-
-      const numDays = Math.round(
-        (new Date(endDate).getTime() - new Date(startDate).getTime()) / 86400000,
-      ) + 1;
-
-      try {
-        const skelRes = await fetch('/api/memories/skeleton', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ destination: destination.trim(), numDays, locale }),
-        });
-        if (skelRes.ok) {
-          const { titles } = await skelRes.json();
-          if (titles?.length > 0) {
-            const days = memory.memory_data.days.map(
-              (d: { dayNumber: number; dayTitle?: string }, i: number) => ({
-                ...d,
-                dayTitle: titles[i] ?? d.dayTitle ?? `Day ${i + 1}`,
-              }),
-            );
-            await fetch(`/api/memories/${memory.id}`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ memory_data: { ...memory.memory_data, days } }),
-            });
-          }
-        }
-      } catch {
-        // Skeleton failed. Continue with generic day titles.
-      }
 
       router.push(`/${locale}/memories/${memory.id}`);
     } catch (err) {
