@@ -2,6 +2,7 @@
 
 import { usePathname, useSearchParams } from 'next/navigation'
 import { useState, useRef, useEffect, Suspense } from 'react'
+import NextImage from 'next/image'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -21,12 +22,13 @@ function Avatar({ name, avatarUrl }: { name: string; avatarUrl?: string | null }
   const initial = (name || '?')[0].toUpperCase()
   if (avatarUrl && !imgError) {
     return (
-      <img
+      <NextImage
         src={avatarUrl}
         alt={name}
-        referrerPolicy="no-referrer"
+        width={34}
+        height={34}
         onError={() => setImgError(true)}
-        style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover', display: 'block', flexShrink: 0 }}
+        style={{ borderRadius: '50%', objectFit: 'cover', display: 'block', flexShrink: 0 }}
       />
     )
   }
