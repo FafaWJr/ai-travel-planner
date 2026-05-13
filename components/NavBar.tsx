@@ -14,7 +14,7 @@ const NAV_LINK_KEYS = [
   { key: 'quiz',     href: '/#quiz' },
   { key: 'blog',     href: '/blog' },
   { key: 'deals',    href: '/deals' },
-  { key: 'memories', href: '/memories' },
+  { key: 'memories', href: '/memories/coming-soon' },
 ]
 
 function Avatar({ name, avatarUrl }: { name: string; avatarUrl?: string | null }) {

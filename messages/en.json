@@ -1363,5 +1363,21 @@
       "body": "Ready to plan your next adventure? Open your trip and start chatting with Luna.",
       "linkLabel": "www.lunaletsgo.com"
     }
+  },
+  "memoriesComingSoon": {
+    "badge": "Coming Soon",
+    "title": "Your trips, your stories, forever.",
+    "subtitle": "Luna Memories transforms your travel photos into beautiful, personalised day-by-day journals, powered by AI.",
+    "feature1Title": "Smart photo sorting",
+    "feature1Desc": "Upload your trip photos and Luna reads the dates, times, and GPS locations to reconstruct your itinerary automatically.",
+    "feature2Title": "AI-powered day titles",
+    "feature2Desc": "Luna names each day using the actual neighbourhoods and landmarks from your photos, not generic guesses.",
+    "feature3Title": "Personal narratives",
+    "feature3Desc": "Add a few notes per day and Luna writes a cinematic story of your trip, ready to share or print.",
+    "feature4Title": "Premium PDF export",
+    "feature4Desc": "Turn your memories into a beautifully designed printable journal. The perfect keepsake or gift.",
+    "ctaTitle": "Plan your next adventure",
+    "ctaDesc": "While Memories is on the way, start planning your next trip with Luna.",
+    "ctaBtn": "Plan a Trip"
   }
 }

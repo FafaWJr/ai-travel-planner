@@ -1363,5 +1363,21 @@
       "body": "Pronto para planejar sua próxima aventura? Abra sua viagem e comece a conversar com a Luna.",
       "linkLabel": "www.lunaletsgo.com"
     }
+  },
+  "memoriesComingSoon": {
+    "badge": "Em breve",
+    "title": "Suas viagens, suas histórias, para sempre.",
+    "subtitle": "O Luna Memories transforma suas fotos de viagem em diários personalizados dia a dia, com inteligência artificial.",
+    "feature1Title": "Organização inteligente de fotos",
+    "feature1Desc": "Envie suas fotos de viagem e a Luna lê as datas, horários e localizações GPS para reconstruir seu roteiro automaticamente.",
+    "feature2Title": "Títulos diários com IA",
+    "feature2Desc": "A Luna nomeia cada dia usando os bairros e pontos turísticos reais das suas fotos, sem suposições genéricas.",
+    "feature3Title": "Narrativas pessoais",
+    "feature3Desc": "Adicione algumas notas por dia e a Luna escreve uma história cinematográfica da sua viagem, pronta para compartilhar ou imprimir.",
+    "feature4Title": "Exportação PDF premium",
+    "feature4Desc": "Transforme suas memórias em um diário imprimível com design profissional. A lembrança perfeita ou presente.",
+    "ctaTitle": "Planeje sua próxima aventura",
+    "ctaDesc": "Enquanto o Memories está a caminho, comece a planejar sua próxima viagem com a Luna.",
+    "ctaBtn": "Planejar uma Viagem"
   }
 }
