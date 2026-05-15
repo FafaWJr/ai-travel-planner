@@ -25,7 +25,6 @@ export interface CollaboratorEvent {
  *
  * Accepts the caller's already-authenticated Supabase client so we
  * don't create a redundant client instance per request (same pattern
- * as lib/activity-log.ts).
  */
 export async function getRecentCollaboratorActivity(
   supabase: SupabaseClient,
