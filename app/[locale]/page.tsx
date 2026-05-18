@@ -291,6 +291,13 @@ export default function HomePage() {
         .carousel-btn.prev{left:-20px}
         .carousel-btn.next{right:-20px}
         @media(max-width:900px){.carousel-btn{display:none}}
+        /* FOCUS STATES */
+        :focus-visible{outline:3px solid var(--orange);outline-offset:3px;border-radius:4px}
+        /* REDUCED MOTION */
+        @media(prefers-reduced-motion:reduce){
+          .hero-bg{animation:none!important}
+          *,*::before,*::after{transition-duration:0.01ms!important;animation-duration:0.01ms!important}
+        }
       `}</style>
 
       {/* NAVBAR */}
@@ -334,7 +341,14 @@ export default function HomePage() {
           </div>
           <Link href="/start" className="btn-letsgo">{tHero('cta')} &rarr;</Link>
           <p className="hero-microcopy">{tHero('microCopy')}</p>
-          <div style={{ cursor: 'pointer' }} onClick={() => document.getElementById('proof-strip')?.scrollIntoView({ behavior: 'smooth' })}>
+          <div
+            role="button"
+            tabIndex={0}
+            style={{ cursor: 'pointer' }}
+            onClick={() => document.getElementById('proof-strip')?.scrollIntoView({ behavior: 'smooth' })}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); document.getElementById('proof-strip')?.scrollIntoView({ behavior: 'smooth' }); } }}
+            aria-label="Scroll to content"
+          >
             <div className="see-more">{tHero('seeMore')}</div>
             <div className="see-more-arrow">↓</div>
           </div>
@@ -706,8 +720,8 @@ export default function HomePage() {
           </div>
           <Link href="/trip-ideas" style={{fontFamily:"'Lato',sans-serif",fontSize:14,fontWeight:700,color:'var(--orange)',textDecoration:'none'}}>{tTI('seeAll')} &rarr;</Link>
         </div>
-        <div className="ideas-carousel-wrap" onMouseEnter={stopAutoPlay} onMouseLeave={startAutoPlay}>
-          <button className="carousel-btn prev" onClick={()=>{ carouselRef.current?.scrollBy({left:-320,behavior:'smooth'}); startAutoPlay(); }}>
+        <div className="ideas-carousel-wrap" role="region" aria-label={tTI('title')} onMouseEnter={stopAutoPlay} onMouseLeave={startAutoPlay}>
+          <button className="carousel-btn prev" aria-label="Previous destinations" onClick={()=>{ carouselRef.current?.scrollBy({left:-320,behavior:'smooth'}); startAutoPlay(); }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00447B" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6" /></svg>
           </button>
           <div className="ideas-carousel" ref={carouselRef}>
@@ -737,7 +751,7 @@ export default function HomePage() {
               </Link>
             ))}
           </div>
-          <button className="carousel-btn next" onClick={()=>{ carouselRef.current?.scrollBy({left:320,behavior:'smooth'}); startAutoPlay(); }}>
+          <button className="carousel-btn next" aria-label="Next destinations" onClick={()=>{ carouselRef.current?.scrollBy({left:320,behavior:'smooth'}); startAutoPlay(); }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00447B" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6" /></svg>
           </button>
         </div>

@@ -562,10 +562,11 @@ export default function MemoriesLandingPage() {
             }}>
               {/* Destination */}
               <div style={{ marginBottom: 18 }}>
-                <label style={labelBase}>
+                <label htmlFor="mem-destination" style={labelBase}>
                   <MapPin size={13} aria-hidden="true" /> {t('destination')}
                 </label>
                 <DestinationInput
+                  id="mem-destination"
                   value={destination}
                   onChange={(v) => { setDestination(v); setFormError(''); }}
                   placeholder={t('destinationPlaceholder')}

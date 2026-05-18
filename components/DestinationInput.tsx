@@ -17,10 +17,11 @@ interface DestinationInputProps {
   placeholder: string;
   inputStyle?: CSSProperties;
   iconColor?: string;
+  id?: string;
 }
 
 export default function DestinationInput({
-  value, onChange, placeholder, inputStyle, iconColor = 'var(--orange)',
+  value, onChange, placeholder, inputStyle, iconColor = 'var(--orange)', id,
 }: DestinationInputProps) {
   const [query,     setQuery]     = useState(value);
   const [results,   setResults]   = useState<GeoResult[]>([]);
@@ -95,7 +96,7 @@ export default function DestinationInput({
           </svg>
         </span>
         <input
-          ref={inputRef} type="text" autoComplete="off" value={query}
+          ref={inputRef} id={id} type="text" autoComplete="off" value={query}
           onChange={handleChange} onKeyDown={handleKey}
           placeholder={placeholder}
           style={{
