@@ -1474,12 +1474,12 @@ function PlanContent() {
                     {/* Orange accent bar */}
                     <div style={{ width:5, flexShrink:0, background:'#FF8210', borderRadius:'16px 0 0 16px' }} />
                     {/* Content */}
-                    <div style={{ flex:1, padding:'20px 24px', display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:16 }}>
+                    <div className="plan-dest-header" style={{ flex:1, padding:'20px 24px', display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:16 }}>
                       {/* Left — title, dates, secondary actions */}
-                      <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                      <div style={{ display:'flex', flexDirection:'column', gap:8, minWidth:0, flex:1 }}>
                         {/* Destination + duration badge */}
                         <div style={{ display:'flex', alignItems:'center', gap:12, flexWrap:'wrap' }}>
-                          <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:28, color:'#00447B', margin:0, lineHeight:1.2 }}>
+                          <p className="plan-dest-title" style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:28, color:'#00447B', margin:0, lineHeight:1.2 }}>
                             {destination}
                           </p>
                           {numDays !== null && (
@@ -1504,7 +1504,7 @@ function PlanContent() {
                           </div>
                         )}
                         {/* Secondary actions — Export PDF + New trip + Share */}
-                        <div style={{ display:'flex', gap:8, alignItems:'center', marginTop:4, flexWrap:'wrap' }}>
+                        <div className="plan-dest-actions" style={{ display:'flex', gap:8, alignItems:'center', marginTop:4, flexWrap:'wrap' }}>
                           <button
                             onClick={handleExportPDF}
                             disabled={isExportingPDF}
@@ -1542,56 +1542,57 @@ function PlanContent() {
                           )}
                         </div>
                       </div>
-                      {/* Right — Presence avatars + Invite (owner only, flag-gated) + Save */}
-                      {collab.enabled && (
-                        <div style={{ display: 'flex', alignItems: 'center', marginRight: 12, paddingLeft: 6 }}>
-                          <CollaboratorAvatars
-                            presence={collab.presence}
-                            currentUserId={user?.id}
-                            maxVisible={3}
-                          />
-                        </div>
-                      )}
-                      {COLLAB_ENABLED && tripIsCollaborative && savedTripId && myRole && myRole !== 'owner' && (
-                        <button
-                          onClick={leaveTrip}
-                          style={{
-                            background: 'none',
-                            color: '#6C6D6F',
-                            border: '1.5px solid rgba(108,109,111,0.35)',
-                            fontFamily: "'Poppins',sans-serif",
-                            fontWeight: 600,
-                            fontSize: 13,
-                            padding: '8px 14px',
-                            borderRadius: 8,
-                            cursor: 'pointer',
-                            transition: 'color 0.15s, border-color 0.15s',
-                            whiteSpace: 'nowrap',
-                            flexShrink: 0,
-                            marginRight: 8,
-                          }}
-                          onMouseEnter={e => { e.currentTarget.style.color = '#DC2626'; e.currentTarget.style.borderColor = '#DC2626'; }}
-                          onMouseLeave={e => { e.currentTarget.style.color = '#6C6D6F'; e.currentTarget.style.borderColor = 'rgba(108,109,111,0.35)'; }}
-                        >
-                          {t('header.leaveTrip')}
-                        </button>
-                      )}
-                      {!isViewerRole && (
-                        <button
-                          onClick={saveTrip}
-                          disabled={saveLoading || (!!savedTripId && !isDirty)}
-                          style={{
-                            background: saveLoading ? 'rgba(255,130,16,0.6)' : (savedTripId && !isDirty) ? '#16A34A' : '#FF8210',
-                            color: '#fff', border: 'none',
-                            fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 14,
-                            padding: '10px 22px', borderRadius: 8,
-                            cursor: (saveLoading || (!!savedTripId && !isDirty)) ? 'default' : 'pointer',
-                            transition: 'background 0.15s', whiteSpace: 'nowrap', flexShrink: 0,
-                          }}
-                        >
-                          {saveLoading ? t('header.saving') : (savedTripId && !isDirty) ? '✓ Saved' : savedTripId ? 'Save changes' : t('header.saveTrip')}
-                        </button>
-                      )}
+                      {/* Right — Presence avatars + Leave trip + Save (grouped for mobile layout) */}
+                      <div className="plan-dest-right" style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
+                        {collab.enabled && (
+                          <div style={{ display: 'flex', alignItems: 'center' }}>
+                            <CollaboratorAvatars
+                              presence={collab.presence}
+                              currentUserId={user?.id}
+                              maxVisible={3}
+                            />
+                          </div>
+                        )}
+                        {COLLAB_ENABLED && tripIsCollaborative && savedTripId && myRole && myRole !== 'owner' && (
+                          <button
+                            onClick={leaveTrip}
+                            style={{
+                              background: 'none',
+                              color: '#6C6D6F',
+                              border: '1.5px solid rgba(108,109,111,0.35)',
+                              fontFamily: "'Poppins',sans-serif",
+                              fontWeight: 600,
+                              fontSize: 13,
+                              padding: '8px 14px',
+                              borderRadius: 8,
+                              cursor: 'pointer',
+                              transition: 'color 0.15s, border-color 0.15s',
+                              whiteSpace: 'nowrap',
+                              flexShrink: 0,
+                            }}
+                            onMouseEnter={e => { e.currentTarget.style.color = '#DC2626'; e.currentTarget.style.borderColor = '#DC2626'; }}
+                            onMouseLeave={e => { e.currentTarget.style.color = '#6C6D6F'; e.currentTarget.style.borderColor = 'rgba(108,109,111,0.35)'; }}
+                          >
+                            {t('header.leaveTrip')}
+                          </button>
+                        )}
+                        {!isViewerRole && (
+                          <button
+                            onClick={saveTrip}
+                            disabled={saveLoading || (!!savedTripId && !isDirty)}
+                            style={{
+                              background: saveLoading ? 'rgba(255,130,16,0.6)' : (savedTripId && !isDirty) ? '#16A34A' : '#FF8210',
+                              color: '#fff', border: 'none',
+                              fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 14,
+                              padding: '10px 22px', borderRadius: 8,
+                              cursor: (saveLoading || (!!savedTripId && !isDirty)) ? 'default' : 'pointer',
+                              transition: 'background 0.15s', whiteSpace: 'nowrap', flexShrink: 0,
+                            }}
+                          >
+                            {saveLoading ? t('header.saving') : (savedTripId && !isDirty) ? '✓ Saved' : savedTripId ? 'Save changes' : t('header.saveTrip')}
+                          </button>
+                        )}
+                      </div>
                       {COLLAB_ENABLED && inviteOpen && savedTripId && (
                         <InviteModal
                           tripId={savedTripId}
@@ -2429,9 +2430,14 @@ function PlanContent() {
           .plan-section { padding: 20px 16px !important; }
           /* Loading steps: stack vertically */
           .plan-loading-steps { flex-direction: column !important; align-items: center !important; }
-          /* Destination header */
-          .plan-dest-header { flex-direction: column !important; gap: 12px !important; }
-          .plan-dest-actions { flex-wrap: wrap !important; }
+          /* Destination header: stack left content + right buttons vertically */
+          .plan-dest-header { flex-direction: column !important; gap: 12px !important; padding: 16px !important; }
+          /* Destination title: smaller on mobile */
+          .plan-dest-title { font-size: 20px !important; }
+          /* Right group (avatars + leave + save): align to row, push to right edge */
+          .plan-dest-right { width: 100% !important; justify-content: flex-end !important; }
+          /* Secondary action buttons: wrap onto multiple lines */
+          .plan-dest-actions { flex-wrap: wrap !important; gap: 6px !important; }
         }
       `}</style>
     </div>
