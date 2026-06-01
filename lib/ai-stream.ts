@@ -477,14 +477,21 @@ export async function streamGenerateTwoPhase(opts: {
 
       const dayInputs: Record<string, unknown>[] = [];
       const phaseInputs: Record<string, unknown>[] = [];
+      // Buffer Phase 1 tool events. The client only mounts the itinerary
+      // component (and binds itineraryRef) once narrative text flips its
+      // loading state off, so tool events emitted before any narrative would
+      // hit a null ref and be dropped. We emit the narrative first, then flush
+      // these. Generation order is unchanged: the itinerary is still produced
+      // first and grounds the narrative.
+      const bufferedToolEvents: { id: string; name: string; input: Record<string, unknown> }[] = [];
 
       try {
-        // ── Phase 1: itinerary (tools only). Stray prose is dropped. ──
+        // ── Phase 1: itinerary (tools only). Buffer events; stray prose dropped. ──
         const p1 = await consumeAnthropicPhase(phase1Res, route, {
           onToolUse: (tu) => {
             if (tu.name === 'define_day') dayInputs.push(tu.input);
             else if (tu.name === 'define_phase') phaseInputs.push(tu.input);
-            emitTool(tu);
+            bufferedToolEvents.push(tu);
           },
           onText: () => {},
         });
@@ -493,7 +500,8 @@ export async function streamGenerateTwoPhase(opts: {
         // ── Build grounding summary from the itinerary just produced. ──
         const itinerarySummary = collectSummary(dayInputs, phaseInputs);
 
-        // ── Phase 2: narrative (no tools), grounded. Failure here keeps the itinerary. ──
+        // ── Phase 2: narrative (no tools), grounded. Streamed FIRST so the
+        //    client mounts the itinerary view before the buffered tool events. ──
         try {
           const phase2Res = await openWithFallback([
             { role: 'user', content: buildNarrativeUserPrompt(itinerarySummary) },
@@ -501,8 +509,12 @@ export async function streamGenerateTwoPhase(opts: {
           const p2 = await consumeAnthropicPhase(phase2Res, route, { onText: (t) => emitText(t) });
           console.log(`[ai/${route}] phase2 stop=${p2.stopReason} cacheRead=${p2.cache?.read ?? 0}`);
         } catch (phase2Err) {
-          console.error(`[ai/${route}] phase2 failed after itinerary streamed:`, phase2Err);
+          console.error(`[ai/${route}] phase2 failed after itinerary buffered:`, phase2Err);
         }
+
+        // ── Flush the buffered itinerary AFTER the narrative, in original order. ──
+        for (const tu of bufferedToolEvents) emitTool(tu);
+        console.log(`[ai/${route}] flushed ${bufferedToolEvents.length} tool events after narrative`);
       } catch (err) {
         console.error(`[ai/${route}] two-phase generation error:`, err);
       } finally {
