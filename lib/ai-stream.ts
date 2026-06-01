@@ -266,3 +266,249 @@ async function streamAnthropic(
     },
   });
 }
+
+// ── Two-phase generate orchestrator ─────────────────────────────────────────
+// Root-cause fix for the "itinerary XOR narrative" generation bug. A single
+// assistant turn cannot reliably emit BOTH a full prose narrative AND a full
+// set of tool calls: once the model emits tool_use, the turn ends with
+// stop_reason: tool_use and any trailing prose is dropped; if it leads with
+// prose it tends to stop with end_turn before any tool call. We split into two
+// sequential calls inside one output stream:
+//   Phase 1: tools only (tool_choice: any) → itinerary, streamed as tool_use.
+//   Phase 2: no tools → the six narrative sections as text, grounded in the
+//            Phase 1 itinerary.
+// The emitted SSE shapes are identical to streamAnthropic, so the client SSE
+// parser is unchanged.
+//
+// NOTE: the SSE parse loop below is intentionally duplicated from streamAnthropic
+// rather than shared, to keep the proven streamCompletion path untouched. A
+// future refactor can unify them (see follow-ups).
+
+type PhaseHandlers = {
+  onText?: (text: string) => void;
+  onToolUse?: (tu: { id: string; name: string; input: Record<string, unknown> }) => void;
+};
+
+type PhaseResult = {
+  stopReason: string;
+  toolsEmitted: number;
+  cache: { read: number; write: number; uncached: number } | null;
+};
+
+/**
+ * Open one Anthropic streaming call. Throws on a pre-stream error (non-2xx)
+ * so the caller can fall back to the secondary model or return a 502 before
+ * any token has streamed. Returns the live Response for consumption.
+ */
+async function openAnthropicPhase(
+  model: string,
+  system: string | SystemContentBlock[],
+  conversation: { role: 'user' | 'assistant'; content: string }[],
+  maxTokens: number,
+  route: AIRoute,
+  tools?: AnthropicTool[],
+  toolChoice?: ToolChoiceOption,
+): Promise<Response> {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': process.env.ANTHROPIC_API_KEY!,
+      'anthropic-version': '2023-06-01',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: maxTokens,
+      temperature: AI_CONFIG.temperature,
+      stream: true,
+      system,
+      messages: conversation,
+      ...(tools && tools.length > 0 ? { tools, tool_choice: toolChoice ?? { type: 'auto' } } : {}),
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Anthropic ${res.status} (${model}, ${route}): ${err}`);
+  }
+  return res;
+}
+
+/**
+ * Consume an open Anthropic stream, invoking handlers for text and completed
+ * tool_use blocks. Mid-stream errors are logged and swallowed (parity with
+ * streamAnthropic), never thrown, so they cannot trigger a spurious fallback
+ * after content has already streamed.
+ */
+async function consumeAnthropicPhase(
+  res: Response,
+  route: AIRoute,
+  handlers: PhaseHandlers,
+): Promise<PhaseResult> {
+  const reader = res.body!.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  const toolBuffers = new Map<number, { id: string; name: string; partialJson: string }>();
+  let stopReason = 'unknown';
+  let toolsEmitted = 0;
+  let cache: PhaseResult['cache'] = null;
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? '';
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const jsonStr = line.slice(6).trim();
+        if (!jsonStr || jsonStr === '[DONE]') continue;
+
+        try {
+          const event = JSON.parse(jsonStr);
+
+          if (event.type === 'message_start' && event.message?.usage) {
+            const u = event.message.usage;
+            cache = {
+              read: u.cache_read_input_tokens ?? 0,
+              write: u.cache_creation_input_tokens ?? 0,
+              uncached: u.input_tokens ?? 0,
+            };
+          } else if (event.type === 'content_block_start' && event.content_block?.type === 'tool_use') {
+            toolBuffers.set(event.index, {
+              id: event.content_block.id,
+              name: event.content_block.name,
+              partialJson: '',
+            });
+          } else if (event.type === 'content_block_delta' && event.delta?.type === 'input_json_delta') {
+            const tb = toolBuffers.get(event.index);
+            if (tb) tb.partialJson += event.delta.partial_json ?? '';
+          } else if (event.type === 'content_block_stop') {
+            const tb = toolBuffers.get(event.index);
+            if (tb) {
+              try {
+                const input = tb.partialJson.trim() ? JSON.parse(tb.partialJson) : {};
+                handlers.onToolUse?.({ id: tb.id, name: tb.name, input });
+                toolsEmitted++;
+              } catch (err) {
+                console.error(`[ai/${route}] tool_use JSON parse failed for ${tb.name}:`, tb.partialJson, err);
+              }
+              toolBuffers.delete(event.index);
+            }
+          } else if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
+            handlers.onText?.(event.delta.text);
+          } else if (event.type === 'message_delta' && event.delta?.stop_reason) {
+            stopReason = event.delta.stop_reason;
+          }
+        } catch {
+          /* skip malformed lines */
+        }
+      }
+    }
+  } catch (err) {
+    console.error(`[ai/${route}] phase consume error:`, err);
+  }
+
+  return { stopReason, toolsEmitted, cache };
+}
+
+/**
+ * Two-phase generate. Phase 1 (itinerary, tools only) is opened eagerly so a
+ * pre-stream failure rejects this promise and the route can return 502, exactly
+ * like streamCompletion does today. Phase 2 (narrative, no tools) runs inside
+ * the stream after Phase 1 has finished; if Phase 2 fails the user still keeps
+ * the itinerary and the stream closes cleanly.
+ */
+export async function streamGenerateTwoPhase(opts: {
+  system: SystemContentBlock[];
+  tools: AnthropicTool[];
+  itineraryUserPrompt: string;
+  buildNarrativeUserPrompt: (itinerarySummary: string) => string;
+  collectSummary: (
+    dayInputs: Record<string, unknown>[],
+    phaseInputs: Record<string, unknown>[],
+  ) => string;
+}): Promise<ReadableStream<Uint8Array>> {
+  const { system, tools, itineraryUserPrompt, buildNarrativeUserPrompt, collectSummary } = opts;
+  const route: AIRoute = 'generate';
+  const maxTokens = AI_CONFIG.maxTokens[route];
+
+  if (!process.env.ANTHROPIC_API_KEY) {
+    throw new Error('ANTHROPIC_API_KEY is not set. Add it to Vercel env vars for all environments.');
+  }
+
+  const fallbackEnabled = process.env.NEXT_PUBLIC_AI_FALLBACK_ENABLED !== 'false';
+  const encoder = new TextEncoder();
+
+  const openWithFallback = async (
+    conversation: { role: 'user' | 'assistant'; content: string }[],
+    phaseTools?: AnthropicTool[],
+    toolChoice?: ToolChoiceOption,
+  ): Promise<Response> => {
+    try {
+      return await openAnthropicPhase(AI_MODELS.primary, system, conversation, maxTokens, route, phaseTools, toolChoice);
+    } catch (primaryErr) {
+      console.warn(`[ai/${route}] primary (${AI_MODELS.primary}) failed pre-stream:`, primaryErr);
+      if (!fallbackEnabled) throw primaryErr;
+      console.warn(`[ai/${route}] falling back to ${AI_MODELS.fallback}`);
+      return await openAnthropicPhase(AI_MODELS.fallback, system, conversation, maxTokens, route, phaseTools, toolChoice);
+    }
+  };
+
+  // Open Phase 1 eagerly. A pre-stream failure here propagates to the route's
+  // try/catch as a 502, matching today's behaviour.
+  const phase1Res = await openWithFallback(
+    [{ role: 'user', content: itineraryUserPrompt }],
+    tools,
+    { type: 'any' },
+  );
+
+  return new ReadableStream<Uint8Array>({
+    async start(controller) {
+      const emitText = (text: string) => {
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ choices: [{ delta: { content: text } }] })}\n\n`));
+      };
+      const emitTool = (tu: { id: string; name: string; input: Record<string, unknown> }) => {
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ tool_use: tu })}\n\n`));
+      };
+
+      const dayInputs: Record<string, unknown>[] = [];
+      const phaseInputs: Record<string, unknown>[] = [];
+
+      try {
+        // ── Phase 1: itinerary (tools only). Stray prose is dropped. ──
+        const p1 = await consumeAnthropicPhase(phase1Res, route, {
+          onToolUse: (tu) => {
+            if (tu.name === 'define_day') dayInputs.push(tu.input);
+            else if (tu.name === 'define_phase') phaseInputs.push(tu.input);
+            emitTool(tu);
+          },
+          onText: () => {},
+        });
+        console.log(`[ai/${route}] phase1 stop=${p1.stopReason} tools=${p1.toolsEmitted} cacheRead=${p1.cache?.read ?? 0}`);
+
+        // ── Build grounding summary from the itinerary just produced. ──
+        const itinerarySummary = collectSummary(dayInputs, phaseInputs);
+
+        // ── Phase 2: narrative (no tools), grounded. Failure here keeps the itinerary. ──
+        try {
+          const phase2Res = await openWithFallback([
+            { role: 'user', content: buildNarrativeUserPrompt(itinerarySummary) },
+          ]);
+          const p2 = await consumeAnthropicPhase(phase2Res, route, { onText: (t) => emitText(t) });
+          console.log(`[ai/${route}] phase2 stop=${p2.stopReason} cacheRead=${p2.cache?.read ?? 0}`);
+        } catch (phase2Err) {
+          console.error(`[ai/${route}] phase2 failed after itinerary streamed:`, phase2Err);
+        }
+      } catch (err) {
+        console.error(`[ai/${route}] two-phase generation error:`, err);
+      } finally {
+        controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+        controller.close();
+      }
+    },
+  });
+}

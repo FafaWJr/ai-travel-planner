@@ -133,15 +133,20 @@ export const BUDGET_LABELS: Record<BudgetLevel, string> = {
   'premium': 'Premium & Luxury',
 };
 
-export function buildTravelPrompt(form: TripFormData, weather: WeatherData | null): string {
+/**
+ * Shared trip context block used by /api/generate to build both the itinerary
+ * phase prompt and the narrative phase prompt. This is the head of the legacy
+ * single-call buildTravelPrompt, extracted so there is one source of truth.
+ */
+export function buildGenerateContextPreamble(form: TripFormData, weather: WeatherData | null): string {
   const styleLabels = form.tripStyles.map(s => TRIP_STYLE_LABELS[s]).join(', ');
   const budgetLabel = BUDGET_LABELS[form.budgetLevel];
 
   const startDateFormatted = new Date(form.startDate).toLocaleDateString('en-GB', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   });
   const endDateFormatted = new Date(form.endDate).toLocaleDateString('en-GB', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   });
 
   const start = new Date(form.startDate);
@@ -171,7 +176,6 @@ ${weather.humidity !== undefined ? `- Humidity: ${weather.humidity}%` : ''}
 `;
   }
 
-  // ── R1 Stage 4 Rules ────────────────────────────────────────────────────
   const rulesBlock = buildStage4RulesBlock({
     adultAges:     form.adultAges,
     childrenAges:  form.childrenAges,
@@ -182,6 +186,35 @@ ${weather.humidity !== undefined ? `- Humidity: ${weather.humidity}%` : ''}
     departureTime: form.departureTime,
     styleLabels,
   });
+
+  return `Please create a comprehensive travel plan for the following trip:
+
+## Trip Details
+- **Destination:** ${form.destination}
+- **Travel Dates:** ${startDateFormatted} to ${endDateFormatted} (${tripDays} day${tripDays !== 1 ? 's' : ''})
+${form.arrivalTime ? `- **Arrival Time:** ${form.arrivalTime}` : ''}
+${form.departureTime ? `- **Departure Time:** ${form.departureTime}` : ''}
+
+## Travellers
+- ${travellerInfo}
+
+## Trip Preferences
+- **Travel Styles:** ${styleLabels}
+- **Budget Level:** ${budgetLabel}
+${form.notes ? `\n## Special Requests\n${form.notes}` : ''}
+${weatherContext}
+${rulesBlock}`;
+}
+
+export function buildTravelPrompt(form: TripFormData, weather: WeatherData | null): string {
+  const styleLabels = form.tripStyles.map(s => TRIP_STYLE_LABELS[s]).join(', ');
+  const budgetLabel = BUDGET_LABELS[form.budgetLevel];
+
+  const start = new Date(form.startDate);
+  const end = new Date(form.endDate);
+  const tripDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+  const preamble = buildGenerateContextPreamble(form, weather);
 
   const tripLengthMode: TripLengthMode = tripDays >= 15 ? 'long' : tripDays >= 7 ? 'medium' : 'short';
 
@@ -212,23 +245,7 @@ Example for a 10-day trip with 3 phases of Days 1-3, Days 4-7, Days 8-10:
     phaseInstruction = `This is a ${tripDays}-day trip (under 7 days), so DO NOT call define_phase. Just call define_day once per day with full activities, from Day 1 through Day ${tripDays}.`;
   }
 
-  const userPrompt = `Please create a comprehensive travel plan for the following trip:
-
-## Trip Details
-- **Destination:** ${form.destination}
-- **Travel Dates:** ${startDateFormatted} to ${endDateFormatted} (${tripDays} day${tripDays !== 1 ? 's' : ''})
-${form.arrivalTime ? `- **Arrival Time:** ${form.arrivalTime}` : ''}
-${form.departureTime ? `- **Departure Time:** ${form.departureTime}` : ''}
-
-## Travellers
-- ${travellerInfo}
-
-## Trip Preferences
-- **Travel Styles:** ${styleLabels}
-- **Budget Level:** ${budgetLabel}
-${form.notes ? `\n## Special Requests\n${form.notes}` : ''}
-${weatherContext}
-${rulesBlock}
+  const userPrompt = `${preamble}
 
 ---
 

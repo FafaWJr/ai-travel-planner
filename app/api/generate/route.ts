@@ -2,31 +2,29 @@ import { NextRequest } from 'next/server';
 import { tripFormSchema } from '@/lib/validators';
 import { getWeather } from '@/lib/weather';
 import {
-  buildTravelPrompt,
   SYSTEM_PROMPT,
   getLanguageInstruction,
   buildGenerateTools,
   parsePromptContext,
   buildStage4RulesBlock,
   derivePace,
-  validatePacing,
   buildGenerateSystemBlocks,
+  buildGenerateContextPreamble,
 } from '@/lib/ai';
 import type { SystemContentBlock } from '@/lib/ai-stream';
-import { streamCompletion } from '@/lib/ai-stream';
+import { streamGenerateTwoPhase } from '@/lib/ai-stream';
+import { summariseItineraryForNarrative } from '@/lib/normalizeToolInput';
 import { createClient } from '@/lib/supabase/server';
 
-// Stage 4: capped at 300s (Vercel Hobby plan max). Structured tool-call generation
-// streams incrementally so the client sees output well before timeout.
+// Stage 4: capped at 300s (Vercel Hobby plan max). Two-phase generation streams
+// the itinerary first, then the narrative, both well before timeout.
 export const maxDuration = 300;
 
 /**
  * Extract approximate trip day count from a natural-language prompt string.
- * Used to decide whether to include define_phase in the tool array (≥15 days).
  * Returns null if the count can't be reliably detected.
  */
 function extractTripDaysFromPrompt(prompt: string): number | null {
-  // "from 2025-01-01 to 2025-01-14" style
   const fromTo = prompt.match(/from\s+(\d{4}-\d{2}-\d{2}).*?to\s+(\d{4}-\d{2}-\d{2})/i);
   if (fromTo) {
     const days = Math.ceil(
@@ -34,25 +32,21 @@ function extractTripDaysFromPrompt(prompt: string): number | null {
     ) + 1;
     if (!isNaN(days) && days > 0) return days;
   }
-  // "14 days", "14-day", "for 14 days"
   const dayWord = prompt.match(/(\d+)\s*-?\s*days?/i);
   if (dayWord) return parseInt(dayWord[1], 10);
-  // "2 weeks"
   const weekWord = prompt.match(/(\d+)\s*-?\s*weeks?/i);
   if (weekWord) return parseInt(weekWord[1], 10) * 7;
   return null;
 }
 
 /**
- * Builds the user prompt for the itinerary section when using structured tool output.
- * Branches by trip length to match the tool array narrowed in buildGenerateTools.
+ * Itinerary instruction for the tool-only phase. Branches by trip length to
+ * match the tool array narrowed in buildGenerateTools.
  */
 function buildStructuredItineraryInstruction(tripDays: number): string {
   // LONG TRIPS: phase-only. define_day is not in the tool array.
   if (tripDays >= 15) {
-    return `## Personalised Itinerary
-
-CRITICAL OUTPUT MODE: PHASE-ONLY. This ${tripDays}-day trip uses phase-based planning.
+    return `CRITICAL OUTPUT MODE: PHASE-ONLY. This ${tripDays}-day trip uses phase-based planning.
 
 You MUST call define_phase 3 to 6 times to cover ALL ${tripDays} days. Every day from Day 1 to Day ${tripDays} must belong to exactly one phase. Phase boundaries should be 5 to 10 days each. Choose phases that match the destination's natural geography (e.g. "Coastal Days", "Hinterland Escape", "Southern Beaches") OR temporal flow (e.g. "Settling In", "Big Hits", "Slow Beach Living").
 
@@ -63,16 +57,12 @@ You MUST NOT call define_day for ANY day. The define_day tool is not available f
 Example for a 20-day trip with 4 phases:
 - 4 define_phase calls covering Days 1-5, Days 6-10, Days 11-15, Days 16-20
 - 0 define_day calls
-- Total: 4 tool calls only
-
-REMINDER: PHASE-ONLY. Do NOT call define_day. Just emit define_phase calls covering all ${tripDays} days.`;
+- Total: 4 tool calls only.`;
   }
 
   // MEDIUM TRIPS: phases first, then all days.
   if (tripDays >= 7) {
-    return `## Personalised Itinerary
-
-This ${tripDays}-day trip uses phase grouping for organisation. You MUST call define_phase 2 to 3 times BEFORE any define_day call.
+    return `This ${tripDays}-day trip uses phase grouping for organisation. You MUST call define_phase 2 to 3 times BEFORE any define_day call.
 
 STEP A: Call define_phase 2 to 3 times to cover ALL ${tripDays} days. Every day must belong to exactly one phase. Choose phase boundaries that reflect natural journey structure (e.g. "Arrival & City", "Day Trips", "Coastal Finale"). Each phase needs phase_id, label, day_from, day_to, summary (1-2 sentences), and 2-4 highlights.
 
@@ -81,15 +71,65 @@ STEP B: Call define_day with FULL activity content for ALL ${tripDays} days in o
 Example for a 10-day trip with 3 phases of Days 1-3, Days 4-7, Days 8-10:
 - 3 define_phase calls (one per phase, covering all 10 days)
 - 10 define_day calls (all days, each with its phase_id)
-- Total: 13 tool calls
-
-REMINDER: phases FIRST, then days. Both are required.`;
+- Total: 13 tool calls.`;
   }
 
   // SHORT TRIPS: day-only.
-  return `## Personalised Itinerary
+  return `This is a ${tripDays}-day trip. Do NOT call define_phase. Just call define_day ONCE for EACH of the ${tripDays} days in order (Day 1 through Day ${tripDays}). Each call must include at least 1 activity per time slot (morning, afternoon, evening, night). Be specific and practical.`;
+}
 
-This is a ${tripDays}-day trip. Do NOT call define_phase. Just call define_day ONCE for EACH of the ${tripDays} days in order (Day 1 through Day ${tripDays}). Each call must include at least 1 activity per time slot (morning, afternoon, evening, night). Be specific and practical.`;
+/** Directive appended to the itinerary phase prompt: tools only, no prose. */
+function itineraryOnlyDirective(tripDays: number): string {
+  const toolNames = tripDays >= 15
+    ? 'define_phase'
+    : tripDays >= 7
+      ? 'define_phase and define_day'
+      : 'define_day';
+  return `OUTPUT MODE: ITINERARY ONLY. In this turn, output ONLY the structured itinerary via ${toolNames} tool calls. Do NOT write any markdown, prose, or narrative sections. The narrative is produced in a separate step.`;
+}
+
+/** Builds the grounded narrative-only prompt for the simple-prompt branch. */
+function buildSimpleNarrativePrompt(rawPrompt: string, rulesBlock: string, summary: string): string {
+  return `${rawPrompt}${rulesBlock ? `\n${rulesBlock}` : ''}
+
+The day-by-day itinerary for this trip has ALREADY been generated. Here it is, for grounding. Keep every recommendation consistent with it:
+
+ITINERARY ALREADY CREATED:
+${summary || '(no structured days were produced; write destination-level guidance.)'}
+
+Now write EXACTLY these six sections as Markdown H2 headers (no emojis in the headers), in this order, each complete with bullet points and bold text:
+
+## Destination Overview
+## Travel Season & Weather
+## Where to Stay
+## Getting Around
+## Budget Estimator
+## Practical Tips
+
+Ground "Where to Stay" and "Getting Around" in the neighbourhoods, areas, and movements implied by the itinerary above. Do NOT include a "Personalised Itinerary" or any day-by-day section; that already exists. Output prose only, no tool calls.`;
+}
+
+/** Builds the grounded narrative-only prompt for the form branch. */
+function buildFormNarrativePrompt(preamble: string, summary: string): string {
+  return `${preamble}
+
+---
+
+The day-by-day itinerary for this trip has ALREADY been generated. Here it is, for grounding. Keep every recommendation consistent with it:
+
+ITINERARY ALREADY CREATED:
+${summary || '(no structured days were produced; write destination-level guidance.)'}
+
+Now write EXACTLY these six sections as Markdown H2 headers (no emojis in the headers), in this order, each complete with bullet points and bold text:
+
+## Destination Overview
+## Travel Season & Weather
+## Where to Stay
+## Getting Around
+## Budget Estimator
+## Practical Tips
+
+Ground "Where to Stay" and "Getting Around" in the neighbourhoods, areas, and movements implied by the itinerary above. The Getting Around and Practical Tips sections are required and must not be skipped. Do NOT include a "Personalised Itinerary" or any day-by-day section; that already exists. Output prose only, no tool calls.`;
 }
 
 export async function POST(request: NextRequest) {
@@ -101,7 +141,6 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-
     const locale = (body.locale as string) || 'en';
 
     /* ── Simple prompt mode (used by the homepage search bar) ── */
@@ -114,13 +153,9 @@ export async function POST(request: NextRequest) {
       const parsedCtx = parsePromptContext(rawPrompt);
       const rulesBlock = buildStage4RulesBlock(parsedCtx);
 
-      // Pace classification for simple prompt mode (logging only — per-day
-      // validatePacing requires server-side tool extraction, which is not possible
-      // in the current streaming architecture; tool results are parsed client-side).
       const simplePace = derivePace(parsedCtx.tripStyles, parsedCtx.notes);
-      console.log(`[Luna Generate] pace=${simplePace} destination=${parsedCtx.destination || 'unknown'} days=${tripDays} (simple-prompt mode)`);
+      console.log(`[Luna Generate] pace=${simplePace} destination=${parsedCtx.destination || 'unknown'} days=${tripDays} (simple-prompt mode, two-phase)`);
 
-      // System blocks: cached static methodology + simple dynamic context.
       const langInstruction = getLanguageInstruction(locale);
       const dynamicContext = `TRIP DETAILS FOR THIS REQUEST:
 - Destination: ${parsedCtx.destination || 'unspecified'}
@@ -137,36 +172,21 @@ Based on this profile, your internal pace classification is: ${simplePace}${lang
         { type: 'text', text: dynamicContext },
       ];
 
-      const structuredPrompt = rawPrompt + (rulesBlock ? `\n${rulesBlock}` : '') + `
+      const itineraryUserPrompt = `${rawPrompt}${rulesBlock ? `\n${rulesBlock}` : ''}
 
-Please provide a detailed, personalised travel plan in Markdown with exactly these sections as H2 headers (no emojis in the headers):
-
-## Destination Overview
-## Travel Season & Weather
 ${buildStructuredItineraryInstruction(tripDays)}
-## Where to Stay
-## Getting Around
-## Budget Estimator
-## Practical Tips
 
-Make each section specific, practical and engaging. Use bullet points and bold text throughout.
-
-MANDATORY OUTPUT FORMAT: Your response MUST contain BOTH:
-1. Full markdown narrative for all six sections above (Destination Overview, Travel Season & Weather, Where to Stay, Getting Around, Budget Estimator, Practical Tips). Each section must be a complete H2-headed block with substantive content, bullet points, and bold text. Do not abbreviate, skip, or stub any of the six.
-2. The structured day-by-day itinerary via define_day (and define_phase where required) tool calls.
-
-A response with only tool calls and no markdown narrative is incomplete and will be rejected. A response with only narrative and no tool calls is incomplete and will be rejected. Both are mandatory in every response.`;
+${itineraryOnlyDirective(tripDays)}`;
 
       let stream: ReadableStream<Uint8Array>;
       try {
-        stream = await streamCompletion(
-          [
-            { role: 'system', content: simpleSystemBlocks },
-            { role: 'user', content: structuredPrompt },
-          ],
-          'generate',
+        stream = await streamGenerateTwoPhase({
+          system: simpleSystemBlocks,
           tools,
-        );
+          itineraryUserPrompt,
+          buildNarrativeUserPrompt: (summary) => buildSimpleNarrativePrompt(rawPrompt, rulesBlock, summary),
+          collectSummary: summariseItineraryForNarrative,
+        });
       } catch (err: unknown) {
         console.error('[generate] stream error:', err);
         return new Response(
@@ -174,6 +194,7 @@ A response with only tool calls and no markdown narrative is incomplete and will
           { status: 502, headers: { 'Content-Type': 'application/json' } }
         );
       }
+
       return new Response(stream, {
         headers: {
           'Content-Type': 'text/event-stream',
@@ -196,47 +217,34 @@ A response with only tool calls and no markdown narrative is incomplete and will
     const formData = validationResult.data;
     const weather = await getWeather(formData.destination, formData.startDate, formData.endDate);
 
-    // Compute tripDays for the form path (exact date range)
     const start = new Date(formData.startDate);
     const end   = new Date(formData.endDate);
     const tripDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
     const tools = buildGenerateTools(tripDays);
 
-    // Pace classification — log before stream. Per-day validatePacing requires
-    // server-side tool extraction which is not possible in the streaming
-    // architecture; validatePacing is available client-side if needed in Stage 5.
     const pace = derivePace(formData.tripStyles as string[], formData.notes);
-    console.log(`[Luna Generate] pace=${pace} destination=${formData.destination} days=${tripDays} budget=${formData.budgetLevel}`);
+    console.log(`[Luna Generate] pace=${pace} destination=${formData.destination} days=${tripDays} budget=${formData.budgetLevel} (two-phase)`);
 
-    // System blocks: cached static methodology (Block 0) + per-request trip
-    // context with pace classification (Block 1). Enables Anthropic prompt
-    // caching on the generate route for the first time.
     const systemBlocks = buildGenerateSystemBlocks(formData, locale);
+    const preamble = buildGenerateContextPreamble(formData, weather);
 
-    // buildTravelPrompt produces the base structured user prompt.
-    // We patch the Personalised Itinerary section to use tool calls.
-    const baseUserPrompt = buildTravelPrompt(formData, weather);
-    const userPromptWithTools = baseUserPrompt.replace(
-      /## Personalised Itinerary\n[\s\S]*?(?=\n## Where to Stay)/,
-      buildStructuredItineraryInstruction(tripDays) + '\n',
-    ) + `
+    const itineraryUserPrompt = `${preamble}
 
-MANDATORY OUTPUT FORMAT: Your response MUST contain BOTH:
-1. Full markdown narrative for all six sections (Destination Overview, Travel Season & Weather, Where to Stay, Getting Around, Budget Estimator, Practical Tips). Each section must be a complete H2-headed block with substantive content, bullet points, and bold text. Do not abbreviate, skip, or stub any of the six.
-2. The structured day-by-day itinerary via define_day (and define_phase where required) tool calls.
+---
 
-A response with only tool calls and no markdown narrative is incomplete and will be rejected. A response with only narrative and no tool calls is incomplete and will be rejected. Both are mandatory in every response.`;
+${buildStructuredItineraryInstruction(tripDays)}
+
+${itineraryOnlyDirective(tripDays)}`;
 
     let stream: ReadableStream<Uint8Array>;
     try {
-      stream = await streamCompletion(
-        [
-          { role: 'system', content: systemBlocks },
-          { role: 'user', content: userPromptWithTools },
-        ],
-        'generate',
+      stream = await streamGenerateTwoPhase({
+        system: systemBlocks,
         tools,
-      );
+        itineraryUserPrompt,
+        buildNarrativeUserPrompt: (summary) => buildFormNarrativePrompt(preamble, summary),
+        collectSummary: summariseItineraryForNarrative,
+      });
     } catch (err: unknown) {
       console.error('[generate] stream error:', err);
       return new Response(

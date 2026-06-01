@@ -266,3 +266,55 @@ export function defineDayInputToDay(input: DefineDayInput): Day {
     phase_id:    input.phase_id,
   };
 }
+
+/**
+ * Compact, deterministic summary of a generated itinerary, used to ground the
+ * narrative phase of /api/generate. The narrative call cannot see the tool
+ * calls directly, so we serialise the day and phase inputs into plain text and
+ * inject it into the narrative prompt. Reuses the same normalisers the client
+ * uses, so the dual-format day shape is handled consistently.
+ *
+ * Bounded by trip length (short and medium trips only emit define_day; long
+ * trips are phase-only). A hard character cap guards against pathological input.
+ */
+export function summariseItineraryForNarrative(
+  dayInputs: Record<string, unknown>[],
+  phaseInputs: Record<string, unknown>[],
+): string {
+  const lines: string[] = [];
+
+  if (phaseInputs.length > 0) {
+    lines.push('Phases:');
+    for (const raw of phaseInputs) {
+      const p = normalizeDefinePhaseInput(raw);
+      if (!p) continue;
+      lines.push(`- ${p.label} (Days ${p.day_from}-${p.day_to}): ${p.summary}`);
+    }
+    lines.push('');
+  }
+
+  const days: Day[] = dayInputs
+    .map((raw) => {
+      const n = normalizeDefineDayInput(raw);
+      return n ? defineDayInputToDay(n) : null;
+    })
+    .filter((d): d is Day => d !== null)
+    .sort((a, b) => a.number - b.number);
+
+  for (const day of days) {
+    const bySlot: Record<TimeSlot, string[]> = { morning: [], afternoon: [], evening: [], night: [] };
+    for (const a of day.activities) {
+      const text = a.text.replace(/\*\*/g, '').replace(/^\s*[-*]\s*/, '').trim();
+      if (text) bySlot[a.slot]?.push(text);
+    }
+    const slotStr = (['morning', 'afternoon', 'evening', 'night'] as TimeSlot[])
+      .map((s) => (bySlot[s].length ? `${s}: ${bySlot[s].join('; ')}` : ''))
+      .filter(Boolean)
+      .join(' | ');
+    lines.push(`Day ${day.number} (${day.title}): ${slotStr}`);
+  }
+
+  const out = lines.join('\n').trim();
+  // Hard cap so an unusually large itinerary cannot bloat the narrative prompt.
+  return out.length > 6000 ? out.slice(0, 6000) : out;
+}
