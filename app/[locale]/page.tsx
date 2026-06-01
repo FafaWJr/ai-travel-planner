@@ -1,8 +1,31 @@
 'use client';
+import { motion, MotionConfig } from 'framer-motion';
 import { useRef, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import NavBar from '@/components/NavBar';
+
+// Reusable variants
+const fadeUp = {
+  hidden: { opacity: 0, y: 32 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: 'easeOut' as const } },
+};
+const fadeLeft = {
+  hidden: { opacity: 0, x: -40 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.65, ease: 'easeOut' as const } },
+};
+const fadeRight = {
+  hidden: { opacity: 0, x: 40 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.65, ease: 'easeOut' as const } },
+};
+const staggerContainer = (delay = 0.1) => ({
+  hidden: {},
+  visible: { transition: { staggerChildren: delay } },
+});
+const heroStagger = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.13, delayChildren: 0.05 } },
+};
 
 export default function HomePage() {
   const tHero = useTranslations('hero');
@@ -43,8 +66,9 @@ export default function HomePage() {
   }, [startAutoPlay, stopAutoPlay]);
 
   return (
-    <>
-      <style>{`
+    <MotionConfig reducedMotion="user">
+      <>
+        <style>{`
         *{margin:0;padding:0;box-sizing:border-box}
         :root{
           --orange:#FF8210;
@@ -310,18 +334,23 @@ export default function HomePage() {
         <div className="hero-bg" style={{backgroundImage:"url('https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=1600&q=80')"}}></div>
         <div className="hero-bg" style={{backgroundImage:"url('https://images.unsplash.com/photo-1495567720989-cebdbdd97913?w=1600&q=80')"}}></div>
         <div className="hero-overlay"></div>
-        <div className="hero-content">
-          <div className="hero-badge">
+        <motion.div
+          className="hero-content"
+          variants={heroStagger}
+          initial="hidden"
+          animate="visible"
+        >
+          <motion.div className="hero-badge" variants={fadeUp}>
             <div className="hero-badge-dot"></div>
             <span>{tHero('badge')}</span>
-          </div>
-          <h1 className="hero-title">
+          </motion.div>
+          <motion.h1 className="hero-title" variants={fadeUp}>
             <span className="navy">{tHero('title1')}<br /></span>
             <span className="orange">{tHero('title2')}</span><br />
             <span className="navy">{tHero('title3')}</span>
-          </h1>
-          <p className="hero-sub">{tHero('subtitle')}</p>
-          <div className="hero-pills">
+          </motion.h1>
+          <motion.p className="hero-sub" variants={fadeUp}>{tHero('subtitle')}</motion.p>
+          <motion.div className="hero-pills" variants={fadeUp}>
             <div className="hero-pill blue">
               <div className="pill-title">{tHero('pill1Title')}</div>
               <div className="pill-sub">{tHero('pill1Sub')}</div>
@@ -338,10 +367,15 @@ export default function HomePage() {
               <div className="pill-title">{tHero('pill4Title')}</div>
               <div className="pill-sub">{tHero('pill4Sub')}</div>
             </div>
-          </div>
-          <Link href="/start" className="btn-letsgo">{tHero('cta')} &rarr;</Link>
-          <p className="hero-microcopy">{tHero('microCopy')}</p>
-          <div
+          </motion.div>
+          <motion.div variants={fadeUp}>
+            <motion.div whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }} style={{display:'inline-block'}}>
+              <Link href="/start" className="btn-letsgo">{tHero('cta')} &rarr;</Link>
+            </motion.div>
+          </motion.div>
+          <motion.p className="hero-microcopy" variants={fadeUp}>{tHero('microCopy')}</motion.p>
+          <motion.div
+            variants={fadeUp}
             role="button"
             tabIndex={0}
             style={{ cursor: 'pointer' }}
@@ -351,64 +385,112 @@ export default function HomePage() {
           >
             <div className="see-more">{tHero('seeMore')}</div>
             <div className="see-more-arrow">↓</div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </section>
 
       {/* SOCIAL PROOF STRIP */}
       <div className="proof-strip" id="proof-strip">
-        <div className="proof-inner">
-          <p className="proof-headline">{tPS('headline')}</p>
-          <div className="proof-stats">
-            <div style={{textAlign:'center'}}>
+        <motion.div
+          className="proof-inner"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-30px' }}
+          variants={staggerContainer(0.15)}
+        >
+          <motion.p className="proof-headline" variants={fadeUp}>{tPS('headline')}</motion.p>
+          <motion.div className="proof-stats" variants={staggerContainer(0.15)}>
+            <motion.div style={{textAlign:'center'}} variants={fadeUp}>
               <div className="proof-stat-num">{tPS('stat1Num')}</div>
               <div className="proof-stat-label">{tPS('stat1Label')}</div>
-            </div>
-            <div style={{textAlign:'center'}}>
+            </motion.div>
+            <motion.div style={{textAlign:'center'}} variants={fadeUp}>
               <div className="proof-stat-num">{tPS('stat2Num')}</div>
               <div className="proof-stat-label">{tPS('stat2Label')}</div>
-            </div>
-            <div style={{textAlign:'center'}}>
+            </motion.div>
+            <motion.div style={{textAlign:'center'}} variants={fadeUp}>
               <div className="proof-stat-num">{tPS('stat3Num')}</div>
               <div className="proof-stat-label">{tPS('stat3Label')}</div>
-            </div>
-          </div>
-        </div>
+            </motion.div>
+          </motion.div>
+        </motion.div>
       </div>
 
       {/* HOW IT WORKS */}
       <section className="section how" id="how-it-works">
-        <div className="section-label">{tHow('label')}</div>
-        <h2 className="section-title">{tHow('title')}</h2>
-        <p className="section-sub centered">{tHow('subtitle')}</p>
-        <div className="steps">
-          <div className="step-card">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-60px' }}
+          variants={staggerContainer(0.1)}
+        >
+          <motion.div className="section-label" variants={fadeUp}>{tHow('label')}</motion.div>
+          <motion.h2 className="section-title" variants={fadeUp}>{tHow('title')}</motion.h2>
+          <motion.p className="section-sub centered" variants={fadeUp}>{tHow('subtitle')}</motion.p>
+        </motion.div>
+        <motion.div
+          className="steps"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-80px' }}
+          variants={staggerContainer(0.15)}
+        >
+          <motion.div
+            className="step-card"
+            variants={fadeUp}
+            whileHover={{ y: -6, boxShadow: '0 12px 32px rgba(0,68,123,0.12)', transition: { duration: 0.2 } }}
+          >
             <div className="step-num">1</div>
             <h3>{tHow('step1Title')}</h3>
             <p>{tHow('step1Body')}</p>
-          </div>
-          <div className="step-card">
+          </motion.div>
+          <motion.div
+            className="step-card"
+            variants={fadeUp}
+            whileHover={{ y: -6, boxShadow: '0 12px 32px rgba(0,68,123,0.12)', transition: { duration: 0.2 } }}
+          >
             <div className="step-num">2</div>
             <h3>{tHow('step2Title')}</h3>
             <p>{tHow('step2Body')}</p>
-          </div>
-          <div className="step-card">
+          </motion.div>
+          <motion.div
+            className="step-card"
+            variants={fadeUp}
+            whileHover={{ y: -6, boxShadow: '0 12px 32px rgba(0,68,123,0.12)', transition: { duration: 0.2 } }}
+          >
             <div className="step-num">3</div>
             <h3>{tHow('step3Title')}</h3>
             <p>{tHow('step3Body')}</p>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </section>
 
       {/* EVERYTHING IN EVERY PLAN */}
       <section className="section features" id="features">
-        <div className="section-label">{tFeat('label')}</div>
-        <h2 className="section-title">{tFeat('title')}</h2>
-        <p className="section-sub">{tFeat('subtitle')}</p>
-        <div className="features-grid">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-60px' }}
+          variants={staggerContainer(0.1)}
+        >
+          <motion.div className="section-label" variants={fadeUp}>{tFeat('label')}</motion.div>
+          <motion.h2 className="section-title" variants={fadeUp}>{tFeat('title')}</motion.h2>
+          <motion.p className="section-sub" variants={fadeUp}>{tFeat('subtitle')}</motion.p>
+        </motion.div>
+        <motion.div
+          className="features-grid"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-80px' }}
+          variants={staggerContainer(0.07)}
+        >
 
           {/* 1 - Personalised itineraries */}
-          <div className="feat-card">
+          <motion.div
+            className="feat-card"
+            variants={fadeUp}
+            whileHover={{ y: -4, transition: { duration: 0.2 } }}
+          >
             <svg className="feat-icon" viewBox="0 0 44 44" fill="none">
               <rect width="44" height="44" rx="10" fill="#EEF4FB" />
               <rect x="12" y="10" width="20" height="24" rx="3" stroke="#00447B" strokeWidth="1.5" />
@@ -418,10 +500,14 @@ export default function HomePage() {
             </svg>
             <h3>{tFeat('personalisedTitle')}</h3>
             <p>{tFeat('personalisedBody')}</p>
-          </div>
+          </motion.div>
 
           {/* 2 - Smart pacing */}
-          <div className="feat-card">
+          <motion.div
+            className="feat-card"
+            variants={fadeUp}
+            whileHover={{ y: -4, transition: { duration: 0.2 } }}
+          >
             <svg className="feat-icon" viewBox="0 0 44 44" fill="none">
               <rect width="44" height="44" rx="10" fill="#FFF5EC" />
               <circle cx="22" cy="22" r="10" stroke="#FF8210" strokeWidth="1.5" />
@@ -429,10 +515,14 @@ export default function HomePage() {
             </svg>
             <h3>{tFeat('pacingTitle')}</h3>
             <p>{tFeat('pacingBody')}</p>
-          </div>
+          </motion.div>
 
           {/* 3 - Add, swap, remove */}
-          <div className="feat-card">
+          <motion.div
+            className="feat-card"
+            variants={fadeUp}
+            whileHover={{ y: -4, transition: { duration: 0.2 } }}
+          >
             <svg className="feat-icon" viewBox="0 0 44 44" fill="none">
               <rect width="44" height="44" rx="10" fill="#EEF4FB" />
               <path d="M16 22h12M22 16v12" stroke="#00447B" strokeWidth="1.5" strokeLinecap="round" />
@@ -440,10 +530,14 @@ export default function HomePage() {
             </svg>
             <h3>{tFeat('editingTitle')}</h3>
             <p>{tFeat('editingBody')}</p>
-          </div>
+          </motion.div>
 
           {/* 4 - Hotel suggestions */}
-          <div className="feat-card">
+          <motion.div
+            className="feat-card"
+            variants={fadeUp}
+            whileHover={{ y: -4, transition: { duration: 0.2 } }}
+          >
             <svg className="feat-icon" viewBox="0 0 44 44" fill="none">
               <rect width="44" height="44" rx="10" fill="#FFF5EC" />
               <rect x="10" y="16" width="24" height="16" rx="3" stroke="#FF8210" strokeWidth="1.5" />
@@ -452,10 +546,14 @@ export default function HomePage() {
             </svg>
             <h3>{tFeat('hotelsTitle')}</h3>
             <p>{tFeat('hotelsBody')}</p>
-          </div>
+          </motion.div>
 
           {/* 5 - Budget breakdown */}
-          <div className="feat-card">
+          <motion.div
+            className="feat-card"
+            variants={fadeUp}
+            whileHover={{ y: -4, transition: { duration: 0.2 } }}
+          >
             <svg className="feat-icon" viewBox="0 0 44 44" fill="none">
               <rect width="44" height="44" rx="10" fill="#EEF4FB" />
               <rect x="12" y="14" width="20" height="16" rx="3" stroke="#00447B" strokeWidth="1.5" />
@@ -465,10 +563,14 @@ export default function HomePage() {
             </svg>
             <h3>{tFeat('budgetTitle')}</h3>
             <p>{tFeat('budgetBody')}</p>
-          </div>
+          </motion.div>
 
           {/* 6 - Weather */}
-          <div className="feat-card">
+          <motion.div
+            className="feat-card"
+            variants={fadeUp}
+            whileHover={{ y: -4, transition: { duration: 0.2 } }}
+          >
             <svg className="feat-icon" viewBox="0 0 44 44" fill="none">
               <rect width="44" height="44" rx="10" fill="#FFF5EC" />
               <circle cx="22" cy="20" r="8" stroke="#FF8210" strokeWidth="1.5" />
@@ -479,10 +581,14 @@ export default function HomePage() {
             </svg>
             <h3>{tFeat('weatherTitle')}</h3>
             <p>{tFeat('weatherBody')}</p>
-          </div>
+          </motion.div>
 
           {/* 7 - Getting around */}
-          <div className="feat-card">
+          <motion.div
+            className="feat-card"
+            variants={fadeUp}
+            whileHover={{ y: -4, transition: { duration: 0.2 } }}
+          >
             <svg className="feat-icon" viewBox="0 0 44 44" fill="none">
               <rect width="44" height="44" rx="10" fill="#EEF4FB" />
               <circle cx="14" cy="30" r="3" stroke="#00447B" strokeWidth="1.5" />
@@ -492,10 +598,14 @@ export default function HomePage() {
             </svg>
             <h3>{tFeat('transportTitle')}</h3>
             <p>{tFeat('transportBody')}</p>
-          </div>
+          </motion.div>
 
           {/* 8 - Chat with Luna */}
-          <div className="feat-card">
+          <motion.div
+            className="feat-card"
+            variants={fadeUp}
+            whileHover={{ y: -4, transition: { duration: 0.2 } }}
+          >
             <svg className="feat-icon" viewBox="0 0 44 44" fill="none">
               <rect width="44" height="44" rx="10" fill="#FFF5EC" />
               <path d="M14 28a10 10 0 1 1 16 0" stroke="#FF8210" strokeWidth="1.5" strokeLinecap="round" />
@@ -504,10 +614,14 @@ export default function HomePage() {
             </svg>
             <h3>{tFeat('chatTitle')}</h3>
             <p>{tFeat('chatBody')}</p>
-          </div>
+          </motion.div>
 
           {/* 9 - Plan together (highlight) */}
-          <div className="feat-card highlight">
+          <motion.div
+            className="feat-card highlight"
+            variants={fadeUp}
+            whileHover={{ y: -4, transition: { duration: 0.2 } }}
+          >
             <svg className="feat-icon" viewBox="0 0 44 44" fill="none">
               <rect width="44" height="44" rx="10" fill="rgba(255,255,255,0.15)" />
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="white" strokeWidth="1.5" strokeLinecap="round" transform="translate(10,8) scale(0.85)" />
@@ -516,15 +630,20 @@ export default function HomePage() {
             </svg>
             <h3>{tFeat('planTogetherTitle')}</h3>
             <p>{tFeat('planTogetherBody')}</p>
-          </div>
+          </motion.div>
 
-        </div>
+        </motion.div>
       </section>
 
       {/* YOUR TRIP YOUR WAY */}
       <section className="section yourway" id="your-way">
         <div className="yourway-grid">
-          <div>
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-60px' }}
+            variants={fadeLeft}
+          >
             <div className="section-label">{tYW('label')}</div>
             <h2 className="section-title">{tYW('title')}</h2>
             <p className="section-sub">{tYW('subtitle')}</p>
@@ -551,8 +670,14 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-          </div>
-          <div className="yourway-visual">
+          </motion.div>
+          <motion.div
+            className="yourway-visual"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-60px' }}
+            variants={fadeRight}
+          >
             <div className="chat-label">{tYW('chatYou')}</div>
             <div className="chat-bubble">{tYW('chat1')}</div>
             <div className="chat-label luna" style={{marginTop:16}}>{tYW('chatLuna')}</div>
@@ -561,51 +686,64 @@ export default function HomePage() {
             <div className="chat-bubble">{tYW('chat3')}</div>
             <div className="chat-label luna" style={{marginTop:16}}>{tYW('chatLuna')}</div>
             <div className="chat-bubble luna">{tYW('chat4')}</div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* MEET LUNA */}
       <section className="meet-luna" id="meet-luna">
         <div className="meet-luna-inner">
-          <div className="luna-avatar-wrap">
+          <motion.div
+            className="luna-avatar-wrap"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-60px' }}
+            variants={fadeLeft}
+          >
             <img src="/luna_BLUE.png" alt="Luna, your AI travel companion" />
-          </div>
-          <div className="luna-copy">
-            <div className="section-label">{tML('label')}</div>
-            <h2 className="section-title">{tML('title')}</h2>
-            <p className="section-sub">{tML('subtitle')}</p>
-            <div className="luna-features">
-              <div className="luna-feat">
-                <div className="luna-feat-check"></div>
-                <p><strong>{tML('feat1Bold')}</strong>{tML('feat1Body')}</p>
-              </div>
-              <div className="luna-feat">
-                <div className="luna-feat-check"></div>
-                <p><strong>{tML('feat2Bold')}</strong>{tML('feat2Body')}</p>
-              </div>
-              <div className="luna-feat">
-                <div className="luna-feat-check"></div>
-                <p><strong>{tML('feat3Bold')}</strong>{tML('feat3Body')}</p>
-              </div>
-              <div className="luna-feat">
-                <div className="luna-feat-check"></div>
-                <p><strong>{tML('feat4Bold')}</strong>{tML('feat4Body')}</p>
-              </div>
-              <div className="luna-feat">
-                <div className="luna-feat-check"></div>
-                <p><strong>{tML('feat5Bold')}</strong>{tML('feat5Body')}</p>
-              </div>
-            </div>
-            <Link href="/start" className="btn-letsgo-white">{tML('cta')} &rarr;</Link>
-          </div>
+          </motion.div>
+          <motion.div
+            className="luna-copy"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-60px' }}
+            variants={staggerContainer(0.1)}
+          >
+            <motion.div className="section-label" variants={fadeUp}>{tML('label')}</motion.div>
+            <motion.h2 className="section-title" variants={fadeUp}>{tML('title')}</motion.h2>
+            <motion.p className="section-sub" variants={fadeUp}>{tML('subtitle')}</motion.p>
+            <motion.div className="luna-features" variants={staggerContainer(0.08)}>
+              {[
+                { bold: tML('feat1Bold'), body: tML('feat1Body') },
+                { bold: tML('feat2Bold'), body: tML('feat2Body') },
+                { bold: tML('feat3Bold'), body: tML('feat3Body') },
+                { bold: tML('feat4Bold'), body: tML('feat4Body') },
+                { bold: tML('feat5Bold'), body: tML('feat5Body') },
+              ].map(({ bold, body }, i) => (
+                <motion.div key={i} className="luna-feat" variants={fadeUp}>
+                  <div className="luna-feat-check"></div>
+                  <p><strong>{bold}</strong>{body}</p>
+                </motion.div>
+              ))}
+            </motion.div>
+            <motion.div variants={fadeUp}>
+              <motion.div whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }} style={{display:'inline-block'}}>
+                <Link href="/start" className="btn-letsgo-white">{tML('cta')} &rarr;</Link>
+              </motion.div>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
       {/* PLAN TOGETHER */}
       <section className="section plan-together" id="plan-together">
         <div className="pt-grid">
-          <div>
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-60px' }}
+            variants={fadeLeft}
+          >
             <div className="section-label">{tPT('label')}</div>
             <h2 className="section-title">{tPT('headline')}</h2>
             <p className="section-sub">{tPT('subhead')}</p>
@@ -627,9 +765,17 @@ export default function HomePage() {
                 <p><strong>{tPT('point4Bold')}</strong>{tPT('point4Body')}</p>
               </div>
             </div>
-            <Link href="/start" className="btn-plan-together">{tPT('cta')} &rarr;</Link>
-          </div>
-          <div className="pt-visual">
+            <motion.div whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }} style={{display:'inline-block', marginTop:28}}>
+              <Link href="/start" className="btn-plan-together">{tPT('cta')} &rarr;</Link>
+            </motion.div>
+          </motion.div>
+          <motion.div
+            className="pt-visual"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-60px' }}
+            variants={fadeRight}
+          >
             <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:16}}>
               <div style={{display:'flex'}}>
                 <div className="pt-avatar" style={{background:'var(--orange)'}}>W</div>
@@ -657,69 +803,118 @@ export default function HomePage() {
             <div style={{marginTop:14,padding:'10px 14px',background:'var(--bg-navy-tint)',borderRadius:10,fontFamily:"'Lato',sans-serif",fontSize:12,color:'var(--navy)'}}>
               <strong style={{color:'var(--orange)'}}>F:</strong> &quot;Let&apos;s swap Robot Restaurant for a local izakaya instead&quot;
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* TALK TO LUNA */}
       <section className="section talk-luna" id="talk-to-luna">
-        <div className="section-label">{tTL('label')}</div>
-        <h2 className="section-title">{tTL('title')}</h2>
-        <p className="section-sub">{tTL('subtitle')}</p>
-        <div className="prompts-grid">
-          <div className="prompt-card">{tTL('prompt1')}</div>
-          <div className="prompt-card">{tTL('prompt2')}</div>
-          <div className="prompt-card">{tTL('prompt3')}</div>
-          <div className="prompt-card">{tTL('prompt4')}</div>
-          <div className="prompt-card">{tTL('prompt5')}</div>
-          <div className="prompt-card">{tTL('prompt6')}</div>
-        </div>
-        <div className="tip-card">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-60px' }}
+          variants={staggerContainer(0.1)}
+        >
+          <motion.div className="section-label" variants={fadeUp}>{tTL('label')}</motion.div>
+          <motion.h2 className="section-title" variants={fadeUp}>{tTL('title')}</motion.h2>
+          <motion.p className="section-sub" variants={fadeUp}>{tTL('subtitle')}</motion.p>
+        </motion.div>
+        <motion.div
+          className="prompts-grid"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-60px' }}
+          variants={staggerContainer(0.08)}
+        >
+          {[tTL('prompt1'), tTL('prompt2'), tTL('prompt3'), tTL('prompt4'), tTL('prompt5'), tTL('prompt6')].map((prompt, i) => (
+            <motion.div
+              key={i}
+              className="prompt-card"
+              variants={fadeUp}
+              whileHover={{ y: -4, boxShadow: '0 8px 24px rgba(0,68,123,0.1)', transition: { duration: 0.2 } }}
+            >
+              {prompt}
+            </motion.div>
+          ))}
+        </motion.div>
+        <motion.div
+          className="tip-card"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+        >
           <div className="tip-card-title">{tTL('tipTitle')}</div>
           <p>{tTL('tipBody')}</p>
-        </div>
-        <div style={{marginTop:16}}>
+        </motion.div>
+        <motion.div
+          style={{marginTop:16}}
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        >
           <Link href="/how-to-use-luna" style={{fontFamily:"'Lato',sans-serif",fontSize:14,fontWeight:700,color:'var(--orange)',textDecoration:'none'}}>{tTL('guideLink')} &rarr;</Link>
-        </div>
+        </motion.div>
       </section>
 
       {/* WHY LUNA - DIFFERENTIATION */}
       <section className="section diff" id="why-luna">
-        <div style={{textAlign:'center'}}>
-          <div className="section-label">{tWL('label')}</div>
-          <h2 className="section-title" style={{textAlign:'center'}}>{tWL('title')}</h2>
-        </div>
-        <div className="diff-table-scroll">
-        <table className="diff-table">
-          <thead>
-            <tr>
-              <th></th>
-              <th>{tWL('colLuna')}</th>
-              <th>{tWL('colOther')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(['1','2','3','4','5','6'] as const).map((n) => (
-              <tr key={n}>
-                <td>{tWL(`row${n}Label` as Parameters<typeof tWL>[0])}</td>
-                <td>{tWL(`row${n}Luna` as Parameters<typeof tWL>[0])}</td>
-                <td>{tWL(`row${n}Other` as Parameters<typeof tWL>[0])}</td>
+        <motion.div
+          style={{textAlign:'center'}}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-60px' }}
+          variants={staggerContainer(0.1)}
+        >
+          <motion.div className="section-label" variants={fadeUp}>{tWL('label')}</motion.div>
+          <motion.h2 className="section-title" style={{textAlign:'center'}} variants={fadeUp}>{tWL('title')}</motion.h2>
+        </motion.div>
+        <motion.div
+          className="diff-table-scroll"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ duration: 0.55, delay: 0.15 }}
+        >
+          <table className="diff-table">
+            <thead>
+              <tr>
+                <th></th>
+                <th>{tWL('colLuna')}</th>
+                <th>{tWL('colOther')}</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-        </div>
+            </thead>
+            <tbody>
+              {(['1','2','3','4','5','6'] as const).map((n) => (
+                <tr key={n}>
+                  <td>{tWL(`row${n}Label` as Parameters<typeof tWL>[0])}</td>
+                  <td>{tWL(`row${n}Luna` as Parameters<typeof tWL>[0])}</td>
+                  <td>{tWL(`row${n}Other` as Parameters<typeof tWL>[0])}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </motion.div>
       </section>
 
       {/* TRIP IDEAS */}
       <section className="section trip-ideas" id="trip-ideas">
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end',marginBottom:0}}>
-          <div>
+        <motion.div
+          style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end',marginBottom:0}}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-60px' }}
+          variants={staggerContainer(0.12)}
+        >
+          <motion.div variants={fadeUp}>
             <div className="section-label">{tTI('label')}</div>
             <h2 className="section-title" style={{marginBottom:0}}>{tTI('title')}</h2>
-          </div>
-          <Link href="/trip-ideas" style={{fontFamily:"'Lato',sans-serif",fontSize:14,fontWeight:700,color:'var(--orange)',textDecoration:'none'}}>{tTI('seeAll')} &rarr;</Link>
-        </div>
+          </motion.div>
+          <motion.div variants={fadeUp}>
+            <Link href="/trip-ideas" style={{fontFamily:"'Lato',sans-serif",fontSize:14,fontWeight:700,color:'var(--orange)',textDecoration:'none'}}>{tTI('seeAll')} &rarr;</Link>
+          </motion.div>
+        </motion.div>
         <div className="ideas-carousel-wrap" role="region" aria-label={tTI('title')} onMouseEnter={stopAutoPlay} onMouseLeave={startAutoPlay}>
           <button className="carousel-btn prev" aria-label="Previous destinations" onClick={()=>{ carouselRef.current?.scrollBy({left:-320,behavior:'smooth'}); startAutoPlay(); }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00447B" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6" /></svg>
@@ -759,10 +954,24 @@ export default function HomePage() {
 
       {/* TRAVELLER PERSONA */}
       <section className="section persona" id="quiz">
-        <div className="section-label">{tQuiz('label')}</div>
-        <h2 className="section-title">{tQuiz('title')}</h2>
-        <p className="section-sub centered" style={{margin:'0 auto 8px'}}>{tQuiz('subtitle')}</p>
-        <div className="persona-cards" style={{justifyContent:'center',flexWrap:'wrap',gap:12}}>
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-60px' }}
+          variants={staggerContainer(0.1)}
+        >
+          <motion.div className="section-label" variants={fadeUp}>{tQuiz('label')}</motion.div>
+          <motion.h2 className="section-title" variants={fadeUp}>{tQuiz('title')}</motion.h2>
+          <motion.p className="section-sub centered" style={{margin:'0 auto 8px'}} variants={fadeUp}>{tQuiz('subtitle')}</motion.p>
+        </motion.div>
+        <motion.div
+          className="persona-cards"
+          style={{justifyContent:'center',flexWrap:'wrap',gap:12}}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-60px' }}
+          variants={staggerContainer(0.05)}
+        >
           {[
             { name: 'The Explorer',         color: 'var(--orange)' },
             { name: 'The Foodie',           color: 'var(--navy)'   },
@@ -777,30 +986,62 @@ export default function HomePage() {
             { name: 'The Party Animal',     color: 'var(--orange)' },
             { name: 'The Festival Chaser',  color: 'var(--navy)'   },
           ].map(({ name, color }) => (
-            <Link key={name} href="/quiz" className="persona-card" style={{textDecoration:'none'}}>
-              <svg width="18" height="18" viewBox="0 0 18 18" style={{flexShrink:0}}><circle cx="9" cy="9" r="9" fill={color} /></svg>
-              <div className="p-name">{name}</div>
-            </Link>
+            <motion.div key={name} variants={fadeUp} whileHover={{ y: -4, scale: 1.03, transition: { duration: 0.18 } }}>
+              <Link href="/quiz" className="persona-card" style={{textDecoration:'none'}}>
+                <svg width="18" height="18" viewBox="0 0 18 18" style={{flexShrink:0}}><circle cx="9" cy="9" r="9" fill={color} /></svg>
+                <div className="p-name">{name}</div>
+              </Link>
+            </motion.div>
           ))}
-        </div>
-        <Link href="/quiz" style={{display:'inline-block',background:'var(--orange)',color:'white',borderRadius:50,padding:'16px 44px',fontFamily:"'Poppins',sans-serif",fontSize:16,fontWeight:500,textDecoration:'none',marginTop:8}}>{tQuiz('cta')} &rarr;</Link>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          whileHover={{ scale: 1.04, y: -2 }}
+          style={{display:'inline-block'}}
+        >
+          <Link href="/quiz" style={{display:'inline-block',background:'var(--orange)',color:'white',borderRadius:50,padding:'16px 44px',fontFamily:"'Poppins',sans-serif",fontSize:16,fontWeight:500,textDecoration:'none',marginTop:8}}>{tQuiz('cta')} &rarr;</Link>
+        </motion.div>
       </section>
 
       {/* FAQ */}
       <section id="faq" style={{ background: '#F8FBFF', padding: '80px 24px' }}>
         <div style={{ maxWidth: 800, margin: '0 auto' }}>
-          <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: 12, fontWeight: 700, color: '#FF8210', letterSpacing: '0.12em', textTransform: 'uppercase', borderBottom: '2px solid #FF8210', display: 'inline-block', paddingBottom: 3, marginBottom: 16 }}>{tFaq('label')}</p>
-          <h2 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 'clamp(26px,3.5vw,38px)', color: '#00447B', lineHeight: 1.2, marginBottom: 48, letterSpacing: '-0.5px' }}>
-            {tFaq('title')}
-          </h2>
-          <div itemScope itemType="https://schema.org/FAQPage">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-60px' }}
+            variants={staggerContainer(0.1)}
+          >
+            <motion.p
+              style={{ fontFamily: "'Poppins',sans-serif", fontSize: 12, fontWeight: 700, color: '#FF8210', letterSpacing: '0.12em', textTransform: 'uppercase', borderBottom: '2px solid #FF8210', display: 'inline-block', paddingBottom: 3, marginBottom: 16 }}
+              variants={fadeUp}
+            >{tFaq('label')}</motion.p>
+            <motion.h2
+              style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 'clamp(26px,3.5vw,38px)', color: '#00447B', lineHeight: 1.2, marginBottom: 48, letterSpacing: '-0.5px' }}
+              variants={fadeUp}
+            >
+              {tFaq('title')}
+            </motion.h2>
+          </motion.div>
+          <motion.div
+            itemScope
+            itemType="https://schema.org/FAQPage"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-40px' }}
+            variants={staggerContainer(0.08)}
+          >
             {(['1','2','3','4','5','6','7','8'] as const).map((n) => (
-              <div
+              <motion.div
                 key={n}
                 itemScope
                 itemProp="mainEntity"
                 itemType="https://schema.org/Question"
                 style={{ borderBottom: '1px solid rgba(0,68,123,0.1)', paddingBottom: 28, marginBottom: 28 }}
+                variants={fadeUp}
               >
                 <h3
                   itemProp="name"
@@ -816,20 +1057,47 @@ export default function HomePage() {
                     {tFaq(`a${n}` as Parameters<typeof tFaq>[0])}
                   </p>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* FINAL CTA */}
       <section className="final-cta" id="cta">
-        <h2>{tCta('title')}</h2>
-        <p>{tCta('subtitle')}</p>
-        <Link href="/start" className="btn-cta-white">{tCta('cta')} &rarr;</Link>
-        <p style={{fontFamily:"'Lato',sans-serif",fontSize:13,color:'rgba(255,255,255,0.55)',marginTop:12}}>{tCta('microCopy')}</p>
+        <motion.h2
+          initial={{ opacity: 0, y: 36 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        >{tCta('title')}</motion.h2>
+        <motion.p
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+        >{tCta('subtitle')}</motion.p>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.92 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.22, type: 'spring', stiffness: 220, damping: 20 }}
+          whileHover={{ scale: 1.05, y: -2 }}
+          whileTap={{ scale: 0.97 }}
+          style={{display:'inline-block'}}
+        >
+          <Link href="/start" className="btn-cta-white">{tCta('cta')} &rarr;</Link>
+        </motion.div>
+        <motion.p
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, delay: 0.4 }}
+          style={{fontFamily:"'Lato',sans-serif",fontSize:13,color:'rgba(255,255,255,0.55)',marginTop:12}}
+        >{tCta('microCopy')}</motion.p>
       </section>
 
-    </>
+      </>
+    </MotionConfig>
   );
 }

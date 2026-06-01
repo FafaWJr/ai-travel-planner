@@ -1,7 +1,7 @@
 # Luna Let's Go - Claude Code Context
-**Last Updated:** 2026-05-13 10:18:10
+**Last Updated:** 2026-06-01 21:34:48
 **Current Branch:** main
-**Last Commit:** 54c3a40f feat: destination autocomplete and sessionStorage auth flow on /memories (LP-3)
+**Last Commit:** d6a4a729 fix: emit narrative before itinerary tool events in two-phase generate
 **Deployment:** https://www.lunaletsgo.com
 
 ---
@@ -57,8 +57,10 @@ app/api/hotel-photos/route.ts
 app/api/hotel-suggestions/route.ts
 app/api/memories/[tripId]/route.ts
 app/api/memories/export/pdf/route.ts
+app/api/memories/geocode/route.ts
 app/api/memories/narrative/route.ts
 app/api/memories/photos/route.ts
+app/api/memories/reconstruct-titles/route.ts
 app/api/memories/share/[token]/route.ts
 app/api/memories/skeleton/route.ts
 app/api/memories/standalone/route.ts
@@ -98,6 +100,7 @@ app/[locale]/blog/rio-de-janeiro-5-days/page.tsx
 app/[locale]/deals/page.tsx
 app/[locale]/how-to-use-luna/page.tsx
 app/[locale]/memories/[tripId]/page.tsx
+app/[locale]/memories/coming-soon/page.tsx
 app/[locale]/memories/page.tsx
 app/[locale]/memories/share/[token]/page.tsx
 app/[locale]/my-trips/page.tsx
@@ -121,16 +124,16 @@ app/auth/signup/page.tsx
 ## Recent Changes (Last 10 Commits)
 
 ```
-54c3a40f (HEAD -> main, origin/main, origin/HEAD) feat: destination autocomplete and sessionStorage auth flow on /memories (LP-3)
-d7bc4ff0 chore: LP-2 post-ship agent fixes — SEO, frontend, i18n QA
-091c48e0 feat: redesign /memories landing page with photo hero and OG metadata (LP-2)
-a2346137 fix(pwa): exclude manifest.json/sw.js/offline.html from intl middleware (HF-5)
-e1f7491c fix(memories): security hardening C2/C3/C4/H2/H3
-88bd5523 feat: PWA layer for home screen install and offline support (Phase 7)
-998d57de fix(memories): photos + narrative dual-lookup for standalone memories (HF-4)
-3649f4b9 fix: move Stripe instantiation inside handlers to fix build error
-65a6f8f6 feat: Stripe payment for PDF story export (Phase 6.2)
-12103fa6 feat(memories): Phase 6.1 — premium PDF export pipeline
+d6a4a729 (HEAD -> main, origin/main, origin/HEAD) fix: emit narrative before itinerary tool events in two-phase generate
+b9207ce9 fix: generate itinerary and narrative in two phases so neither is dropped
+e242940d fix(mobile): responsive destination card on plan page
+ffd9ea70 chore: add motion v12.38.0 animation library
+2340c80c fix(a11y): focus styles, reduced-motion, keyboard nav, and label wiring
+0c0971d5 chore: remove dangling reference to deleted activity-log.ts
+721de47a chore: remove 843 lines of confirmed dead code
+fdd5539f fix: add NavBar to Memories coming soon page
+0e7211f5 fix: remove negative margin causing hero to overlap feature cards (coming-soon)
+d179bfcf feat: Memories coming soon placeholder page
 ```
 
 ---
