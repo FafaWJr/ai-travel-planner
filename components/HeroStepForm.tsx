@@ -222,11 +222,11 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
               <label style={lbl}>{t('travelDates')} <span style={{ color:'var(--orange)' }}>*</span></label>
               <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
                 <div>
-                  <div style={{ display:'grid', gridTemplateColumns:'1fr 100px', gap:8, marginBottom:6, alignItems:'end' }}>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 128px', gap:8, marginBottom:6, alignItems:'end' }}>
                     <span style={subLbl}>{t('from')}</span>
                     <span style={{ fontFamily:'var(--font-head)',fontWeight:500,fontSize:10,color:'var(--gray-dark)',textTransform:'uppercase' as const,letterSpacing:'0.06em' }}>{t('time')} <span style={{ fontWeight:400,textTransform:'none' as const,letterSpacing:0 }}>({t('optional')})</span></span>
                   </div>
-                  <div style={{ display:'grid', gridTemplateColumns:'1fr 100px', gap:8 }}>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 128px', gap:8 }}>
                     <div className="hf-date-wrap" style={{ display:'flex', alignItems:'center', border:`1.5px solid ${errors.dep?'#E53E3E':'rgba(0,68,123,0.15)'}`, borderRadius:'var(--r-md)', background:'#fff', height:50, padding:'0 14px', gap:10, boxSizing:'border-box' as const, transition:'border-color 0.18s' }}>
                       <CalIcon />
                       <input type="date" value={dep} min={today}
@@ -243,11 +243,11 @@ export default function HeroStepForm({ onSubmit, preFilledData }: { onSubmit:(q:
                   {errors.dep && <p style={{ fontFamily:'var(--font-body)',fontSize:12,color:'#E53E3E',marginTop:5,display:'flex',alignItems:'center',gap:4 }}>⚠ {errors.dep}</p>}
                 </div>
                 <div>
-                  <div style={{ display:'grid', gridTemplateColumns:'1fr 100px', gap:8, marginBottom:6, alignItems:'end' }}>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 128px', gap:8, marginBottom:6, alignItems:'end' }}>
                     <span style={subLbl}>{t('to')}</span>
                     <span style={{ fontFamily:'var(--font-head)',fontWeight:500,fontSize:10,color:'var(--gray-dark)',textTransform:'uppercase' as const,letterSpacing:'0.06em' }}>{t('time')} <span style={{ fontWeight:400,textTransform:'none' as const,letterSpacing:0 }}>({t('optional')})</span></span>
                   </div>
-                  <div style={{ display:'grid', gridTemplateColumns:'1fr 100px', gap:8 }}>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 128px', gap:8 }}>
                     <div className="hf-date-wrap" style={{ display:'flex', alignItems:'center', border:`1.5px solid ${errors.ret?'#E53E3E':'rgba(0,68,123,0.15)'}`, borderRadius:'var(--r-md)', background:'#fff', height:50, padding:'0 14px', gap:10, boxSizing:'border-box' as const, transition:'border-color 0.18s' }}>
                       <CalIcon />
                       <input type="date" value={ret} min={dep || today}
